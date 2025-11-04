@@ -24,6 +24,20 @@ public class Customer {
     @Column(name = "Bakiye", precision = 18, scale = 2)
     private BigDecimal balance;
 
+    @Column(name = "Adres")
+    private String address;
+
+    @Column(name = "Ülke")
+    private String country;
+
+    @Column(name = "İl")
+    private String local;
+
+    @Column(name = "İlçe")
+    private String district;
+
+    @Column(name = "Vergi Dairesi No")
+    private BigDecimal VdNo;
 
 }
 

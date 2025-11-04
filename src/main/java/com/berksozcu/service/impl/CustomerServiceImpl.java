@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -50,8 +51,26 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setId(newCustomer.getId());
         customer.setName(newCustomer.getName());
         customer.setBalance(newCustomer.getBalance());
+        customer.setCountry(newCustomer.getCountry());
+        customer.setAddress(newCustomer.getAddress());
+        customer.setDistrict(newCustomer.getDistrict());
+        customer.setLocal(newCustomer.getLocal());
+        customer.setVdNo(newCustomer.getVdNo());
 
         return customerRepository.save(customer);
+    }
+
+    @Override
+    public List<Customer> getAllCustomer() {
+        return customerRepository.findAll();
+    }
+
+    @Override
+    public void updateCustomer(Long id, Customer updateCustomer) {
+        Optional<Customer> optional = customerRepository.findById(id);
+        if(optional.isPresent()) {
+            optional.get().setName(updateCustomer.getName());
+        }
     }
 
 
