@@ -37,7 +37,7 @@ public class Customer {
     private String district;
 
     @Column(name = "Vergi Dairesi No")
-    private BigDecimal VdNo;
+    private BigDecimal vdNo;
 
 }
 

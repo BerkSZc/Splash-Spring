@@ -1,18 +1,14 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.Customer;
-import com.berksozcu.entites.Material;
-import com.berksozcu.entites.PurchaseInvoice;
-import com.berksozcu.entites.PurchaseInvoiceItem;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.PurchaseInvoiceRepository;
 import com.berksozcu.service.ICustomerService;
-import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,11 +24,14 @@ public class CustomerServiceImpl implements ICustomerService {
     @Autowired
     private MaterialRepository materialRepository;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @Override
     public Customer findCustomerById(Long id) {
         Optional<Customer> optional = customerRepository.findById(id);
         if (optional.isEmpty()) {
-            return null;
+            throw new RuntimeException("Müşteri buluamadı");
         }
         Customer customer = new Customer();
         customer.setId(optional.get().getId());
@@ -43,19 +42,11 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
 
-
-
     @Override
     public Customer addCustomer(Customer newCustomer) {
         Customer customer = new Customer();
         customer.setId(newCustomer.getId());
-        customer.setName(newCustomer.getName());
-        customer.setBalance(newCustomer.getBalance());
-        customer.setCountry(newCustomer.getCountry());
-        customer.setAddress(newCustomer.getAddress());
-        customer.setDistrict(newCustomer.getDistrict());
-        customer.setLocal(newCustomer.getLocal());
-        customer.setVdNo(newCustomer.getVdNo());
+        modelMapper.map(newCustomer, customer);
 
         return customerRepository.save(customer);
     }
@@ -68,10 +59,13 @@ public class CustomerServiceImpl implements ICustomerService {
     @Override
     public void updateCustomer(Long id, Customer updateCustomer) {
         Optional<Customer> optional = customerRepository.findById(id);
-        if(optional.isPresent()) {
-            optional.get().setName(updateCustomer.getName());
+        if (optional.isEmpty()) {
+            throw new RuntimeException("Müşteri bulunamadı");
         }
+
+        Customer customer = optional.get();
+
+        modelMapper.map(updateCustomer, customer);
+        customerRepository.save(customer);
     }
-
-
 }

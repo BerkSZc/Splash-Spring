@@ -22,7 +22,7 @@ public class PurchaseInvoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
+    @Column(name = "Tarih")
     private LocalDate date;
 
     @Column(name = "Belge No")

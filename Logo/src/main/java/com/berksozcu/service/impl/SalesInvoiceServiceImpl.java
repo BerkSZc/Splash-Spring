@@ -9,10 +9,13 @@ import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.SalesInvoiceRepository;
 import com.berksozcu.service.ISalesInvoiceService;
 import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -26,6 +29,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
 
     @Override
@@ -50,7 +56,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             BigDecimal lineTotal = item.getUnitPrice().multiply(kdv)
                     .multiply(item.getQuantity());
 
-            BigDecimal kdvTutarHesaplama= item.getKdv().divide(BigDecimal.valueOf(100))
+            BigDecimal kdvTutarHesaplama = item.getKdv().divide(BigDecimal.valueOf(100))
                     .multiply(item.getUnitPrice()).multiply(item.getQuantity());
 
 
@@ -70,4 +76,54 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         return salesInvoice;
     }
+
+    @Override
+    public List<SalesInvoice> getAllSalesInvoice() {
+        return salesInvoiceRepository.findAll();
+    }
+
+    @Override
+    public SalesInvoice editSalesInvoice(Long id, SalesInvoice salesInvoice) {
+
+        Optional<SalesInvoice> optional = salesInvoiceRepository.findById(id);
+
+        if (optional.isEmpty()) {
+            throw new RuntimeException("Fatura bulunamadı");
+        }
+        SalesInvoice oldInvoice = optional.get();
+
+        oldInvoice.setDate(salesInvoice.getDate());
+        oldInvoice.setFileNo(salesInvoice.getFileNo());
+
+
+        List<SalesInvoiceItem> oldItems = oldInvoice.getItems();
+        List<SalesInvoiceItem> newItems = salesInvoice.getItems();
+
+        oldItems.removeIf(old ->
+                newItems.stream().noneMatch(n -> n.getId() != null
+                        && n.getId().equals(old.getId())));
+
+        for (SalesInvoiceItem newItem : newItems) {
+            if (newItem.getId() == null) {
+                newItem.setSalesInvoice(oldInvoice);
+                oldItems.add(newItem);
+            } else {
+                SalesInvoiceItem oldItem = oldItems.stream()
+                        .filter(i -> i.getId().equals(newItem.getId()))
+                        .findFirst()
+                        .orElseThrow();
+
+                oldItem.setQuantity(newItem.getQuantity());
+                oldItem.setUnitPrice(newItem.getUnitPrice());
+                oldItem.setMaterial(newItem.getMaterial());
+            }
+        }
+
+        return salesInvoiceRepository.save(oldInvoice);
+    }
+
+
 }
+
+
+
