@@ -12,7 +12,7 @@ export default function ClientsPage() {
     country: "",
     local: "",
     district: "",
-    VdNo: "",
+    vdNo: "",
   });
 
   const [editClient, setEditClient] = useState(null);
@@ -43,7 +43,7 @@ export default function ClientsPage() {
       country: "",
       local: "",
       district: "",
-      VdNo: "",
+      vdNo: "",
     });
   };
 
@@ -56,7 +56,7 @@ export default function ClientsPage() {
       country: customers.country || "",
       local: customers.local || "",
       district: customers.district || "",
-      VdNo: customers.vdNo || "",
+      vdNo: customers.vdNo || "",
     });
   };
 
@@ -69,7 +69,7 @@ export default function ClientsPage() {
       country: "",
       local: "",
       district: "",
-      VdNo: "",
+      vdNo: "",
     });
   };
 
@@ -147,8 +147,8 @@ export default function ClientsPage() {
           </label>
           <input
             type="number"
-            name="VdNo"
-            value={form.VdNo}
+            name="vdNo"
+            value={form.vdNo}
             onChange={handleChange}
             className="border rounded-lg w-full p-2"
           />

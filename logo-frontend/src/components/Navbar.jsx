@@ -17,7 +17,7 @@ export default function Navbar() {
               <Link to={"/malzeme-ekle"}>Malzeme Ekle</Link>
             </a>
             <a href="#" className="hover:text-gray-300">
-              Faturalar
+              <Link to={"/faturalar"}>Faturalar </Link>
             </a>
             <a href="#" className="hover:text-gray-300">
               <Link to={"/musteriler"}> Müşteriler </Link>

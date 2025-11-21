@@ -4,6 +4,7 @@ import MalzemeEkle from "./pages/MalzemeEkle";
 import MaterialList from "./pages/MaterialList";
 import PurchaseInvoiceForm from "./pages/PurchaseInvoiceForm";
 import ClientsPage from "./pages/ClientPage";
+import Invoice from "./pages/Invoice";
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
         <Route path="/malzemeler" element={<MaterialList />} />
         <Route path="/alma-fatura-ekle" element={<PurchaseInvoiceForm />} />
         <Route path="/musteriler" element={<ClientsPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/faturalar" element={<Invoice />} />
       </Routes>
     </>
   );

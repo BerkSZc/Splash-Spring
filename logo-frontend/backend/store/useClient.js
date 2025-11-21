@@ -35,7 +35,7 @@ export const useClient = create((set, get) => ({
         }
       );
       toast.success("Müşteri değiştirildi");
-      await get.getAllCustomers();
+      await get().getAllCustomers();
     } catch (error) {
       toast.error("Error at updateCustomer:" + error.message);
     }

@@ -6,38 +6,36 @@ import { useClient } from "../../backend/store/useClient.js";
 export default function PurchaseInvoiceForm() {
   const { addPurchaseInvoice } = usePurchaseInvoice();
   const { getMaterials, materials } = useMaterial();
-  const { getAllClient, clients } = useClient();
+  const { getAllCustomers, customers } = useClient();
 
   const [form, setForm] = useState({
     date: "",
     fileNo: "",
-    customerId: "",
-    items: [{ materialId: "", unitPrice: "", quantity: "", lineTotal: 0 }],
+    id: "",
+    items: [
+      { materialId: "", unitPrice: "", quantity: "", kdv: 18, lineTotal: 0 },
+    ],
   });
 
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // 🔹 Malzeme + müşteri verilerini yükle
   useEffect(() => {
     getMaterials();
-    getAllClient();
-  }, [getMaterials, getAllClient]);
+    getAllCustomers();
+  }, [getMaterials, getAllCustomers]);
 
-  // 🧮 Line total ve genel toplam hesapla
+  // Satır toplamı ve genel toplam hesapla (KDV dahil)
   useEffect(() => {
-    // Her kalem için satır toplamını hesapla
     const updatedItems = form.items.map((i) => ({
       ...i,
       lineTotal:
         i.unitPrice && i.quantity
-          ? Number(i.unitPrice) * Number(i.quantity)
+          ? Number(i.unitPrice) * Number(i.quantity) * (1 + (i.kdv || 0) / 100)
           : 0,
     }));
 
-    // Genel toplamı hesapla
     const total = updatedItems.reduce((sum, i) => sum + i.lineTotal, 0);
 
-    // 🔹 Yalnızca lineTotal değişmişse state'i güncelle
     const itemsChanged =
       JSON.stringify(form.items) !== JSON.stringify(updatedItems);
 
@@ -46,7 +44,6 @@ export default function PurchaseInvoiceForm() {
     }
 
     setTotalPrice(total);
-    // ❗️ Sadece form.items'a bağımlı olacak
   }, [form.items]);
 
   const handleAddItem = () => {
@@ -54,7 +51,7 @@ export default function PurchaseInvoiceForm() {
       ...form,
       items: [
         ...form.items,
-        { materialId: "", unitPrice: "", quantity: "", lineTotal: 0 },
+        { materialId: "", unitPrice: "", quantity: "", kdv: 18, lineTotal: 0 },
       ],
     });
   };
@@ -87,10 +84,11 @@ export default function PurchaseInvoiceForm() {
         material: { id: Number(i.materialId) },
         unitPrice: Number(i.unitPrice),
         quantity: Number(i.quantity),
+        kdv: Number(i.kdv),
       })),
     };
 
-    addPurchaseInvoice(form.customerId, invoiceData);
+    addPurchaseInvoice(form.id, invoiceData);
   };
 
   return (
@@ -100,7 +98,7 @@ export default function PurchaseInvoiceForm() {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 🧾 Temel bilgiler */}
+        {/* Temel bilgiler */}
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-600">
@@ -115,7 +113,6 @@ export default function PurchaseInvoiceForm() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-600">
               Belge No
@@ -129,21 +126,19 @@ export default function PurchaseInvoiceForm() {
               required
             />
           </div>
-
-          {/* 🧍 Müşteri Seçimi */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-600">
               Müşteri
             </label>
             <select
-              name="customerId"
-              value={form.customerId}
+              name="id"
+              value={form.id}
               onChange={handleChange}
               className="border rounded-lg w-full p-2"
               required
             >
               <option value="">Seçiniz</option>
-              {clients?.map((c) => (
+              {customers?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} – {c.city}
                 </option>
@@ -152,7 +147,7 @@ export default function PurchaseInvoiceForm() {
           </div>
         </div>
 
-        {/* 🧮 Kalem tablosu */}
+        {/* Kalem tablosu */}
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Kalemler</h3>
           <div className="overflow-x-auto">
@@ -162,7 +157,8 @@ export default function PurchaseInvoiceForm() {
                   <th className="p-2 text-left">Malzeme</th>
                   <th className="p-2 text-left">Birim Fiyat</th>
                   <th className="p-2 text-left">Miktar</th>
-                  <th className="p-2 text-left">Tutar</th>
+                  <th className="p-2 text-left">KDV (%)</th>
+                  <th className="p-2 text-left">Tutar (KDV dahil)</th>
                 </tr>
               </thead>
               <tbody>
@@ -186,7 +182,6 @@ export default function PurchaseInvoiceForm() {
                         ))}
                       </select>
                     </td>
-
                     <td className="p-2">
                       <input
                         type="number"
@@ -198,7 +193,6 @@ export default function PurchaseInvoiceForm() {
                         required
                       />
                     </td>
-
                     <td className="p-2">
                       <input
                         type="number"
@@ -210,7 +204,16 @@ export default function PurchaseInvoiceForm() {
                         required
                       />
                     </td>
-
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        name="kdv"
+                        value={item.kdv}
+                        onChange={(e) => handleChangeItem(index, e)}
+                        className="border rounded-lg p-1 w-full"
+                      />
+                    </td>
                     <td className="p-2 text-right text-gray-700 font-medium">
                       {item.lineTotal.toFixed(2)} ₺
                     </td>
@@ -229,7 +232,7 @@ export default function PurchaseInvoiceForm() {
           </button>
         </div>
 
-        {/* 🧾 Genel toplam */}
+        {/* Genel toplam */}
         <div className="flex justify-end mt-6">
           <div className="text-right">
             <p className="text-gray-600 text-sm">Toplam Tutar:</p>
@@ -239,7 +242,7 @@ export default function PurchaseInvoiceForm() {
           </div>
         </div>
 
-        {/* 🧩 Kaydet */}
+        {/* Kaydet */}
         <div className="flex justify-end mt-4">
           <button
             type="submit"
