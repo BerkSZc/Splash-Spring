@@ -6,6 +6,8 @@ import com.berksozcu.service.ISalesInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/rest/api/sales")
 public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
@@ -18,4 +20,17 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
     public SalesInvoice addSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice) {
         return salesInvoiceService.addSalesInvoice(id, salesInvoice);
     }
+
+    @Override
+    @GetMapping("/all")
+    public List<SalesInvoice> getAllSalesInvoice() {
+        return salesInvoiceService.getAllSalesInvoice();
+    }
+
+    @Override
+    @PutMapping("/update/{id}")
+    public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice) {
+            return salesInvoiceService.editSalesInvoice(id, salesInvoice);
+    }
+
 }

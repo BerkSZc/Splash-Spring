@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
@@ -47,17 +48,17 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 item.setMaterial(material);
                 item.setPurchaseInvoice(newPurchaseInvoice);
 
-            //KDV HESAPLAMA
-            BigDecimal kdv = item.getKdv().add(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(100));
+                //KDV HESAPLAMA
+                BigDecimal kdv = item.getKdv().add(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(100));
 
 
-            // TOPLAM KDV Yİ TOPLAM ÜCRET E EKLEME
+                // TOPLAM KDV Yİ TOPLAM ÜCRET E EKLEME
                 BigDecimal lineTotal = item.getUnitPrice().multiply(kdv)
                         .multiply(item.getQuantity());
 
 
                 //  TOPLAM KDV HESAPLAMA
-                BigDecimal kdvTutarHesaplama= item.getKdv().divide(BigDecimal.valueOf(100))
+                BigDecimal kdvTutarHesaplama = item.getKdv().divide(BigDecimal.valueOf(100))
                         .multiply(item.getUnitPrice()).multiply(item.getQuantity());
 
                 item.setKdvTutar(kdvTutarHesaplama);
@@ -82,4 +83,21 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         return newPurchaseInvoice;
     }
+
+    @Override
+    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id) {
+        List<PurchaseInvoice> invoices = purchaseInvoiceRepository.findAllByCustomerId(id);
+
+        if (invoices.isEmpty()) {
+            throw new RuntimeException("Fatura bulunamadı");
+        }
+
+        return invoices;
+    }
+
+    @Override
+    public List<PurchaseInvoice> getAllPurchaseInvoice() {
+        return purchaseInvoiceRepository.findAll();
+    }
+
 }
