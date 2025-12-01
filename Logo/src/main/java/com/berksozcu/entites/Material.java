@@ -27,6 +27,6 @@ public class Material {
     @Column(name = "Birim")
     private Birim unit;
 
-    @Column(name = "Son Satın Alma Fiyatı")
-    private BigDecimal lastPurchasePrice;
+//    @Column(name = "Son Satın Alma Fiyatı")
+//    private BigDecimal lastPurchasePrice;
 }

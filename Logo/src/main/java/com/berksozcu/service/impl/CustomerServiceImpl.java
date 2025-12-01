@@ -1,6 +1,9 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.Customer;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.PurchaseInvoiceRepository;
@@ -31,7 +34,7 @@ public class CustomerServiceImpl implements ICustomerService {
     public Customer findCustomerById(Long id) {
         Optional<Customer> optional = customerRepository.findById(id);
         if (optional.isEmpty()) {
-            throw new RuntimeException("Müşteri buluamadı");
+            throw new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI));
         }
         Customer customer = new Customer();
         customer.setId(optional.get().getId());

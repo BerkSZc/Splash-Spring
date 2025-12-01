@@ -1,6 +1,8 @@
 package com.berksozcu.controller.impl;
 
 import com.berksozcu.controller.ICustomerController;
+import com.berksozcu.controller.base.RestBaseController;
+import com.berksozcu.controller.base.RootEntity;
 import com.berksozcu.entites.Customer;
 import com.berksozcu.service.ICustomerService;
 import com.berksozcu.service.IPurchaseInvoiceService;
@@ -11,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/customer")
-public class CustomerControllerImpl implements ICustomerController {
+public class CustomerControllerImpl extends RestBaseController implements ICustomerController {
 
     @Autowired
     private ICustomerService customerService;
@@ -21,20 +23,21 @@ public class CustomerControllerImpl implements ICustomerController {
 
     @Override
     @GetMapping("/{id}")
-    public Customer findCustomerById(@PathVariable(name = "id") Long id) {
-        return customerService.findCustomerById(id);
+    public RootEntity<Customer> findCustomerById(@PathVariable(name = "id") Long id) {
+        return ok(customerService.findCustomerById(id));
     }
 
     @Override
     @PostMapping("/add-customer")
-    public Customer addCustomer(@RequestBody Customer customer) {
-        return customerService.addCustomer(customer);
+    public RootEntity<Customer> addCustomer(@RequestBody Customer customer) {
+        return
+                ok(customerService.addCustomer(customer));
     }
 
     @Override
     @GetMapping("/list")
-    public List<Customer> getAllCustomer(){
-        return customerService.getAllCustomer();
+    public RootEntity<List<Customer>> getAllCustomer(){
+        return listOk(customerService.getAllCustomer());
     }
 
     @Override
