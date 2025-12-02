@@ -141,6 +141,18 @@ export default function ClientsPage() {
           />
         </div>
 
+        {/* 📌 EKLENEN ADRES ALANI */}
+        <div>
+          <label className="block text-sm text-gray-600">Adres</label>
+          <input
+            type="text"
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            className="border rounded-lg w-full p-2"
+          />
+        </div>
+
         <div>
           <label className="block text-sm text-gray-600">
             Vergi Dairesi No
@@ -182,37 +194,40 @@ export default function ClientsPage() {
               <th className="p-2 text-left">Ülke</th>
               <th className="p-2 text-left">İl</th>
               <th className="p-2 text-left">İlçe</th>
+              <th className="p-2 text-left">Adres</th>
               <th className="p-2 text-left">Vergi Dairesi No</th>
               <th className="p-2 text-right">Bakiye (₺)</th>
               <th className="p-2 text-center">İşlem</th>
             </tr>
           </thead>
-          <tbody>
-            {customers.map((c) => (
-              <tr key={c.id} className="border-t hover:bg-gray-50">
-                <td className="p-2">{c.name}</td>
-                <td className="p-2">{c.country}</td>
-                <td className="p-2">{c.local}</td>
-                <td className="p-2">{c.district}</td>
-                <td className="p-2">{c.vdNo}</td>
-                <td className="p-2 text-right">
-                  {Number(c.balance || 0).toFixed(2)}
-                </td>
-                <td className="p-2 text-center">
-                  <button
-                    onClick={() => handleEdit(c)}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-                  >
-                    Düzenle
-                  </button>
-                </td>
-              </tr>
-            ))}
 
-            {customers?.length === 0 && (
+          <tbody>
+            {Array.isArray(customers) && customers.length > 0 ? (
+              customers.map((c) => (
+                <tr key={c.id} className="border-t hover:bg-gray-50">
+                  <td className="p-2">{c.name}</td>
+                  <td className="p-2">{c.country}</td>
+                  <td className="p-2">{c.local}</td>
+                  <td className="p-2">{c.district}</td>
+                  <td className="p-2">{c.address}</td>
+                  <td className="p-2">{c.vdNo}</td>
+                  <td className="p-2 text-right">
+                    {Number(c.balance || 0).toFixed(2)}
+                  </td>
+                  <td className="p-2 text-center">
+                    <button
+                      onClick={() => handleEdit(c)}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                    >
+                      Düzenle
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="text-center text-gray-500 p-4 italic"
                 >
                   Henüz müşteri eklenmemiş.

@@ -16,6 +16,10 @@ export default function Navbar() {
             <a href="#" className="hover:text-gray-300">
               <Link to={"/malzeme-ekle"}>Malzeme Ekle</Link>
             </a>
+
+            <a href="#" className="hover:text-gray-300">
+              <Link to={"/alma-fatura-ekle"}>Satın Alma Faturası Ekle</Link>
+            </a>
             <a href="#" className="hover:text-gray-300">
               <Link to={"/faturalar"}>Faturalar </Link>
             </a>
