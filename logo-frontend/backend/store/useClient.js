@@ -8,7 +8,7 @@ export const useClient = create((set, get) => ({
   getAllCustomers: async () => {
     try {
       const res = await axiosInstance.get("/customer/list");
-      set({ customers: res.data });
+      set({ customers: res.data.data });
     } catch (error) {
       toast.error("Error at getAllClient:" + error.message);
     }
