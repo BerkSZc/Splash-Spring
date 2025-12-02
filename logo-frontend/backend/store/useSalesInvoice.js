@@ -5,6 +5,19 @@ import toast from "react-hot-toast";
 export const useSalesInvoice = create((set) => ({
   sales: [],
 
+  addSalesInvoice: async (id, newSalesInvoice) => {
+    try {
+      await axiosInstance.post(`/sales/add/${id}`, newSalesInvoice, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      toast.success("Fatura eklendi");
+    } catch (error) {
+      toast.error("Error at addSalesInvoice: " + error);
+    }
+  },
+
   getAllSalesInvoices: async () => {
     try {
       const res = await axiosInstance.get("/sales/all");

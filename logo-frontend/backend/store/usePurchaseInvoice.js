@@ -7,16 +7,12 @@ export const usePurchaseInvoice = create((set) => ({
 
   addPurchaseInvoice: async (id, newPurchaseInvoice) => {
     try {
-      const res = await axiosInstance.post(
-        `/purchase/add/${id}`,
-        newPurchaseInvoice,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      toast.success("Fatura eklendi.", res.data);
+      await axiosInstance.post(`/purchase/add/${id}`, newPurchaseInvoice, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      toast.success("Fatura eklendi.");
     } catch (error) {
       toast.error("Error at addPurchaseInvoice: " + error.message);
     }
