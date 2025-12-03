@@ -33,4 +33,10 @@ public class PurchaseInvoiceControllerControllerImpl implements IPurchaseInvoice
     public List<PurchaseInvoice> getAllPurchaseInvoice() {
         return purchaseInvoice.getAllPurchaseInvoice();
     }
+
+    @Override
+    @PutMapping("/update/{id}")
+    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice) {
+        return purchaseInvoice.editPurchaseInvoice(id, newPurchaseInvoice);
+    }
 }

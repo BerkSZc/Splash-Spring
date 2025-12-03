@@ -1,9 +1,9 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.entites.Customer;
-import com.berksozcu.entites.Material;
-import com.berksozcu.entites.PurchaseInvoice;
-import com.berksozcu.entites.PurchaseInvoiceItem;
+import com.berksozcu.entites.*;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.PurchaseInvoiceRepository;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -98,6 +99,75 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     @Override
     public List<PurchaseInvoice> getAllPurchaseInvoice() {
         return purchaseInvoiceRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice) {
+        PurchaseInvoice oldInvoice = purchaseInvoiceRepository.findById(id)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
+        Customer customer = oldInvoice.getCustomer();
+        customer.setBalance(customer.getBalance().subtract(oldInvoice.getTotalPrice()));
+
+        oldInvoice.setDate(newPurchaseInvoice.getDate());
+        oldInvoice.setFileNo(newPurchaseInvoice.getFileNo());
+
+
+        List<PurchaseInvoiceItem> oldItems = oldInvoice.getItems();
+        List<PurchaseInvoiceItem> newItems = newPurchaseInvoice.getItems();
+
+        oldItems.removeIf(old ->
+                newItems.stream().noneMatch(n ->
+                      n.getId() != null  && n.getId().equals(old.getId())));
+
+
+        for (PurchaseInvoiceItem newItem : newItems) {
+           Material material = materialRepository.findById(newItem.getMaterial().getId())
+                   .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
+
+                if(newItem.getId() == null) {
+                    newItem.setMaterial(material);
+                    newItem.setPurchaseInvoice(oldInvoice);
+                    oldItems.add(newItem);
+                } else {
+                    PurchaseInvoiceItem oldItem = oldItems.stream()
+                            .filter(i -> i.getId().equals(newItem.getId()))
+                            .findFirst()
+                            .orElseThrow();
+
+                    oldItem.setMaterial(material);
+                    oldItem.setQuantity(newItem.getQuantity());
+                    oldItem.setUnitPrice(newItem.getUnitPrice());
+                    oldItem.setKdv(newItem.getKdv());
+                }
+
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal kdvToplam = BigDecimal.ZERO;
+
+        for (PurchaseInvoiceItem item : oldItems) {
+            BigDecimal qty = item.getQuantity();
+            BigDecimal unitPrice = item.getUnitPrice();
+            BigDecimal kdvOran = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
+            BigDecimal kdvTutar = unitPrice.multiply(qty).multiply(kdvOran);
+            BigDecimal lineTotal = unitPrice.multiply(qty).add(kdvTutar);
+
+            item.setKdvTutar(kdvTutar);
+            item.setLineTotal(lineTotal);
+
+            kdvToplam = kdvToplam.add(kdvTutar);
+            total = total.add(lineTotal);
+        }
+        oldInvoice.setTotalPrice(total);
+        oldInvoice.setKdvToplam(kdvToplam);
+
+        customer.setBalance(customer.getBalance().add(total));
+        customerRepository.save(customer);
+
+        return purchaseInvoiceRepository.save(oldInvoice);
     }
 
 }

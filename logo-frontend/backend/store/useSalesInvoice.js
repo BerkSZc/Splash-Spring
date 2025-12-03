@@ -34,6 +34,7 @@ export const useSalesInvoice = create((set) => ({
           "Content-Type": "application/json",
         },
       });
+      toast.success("Fatura değiştirildi");
     } catch (error) {
       toast.error("Error at editPurchaseInvoice:" + error);
     }

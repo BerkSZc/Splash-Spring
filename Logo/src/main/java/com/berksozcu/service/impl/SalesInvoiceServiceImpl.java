@@ -4,6 +4,9 @@ import com.berksozcu.entites.Customer;
 import com.berksozcu.entites.Material;
 import com.berksozcu.entites.SalesInvoice;
 import com.berksozcu.entites.SalesInvoiceItem;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.SalesInvoiceRepository;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,18 +87,19 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     }
 
     @Override
+    @Transactional
     public SalesInvoice editSalesInvoice(Long id, SalesInvoice salesInvoice) {
 
-        Optional<SalesInvoice> optional = salesInvoiceRepository.findById(id);
+        SalesInvoice oldInvoice = salesInvoiceRepository.findById(id)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
-        if (optional.isEmpty()) {
-            throw new RuntimeException("Fatura bulunamadı");
-        }
-        SalesInvoice oldInvoice = optional.get();
+
+        Customer customer = oldInvoice.getCustomer();
+
+        customer.setBalance(customer.getBalance().subtract(oldInvoice.getTotalPrice()));
 
         oldInvoice.setDate(salesInvoice.getDate());
         oldInvoice.setFileNo(salesInvoice.getFileNo());
-
 
         List<SalesInvoiceItem> oldItems = oldInvoice.getItems();
         List<SalesInvoiceItem> newItems = salesInvoice.getItems();
@@ -104,7 +109,11 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                         && n.getId().equals(old.getId())));
 
         for (SalesInvoiceItem newItem : newItems) {
+            Material material = materialRepository.findById(newItem.getMaterial().getId())
+                    .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
+
             if (newItem.getId() == null) {
+                newItem.setMaterial(material);
                 newItem.setSalesInvoice(oldInvoice);
                 oldItems.add(newItem);
             } else {
@@ -113,16 +122,43 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                         .findFirst()
                         .orElseThrow();
 
+                oldItem.setMaterial(material);
                 oldItem.setQuantity(newItem.getQuantity());
                 oldItem.setUnitPrice(newItem.getUnitPrice());
-                oldItem.setMaterial(newItem.getMaterial());
+                oldItem.setKdv(newItem.getKdv());
+
             }
         }
 
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal kdvToplam = BigDecimal.ZERO;
+
+        for (SalesInvoiceItem item : oldItems) {
+            BigDecimal qty = item.getQuantity();
+            BigDecimal price = item.getUnitPrice();
+            BigDecimal kdvOran = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
+            BigDecimal kdvTutar = price.multiply(qty).multiply(kdvOran);
+            BigDecimal lineTotal = price.multiply(qty).add(kdvTutar);
+
+            item.setKdvTutar(kdvTutar);
+            item.setLineTotal(lineTotal);
+
+            kdvToplam = kdvToplam.add(kdvTutar);
+            total = total.add(lineTotal);
+        }
+
+        oldInvoice.setKdvToplam(kdvToplam);
+        oldInvoice.setTotalPrice(total);
+
+        // 5- Yeni toplamı müşterinin bakiyesine ekle
+        customer.setBalance(customer.getBalance().add(total));
+
+        customerRepository.save(customer);
+
         return salesInvoiceRepository.save(oldInvoice);
+
     }
-
-
 }
 
 

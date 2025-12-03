@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 public enum MessageType {
 
     MUSTERI_BULUNAMADI(1001,"Müşteri mevcut değil"),
-    MALZEME_BULUNAMADI(1002,"Malzeme mevcut değil");
+    MALZEME_BULUNAMADI(1002,"Malzeme mevcut değil"),
+    FATURA_BULUNAMADI(1003, "Fatura bulunamadı");
 
     private Integer code;
     private String message;

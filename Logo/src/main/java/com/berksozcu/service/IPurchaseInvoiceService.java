@@ -8,4 +8,5 @@ public interface IPurchaseInvoiceService {
     public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice);
     public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id);
     public List<PurchaseInvoice> getAllPurchaseInvoice();
+    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice);
 }
