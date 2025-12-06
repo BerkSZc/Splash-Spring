@@ -26,7 +26,10 @@ public class Material {
     @Enumerated(EnumType.STRING)
     @Column(name = "Birim")
     private Birim unit;
-
-//    @Column(name = "Son Satın Alma Fiyatı")
-//    private BigDecimal lastPurchasePrice;
+//
+//   @Column(name = "Son Satın Alma Fiyatı")
+//   private BigDecimal lastPurchasePrice;
+//
+//   @Column(name = "Son Satış Fiyatı")
+//   private BigDecimal lastSalesPrice;
 }

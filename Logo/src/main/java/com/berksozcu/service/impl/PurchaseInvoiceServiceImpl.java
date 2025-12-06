@@ -5,6 +5,7 @@ import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
+import com.berksozcu.repository.MaterialPriceHistoryRepository;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.PurchaseInvoiceRepository;
 import com.berksozcu.service.IPurchaseInvoiceService;
@@ -27,6 +28,9 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
     @Autowired
     private PurchaseInvoiceRepository purchaseInvoiceRepository;
+
+    @Autowired
+    private MaterialPriceHistoryRepository materialPriceHistoryRepository;
 
 
     @Override
@@ -81,6 +85,24 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         // Cascade ALL olduğundan invoice save = items save
         purchaseInvoiceRepository.save(newPurchaseInvoice);
         customerRepository.save(customer);
+
+        for(PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
+            MaterialPriceHistory history = new MaterialPriceHistory();
+            history.setInvoiceType(InvoiceType.PURCHASE);
+            history.setMaterial(item.getMaterial());
+            history.setPrice(item.getUnitPrice());
+            history.setDate(newPurchaseInvoice.getDate());
+
+            materialPriceHistoryRepository.save(history);
+
+//            Material material = new Material();
+//            material.setLastPurchasePrice(item.getUnitPrice());
+//            materialRepository.save(material);
+        }
+
+
+
+
 
         return newPurchaseInvoice;
     }
@@ -168,6 +190,20 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         customerRepository.save(customer);
 
         return purchaseInvoiceRepository.save(oldInvoice);
+    }
+
+    @Override
+    @Transactional
+    public void deletePurchaseInvoice(Long id) {
+        PurchaseInvoice purchaseInvoice = purchaseInvoiceRepository.findById(id)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
+        Customer customer = purchaseInvoice.getCustomer();
+
+        customer.setBalance(customer.getBalance().subtract(purchaseInvoice.getTotalPrice()));
+        customerRepository.save(customer);
+
+        purchaseInvoiceRepository.deleteById(id);
     }
 
 }

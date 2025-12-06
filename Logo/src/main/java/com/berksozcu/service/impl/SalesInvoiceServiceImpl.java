@@ -159,6 +159,20 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         return salesInvoiceRepository.save(oldInvoice);
 
     }
+
+    @Override
+    @Transactional
+    public void deleteSalesInvoice(Long id) {
+        SalesInvoice salesInvoice = salesInvoiceRepository.findById(id)
+                        .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
+        Customer customer = salesInvoice.getCustomer();
+
+        customer.setBalance(customer.getBalance().subtract(salesInvoice.getTotalPrice()));
+        customerRepository.save(customer);
+
+        salesInvoiceRepository.deleteById(id);
+    }
 }
 
 

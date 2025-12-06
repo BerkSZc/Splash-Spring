@@ -39,4 +39,13 @@ export const usePurchaseInvoice = create((set) => ({
       toast.error("Error at editPurchaseInvoice:" + error);
     }
   },
+
+  deletePurchaseInvoice: async (id) => {
+    try {
+      await axiosInstance.delete(`/purchase/delete/${id}`);
+      toast.success("Fatura silindi");
+    } catch (error) {
+      toast.error("Error at deletePurchaseInvoice: " + error);
+    }
+  },
 }));

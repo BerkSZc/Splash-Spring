@@ -33,4 +33,10 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
             return salesInvoiceService.editSalesInvoice(id, salesInvoice);
     }
 
+    @Override
+    @DeleteMapping("/delete/{id}")
+    public void deleteSalesInvoice(@PathVariable(name = "id") Long id) {
+        salesInvoiceService.deleteSalesInvoice(id);
+    }
+
 }

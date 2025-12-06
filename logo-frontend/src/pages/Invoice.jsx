@@ -5,14 +5,21 @@ import { useMaterial } from "../../backend/store/useMaterial";
 import { useClient } from "../../backend/store/useClient";
 
 export default function InvoicePage() {
-  const { getAllPurchaseInvoices, purchase, editPurchaseInvoice } =
-    usePurchaseInvoice();
-  const { getAllSalesInvoices, sales, editSalesInvoice } = useSalesInvoice();
+  const {
+    getAllPurchaseInvoices,
+    purchase,
+    editPurchaseInvoice,
+    deletePurchaseInvoice,
+  } = usePurchaseInvoice();
+  const { getAllSalesInvoices, sales, editSalesInvoice, deleteSalesInvoice } =
+    useSalesInvoice();
   const { materials, getMaterials } = useMaterial();
   const { customers, getAllCustomers } = useClient();
 
   const [invoiceType, setInvoiceType] = useState("purchase");
   const [editingInvoice, setEditingInvoice] = useState(null);
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState(""); // 🔍 ARAMA
 
@@ -126,6 +133,20 @@ export default function InvoicePage() {
     setForm(null);
   };
 
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    if (invoiceType === "purchase") {
+      await deletePurchaseInvoice(deleteTarget.id);
+      getAllPurchaseInvoices();
+    } else {
+      await deleteSalesInvoice(deleteTarget.id);
+      getAllSalesInvoices();
+    }
+
+    setDeleteTarget(null);
+  };
+
   return (
     <div className="max-w-7xl mx-auto mt-10 bg-white shadow-lg rounded-2xl p-6">
       {/* ------------------------------ */}
@@ -183,9 +204,16 @@ export default function InvoicePage() {
                   <td className="p-2 text-center">
                     <button
                       onClick={() => handleEdit(inv)}
-                      className="px-3 py-1 bg-yellow-500 text-white rounded-lg"
+                      className="px-3 py-1 bg-yellow-500 text-white rounded-lg mr-2"
                     >
                       Düzenle
+                    </button>
+                    {/* 🔥 SİLME BUTONU */}
+                    <button
+                      onClick={() => setDeleteTarget(inv)}
+                      className="px-3 py-1 bg-red-600 text-white rounded-lg mr-2"
+                    >
+                      Sil
                     </button>
                   </td>
                 </tr>
@@ -200,6 +228,37 @@ export default function InvoicePage() {
           </tbody>
         </table>
       </div>
+      {/* ------------------------------------------------ */}
+      {/*         🔥 SİLME ONAY MODALİ                    */}
+      {/* ------------------------------------------------ */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-xl w-[400px] shadow-xl text-center">
+            <h3 className="text-xl font-semibold mb-4">Fatura Silinsin mi?</h3>
+
+            <p className="mb-6 text-gray-600">
+              <strong>{deleteTarget.fileNo}</strong> numaralı faturayı silmek
+              istediğinize emin misiniz?
+            </p>
+
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 bg-gray-400 text-white rounded"
+              >
+                İptal
+              </button>
+
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded"
+              >
+                Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ------------------------------------------------ */}
       {/*                DÜZENLEME MODALİ */}

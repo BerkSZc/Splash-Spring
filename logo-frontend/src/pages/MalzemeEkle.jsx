@@ -48,8 +48,8 @@ export default function MaterialForm() {
 
   const filteredMaterials = materials.filter(
     (item) =>
-      item.code.toLowerCase().includes(search.toLowerCase()) ||
-      item.comment.toLowerCase().includes(search.toLowerCase())
+      item.code?.toLowerCase().includes(search.toLowerCase()) ||
+      item.comment?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (

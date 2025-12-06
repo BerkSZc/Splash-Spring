@@ -39,4 +39,10 @@ public class PurchaseInvoiceControllerControllerImpl implements IPurchaseInvoice
     public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice) {
         return purchaseInvoice.editPurchaseInvoice(id, newPurchaseInvoice);
     }
+
+    @Override
+    @DeleteMapping("/delete/{id}")
+    public void deletePurchaseInvoice(@PathVariable(name = "id") Long id) {
+         purchaseInvoice.deletePurchaseInvoice(id);
+    }
 }
