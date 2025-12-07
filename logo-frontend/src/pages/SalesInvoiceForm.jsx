@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMaterial } from "../../backend/store/useMaterial.js";
 import { useClient } from "../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../backend/store/useSalesInvoice.js";
+import MaterialPriceTooltip from "../components/MaterialPriceTooltip.jsx";
 
 export default function SalesInvoiceForm() {
   const { materials, getMaterials } = useMaterial();
@@ -187,13 +188,22 @@ export default function SalesInvoiceForm() {
                     </select>
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-2 flex items-center gap-1">
                     <input
                       type="number"
                       name="unitPrice"
                       value={item.unitPrice}
                       onChange={(e) => handleItemChange(i, e)}
                       className="w-full border p-2 rounded-lg"
+                    />
+                    <MaterialPriceTooltip
+                      materialId={item.materialId}
+                      onSelect={(price) =>
+                        handleItemChange(i, {
+                          target: { name: "unitPrice", value: price },
+                        })
+                      }
+                      disabled={!item.materialId}
                     />
                   </td>
 

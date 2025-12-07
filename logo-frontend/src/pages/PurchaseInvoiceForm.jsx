@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { usePurchaseInvoice } from "../../backend/store/usePurchaseInvoice.js";
 import { useMaterial } from "../../backend/store/useMaterial.js";
 import { useClient } from "../../backend/store/useClient.js";
+import MaterialPriceTooltip from "../components/MaterialPriceTooltip.jsx";
 
 export default function PurchaseInvoiceForm() {
   const { addPurchaseInvoice } = usePurchaseInvoice();
@@ -182,7 +183,7 @@ export default function PurchaseInvoiceForm() {
                         ))}
                       </select>
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 flex items-center gap-1">
                       <input
                         type="number"
                         step="0.01"
@@ -191,6 +192,15 @@ export default function PurchaseInvoiceForm() {
                         onChange={(e) => handleChangeItem(index, e)}
                         className="border rounded-lg p-1 w-full"
                         required
+                      />{" "}
+                      <MaterialPriceTooltip
+                        materialId={item.materialId}
+                        onSelect={(price) =>
+                          handleChangeItem(index, {
+                            target: { name: "unitPrice", value: price },
+                          })
+                        }
+                        disabled={!item.materialId}
                       />
                     </td>
                     <td className="p-2">

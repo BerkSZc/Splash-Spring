@@ -7,7 +7,7 @@ import SalesInvoiceForm from "./pages/SalesInvoiceForm";
 import ClientsPage from "./pages/ClientPage";
 import Invoice from "./pages/Invoice";
 import Collection from "./pages/Collection";
-import VaultOperations from "./pages/VaultOperations";
+import CombinedInvoiceForm from "./pages/CombinedInvoiceForm";
 
 function App() {
   return (
@@ -16,13 +16,15 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/malzeme-ekle" element={<MalzemeEkle />} />
         <Route path="/malzemeler" element={<MaterialList />} />
-        <Route path="/alma-fatura-ekle" element={<PurchaseInvoiceForm />} />
-        <Route path="/satis-fatura-ekle" element={<SalesInvoiceForm />} />
+
+        {/* <Route path="/alma-fatura-ekle" element={<PurchaseInvoiceForm />} />
+        <Route path="/satis-fatura-ekle" element={<SalesInvoiceForm />} /> */}
+
         <Route path="/musteriler" element={<ClientsPage />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/faturalar" element={<Invoice />} />
         <Route path="/tahsilatlar" element={<Collection />} />
-        <Route path="/kasa-islemleri" element={<VaultOperations />} />
+        <Route path="/faturalar-islemleri" element={<CombinedInvoiceForm />} />
       </Routes>
     </>
   );

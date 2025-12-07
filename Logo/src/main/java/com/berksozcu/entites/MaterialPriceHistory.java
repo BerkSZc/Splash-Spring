@@ -32,4 +32,7 @@ public class MaterialPriceHistory {
     @Column(name = "tarih")
     private LocalDate date;
 
+    @Column(name = "customer_name")
+    private String customerName;
+
 }

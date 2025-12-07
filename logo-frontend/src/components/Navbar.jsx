@@ -15,32 +15,35 @@ export default function Navbar() {
 
           {/* MENU (DESKTOP) */}
           <div className="hidden md:flex space-x-6">
-            <a href="#" className="hover:text-gray-300">
-              <Link to={"/malzeme-ekle"}>Malzeme Ekle</Link>
-            </a>
+            <Link className="hover:text-gray-300" to={"/malzeme-ekle"}>
+              Malzeme Ekle
+            </Link>
 
-            <a href="#" className="hover:text-gray-300">
+            {/* <a href="#" className="hover:text-gray-300">
               <Link to={"/alma-fatura-ekle"}>Satın Alma Faturası Ekle</Link>
             </a>
 
             <a href="#" className="hover:text-gray-300">
               <Link to={"/satis-fatura-ekle"}>Satış Faturası Ekle</Link>
-            </a>
+            </a> */}
 
-            <a href="#" className="hover:text-gray-300">
-              <Link to={"/tahsilatlar"}>Tahsilatlar</Link>
-            </a>
+            <Link className="hover:text-gray-300" to={"/tahsilatlar"}>
+              Tahsilatlar
+            </Link>
 
-            <a href="#" className="hover:text-gray-300">
-              <Link to={"/kasa-islemleri"}>Kasa İşlemleri</Link>
-            </a>
+            <Link className="hover:text-gray-300" to={"/faturalar-islemleri"}>
+              Fatura İşlemleri
+            </Link>
 
-            <a href="#" className="hover:text-gray-300">
-              <Link to={"/faturalar"}>Faturalar </Link>
-            </a>
-            <a href="#" className="hover:text-gray-300">
-              <Link to={"/musteriler"}> Müşteriler </Link>
-            </a>
+            <Link className="hover:text-gray-300" to={"/faturalar"}>
+              Faturalar{" "}
+            </Link>
+
+            <Link className="hover:text-gray-300" to={"/musteriler"}>
+              {" "}
+              Müşteriler{" "}
+            </Link>
+
             <a href="#" className="hover:text-gray-300">
               Ayarlar
             </a>

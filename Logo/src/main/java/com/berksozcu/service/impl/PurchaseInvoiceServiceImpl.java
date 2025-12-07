@@ -92,6 +92,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             history.setMaterial(item.getMaterial());
             history.setPrice(item.getUnitPrice());
             history.setDate(newPurchaseInvoice.getDate());
+            history.setCustomerName(customer.getName());
 
             materialPriceHistoryRepository.save(history);
 
@@ -99,10 +100,6 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 //            material.setLastPurchasePrice(item.getUnitPrice());
 //            materialRepository.save(material);
         }
-
-
-
-
 
         return newPurchaseInvoice;
     }

@@ -1,13 +1,11 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.entites.Customer;
-import com.berksozcu.entites.Material;
-import com.berksozcu.entites.SalesInvoice;
-import com.berksozcu.entites.SalesInvoiceItem;
+import com.berksozcu.entites.*;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
+import com.berksozcu.repository.MaterialPriceHistoryRepository;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.SalesInvoiceRepository;
 import com.berksozcu.service.ISalesInvoiceService;
@@ -36,6 +34,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private MaterialPriceHistoryRepository repository;
 
 
     @Override
@@ -77,6 +78,19 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         salesInvoiceRepository.save(salesInvoice);
         customerRepository.save(customer);
+
+        for(SalesInvoiceItem item : salesInvoice.getItems()) {
+            MaterialPriceHistory history = new MaterialPriceHistory();
+            history.setDate(salesInvoice.getDate());
+            history.setInvoiceType(InvoiceType.SALES);
+            history.setMaterial(item.getMaterial());
+            history.setCustomerName(customer.getName());
+            history.setPrice(item.getUnitPrice());
+            repository.save(history);
+        }
+
+
+
 
         return salesInvoice;
     }

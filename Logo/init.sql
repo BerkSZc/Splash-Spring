@@ -3,7 +3,7 @@ CREATE SCHEMA IF NOT EXISTS logo;
 ALTER ROLE postgres SET search_path TO logo, public;
 
 CREATE TABLE IF NOT EXISTS customer (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     name VARCHAR(255) NOT NULL,
     balance DECIMAL(15,2) DEFAULT 0,
     address VARCHAR(255),
@@ -28,7 +28,7 @@ CREATE TYPE unit_status AS ENUM ('KG', 'ADET', 'M');
 
 
 CREATE TABLE IF NOT EXISTS material (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     code VARCHAR(50) NOT NULL,
     comment VARCHAR(255),
     unit unit_status NOT NULL
@@ -44,7 +44,7 @@ VALUES
 -- 3. SATIN ALMA FATURASI TABLOSU
 -- ---------------------------
 CREATE TABLE IF NOT EXISTS purchase_invoice (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     fileNo VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
     customer BIGINT NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoice (
 -- 4. SATIN ALMA FATURA KALEMLERİ
 -- ---------------------------
 CREATE TABLE IF NOT EXISTS purchase_invoice_item (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     purchase_invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
     unit_price DECIMAL(15,2) NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_item (
 -- 5. SATIŞ FATURASI TABLOSU
 -- ---------------------------
 CREATE TABLE IF NOT EXISTS sales_invoice (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     fileNo VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
     customer BIGINT NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS sales_invoice (
 -- 6. SATIŞ FATURA KALEMLERİ
 -- ---------------------------
 CREATE TABLE IF NOT EXISTS sales_invoice_item (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     sales_invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
     unit_price DECIMAL(15,2) NOT NULL,
@@ -97,6 +97,21 @@ CREATE TABLE IF NOT EXISTS sales_invoice_item (
     FOREIGN KEY (sales_invoice_id) REFERENCES sales_invoice(id) ON DELETE CASCADE,
     FOREIGN KEY (material_id) REFERENCES material(id)
 );
+
+CREATE TYPE invoice_status AS ENUM ('PURCHASE', 'SALES');
+
+CREATE TABLE material_price_history (
+    id BIGSERIAL PRIMARY KEY,
+    material_id BIGINT,
+    fatura_tipi invoice_status,
+    fiyat DECIMAL(19,2),
+    tarih DATE,
+    customer_name VARCHAR(255),
+    CONSTRAINT fk_material_price_history_material
+        FOREIGN KEY (material_id) REFERENCES material(id)
+);
+
+
 
 -- ---------------------------
 -- Örnek Satın Alma Faturası
@@ -120,7 +135,7 @@ VALUES (1, 2, 150, 2, 300, 54);
 -- Şirketten Ödeme Alma Tablosu
 
 CREATE TABLE IF NOT EXISTS received_collection (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     date DATE NOT NULL,
     comment VARCHAR(255),
     price DECIMAL(15,2) NOT NULL,
@@ -132,7 +147,7 @@ CREATE TABLE IF NOT EXISTS received_collection (
 -- Şirkete Ödeme Tablosu
 
 CREATE TABLE IF NOT EXISTS payment_company (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGSERIAL PRIMARY KEY ,
     date DATE NOT NULL,
     comment VARCHAR(255),
     price DECIMAL(15,2) NOT NULL,
