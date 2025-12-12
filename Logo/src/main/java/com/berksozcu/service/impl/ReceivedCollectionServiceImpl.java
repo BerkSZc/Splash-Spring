@@ -37,6 +37,7 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         receivedCollection.setComment(receivedCollection.getComment());
         receivedCollection.setDate(receivedCollection.getDate());
         receivedCollection.setPrice(receivedCollection.getPrice());
+        receivedCollection.setCustomerName(receivedCollection.getCustomer().getName());
 
         customer.setBalance(customer.getBalance().subtract(receivedCollection.getPrice()));
 

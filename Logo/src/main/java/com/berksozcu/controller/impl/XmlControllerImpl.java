@@ -17,8 +17,6 @@ public class XmlControllerImpl implements IXmlController {
     @Autowired
     private XmlImportService importService;
 
-
-
     @Override
     @PostMapping("/purchase-invoice")
     public ResponseEntity<?> importInvoice(@RequestParam("file") MultipartFile file) {
@@ -46,6 +44,17 @@ public class XmlControllerImpl implements IXmlController {
     public ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file) {
         try {
             importService.importCustomers(file);
+            return ResponseEntity.ok("XML Faturaları başarıyla aktarıldı!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Hata: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @PostMapping("/collections")
+    public ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file) {
+        try {
+            importService.importCollections(file);
             return ResponseEntity.ok("XML Faturaları başarıyla aktarıldı!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Hata: " + e.getMessage());

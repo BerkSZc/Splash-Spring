@@ -7,12 +7,17 @@ export const usePaymentCompany = create((set) => ({
 
   addPayment: async (id, paymentCompany) => {
     try {
-      await axiosInstance.post(`/payment/add/${id}`, paymentCompany, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await axiosInstance.post(
+        `/payment/add/${id}`,
+        paymentCompany,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
       toast.success("Firmaya ödeme gerçekleştirildi");
+      set((state) => ({ payments: [...state.payments, res.data] }));
     } catch (error) {
       toast.error("Error at addPayment: " + error);
     }

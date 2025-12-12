@@ -1,13 +1,9 @@
 package com.berksozcu.service.xmlService;
 
-import com.berksozcu.entites.Customer;
-import com.berksozcu.entites.Material;
-import com.berksozcu.entites.PurchaseInvoice;
-import com.berksozcu.entites.PurchaseInvoiceItem;
+import com.berksozcu.entites.*;
 import com.berksozcu.entites.xmlEntity.*;
-import com.berksozcu.repository.CustomerRepository;
-import com.berksozcu.repository.MaterialRepository;
-import com.berksozcu.repository.PurchaseInvoiceRepository;
+import com.berksozcu.repository.*;
+import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -32,6 +30,13 @@ public class XmlImportService {
     @Autowired
     private MaterialRepository materialRepository;
 
+    @Autowired
+    private ReceivedCollectionRepository receivedCollectionRepository;
+
+    @Autowired
+    private PaymentCompanyRepository paymentCompanyRepository;
+
+    @Transactional
     public void importPurchaseInvoices(MultipartFile file) throws Exception {
 
         JAXBContext context = JAXBContext.newInstance(PurchaseInvoicesXml.class);
@@ -89,6 +94,7 @@ public class XmlImportService {
         }
     }
 
+    @Transactional
     public void importMaterials(MultipartFile file) throws Exception {
         JAXBContext context = JAXBContext.newInstance(ItemsXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -105,13 +111,14 @@ public class XmlImportService {
         }
     }
 
+    @Transactional
     public void importCustomers(MultipartFile file) throws Exception {
         JAXBContext context = JAXBContext.newInstance(CustomersXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
         CustomersXml customersXml = (CustomersXml) unmarshaller.unmarshal(file.getInputStream());
 
-        for(CustomerXml c : customersXml.getCustomers()) {
+        for (CustomerXml c : customersXml.getCustomers()) {
             Customer customer = new Customer();
 
             customer.setCode(c.getCODE());
@@ -128,9 +135,82 @@ public class XmlImportService {
         }
     }
 
+
+    @Transactional
+    public void importCollections(MultipartFile file) throws Exception {
+        JAXBContext context = JAXBContext.newInstance(CollectionsXml.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+
+        CollectionsXml collectionsXml = (CollectionsXml) unmarshaller.unmarshal(file.getInputStream());
+
+        for (CollectionXml c : collectionsXml.getCollections()) {
+
+            String arpCode = null;
+            if (c.getAttachmentArp() != null && c.getAttachmentArp().getTransaction() != null) {
+                arpCode = c.getAttachmentArp().getTransaction().getArpCode();
+            }
+
+            // TYPE 71 / 72 kayıtlarında ARP_CODE eksikse SD_CODE kullan
+            if (arpCode == null || arpCode.isBlank()) {
+                if (c.getTYPE() == 71 || c.getTYPE() == 72) {
+                    arpCode = c.getSD_CODE();
+                } else {
+                    System.out.println("ARP_CODE eksik, kayıt atlandı: " + c.getNUMBER());
+                    continue;
+                }
+            }
+
+            Customer customer = customerRepository.findByCode(arpCode).orElse(null);
+            if (customer == null) {
+                System.out.println("Müşteri bulunamadı: " + arpCode + " - kayıt: " + c.getNUMBER());
+                continue;
+            }
+
+            Date date;
+            try {
+                date = new SimpleDateFormat("dd.MM.yyyy").parse(c.getDATE());
+            } catch (Exception e) {
+                System.out.println("Hatalı tarih formatı: " + c.getDATE() + " - kayıt: " + c.getNUMBER());
+                continue;
+            }
+
+            BigDecimal total = parseBigDecimal(c.getAMOUNT());
+
+            Integer type = c.getTYPE();
+            String sdCode = c.getSD_CODE();
+            Integer sign = (c.getSIGN() == null ? 1 : c.getSIGN());
+
+            // --- AYRIM ---
+
+            if (type == 11) {
+                // Tahsilat
+                ReceivedCollection rc = new ReceivedCollection();
+                rc.setCustomer(customer);
+                rc.setDate(date);
+                rc.setPrice(total);
+                rc.setCustomerName(customer.getName());
+                rc.setComment(c.getDESCRIPTION());
+                receivedCollectionRepository.save(rc);
+
+            } else if (type == 12 && "2".equals(sdCode)) {
+                // Firmaya ödeme
+                PaymentCompany py = new PaymentCompany();
+                py.setCustomer(customer);
+                py.setDate(date);
+                py.setComment(c.getDESCRIPTION());
+                py.setCustomerName(customer.getName());
+                py.setPrice(total);
+                paymentCompanyRepository.save(py);
+
+            }
+
+        }
+    }
+
     private BigDecimal parseBigDecimal(String value) {
         if (value == null || value.isBlank()) return BigDecimal.ZERO;
         return new BigDecimal(value.replace(",", "."));
     }
+
 
 }

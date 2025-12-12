@@ -37,12 +37,16 @@ function App() {
         {/* <Route path="/alma-fatura-ekle" element={<PurchaseInvoiceForm />} />
         <Route path="/satis-fatura-ekle" element={<SalesInvoiceForm />} /> */}
 
-        <Route path="/musteriler" element={<ClientsPage />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/faturalar" element={<Invoice />} />
-        <Route path="/tahsilatlar" element={<Collection />} />
-        <Route path="/faturalar-islemleri" element={<CombinedInvoiceForm />} />
-        <Route path="/ekleme" element={<PurchaseInvoiceXmlImport />} />
+        <Route
+          path="/ekleme"
+          element={
+            isAuthenticated ? (
+              <PurchaseInvoiceXmlImport />
+            ) : (
+              <Navigate to={"/login"} />
+            )
+          }
+        />
         <Route
           path="/musteriler"
           element={

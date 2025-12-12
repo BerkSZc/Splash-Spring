@@ -12,4 +12,6 @@ public interface IXmlController {
     public ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file);
 
     public ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file);
+
+    public ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file);
 }

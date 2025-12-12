@@ -5,11 +5,16 @@ function XmlImportPage() {
   const invoiceInputRef = useRef(null);
   const materialInputRef = useRef(null);
   const customerInputRef = useRef(null);
+  const cashInputRef = useRef(null); // ← YENİ
 
   const [loading, setLoading] = useState(false);
 
-  const { importPurchaseInvoice, importMaterials, importCustomers } =
-    useImportXml();
+  const {
+    importPurchaseInvoice,
+    importMaterials,
+    importCustomers,
+    importCollections, // ← YENİ
+  } = useImportXml();
 
   // Tüm upload işlemleri tek fonksiyonda
   const upload = async (file, type) => {
@@ -23,6 +28,8 @@ function XmlImportPage() {
       await importMaterials(file);
     } else if (type === "customers") {
       await importCustomers(file);
+    } else if (type === "cash") {
+      await importCollections(file); // ← YENİ
     }
 
     setLoading(false);
@@ -80,9 +87,26 @@ function XmlImportPage() {
       <button
         onClick={() => customerInputRef.current.click()}
         disabled={loading}
-        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md"
+        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 mb-4 rounded-md"
       >
         {loading ? "Yükleniyor..." : "Cari XML Yükle"}
+      </button>
+
+      {/* KASA İŞLEMLERİ XML INPUT — YENİ */}
+      <input
+        type="file"
+        accept=".xml"
+        ref={cashInputRef}
+        className="hidden"
+        onChange={(e) => upload(e.target.files[0], "cash")}
+      />
+
+      <button
+        onClick={() => cashInputRef.current.click()}
+        disabled={loading}
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 mt-4 rounded-md"
+      >
+        {loading ? "Yükleniyor..." : "Kasa İşlemleri XML Yükle"}
       </button>
     </div>
   );

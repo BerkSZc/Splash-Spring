@@ -33,6 +33,9 @@ export default function CollectionPage() {
     getAllCustomers();
     getCollections();
     getPayments();
+
+    console.log("collections: " + collections);
+    console.log("Payments: " + payments);
   }, []);
 
   const shownList = type === "received" ? collections : payments;
@@ -106,10 +109,10 @@ export default function CollectionPage() {
 
     if (type === "received") {
       await editCollection(payload.id, payload);
-      getCollections();
+      await getCollections();
     } else {
       await editPayment(payload.id, payload);
-      getPayments();
+      await getPayments();
     }
 
     setEditing(null);
