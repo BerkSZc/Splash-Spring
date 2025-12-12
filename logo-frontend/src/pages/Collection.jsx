@@ -37,16 +37,18 @@ export default function CollectionPage() {
 
   const shownList = type === "received" ? collections : payments;
 
-  const filteredList = shownList.filter((item) => {
-    const text = search.toLowerCase();
+  const filteredList = (Array.isArray(shownList) ? shownList : []).filter(
+    (item) => {
+      const text = search.toLowerCase();
 
-    return (
-      item.customer?.name?.toLowerCase().includes(text) ||
-      item.comment?.toLowerCase().includes(text) ||
-      item.date?.toLowerCase().includes(text) ||
-      String(item.price).includes(text)
-    );
-  });
+      return (
+        item.customer?.name?.toLowerCase().includes(text) ||
+        item.comment?.toLowerCase().includes(text) ||
+        item.date?.toLowerCase().includes(text) ||
+        String(item.price).includes(text)
+      );
+    }
+  );
 
   const handleAdd = async () => {
     const payload = {

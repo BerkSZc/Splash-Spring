@@ -9,6 +9,6 @@ public class ErrorMessage {
     private MessageType messageType;
 
     public String prepareError() {
-        return "Hata Kodu:" + messageType.getCode().toString() + " " + messageType.getMessage();
+        return "Hata Kodu: " + messageType.getCode().toString() + " " + messageType.getMessage();
     }
 }

@@ -21,7 +21,7 @@ export default function InvoicePage() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const [searchTerm, setSearchTerm] = useState(""); // 🔍 ARAMA
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     getMaterials();
@@ -32,8 +32,9 @@ export default function InvoicePage() {
 
   const invoicesToDisplay = invoiceType === "purchase" ? purchase : sales;
 
-  // 🔍 Arama uygulanmış sonuçlar
-  const filteredInvoices = invoicesToDisplay?.filter((inv) => {
+  const filteredInvoices = (
+    Array.isArray(invoicesToDisplay) ? invoicesToDisplay : []
+  ).filter((inv) => {
     const term = searchTerm.toLowerCase();
 
     return (
@@ -208,7 +209,7 @@ export default function InvoicePage() {
                     >
                       Düzenle
                     </button>
-                    {/* 🔥 SİLME BUTONU */}
+                    {/*  SİLME BUTONU */}
                     <button
                       onClick={() => setDeleteTarget(inv)}
                       className="px-3 py-1 bg-red-600 text-white rounded-lg mr-2"
@@ -229,7 +230,7 @@ export default function InvoicePage() {
         </table>
       </div>
       {/* ------------------------------------------------ */}
-      {/*         🔥 SİLME ONAY MODALİ                    */}
+      {/*          SİLME                   */}
       {/* ------------------------------------------------ */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
@@ -261,7 +262,7 @@ export default function InvoicePage() {
       )}
 
       {/* ------------------------------------------------ */}
-      {/*                DÜZENLEME MODALİ */}
+      {/*                DÜZENLEME  */}
       {/* ------------------------------------------------ */}
       {editingInvoice && form && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">

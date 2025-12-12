@@ -87,7 +87,7 @@ export default function ClientsPage() {
         Müşteri Yönetimi
       </h2>
 
-      {/* 🔍 ARAMA ALANI */}
+      {/*  ARAMA ALANI */}
       <div className="mb-6">
         <input
           type="text"
@@ -204,7 +204,7 @@ export default function ClientsPage() {
         </div>
       </form>
 
-      {/* 📋 Liste */}
+      {/*  Liste */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm border border-gray-200 rounded-lg">
           <thead className="bg-gray-100">

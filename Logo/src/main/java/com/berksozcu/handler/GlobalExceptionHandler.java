@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiResponse<String>> handleBaseException(BaseException ex, WebRequest request) {
-        return ResponseEntity.ok(createApiError(ex.getMessage(), request));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createApiError(ex.getMessage(), request));
     }
 
 

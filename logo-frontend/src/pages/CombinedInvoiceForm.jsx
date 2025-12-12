@@ -230,11 +230,13 @@ export default function CombinedInvoiceForm() {
                         required
                       >
                         <option value="">Seçiniz</option>
-                        {materials.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.code} – {m.comment}
-                          </option>
-                        ))}
+                        {(Array.isArray(materials) ? materials : []).map(
+                          (m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.code} – {m.comment}
+                            </option>
+                          )
+                        )}
                       </select>
                     </td>
 

@@ -155,3 +155,10 @@ CREATE TABLE IF NOT EXISTS payment_company (
     customer_name VARCHAR(255),
     CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES customer(id)
 );
+
+-- Kullanıcı Tablosu
+CREATE TABLE IF NOT EXISTS logo_user(
+id BIGSERIAL PRIMARY KEY,
+username VARCHAR(255) NOT NULL,
+password VARCHAR(255) NOT NULL
+)

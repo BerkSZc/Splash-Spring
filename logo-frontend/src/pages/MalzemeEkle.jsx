@@ -47,7 +47,7 @@ export default function MaterialForm() {
     });
   };
 
-  const filteredMaterials = materials.filter(
+  const filteredMaterials = (Array.isArray(materials) ? materials : []).filter(
     (item) =>
       item.code?.toLowerCase().includes(search.toLowerCase()) ||
       item.comment?.toLowerCase().includes(search.toLowerCase())
@@ -145,6 +145,7 @@ export default function MaterialForm() {
               Aranan kritere uygun malzeme bulunamadı.
             </p>
           ) : (
+            Array.isArray(filteredMaterials) &&
             filteredMaterials.map((item) => (
               <div
                 key={item?._id}
