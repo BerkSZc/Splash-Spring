@@ -74,10 +74,14 @@ export default function MaterialPriceTooltip({
                   <p>
                     Fiyat: <strong>{currentItem.price?.toFixed(2)} ₺</strong>
                   </p>
+                  <p>
+                    Miktar: <strong>{currentItem.quantity} </strong>
+                  </p>
                   <p>Tarih: {currentItem.date}</p>
                   {currentItem.customerName && (
                     <p>Müşteri: {currentItem.customerName}</p>
                   )}
+
                   <p className="text-gray-400 text-sm">
                     {currentIndex + 1} / {history.length}
                   </p>

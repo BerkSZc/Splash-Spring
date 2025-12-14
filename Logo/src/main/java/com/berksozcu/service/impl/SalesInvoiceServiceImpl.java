@@ -90,6 +90,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             history.setMaterial(item.getMaterial());
             history.setCustomerName(customer.getName());
             history.setPrice(item.getUnitPrice());
+            history.setQuantity(item.getQuantity());
             repository.save(history);
         }
 

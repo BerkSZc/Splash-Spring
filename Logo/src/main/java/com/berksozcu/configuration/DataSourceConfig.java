@@ -21,15 +21,15 @@ public class DataSourceConfig {
 
         DataSource aDataSource = DataSourceBuilder.create()
                 .url("jdbc:postgresql://localhost:5432/postgres")
-                .username("${POSTGRES_USER}")
-                .password("${POSTGRES_PASSWORD}")
+                .username("postgres")
+                .password("1")
                 .driverClassName("org.postgresql.Driver")
                 .build();
 
         DataSource bDataSource = DataSourceBuilder.create()
                 .url("jdbc:postgresql://localhost:5432/postgres2")
-                .username("${POSTGRES_USER}")
-                .password("${POSTGRES_PASSWORD}")
+                .username("postgres")
+                .password("1")
                 .driverClassName("org.postgresql.Driver")
                 .build();
 

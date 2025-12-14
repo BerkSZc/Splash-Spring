@@ -127,6 +127,7 @@ public class XmlImportService {
                 materialPriceHistory.setInvoiceType(InvoiceType.PURCHASE);
                 materialPriceHistory.setCustomerName(customer.getName());
                 materialPriceHistory.setPrice(tx.getPRICE());
+                materialPriceHistory.setQuantity(tx.getQUANTITY());
 
                 materialPriceHistoryRepository.save(materialPriceHistory);
 
@@ -206,6 +207,7 @@ public class XmlImportService {
                 materialPriceHistory.setInvoiceType(InvoiceType.SALES);
                 materialPriceHistory.setCustomerName(customer.getName());
                 materialPriceHistory.setPrice(tx.getPRICE());
+                materialPriceHistory.setQuantity(tx.getQUANTITY());
 
                 materialPriceHistoryRepository.save(materialPriceHistory);
 

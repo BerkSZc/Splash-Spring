@@ -36,4 +36,7 @@ public class MaterialPriceHistory {
     //Müşteri İsmi
     private String customerName;
 
+    //Miktar
+    private BigDecimal quantity;
+
 }

@@ -4,6 +4,7 @@ import { useClient } from "../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../backend/store/usePurchaseInvoice.js";
 import MaterialPriceTooltip from "../components/MaterialPriceTooltip.jsx";
+import MaterialSearchSelect from "../MaterialSearchSelect.jsx";
 
 export default function CombinedInvoiceForm() {
   const [mode, setMode] = useState("sales"); // "sales" | "purchase"
@@ -218,26 +219,15 @@ export default function CombinedInvoiceForm() {
                 {salesForm.items.map((item, i) => (
                   <tr key={i} className="border-t">
                     <td className="p-3">
-                      <select
-                        name="materialId"
+                      <MaterialSearchSelect
+                        materials={materials}
                         value={item.materialId}
-                        onChange={(e) => {
+                        onChange={(id) => {
                           const updated = [...salesForm.items];
-                          updated[i].materialId = e.target.value;
+                          updated[i].materialId = id;
                           setSalesForm({ ...salesForm, items: updated });
                         }}
-                        className="w-full border p-2 rounded-lg"
-                        required
-                      >
-                        <option value="">Seçiniz</option>
-                        {(Array.isArray(materials) ? materials : []).map(
-                          (m, index) => (
-                            <option key={m.id || index} value={m.id}>
-                              {m.code} – {m.comment}
-                            </option>
-                          )
-                        )}
-                      </select>
+                      />
                     </td>
 
                     <td className="p-2 flex items-center gap-1">
@@ -448,26 +438,15 @@ export default function CombinedInvoiceForm() {
                 {purchaseForm.items.map((item, i) => (
                   <tr key={i} className="border-t">
                     <td className="p-3">
-                      <select
+                      <MaterialSearchSelect
+                        materials={materials}
                         value={item.materialId}
-                        onChange={(e) => {
-                          const updated = [...purchaseForm.items];
-                          updated[i].materialId = e.target.value;
-                          setPurchaseForm({
-                            ...purchaseForm,
-                            items: updated,
-                          });
+                        onChange={(id) => {
+                          const updated = [...salesForm.items];
+                          updated[i].materialId = id;
+                          setSalesForm({ ...salesForm, items: updated });
                         }}
-                        className="w-full border p-2 rounded-lg"
-                        required
-                      >
-                        <option value="">Seçiniz</option>
-                        {materials.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.code} – {m.comment}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
 
                     <td className="p-2 flex items-center gap-1">

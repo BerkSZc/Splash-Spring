@@ -98,6 +98,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             history.setPrice(item.getUnitPrice());
             history.setDate(newPurchaseInvoice.getDate());
             history.setCustomerName(customer.getName());
+            history.setQuantity(item.getQuantity());
 
             materialPriceHistoryRepository.save(history);
 
