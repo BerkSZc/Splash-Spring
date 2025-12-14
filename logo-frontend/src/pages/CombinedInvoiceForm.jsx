@@ -4,7 +4,7 @@ import { useClient } from "../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../backend/store/usePurchaseInvoice.js";
 import MaterialPriceTooltip from "../components/MaterialPriceTooltip.jsx";
-import MaterialSearchSelect from "../MaterialSearchSelect.jsx";
+import MaterialSearchSelect from "../components/MaterialSearchSelect.jsx";
 
 export default function CombinedInvoiceForm() {
   const [mode, setMode] = useState("sales"); // "sales" | "purchase"

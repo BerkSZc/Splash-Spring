@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthentication } from "../../backend/store/useAuthentication";
 import { useTenant } from "../context/TenantContext.jsx";
+import { useYear } from "../YearContext.jsx";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,8 @@ export default function Navbar() {
   const { logout, isAuthenticated } = useAuthentication();
 
   const { tenant, changeTenant } = useTenant();
+
+  const { year, changeYear } = useYear();
 
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem("theme") === "dark";
@@ -125,9 +128,25 @@ export default function Navbar() {
               <select
                 value={tenant}
                 onChange={(e) => changeTenant(e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded"
               >
                 <option value="A">A Şirketi</option>
                 <option value="B">B Şirketi</option>
+              </select>
+            </div>
+          )}
+
+          {/* Yıl */}
+          {isAuthenticated && (
+            <div className="ml-4">
+              <select
+                value={year}
+                onChange={(e) => changeYear(e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded"
+              >
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
               </select>
             </div>
           )}
