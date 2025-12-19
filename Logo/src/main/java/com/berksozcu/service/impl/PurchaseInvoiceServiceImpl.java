@@ -44,6 +44,10 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
+        if(customer.isArchived()) {
+            throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
         newPurchaseInvoice.setCustomer(customer);
 
         BigDecimal totalPrice = BigDecimal.ZERO;

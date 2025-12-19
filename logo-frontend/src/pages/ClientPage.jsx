@@ -2,8 +2,13 @@ import { useEffect, useState, useRef } from "react";
 import { useClient } from "../../backend/store/useClient";
 
 export default function ClientsPage() {
-  const { customers, getAllCustomers, addCustomer, updateCustomer } =
-    useClient();
+  const {
+    customers,
+    getAllCustomers,
+    addCustomer,
+    updateCustomer,
+    setArchived,
+  } = useClient();
 
   const formRef = useRef(null); // Form için ref
 
@@ -19,6 +24,8 @@ export default function ClientsPage() {
 
   const [editClient, setEditClient] = useState(null);
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     getAllCustomers();
@@ -51,6 +58,8 @@ export default function ClientsPage() {
   };
 
   const handleEdit = (customer) => {
+    if (customer.archived) return;
+
     setEditClient(customer);
     setForm({
       name: customer.name || "",
@@ -80,10 +89,19 @@ export default function ClientsPage() {
   };
 
   const filteredCustomers = Array.isArray(customers)
-    ? customers.filter((c) =>
-        c.name?.toLowerCase().includes(search.toLowerCase())
-      )
+    ? customers
+        .filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
+        .filter((c) => (showArchived ? c.archived : !c.archived))
     : [];
+
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
+  const handleArchiveToggle = async (customer) => {
+    await setArchived(customer.id, !customer.archived);
+    setOpenMenuId(null);
+  };
 
   return (
     <div className="max-w-7xl mx-auto mt-10 bg-white p-6 shadow rounded-2xl">
@@ -92,7 +110,7 @@ export default function ClientsPage() {
       </h2>
 
       {/*  ARAMA ALANI */}
-      <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
         <input
           type="text"
           placeholder="Müşteri ara..."
@@ -100,6 +118,15 @@ export default function ClientsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="border rounded-lg p-2 w-64"
         />
+
+        <button
+          onClick={() => setShowArchived(!showArchived)}
+          className={`px-4 py-2 rounded-lg text-white ${
+            showArchived ? "bg-gray-600" : "bg-indigo-600"
+          }`}
+        >
+          {showArchived ? "Aktif Müşteriler" : "Arşivdekiler"}
+        </button>
       </div>
 
       {/* 🧾 Yeni / Düzenle Formu */}
@@ -108,86 +135,26 @@ export default function ClientsPage() {
         onSubmit={handleSubmit}
         className="grid grid-cols-3 gap-4 items-end mb-8"
       >
-        <div>
-          <label className="block text-sm text-gray-600">Müşteri Unvanı</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Bakiye</label>
-          <input
-            type="number"
-            step="0.01"
-            name="balance"
-            value={form.balance}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Ülke</label>
-          <input
-            type="text"
-            name="country"
-            value={form.country}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">İl</label>
-          <input
-            type="text"
-            name="local"
-            value={form.local}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">İlçe</label>
-          <input
-            type="text"
-            name="district"
-            value={form.district}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Adres</label>
-          <input
-            type="text"
-            name="address"
-            value={form.address}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">
-            Vergi Dairesi No
-          </label>
-          <input
-            type="number"
-            name="vdNo"
-            value={form.vdNo}
-            onChange={handleChange}
-            className="border rounded-lg w-full p-2"
-          />
-        </div>
+        {[
+          ["name", "Müşteri Unvanı"],
+          ["balance", "Bakiye"],
+          ["country", "Ülke"],
+          ["local", "İl"],
+          ["district", "İlçe"],
+          ["address", "Adres"],
+          ["vdNo", "Vergi Dairesi No"],
+        ].map(([key, label]) => (
+          <div key={key}>
+            <label className="block text-sm text-gray-600">{label}</label>
+            <input
+              type={key === "balance" || key === "vdNo" ? "number" : "text"}
+              name={key}
+              value={form[key]}
+              onChange={handleChange}
+              className="border rounded-lg w-full p-2"
+            />
+          </div>
+        ))}
 
         <div className="col-span-3 flex gap-3 mt-2">
           <button
@@ -228,7 +195,14 @@ export default function ClientsPage() {
           <tbody>
             {filteredCustomers.length > 0 ? (
               filteredCustomers.map((c) => (
-                <tr key={c.id} className="border-t hover:bg-gray-50">
+                <tr
+                  key={c.id}
+                  className={`border-t ${
+                    c.archived
+                      ? "bg-gray-100 text-gray-400"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
                   <td className="p-2">{c.name}</td>
                   <td className="p-2">{c.country}</td>
                   <td className="p-2">{c.local}</td>
@@ -238,13 +212,35 @@ export default function ClientsPage() {
                   <td className="p-2 text-right">
                     {Number(c.balance || 0).toFixed(2)}
                   </td>
-                  <td className="p-2 text-center">
+
+                  {/* 3 NOKTA MENÜ */}
+                  <td className="p-2 text-center relative">
                     <button
-                      onClick={() => handleEdit(c)}
-                      className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                      onClick={() => toggleMenu(c.id)}
+                      className="text-xl px-2 hover:bg-gray-200 rounded"
                     >
-                      Düzenle
+                      ⋮
                     </button>
+
+                    {openMenuId === c.id && (
+                      <div className="absolute right-6 top-8 bg-white border rounded-lg shadow-lg w-40 z-50">
+                        {!c.archived && (
+                          <button
+                            onClick={() => handleEdit(c)}
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                          >
+                            Düzenle
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleArchiveToggle(c)}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                          {c.archived ? " Arşivden Çıkar" : " Arşivle"}
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))

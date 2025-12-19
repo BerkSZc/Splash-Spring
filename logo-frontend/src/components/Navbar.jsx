@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthentication } from "../../backend/store/useAuthentication";
 import { useTenant } from "../context/TenantContext.jsx";
-import { useYear } from "../YearContext.jsx";
+import { useYear } from "../context/YearContext.jsx";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);

@@ -30,6 +30,10 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
                 () -> new RuntimeException("User not found")
         );
 
+        if(customer.isArchived()) {
+            throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
         paymentCompany.setCustomer(customer);
 
         paymentCompany.setCustomerName(customer.getName());
@@ -88,5 +92,15 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
 
 
         return paymentCompanyRepository.save(oldPayment);
+    }
+
+    @Override
+    @Transactional
+    public void deletePaymentCompany(Long id) {
+        PaymentCompany paymentCompany = paymentCompanyRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
+        Customer customer = paymentCompany.getCustomer();
+        customer.setBalance(customer.getBalance().add(paymentCompany.getPrice()));
+        customerRepository.save(customer);
+        paymentCompanyRepository.deleteById(id);
     }
 }

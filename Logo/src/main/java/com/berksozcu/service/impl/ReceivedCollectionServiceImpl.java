@@ -31,6 +31,10 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
                 () -> new RuntimeException("Customer not found")
         );
 
+        if(customer.isArchived()) {
+            throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
         receivedCollection.setCustomer(customer);
 
         receivedCollection.setId(receivedCollection.getId());
@@ -60,11 +64,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         ReceivedCollection oldCollection = receivedCollectionRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI)));
 
-        Customer customer = customerRepository.findById(oldCollection.getCustomer().getId())
-                        .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+        Customer customer = oldCollection.getCustomer();
 
-        Customer newCustomer = customerRepository.findById(receivedCollection.getCustomer().getId())
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+        Customer newCustomer = receivedCollection.getCustomer();
 
         boolean sameCustomer = customer.getId().equals(newCustomer.getId());
 
@@ -89,4 +91,17 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
 
         return receivedCollectionRepository.save(oldCollection);
     }
+
+    @Override
+    @Transactional
+    public void deleteReceivedCollection(Long id) {
+        ReceivedCollection receivedCollection = receivedCollectionRepository.findById(id).orElseThrow(
+                () -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI))
+        );
+        Customer customer = receivedCollection.getCustomer();
+        customer.setBalance(customer.getBalance().add(receivedCollection.getPrice()));
+        customerRepository.save(customer);
+        receivedCollectionRepository.deleteById(id);
+    }
 }
+

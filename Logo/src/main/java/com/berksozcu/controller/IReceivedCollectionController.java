@@ -10,4 +10,5 @@ public interface IReceivedCollectionController {
     public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection);
     public List<ReceivedCollection> getAll();
     public ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection);
+    public void deleteReceivedCollection(@PathVariable(name = "id") Long id);
 }

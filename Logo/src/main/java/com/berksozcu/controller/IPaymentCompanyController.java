@@ -10,4 +10,5 @@ public interface IPaymentCompanyController {
     public PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany);
     public List<PaymentCompany> getAll();
     public PaymentCompany editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany);
+    public void deletePaymentCompany(@PathVariable(name = "id") Long id);
 }

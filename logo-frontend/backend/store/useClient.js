@@ -10,7 +10,9 @@ export const useClient = create((set, get) => ({
       const res = await axiosInstance.get("/customer/list");
       set({ customers: res.data.data });
     } catch (error) {
-      toast.error("Error at getAllClient:" + error.message);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at getAllClient:" + backendErr);
     }
   },
   addCustomer: async (customer) => {
@@ -19,7 +21,9 @@ export const useClient = create((set, get) => ({
       toast.success("Musteri eklendi");
       await get().getAllCustomers();
     } catch (error) {
-      toast.error("Error at addCustomer:" + error.message);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at addCustomer:" + backendErr);
     }
   },
 
@@ -37,7 +41,23 @@ export const useClient = create((set, get) => ({
       toast.success("Müşteri değiştirildi");
       await get().getAllCustomers();
     } catch (error) {
-      toast.error("Error at updateCustomer:" + error.message);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at updateCustomer:" + backendErr);
+    }
+  },
+
+  setArchived: async (id, archived) => {
+    try {
+      await axiosInstance.put(`/customer/archive/${id}?archived=${archived}`);
+      toast.success(
+        archived ? "Müşteri arşivlendi" : "Müşteri arşivden çıkartıldı"
+      );
+      await get().getAllCustomers();
+    } catch (error) {
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at setArchived: " + backendErr);
     }
   },
 }));

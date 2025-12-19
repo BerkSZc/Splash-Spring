@@ -43,4 +43,14 @@ export const usePaymentCompany = create((set) => ({
       toast.error("Error at editPayment: " + error);
     }
   },
+  deletePaymentCompany: async (id) => {
+    try {
+      await axiosInstance.delete(`/payment/delete/${id}`);
+      toast.success("Ödeme başarıyla silindi");
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error("Error at deletePayment: " + backendErr);
+    }
+  },
 }));

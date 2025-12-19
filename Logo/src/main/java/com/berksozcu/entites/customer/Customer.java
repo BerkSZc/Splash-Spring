@@ -43,5 +43,8 @@ import java.math.BigDecimal;
         //
         private String vdNo;
 
+        @Column(nullable = false)
+        private boolean archived = false;
+
     }
 

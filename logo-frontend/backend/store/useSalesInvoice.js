@@ -14,7 +14,9 @@ export const useSalesInvoice = create((set) => ({
       });
       toast.success("Fatura eklendi");
     } catch (error) {
-      toast.error("Error at addSalesInvoice: " + error);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at addSalesInvoice: " + backendErr);
     }
   },
 
@@ -23,7 +25,9 @@ export const useSalesInvoice = create((set) => ({
       const res = await axiosInstance.get("/sales/all");
       set({ sales: res.data });
     } catch (error) {
-      toast.error("Error at getAllSalesInvoices:" + error);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at getAllSalesInvoices:" + backendErr);
     }
   },
 
@@ -36,7 +40,9 @@ export const useSalesInvoice = create((set) => ({
       });
       toast.success("Fatura değiştirildi");
     } catch (error) {
-      toast.error("Error at editPurchaseInvoice:" + error);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at editPurchaseInvoice:" + backendErr);
     }
   },
 
@@ -45,7 +51,9 @@ export const useSalesInvoice = create((set) => ({
       await axiosInstance.delete(`/sales/delete/${id}`);
       toast.success("Fatura başarıyla silindi");
     } catch (error) {
-      toast.error("Error at deleteSalesInvoice: " + error);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at deleteSalesInvoice: " + backendErr);
     }
   },
 }));

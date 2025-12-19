@@ -8,4 +8,5 @@ public interface IReceivedCollectionService {
     public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection);
     public List<ReceivedCollection> getAll();
     public ReceivedCollection editReceivedCollection(Long id, ReceivedCollection receivedCollection);
+    public void deleteReceivedCollection(Long id);
 }

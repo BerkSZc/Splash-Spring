@@ -5,15 +5,31 @@ import { usePaymentCompany } from "../../backend/store/usePaymentCompany.js";
 
 export default function CollectionPage() {
   const { customers, getAllCustomers } = useClient();
-  const { collections, getCollections, addCollection, editCollection } =
-    useReceivedCollection();
-  const { payments, getPayments, addPayment, editPayment } =
-    usePaymentCompany();
+  const {
+    collections,
+    getCollections,
+    addCollection,
+    editCollection,
+    deleteReceivedCollection,
+  } = useReceivedCollection();
+  const {
+    payments,
+    getPayments,
+    addPayment,
+    editPayment,
+    deletePaymentCompany,
+  } = usePaymentCompany();
 
   const [type, setType] = useState("received"); // received | payment
   const [editing, setEditing] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
 
   const [addForm, setAddForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -116,6 +132,19 @@ export default function CollectionPage() {
     }
 
     setEditing(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    if (type === "received") {
+      await deleteReceivedCollection(deleteTarget.id);
+      await getCollections();
+    } else {
+      await deletePaymentCompany(deleteTarget.id);
+      await getPayments();
+    }
+    setDeleteTarget(null);
   };
 
   return (
@@ -238,18 +267,42 @@ export default function CollectionPage() {
         <tbody>
           {filteredList?.length ? (
             filteredList.map((c) => (
-              <tr key={c.id} className="border-t hover:bg-gray-50">
+              <tr key={c.id} className="border-t hover:bg-gray-50 ">
                 <td className="p-2">{c.date}</td>
                 <td className="p-2 text-center">{c.customer?.name}</td>
                 <td className="p-2">{c.comment}</td>
                 <td className="p-2 text-center">{c.price} ₺</td>
-                <td className="p-2 text-center">
+                <td className="p-2 text-center relative">
                   <button
-                    onClick={() => handleEdit(c)}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg"
+                    onClick={() => toggleMenu(c.id)}
+                    className="text-xl px-2 py-1 hover:bg-gray-200 rounded"
                   >
-                    Düzenle
+                    ⋮
                   </button>
+
+                  {openMenuId === c.id && (
+                    <div className="absolute right-6 top-8 bg-white border rounded-lg shadow-lg w-36 z-50">
+                      <button
+                        onClick={() => {
+                          handleEdit(c);
+                          setOpenMenuId(null);
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Düzenle
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setDeleteTarget(c);
+                          setOpenMenuId(null);
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))
@@ -262,6 +315,38 @@ export default function CollectionPage() {
           )}
         </tbody>
       </table>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[400px] shadow-xl">
+            <h2 className="text-lg font-semibold mb-4 text-red-600">
+              Kaydı Sil
+            </h2>
+
+            <p className="mb-6 text-gray-700">
+              <b>{deleteTarget.customer?.name}</b> için olan{" "}
+              <b>{deleteTarget.price} ₺</b> tutarındaki kaydı silmek
+              istediğinize emin misiniz?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 bg-gray-400 text-white rounded"
+              >
+                Vazgeç
+              </button>
+
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded"
+              >
+                Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ------------------------
             DÜZENLEME MODALI

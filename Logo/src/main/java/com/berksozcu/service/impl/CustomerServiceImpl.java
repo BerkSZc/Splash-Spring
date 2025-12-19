@@ -67,8 +67,30 @@ public class CustomerServiceImpl implements ICustomerService {
         }
 
         Customer customer = optional.get();
-
+            if(customer.isArchived()) {
+                throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+            }
         modelMapper.map(updateCustomer, customer);
         customerRepository.save(customer);
     }
+
+    @Override
+    public List<Customer> findByArchivedTrue() {
+        return customerRepository.findByArchivedTrue();
+    }
+
+    @Override
+    public List<Customer> findByArchivedFalse() {
+        return customerRepository.findByArchivedFalse();
+    }
+
+    @Override
+    public void setArchived(Long id, boolean archived) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+
+        customer.setArchived(archived);
+        customerRepository.save(customer);
+    }
 }
+

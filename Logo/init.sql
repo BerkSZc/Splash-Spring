@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS customer (
     local VARCHAR(100),
     district VARCHAR(100),
     vdNo VARCHAR(50),
-    customer_code VARCHAR(255)
+    customer_code VARCHAR(255),
+    archived BOOLEAN NOT NULL DEFAULT FALSE;
 );
 
 -- Örnek müşteriler
