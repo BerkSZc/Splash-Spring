@@ -22,10 +22,16 @@ export default function ClientsPage() {
     vdNo: "",
   });
 
+  const [archiveAction, setArchiveAction] = useState("archive");
+
+  const [contextMenu, setContextMenu] = useState(null);
+
   const [editClient, setEditClient] = useState(null);
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
 
   useEffect(() => {
     getAllCustomers();
@@ -103,6 +109,38 @@ export default function ClientsPage() {
     setOpenMenuId(null);
   };
 
+  const handleCheckboxChange = (customerId) => {
+    setSelectedCustomers((prev) =>
+      prev.includes(customerId)
+        ? prev.filter((id) => id !== customerId)
+        : [...prev, customerId]
+    );
+  };
+
+  const handleArchiveModal = async () => {
+    const archivedValue = archiveAction === "archive";
+
+    if (selectedCustomers.length < 2) return;
+
+    for (const id of selectedCustomers) {
+      await setArchived(id, archivedValue);
+    }
+
+    setSelectedCustomers([]);
+    setShowArchiveModal(false);
+    setOpenMenuId(null);
+  };
+
+  useEffect(() => {
+    setSelectedCustomers([]);
+    setContextMenu(null);
+    setOpenMenuId(null);
+  }, [showArchived]);
+
+  const selectedList = filteredCustomers.filter((c) =>
+    selectedCustomers.includes(c.id)
+  );
+
   return (
     <div className="max-w-7xl mx-auto mt-10 bg-white p-6 shadow rounded-2xl">
       <h2 className="text-2xl font-semibold text-gray-700 mb-6">
@@ -129,7 +167,7 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      {/* 🧾 Yeni / Düzenle Formu */}
+      {/* Düzenle Formu */}
       <form
         ref={formRef} // Form ref burada
         onSubmit={handleSubmit}
@@ -181,6 +219,7 @@ export default function ClientsPage() {
         <table className="w-full text-sm border border-gray-200 rounded-lg">
           <thead className="bg-gray-100">
             <tr>
+              <th className="p-2 text-center w-10"></th>
               <th className="p-2 text-left">Unvan</th>
               <th className="p-2 text-left">Ülke</th>
               <th className="p-2 text-left">İl</th>
@@ -197,12 +236,33 @@ export default function ClientsPage() {
               filteredCustomers.map((c) => (
                 <tr
                   key={c.id}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setContextMenu({
+                      x: e.clientX,
+                      y: e.clientY,
+                      customer: c,
+                    });
+
+                    if (selectedCustomers.length === 0) {
+                      setSelectedCustomers([c.id]);
+                    }
+                  }}
                   className={`border-t ${
                     c.archived
                       ? "bg-gray-100 text-gray-400"
                       : "hover:bg-gray-50"
                   }`}
                 >
+                  <td className="p-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedCustomers.includes(c.id)}
+                      onChange={() => handleCheckboxChange(c.id)}
+                      // disabled={c.archived} // arşivdekiler seçilemesin
+                    />
+                  </td>
                   <td className="p-2">{c.name}</td>
                   <td className="p-2">{c.country}</td>
                   <td className="p-2">{c.local}</td>
@@ -232,7 +292,26 @@ export default function ClientsPage() {
                             Düzenle
                           </button>
                         )}
-
+                        <button
+                          onClick={() => {
+                            setArchiveAction(
+                              showArchived ? "unarchive" : "archive"
+                            );
+                            setShowArchiveModal(true);
+                          }}
+                          disabled={selectedCustomers.length < 2}
+                          className={`block w-full text-left px-4 py-2 border-t
+                                  ${
+                                    selectedCustomers.length < 2
+                                      ? "text-gray-400 cursor-not-allowed"
+                                      : "hover:bg-gray-100 text-indigo-600 font-medium"
+                                  }
+                                `}
+                        >
+                          {c.archived
+                            ? "Seçilenleri Arşivden Çıkart"
+                            : "Seçilenleri Arşivle"}
+                        </button>
                         <button
                           onClick={() => handleArchiveToggle(c)}
                           className="block w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -256,6 +335,89 @@ export default function ClientsPage() {
             )}
           </tbody>
         </table>
+
+        {showArchiveModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-xl w-[420px] shadow-xl text-center">
+              <h3 className="text-xl font-semibold mb-4">
+                Müşteriler{" "}
+                {archiveAction === "unarchive"
+                  ? "Arşivden çıkartılsın mı?"
+                  : "Arşivlensin mi?"}
+              </h3>
+
+              <p className="mb-6 text-gray-600">
+                <strong>{selectedCustomers.length}</strong> adet müşteri
+                {archiveAction === "unarchive"
+                  ? " arşivden çıkartılacak"
+                  : " arşivlenecek"}
+                . . Devam etmek istiyor musunuz?
+              </p>
+
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => setShowArchiveModal(false)}
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                >
+                  Vazgeç
+                </button>
+
+                <button
+                  onClick={handleArchiveModal}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                >
+                  Devam et
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {contextMenu && (
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => setContextMenu(null)}
+          >
+            <div
+              style={{ top: contextMenu.y, left: contextMenu.x }}
+              className="absolute bg-white border rounded-lg shadow-lg w-48"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 1 SEÇİM VARSA */}
+              {selectedCustomers.length === 1 && (
+                <button
+                  onClick={() => {
+                    const customer = selectedList[0];
+                    handleEdit(customer);
+                    setContextMenu(null);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Düzenle
+                </button>
+              )}
+
+              {/* 1 VEYA FAZLA SEÇİM */}
+              {selectedCustomers.length >= 1 && (
+                <button
+                  onClick={() => {
+                    setArchiveAction(
+                      selectedList.every((c) => c.archived)
+                        ? "unarchive"
+                        : "archive"
+                    );
+                    setShowArchiveModal(true);
+                    setContextMenu(null);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  {selectedList.every((c) => c.archived)
+                    ? "Seçilenleri Arşivden Çıkar"
+                    : "Seçilenleri Arşivle"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

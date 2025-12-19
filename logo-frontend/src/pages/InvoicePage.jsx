@@ -350,7 +350,7 @@ export default function InvoicePage() {
 
               <tbody>
                 {form.items.map((item, i) => (
-                  <tr key={i}>
+                  <tr key={item.materialId + "-" + i}>
                     <td className="p-2">
                       <select
                         name="materialId"

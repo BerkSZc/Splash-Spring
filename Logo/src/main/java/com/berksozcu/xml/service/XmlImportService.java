@@ -250,7 +250,7 @@ public class XmlImportService {
             if (existing.isPresent()) {
                 // istersek sadece boş alanları doldururuz
                 Material material = existing.get();
-                if (material.getComment() == null) {
+                if (material.getComment() == null || material.getComment().isBlank()) {
                     material.setComment(m.getNAME());
                 }
             } else {
