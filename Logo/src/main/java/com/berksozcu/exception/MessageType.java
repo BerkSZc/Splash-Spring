@@ -15,6 +15,7 @@ public enum MessageType {
     ARP_BILGISI_EKSIK(1009, "ARP bilgisi Eksik"),
     ARP_KODU_BOS(1010, "ARP kodu boş"),
     YANLIS_SIFRE(1011, "Şifreniz yanlış"),
+    ARSIV_MUSTERI(1012, "Arşivdeki müşteriye işlem yapılamaz"),
     SIFRE_HATA(1008, "Şifre en az 8 karakter olmalı"),
     ODEME_BULUNAMADI(1005, "Ödeme bulunamadı"),
     FATURA_BULUNAMADI(1003, "Fatura bulunamadı");

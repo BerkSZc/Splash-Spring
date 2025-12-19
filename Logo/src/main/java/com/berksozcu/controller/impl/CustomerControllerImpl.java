@@ -45,4 +45,9 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
     public void updateCustomer(@PathVariable(name = "id") Long id, @RequestBody Customer updateCustomer) {
         customerService.updateCustomer(id, updateCustomer);
     }
+
+    @PutMapping("/archive/{id}")
+    public void setArchived(@PathVariable(name = "id") Long id, @RequestParam boolean archived) {
+        customerService.setArchived(id, archived);
+    }
 }

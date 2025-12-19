@@ -34,4 +34,10 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
         return paymentCompanyService.editPaymentCompany(id, paymentCompany);
     }
 
+    @Override
+    @DeleteMapping("/delete/{id}")
+    public void deletePaymentCompany(@PathVariable(name = "id") Long id) {
+         paymentCompanyService.deletePaymentCompany(id);
+    }
+
 }

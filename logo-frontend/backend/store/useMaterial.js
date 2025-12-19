@@ -11,7 +11,9 @@ export const useMaterial = create((set, get) => ({
       toast.success("Malzeme eklendi");
       await get().getMaterials();
     } catch (error) {
-      toast.error("Error at addMaterial: ", error.message);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at addMaterial: ", backendErr);
     }
   },
 
@@ -20,7 +22,9 @@ export const useMaterial = create((set, get) => ({
       const res = await axiosInstance.get("/material/list");
       set({ materials: res.data });
     } catch (error) {
-      toast.error("Error at getMaterials:", error.message);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at getMaterials:", backendErr);
     }
   },
 
@@ -47,7 +51,9 @@ export const useMaterial = create((set, get) => ({
       toast.success("malzeme değiştirildi");
       await get().getMaterials();
     } catch (error) {
-      toast.error("Error at updateMaterials: ", error.message);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at updateMaterials: ", backendErr);
     }
   },
 }));

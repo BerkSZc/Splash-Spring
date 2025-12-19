@@ -48,6 +48,10 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice) {
         Customer customer = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer Not Found"));
 
+        if(customer.isArchived()) {
+            throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
         salesInvoice.setCustomer(customer);
 
         BigDecimal totalPrice = BigDecimal.ZERO;

@@ -32,4 +32,10 @@ public class ReceivedCollectionControllerImpl implements IReceivedCollectionCont
     public ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection) {
         return receivedCollectionService.editReceivedCollection(id, receivedCollection);
     }
+
+    @Override
+    @DeleteMapping("/delete/{id}")
+    public void deleteReceivedCollection(@PathVariable(name = "id") Long id) {
+        receivedCollectionService.deleteReceivedCollection(id);
+    }
 }

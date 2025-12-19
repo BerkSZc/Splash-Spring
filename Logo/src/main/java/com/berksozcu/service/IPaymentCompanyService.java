@@ -8,4 +8,5 @@ public interface IPaymentCompanyService {
     public PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany);
     public List<PaymentCompany> getAll();
     public PaymentCompany editPaymentCompany(Long id, PaymentCompany paymentCompany);
+    public void deletePaymentCompany(Long id);
 }

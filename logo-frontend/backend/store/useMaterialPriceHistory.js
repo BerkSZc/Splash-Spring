@@ -12,7 +12,9 @@ export const useMaterialPriceHistory = create((set) => ({
       );
       set({ history: res.data });
     } catch (error) {
-      toast.error("Error at getHistoryByType: " + error);
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at getHistoryByType: " + backendErr);
     }
   },
 }));

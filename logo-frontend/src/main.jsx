@@ -7,7 +7,7 @@ import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar.jsx";
 import TokenWatcher from "../backend/lib/TokenWatcher.js";
 import { TenantProvider } from "./context/TenantContext.jsx";
-import { YearProvider } from "./YearContext.jsx";
+import { YearProvider } from "./context/YearContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

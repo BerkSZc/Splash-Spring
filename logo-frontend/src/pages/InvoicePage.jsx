@@ -23,6 +23,8 @@ export default function InvoicePage() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [openMenuId, setOpenMenuId] = useState(null);
+
   useEffect(() => {
     getMaterials();
     getAllCustomers();
@@ -149,6 +151,10 @@ export default function InvoicePage() {
     setDeleteTarget(null);
   };
 
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
   return (
     <div className="max-w-7xl mx-auto mt-10 bg-white shadow-lg rounded-2xl p-6">
       {/* ------------------------------ */}
@@ -205,20 +211,37 @@ export default function InvoicePage() {
                   <td className="p-2 text-center">
                     {inv.totalPrice?.toFixed(2)} ₺
                   </td>
-                  <td className="p-2 text-center">
+                  <td className="p-2 text-center relative">
                     <button
-                      onClick={() => handleEdit(inv)}
-                      className="px-3 py-1 bg-yellow-500 text-white rounded-lg mr-2"
+                      onClick={() => toggleMenu(inv.id)}
+                      className="text-xl px-2 py-1 rounded hover:bg-gray-200"
                     >
-                      Düzenle
+                      ⋮
                     </button>
-                    {/*  SİLME BUTONU */}
-                    <button
-                      onClick={() => setDeleteTarget(inv)}
-                      className="px-3 py-1 bg-red-600 text-white rounded-lg mr-2"
-                    >
-                      Sil
-                    </button>
+
+                    {openMenuId === inv.id && (
+                      <div className="absolute right-6 top-8 bg-white border rounded-lg shadow-lg w-40 z-50">
+                        <button
+                          onClick={() => {
+                            handleEdit(inv);
+                            setOpenMenuId(null);
+                          }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                          Düzenle
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setDeleteTarget(inv);
+                            setOpenMenuId(null);
+                          }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                        >
+                          Sil
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))

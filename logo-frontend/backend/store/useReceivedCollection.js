@@ -39,4 +39,14 @@ export const useReceivedCollection = create((set) => ({
       toast.error("Error at editCollections: " + error);
     }
   },
+  deleteReceivedCollection: async (id) => {
+    try {
+      await axiosInstance.delete(`/receive/delete/${id}`);
+      toast.success("Tahsilat başarıyla silindi");
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error("Error at deleteReceivedCollection: " + backendErr);
+    }
+  },
 }));
