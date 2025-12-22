@@ -442,9 +442,9 @@ export default function CombinedInvoiceForm() {
                         materials={materials}
                         value={item.materialId}
                         onChange={(id) => {
-                          const updated = [...salesForm.items];
+                          const updated = [...purchaseForm.items];
                           updated[i].materialId = id;
-                          setSalesForm({ ...salesForm, items: updated });
+                          setSalesForm({ ...purchaseForm, items: updated });
                         }}
                       />
                     </td>
