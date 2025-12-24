@@ -56,4 +56,14 @@ export const useSalesInvoice = create((set) => ({
       toast.error("Error at deleteSalesInvoice: " + backendErr);
     }
   },
+
+  getSalesInvoicesByYear: async (year) => {
+    try {
+      await axiosInstance.get(`/sales/find-date/${year}`);
+    } catch (error) {
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at getInvoicesByYear: " + backendErr);
+    }
+  },
 }));

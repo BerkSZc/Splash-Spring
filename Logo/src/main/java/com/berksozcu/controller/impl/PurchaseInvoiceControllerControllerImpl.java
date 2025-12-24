@@ -45,4 +45,10 @@ public class PurchaseInvoiceControllerControllerImpl implements IPurchaseInvoice
     public void deletePurchaseInvoice(@PathVariable(name = "id") Long id) {
          purchaseInvoice.deletePurchaseInvoice(id);
     }
+
+    @Override
+    @GetMapping("/find-year/{year}")
+    public List<PurchaseInvoice> getPurchaseInvoiceByYear(@PathVariable int year) {
+        return purchaseInvoice.getPurchaseInvoiceByDateBetween(year);
+    }
 }

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -211,6 +212,13 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         customerRepository.save(customer);
 
         purchaseInvoiceRepository.deleteById(id);
+    }
+
+    @Override
+    public List<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int year) {
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+        return purchaseInvoiceRepository.findByDateBetween(start, end);
     }
 
 }

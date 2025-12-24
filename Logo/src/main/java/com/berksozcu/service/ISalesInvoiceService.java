@@ -9,4 +9,5 @@ public interface ISalesInvoiceService {
     public List<SalesInvoice> getAllSalesInvoice();
     public SalesInvoice editSalesInvoice( Long id, SalesInvoice salesInvoice);
     public void deleteSalesInvoice(Long id);
+    public List<SalesInvoice> getSalesInvoicesByYear(int year);
 }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuthentication } from "../../backend/store/useAuthentication";
 import { useTenant } from "../context/TenantContext.jsx";
 import { useYear } from "../context/YearContext.jsx";
+import YearDropdown from "./YearDropdown.jsx";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +13,7 @@ export default function Navbar() {
 
   const { tenant, changeTenant } = useTenant();
 
-  const { year, changeYear } = useYear();
+  const { year } = useYear();
 
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem("theme") === "dark";
@@ -101,6 +102,13 @@ export default function Navbar() {
                     Profil
                   </Link>
 
+                  <Link
+                    to="/devir"
+                    className="block px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
+                  >
+                    Devir İşlemleri
+                  </Link>
+
                   {/* DARK MODE TOGGLE */}
                   <button
                     onClick={toggleTheme}
@@ -121,6 +129,13 @@ export default function Navbar() {
               )}
             </div>
           </div>
+          {isAuthenticated && (
+            <nav className="flex justify-between items-center px-6 py-3 ">
+              <div className="flex items-center gap-4">
+                <YearDropdown />
+              </div>
+            </nav>
+          )}
 
           {/* Şirket Seçimi */}
           {!isAuthenticated && (
@@ -132,21 +147,6 @@ export default function Navbar() {
               >
                 <option value="A">A Şirketi</option>
                 <option value="B">B Şirketi</option>
-              </select>
-            </div>
-          )}
-
-          {/* Yıl */}
-          {isAuthenticated && (
-            <div className="ml-4">
-              <select
-                value={year}
-                onChange={(e) => changeYear(e.target.value)}
-                className="bg-gray-700 text-white px-2 py-1 rounded"
-              >
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
               </select>
             </div>
           )}

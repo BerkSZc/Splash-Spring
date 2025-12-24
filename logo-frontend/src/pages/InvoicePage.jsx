@@ -3,6 +3,7 @@ import { usePurchaseInvoice } from "../../backend/store/usePurchaseInvoice";
 import { useSalesInvoice } from "../../backend/store/useSalesInvoice";
 import { useMaterial } from "../../backend/store/useMaterial";
 import { useClient } from "../../backend/store/useClient";
+import { useYear } from "../context/YearContext";
 
 export default function InvoicePage() {
   const {
@@ -10,9 +11,15 @@ export default function InvoicePage() {
     purchase,
     editPurchaseInvoice,
     deletePurchaseInvoice,
+    getPurchaseInvoiceByYear,
   } = usePurchaseInvoice();
-  const { getAllSalesInvoices, sales, editSalesInvoice, deleteSalesInvoice } =
-    useSalesInvoice();
+  const {
+    getAllSalesInvoices,
+    sales,
+    editSalesInvoice,
+    deleteSalesInvoice,
+    getSalesInvoicesByYear,
+  } = useSalesInvoice();
   const { materials, getMaterials } = useMaterial();
   const { customers, getAllCustomers } = useClient();
 
@@ -25,12 +32,21 @@ export default function InvoicePage() {
 
   const [openMenuId, setOpenMenuId] = useState(null);
 
+  const { year } = useYear();
+
+  console.log("Seçili Yıl: " + year);
+
   useEffect(() => {
+    if (!year) return;
     getMaterials();
     getAllCustomers();
-    getAllPurchaseInvoices();
-    getAllSalesInvoices();
-  }, []);
+
+    if (invoiceType == "purchase") {
+      getPurchaseInvoiceByYear(year);
+    } else {
+      getSalesInvoicesByYear(year);
+    }
+  }, [year, invoiceType]);
 
   const invoicesToDisplay = invoiceType === "purchase" ? purchase : sales;
 

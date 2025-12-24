@@ -12,4 +12,5 @@ public interface IPurchaseInvoiceController {
     public List<PurchaseInvoice> getAllPurchaseInvoice();
     public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice);
     public void deletePurchaseInvoice(@PathVariable(name = "id") Long id);
+    public List<PurchaseInvoice> getPurchaseInvoiceByYear(@PathVariable int year);
 }

@@ -11,4 +11,5 @@ public interface ISalesInvoiceController {
     public List<SalesInvoice> getAllSalesInvoice();
     public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice);
     public void deleteSalesInvoice(@PathVariable(name = "id") Long id);
+    public List<SalesInvoice> getSalesInvoiceByYear(@PathVariable(name = "year") int year);
 }

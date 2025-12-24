@@ -56,4 +56,14 @@ export const usePurchaseInvoice = create((set) => ({
       toast.error("Error at deletePurchaseInvoice: " + backendErr);
     }
   },
+  getPurchaseInvoiceByYear: async (year) => {
+    try {
+      const res = await axiosInstance.get(`/purchase/find-year/${year}`);
+      set({ purchase: res.data });
+    } catch (error) {
+      const backendErr =
+        error.response.data.exception.message || "Bilinmeyen Hata";
+      toast.error("Error at getPurchaseInvoiceByYear: " + backendErr);
+    }
+  },
 }));

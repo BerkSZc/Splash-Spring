@@ -39,4 +39,9 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
         salesInvoiceService.deleteSalesInvoice(id);
     }
 
+    @Override
+    @GetMapping("/find-date/{year}")
+    public List<SalesInvoice> getSalesInvoiceByYear(@PathVariable(name = "year") int year) {
+        return salesInvoiceService.getSalesInvoicesByYear(year);
+    }
 }

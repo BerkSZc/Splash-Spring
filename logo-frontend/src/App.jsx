@@ -11,6 +11,7 @@ import CombinedInvoiceForm from "./pages/CombinedInvoiceForm";
 import { useAuthentication } from "../backend/store/useAuthentication";
 import AuthPage from "./authentication/AuthPage";
 import XmlImportPage from "./pages/XmlImportPage";
+import TransferOperationPage from "./pages/TransferOperationPage";
 
 function App() {
   const { isAuthenticated } = useAuthentication();
@@ -18,6 +19,17 @@ function App() {
   return (
     <>
       <Routes>
+        <Route
+          path="/devir"
+          element={
+            !isAuthenticated ? (
+              <Navigate to={"/home"} />
+            ) : (
+              <TransferOperationPage />
+            )
+          }
+        />
+
         <Route
           path="/login"
           element={isAuthenticated ? <Navigate to={"/home"} /> : <AuthPage />}

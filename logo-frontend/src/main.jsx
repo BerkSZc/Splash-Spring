@@ -8,17 +8,20 @@ import Navbar from "./components/Navbar.jsx";
 import TokenWatcher from "../backend/lib/TokenWatcher.js";
 import { TenantProvider } from "./context/TenantContext.jsx";
 import { YearProvider } from "./context/YearContext.jsx";
+import DisableContextMenu from "./context/DisableContextMenu.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <TenantProvider>
-        <YearProvider>
-          <TokenWatcher />
-          <Navbar />
-          <App />
-          <Toaster />
-        </YearProvider>
+        <DisableContextMenu>
+          <YearProvider>
+            <TokenWatcher />
+            <Navbar />
+            <App />
+            <Toaster />
+          </YearProvider>
+        </DisableContextMenu>
       </TenantProvider>
     </BrowserRouter>
   </StrictMode>

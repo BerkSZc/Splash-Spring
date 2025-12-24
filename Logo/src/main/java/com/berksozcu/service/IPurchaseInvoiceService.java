@@ -10,4 +10,5 @@ public interface IPurchaseInvoiceService {
     public List<PurchaseInvoice> getAllPurchaseInvoice();
     public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice);
     public void deletePurchaseInvoice(Long id);
+    public List<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int year);
 }
