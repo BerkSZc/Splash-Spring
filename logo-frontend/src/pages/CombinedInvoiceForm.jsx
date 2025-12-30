@@ -87,7 +87,7 @@ export default function CombinedInvoiceForm() {
 
   const addItem = (formType) => {
     const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
-    setter((prev) => ({ ...prev, items: [...prev.items, { ...initialItem }] }));
+    setter((prev) => ({ ...prev, items: [...prev.items, { ...initalItem }] }));
   };
 
   const removeItem = (formType, index) => {

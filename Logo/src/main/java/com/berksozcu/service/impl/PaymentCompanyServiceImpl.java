@@ -101,7 +101,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     public void deletePaymentCompany(Long id) {
         PaymentCompany paymentCompany = paymentCompanyRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
         Customer customer = paymentCompany.getCustomer();
-        customer.setBalance(customer.getBalance().add(paymentCompany.getPrice()));
+        customer.setBalance(customer.getBalance().subtract(paymentCompany.getPrice()));
         customerRepository.save(customer);
         paymentCompanyRepository.deleteById(id);
     }
