@@ -68,6 +68,9 @@ export default function Navbar() {
             <Link className="hover:text-gray-300" to={"/faturalar"}>
               Faturalar
             </Link>
+            <Link className="hover:text-gray-300" to={"/payroll"}>
+              Çek-Senet İşlemleri
+            </Link>
 
             <Link className="hover:text-gray-300" to={"/ekleme"}>
               Araçlar{" "}
@@ -106,13 +109,6 @@ export default function Navbar() {
 
               {settingsOpen && (
                 <div className="absolute right-0 mt-2 bg-gray-700 dark:bg-gray-800 shadow-lg rounded-md w-40 py-2 z-50">
-                  <Link
-                    to="/profil"
-                    className="block px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
-                  >
-                    Profil
-                  </Link>
-
                   <Link
                     to="/devir"
                     className="block px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"

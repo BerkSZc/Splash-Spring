@@ -1,6 +1,6 @@
 package com.berksozcu.configuration;
 
-import com.berksozcu.context.TenantContext;
+import com.berksozcu.tenant.TenantContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.springframework.stereotype.Component;
 

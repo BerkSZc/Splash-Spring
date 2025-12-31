@@ -23,12 +23,17 @@ public class CompanyController {
         String schemaName = request.get("id"); // React'teki newCompData.id
         String companyName = request.get("name");
         String description = request.get("desc");
+        String sourceSchema = request.get("sourceSchema");
         if(companyName == null || companyName.isEmpty() || schemaName == null || schemaName.isEmpty()) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_HATA));
         }
 
+        if(sourceSchema == null || sourceSchema.isEmpty()) {
+            sourceSchema = "logo";
+        }
+
         try {
-            companyService.createNewTenantSchema(schemaName, companyName, description);
+            companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema);
             return ResponseEntity.ok("Şema '" + schemaName + "' başarıyla oluşturuldu.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Şema oluşturma hatası: " + e.getMessage());

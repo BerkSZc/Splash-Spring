@@ -13,4 +13,6 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     List<PurchaseInvoice> findAllByCustomerId(Long id);
 
     List<PurchaseInvoice> findByDateBetween(LocalDate start, LocalDate end);
+
+    boolean existsByFileNo(String fileNo);
 }

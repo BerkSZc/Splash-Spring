@@ -28,6 +28,8 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Token süresi dolmuş
+      localStorage.clear();
+
       localStorage.removeItem("token");
       window.location.href = "/login"; // otomatik yönlendirme
     }

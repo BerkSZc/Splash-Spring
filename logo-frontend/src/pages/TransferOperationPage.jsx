@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useYear } from "../context/YearContext";
 import { useTenant } from "../context/TenantContext.jsx";
-import { useAuthentication } from "../../backend/store/useAuthentication.js";
 import { useCompany } from "../../backend/store/useCompany.js";
 import toast from "react-hot-toast";
 
 const TransferOperationPage = () => {
   const { year, years, changeYear, addYear, removeYear } = useYear();
   const { tenant, changeTenant } = useTenant();
-  const { isAuthenticated } = useAuthentication();
 
   // useCompany store'undan gerekli fonksiyonları ve şirket listesini alıyoruz
   const { addCompany, getAllCompanies, companies, isLoading } = useCompany();
@@ -23,7 +21,7 @@ const TransferOperationPage = () => {
   // 1. ADIM: Sayfa yüklendiğinde mevcut şirketleri DB'den çek
   useEffect(() => {
     getAllCompanies();
-  }, []);
+  }, [addCompany, companies]);
 
   const handleAddYear = () => {
     if (newYear.trim() && !years.includes(Number(newYear))) {

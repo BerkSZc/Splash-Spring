@@ -1,4 +1,4 @@
-package com.berksozcu.context;
+package com.berksozcu.tenant;
 
 public class TenantContext {
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();

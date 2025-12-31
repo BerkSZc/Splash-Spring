@@ -22,8 +22,14 @@ export const useCompany = create((set, get) => ({
   },
 
   addCompany: async (companyData) => {
+    const currentTenant = localStorage.getItem("tenant") || "logo";
+
+    const finalData = {
+      ...companyData,
+      sourceSchema: currentTenant,
+    };
     try {
-      await axiosInstance.post("/company/create", companyData, {
+      await axiosInstance.post("/company/create", finalData, {
         headers: {
           "Content-Type": "application/json",
         },

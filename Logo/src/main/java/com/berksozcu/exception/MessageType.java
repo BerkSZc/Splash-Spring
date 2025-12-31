@@ -17,6 +17,8 @@ public enum MessageType {
     SIRKET_KODU_MEVCUT(1014, "Şirket kodu mevcut farklı bir kod kullanın."),
     YANLIS_SIFRE(1011, "Şifreniz yanlış"),
     ARSIV_MUSTERI(1012, "Arşivdeki müşteriye işlem yapılamaz"),
+    FATURA_NO_MEVCUT(1015, "Fatura No Mevcut"),
+    BORDRO_HATA(1014, "Bordo işlemi bulunamadı"),
     SIRKET_HATA(1013, "Şirket kodu veya adı boş olamaz"),
     SIFRE_HATA(1008, "Şifre en az 8 karakter olmalı"),
     ODEME_BULUNAMADI(1005, "Ödeme bulunamadı"),
