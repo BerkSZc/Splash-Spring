@@ -150,6 +150,10 @@ public class XmlImportService {
 
             invoice.setItems(itemList);
 
+            BigDecimal currentBalance = customer.getBalance() != null ? customer.getBalance() : BigDecimal.ZERO;
+            customer.setBalance(currentBalance.subtract(invoice.getTotalPrice()));
+
+            customerRepository.save(customer);
             // Cascade ALL sayesinde item'lar otomatik kaydedilir
             invoiceRepository.save(invoice);
         }
@@ -225,6 +229,11 @@ public class XmlImportService {
                 item.setSalesInvoice(invoice);
 
             }
+            BigDecimal currentBalance = customer.getBalance() != null ? customer.getBalance() : BigDecimal.ZERO;
+// Satış faturası tutarını bakiyeye ekliyoruz
+            customer.setBalance(currentBalance.add(invoice.getTotalPrice()));
+
+            customerRepository.save(customer); // Müşteriyi güncelle
             invoice.setItems(itemList);
             salesInvoiceRepository.save(invoice);
         }
@@ -281,7 +290,9 @@ public class XmlImportService {
             customer.setDistrict(c.getDISTRICT());
             customer.setAddress(c.getADDRESS1());
 
-            customer.setBalance(parseBigDecimal(c.getACC_RISK_TOTAL()));
+            BigDecimal initialRisk = parseBigDecimal(c.getACC_RISK_TOTAL());
+        customer.setOpeningBalance(initialRisk);
+        customer.setBalance(initialRisk);
             customer.setVdNo(c.getTAX_ID());
 
             customerRepository.save(customer);
@@ -343,6 +354,9 @@ public class XmlImportService {
                 rc.setPrice(total);
                 rc.setCustomerName(customer.getName());
                 rc.setComment(c.getDESCRIPTION());
+                customer.setBalance(customer.getBalance().subtract(total));
+                customerRepository.save(customer);
+                receivedCollectionRepository.save(rc);
                 receivedCollectionRepository.save(rc);
 
             } else if (type == 12 && "2".equals(sdCode)) {
@@ -353,6 +367,9 @@ public class XmlImportService {
                 py.setComment(c.getDESCRIPTION());
                 py.setCustomerName(customer.getName());
                 py.setPrice(total);
+                customer.setBalance(customer.getBalance().add(total));
+                customerRepository.save(customer);
+                paymentCompanyRepository.save(py);
                 paymentCompanyRepository.save(py);
 
             }

@@ -21,7 +21,7 @@ const TransferOperationPage = () => {
   // 1. ADIM: Sayfa yüklendiğinde mevcut şirketleri DB'den çek
   useEffect(() => {
     getAllCompanies();
-  }, [addCompany, companies]);
+  }, []);
 
   const handleAddYear = () => {
     if (newYear.trim() && !years.includes(Number(newYear))) {

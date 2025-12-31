@@ -35,12 +35,20 @@ public class PayrollServiceImpl implements IPayrollService {
         Customer customer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
+        Payroll payroll = new Payroll();
 
-        newPayroll.setCustomer(customer);
+        payroll.setCustomer(customer);
+        payroll.setAmount(newPayroll.getAmount());
+        payroll.setFileNo(newPayroll.getFileNo());
+        payroll.setExpiredDate(newPayroll.getExpiredDate());
+        payroll.setTransactionDate(newPayroll.getTransactionDate());
+        payroll.setPayrollModel(newPayroll.getPayrollModel());
+        payroll.setPayrollType(newPayroll.getPayrollType());
+
         updateBalance(customer, newPayroll);
 
         customerRepository.save(customer);
-        return payrollRepository.save(newPayroll);
+        return payrollRepository.save(payroll);
     }
 
     @Transactional

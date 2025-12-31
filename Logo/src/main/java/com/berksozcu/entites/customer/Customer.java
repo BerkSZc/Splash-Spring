@@ -21,6 +21,9 @@ import java.math.BigDecimal;
         @Column(name = "customer_code")
         private String code;
 
+        @Column(name = "opening_balance")
+        private BigDecimal openingBalance;
+
         //Müşteri Unvanı
         private String name;
 

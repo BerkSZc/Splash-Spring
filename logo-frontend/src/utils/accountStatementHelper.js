@@ -14,13 +14,16 @@ export const accountStatementHelper = (
   // 1. AÇILIŞ FİŞİ (Mevcut Bakiye)
   // undefined hatasını engellemek için year kontrolü
   const displayYear = year || new Date().getFullYear();
-  if (selectedCustomer.balance && Number(selectedCustomer.balance) !== 0) {
-    const bal = Number(selectedCustomer.balance);
+  if (
+    selectedCustomer.openingBalance &&
+    Number(selectedCustomer.openingBalance) !== 0
+  ) {
+    const openingBal = Number(selectedCustomer.openingBalance);
     combined.push({
       date: `01.01.${displayYear}`,
       desc: "Açılış Fişi",
-      debit: bal > 0 ? bal : 0,
-      credit: bal < 0 ? Math.abs(bal) : 0,
+      debit: openingBal > 0 ? openingBal : 0,
+      credit: openingBal < 0 ? Math.abs(openingBal) : 0,
     });
   }
 

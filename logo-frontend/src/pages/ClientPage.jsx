@@ -127,6 +127,11 @@ export default function ClientsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const payload = { ...form };
+    if (!editClient) {
+      payload.balance = form.openingBalance;
+    }
+
     if (editClient) {
       updateCustomer(editClient.id, form);
       setEditClient(null);
@@ -135,6 +140,7 @@ export default function ClientsPage() {
     }
     setForm({
       name: "",
+      openingBalance: 0,
       balance: 0,
       address: "",
       country: "",
@@ -305,7 +311,8 @@ export default function ClientsPage() {
           >
             {[
               ["name", "Müşteri Unvanı", "text"],
-              ["balance", "Açılış Bakiyesi", "number"],
+              ["openingBalance", "Açılış Bakiyesi (Devir)", "number"],
+              ["balance", "Güncel Bakiye", "number"],
               ["country", "Ülke", "text"],
               ["local", "İl", "text"],
               ["district", "İlçe", "text"],
@@ -320,8 +327,6 @@ export default function ClientsPage() {
                   name={key}
                   value={form[key]}
                   onChange={handleChange}
-                  required={key !== "balance"}
-                  disabled={key === "balance"}
                   className="w-full bg-gray-900/60 border-2 border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none
                    [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
