@@ -85,6 +85,19 @@ export default function CombinedInvoiceForm() {
     });
   };
 
+  const resetForm = () => {
+    const initialForm = {
+      date: new Date().toISOString().slice(0, 10),
+      fileNo: "",
+      customerId: "",
+      items: [{ ...initalItem }],
+    };
+
+    // Hangi moddaysak onu veya her ikisini birden temizleyebilirsin
+    setSalesForm(initialForm);
+    setPurchaseForm(initialForm);
+  };
+
   const addItem = (formType) => {
     const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
     setter((prev) => ({ ...prev, items: [...prev.items, { ...initalItem }] }));
@@ -115,6 +128,9 @@ export default function CombinedInvoiceForm() {
     const payload = {
       date: currentForm.date,
       fileNo: currentForm.fileNo,
+      // KDV toplamını backend'e açıkça gönderin
+      kdvToplam: isSales ? salesCalculation.kdv : purchaseCalculation.kdv,
+      totalPrice: isSales ? salesCalculation.total : purchaseCalculation.total,
       ...(isSales ? { customer: { id: Number(currentForm.customerId) } } : {}),
       items: currentForm.items.map((i) => ({
         material: { id: Number(i.materialId) },
@@ -124,12 +140,20 @@ export default function CombinedInvoiceForm() {
       })),
     };
 
-    if (isSales) {
-      await addSalesInvoice(Number(currentForm.customerId), payload);
-      getSalesInvoicesByYear(year);
-    } else {
-      await addPurchaseInvoice(Number(currentForm.customerId), payload);
-      getPurchaseInvoiceByYear(year);
+    try {
+      if (isSales) {
+        await addSalesInvoice(Number(currentForm.customerId), payload);
+        getSalesInvoicesByYear(year);
+      } else {
+        await addPurchaseInvoice(Number(currentForm.customerId), payload);
+        getPurchaseInvoiceByYear(year);
+      }
+      resetForm();
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message ||
+        "Fatura kaydedilirken bir hata oluştu.";
+      toast.error(backendErr);
     }
   };
 

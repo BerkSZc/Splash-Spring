@@ -7,6 +7,7 @@ import { useReceivedCollection } from "../../backend/store/useReceivedCollection
 import { useYear } from "../context/YearContext";
 import { accountStatementHelper } from "../utils/accountStatementHelper";
 import { generateStatementHTML } from "../utils/statementPrintHelpers";
+import { usePayroll } from "../../backend/store/usePayroll";
 
 export default function ClientsPage() {
   const {
@@ -18,7 +19,6 @@ export default function ClientsPage() {
   } = useClient();
 
   const formRef = useRef(null);
-  const closeMenuRef = useRef(null);
 
   const [archiveAction, setArchiveAction] = useState("archive");
   const [contextMenu, setContextMenu] = useState(null);
@@ -39,6 +39,7 @@ export default function ClientsPage() {
   const { purchase, getPurchaseInvoiceByYear } = usePurchaseInvoice();
   const { payments, getPaymentCollectionsByYear } = usePaymentCompany();
   const { collections, getReceivedCollectionsByYear } = useReceivedCollection();
+  const { payrolls, getPayrollByYear } = usePayroll();
   const { year } = useYear();
 
   useEffect(() => {
@@ -51,26 +52,41 @@ export default function ClientsPage() {
   };
 
   const handleOpenStatement = async (customer) => {
+    setSelectedCustomerForStatement(customer);
     setOpenMenuId(null);
+
     await Promise.all([
       getSalesInvoicesByYear(year),
       getPurchaseInvoiceByYear(year),
       getPaymentCollectionsByYear(year),
       getReceivedCollectionsByYear(year),
+      getPayrollByYear(year),
     ]);
 
-    const data = accountStatementHelper(
-      customer,
-      sales,
-      purchase,
-      payments,
-      collections,
-      year
-    );
-    setStatementData(data);
-    setSelectedCustomerForStatement(customer);
     setShowPrintModal(true);
   };
+  useEffect(() => {
+    if (selectedCustomerForStatement && year) {
+      const data = accountStatementHelper(
+        selectedCustomerForStatement,
+        sales,
+        purchase,
+        payments,
+        collections,
+        payrolls,
+        year
+      );
+      setStatementData(data);
+    }
+  }, [
+    selectedCustomerForStatement,
+    sales,
+    purchase,
+    payments,
+    collections,
+    payrolls,
+    year,
+  ]);
 
   const handleStatementPrint = () => {
     if (!selectedCustomerForStatement) return;
@@ -304,7 +320,8 @@ export default function ClientsPage() {
                   name={key}
                   value={form[key]}
                   onChange={handleChange}
-                  required
+                  required={key !== "balance"}
+                  disabled={key === "balance"}
                   className="w-full bg-gray-900/60 border-2 border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none
                    [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />

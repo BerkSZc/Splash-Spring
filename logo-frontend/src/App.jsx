@@ -11,6 +11,7 @@ import { useAuthentication } from "../backend/store/useAuthentication";
 import AuthPage from "./authentication/AuthPage";
 import XmlImportPage from "./pages/XmlImportPage";
 import TransferOperationPage from "./pages/TransferOperationPage";
+import PayrollTransactionsPage from "./pages/PayrollTransactionsPage";
 
 function App() {
   const { isAuthenticated } = useAuthentication();
@@ -46,6 +47,17 @@ function App() {
           path="/musteriler"
           element={
             isAuthenticated ? <ClientsPage /> : <Navigate to={"/login"} />
+          }
+        />
+
+        <Route
+          path="/payroll"
+          element={
+            isAuthenticated ? (
+              <PayrollTransactionsPage />
+            ) : (
+              <Navigate to={"/login"} />
+            )
           }
         />
         <Route

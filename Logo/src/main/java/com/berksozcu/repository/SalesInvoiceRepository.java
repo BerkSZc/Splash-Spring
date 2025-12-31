@@ -11,4 +11,6 @@ import java.util.List;
 public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long> {
     List<SalesInvoice> findByDateBetween(LocalDate start, LocalDate end);
 
+    boolean existsByFileNo(String fileNo);
+
 }

@@ -43,10 +43,14 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     @Transactional
     public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
         if(customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
+        if(purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
         newPurchaseInvoice.setCustomer(customer);

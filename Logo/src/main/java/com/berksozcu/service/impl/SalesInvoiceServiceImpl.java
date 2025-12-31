@@ -47,10 +47,15 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     @Override
     @Transactional
     public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice) {
-        Customer customer = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer Not Found"));
+        Customer customer = customerRepository.findById(id).orElseThrow(
+                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
         if(customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
+        if(salesInvoiceRepository.existsByFileNo(salesInvoice.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
         salesInvoice.setCustomer(customer);

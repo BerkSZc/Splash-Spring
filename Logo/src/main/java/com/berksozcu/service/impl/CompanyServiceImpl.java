@@ -27,7 +27,8 @@ public class CompanyServiceImpl implements ICompanyService {
     private CompanyRepository companyRepository;
 
     @Override
-    public void createNewTenantSchema(String schemaName, String companyName, String description) throws SQLException {
+    @Transactional(rollbackFor = Exception.class)
+    public void createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema) throws SQLException {
         if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
             throw new IllegalArgumentException("Geçersiz şema ismi!");
         }
@@ -37,7 +38,7 @@ public class CompanyServiceImpl implements ICompanyService {
         //Kopyalanacak Tablolar
         String[] allTables = {"customer", "material", "material_price_history"
                 , "payment_company", "purchase_invoice", "purchase_invoice_item", "received_collection",
-        "sales_invoice", "sales_invoice_item", "app_user"};
+        "sales_invoice", "sales_invoice_item", "app_user", "payroll"};
 
         List<String> tablesWithData = List.of("customer", "material", "app_user");
 
@@ -52,13 +53,13 @@ public class CompanyServiceImpl implements ICompanyService {
                 // 2. Tabloları oluştur
                 for (String tableName : allTables) {
                     statement.execute(String.format(
-                            "CREATE TABLE %s.%s (LIKE logo.%s INCLUDING ALL)",
-                            schemaName, tableName, tableName
+                            "CREATE TABLE %s.%s (LIKE %s.%s INCLUDING ALL)",
+                            schemaName, tableName, sourceSchema,tableName
                     ));
                     if(tablesWithData.contains(tableName)) {
                         statement.execute(String.format(
-                                "INSERT INTO %s.%s SELECT * FROM logo.%s",
-                                schemaName, tableName, tableName
+                                "INSERT INTO %s.%s SELECT * FROM %s.%s",
+                                schemaName, tableName, sourceSchema, tableName
                         ));
                         updateSequence(statement, schemaName, tableName);
                     }
