@@ -36,7 +36,7 @@ export const usePayroll = create((set) => ({
 
   editCheque: async (id, newPayroll) => {
     try {
-      axiosInstance.put(`/payroll/edit/${id}`, newPayroll, {
+      await axiosInstance.put(`/payroll/edit/${id}`, newPayroll, {
         headers: {
           "Content-Type": "application/json",
         },

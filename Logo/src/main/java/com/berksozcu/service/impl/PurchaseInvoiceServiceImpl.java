@@ -23,8 +23,8 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
-@Service
-public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
+    @Service
+    public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -55,7 +55,9 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         newPurchaseInvoice.setCustomer(customer);
 
+        //Fatura toplam fiyatı
         BigDecimal totalPrice = BigDecimal.ZERO;
+        //Kdv Toplam fiyatı
         BigDecimal kdvToplam = BigDecimal.ZERO;
 
         if (newPurchaseInvoice.getItems() != null) {
@@ -72,15 +74,14 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 BigDecimal kdv = item.getKdv().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
 
 
-                //  TOPLAM KDV HESAPLAMA
+                //  Malzemenin bulunduğu satırın kdv sini HESAPLAMA
                 BigDecimal kdvTutarHesaplama = item.getUnitPrice().multiply(kdv)
                         .multiply(item.getQuantity())
                         .setScale(2, RoundingMode.HALF_UP);
 
-                // TOPLAM KDV Yİ TOPLAM ÜCRET E EKLEME
+                // Malzemenin bulunduğu satırın kdv siz fiyatı
                 BigDecimal lineTotal = item.getUnitPrice()
-                        .multiply(item.getQuantity()).add(kdvTutarHesaplama)
-                        .setScale(2, RoundingMode.HALF_UP);
+                        .multiply(item.getQuantity()).setScale(2, RoundingMode.HALF_UP);
 
 
 
@@ -89,12 +90,13 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
                 item.setLineTotal(lineTotal);
 
-                kdvToplam = kdvToplam.add(kdvTutarHesaplama);
-                totalPrice = totalPrice.add(lineTotal);
+                kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
+                totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
             }
         }
 
         newPurchaseInvoice.setKdvToplam(kdvToplam);
+        totalPrice = totalPrice.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
         newPurchaseInvoice.setTotalPrice(totalPrice);
 
@@ -147,7 +149,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
         Customer customer = oldInvoice.getCustomer();
-        customer.setBalance(customer.getBalance().subtract(oldInvoice.getTotalPrice()));
+        customer.setBalance(customer.getBalance().add(oldInvoice.getTotalPrice()));
 
         oldInvoice.setDate(newPurchaseInvoice.getDate());
         oldInvoice.setFileNo(newPurchaseInvoice.getFileNo());
@@ -191,17 +193,19 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             BigDecimal unitPrice = item.getUnitPrice();
             BigDecimal kdvOran = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
 
-            BigDecimal kdvTutar = unitPrice.multiply(qty).multiply(kdvOran);
-            BigDecimal lineTotal = unitPrice.multiply(qty).add(kdvTutar);
+            BigDecimal kdvTutar = unitPrice.multiply(qty).multiply(kdvOran).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal lineTotal = unitPrice.multiply(qty).setScale(2, RoundingMode.HALF_UP);
 
             item.setKdvTutar(kdvTutar);
             item.setLineTotal(lineTotal);
 
-            kdvToplam = kdvToplam.add(kdvTutar);
-            total = total.add(lineTotal);
+            kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
+            total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
         }
-        oldInvoice.setTotalPrice(total);
+        total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
+
         oldInvoice.setKdvToplam(kdvToplam);
+        oldInvoice.setTotalPrice(total);
 
         customer.setBalance(customer.getBalance().subtract(total));
         customerRepository.save(customer);
@@ -217,7 +221,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         Customer customer = purchaseInvoice.getCustomer();
 
-        customer.setBalance(customer.getBalance().subtract(purchaseInvoice.getTotalPrice()));
+        customer.setBalance(customer.getBalance().add(purchaseInvoice.getTotalPrice()));
         customerRepository.save(customer);
 
         purchaseInvoiceRepository.deleteById(id);

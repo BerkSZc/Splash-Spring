@@ -327,6 +327,11 @@ export default function ClientsPage() {
                   name={key}
                   value={form[key]}
                   onChange={handleChange}
+                  disabled={
+                    key === "balance" || // Güncel bakiye her zaman kilitli (sistem hesaplar)
+                    key === "number" //|| // Numara alanı kilitli (otomatik artıyor olabilir)
+                    // (key === "openingBalance" && !!editClient) // Düzenleme modunda açılış bakiyesi değiştirilemez
+                  }
                   className="w-full bg-gray-900/60 border-2 border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none
                    [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />

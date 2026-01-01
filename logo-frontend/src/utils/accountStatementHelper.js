@@ -1,3 +1,5 @@
+// Hesap ekstresi için fonksiyonlar
+
 export const accountStatementHelper = (
   selectedCustomer,
   sales,
@@ -11,6 +13,14 @@ export const accountStatementHelper = (
   if (!selectedCustomer) return [];
   const targetId = Number(selectedCustomer.id);
 
+  const formatDateToTR = (dateString) => {
+    if (!dateString || typeof dateString !== "string") return dateString;
+    if (dateString.includes(".")) return dateString; // Zaten nokta varsa dokunma
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}.${month}.${year}`;
+  };
+
   // 1. AÇILIŞ FİŞİ (Mevcut Bakiye)
   // undefined hatasını engellemek için year kontrolü
   const displayYear = year || new Date().getFullYear();
@@ -20,7 +30,7 @@ export const accountStatementHelper = (
   ) {
     const openingBal = Number(selectedCustomer.openingBalance);
     combined.push({
-      date: `01.01.${displayYear}`,
+      date: `${displayYear}-01-01`,
       desc: "Açılış Fişi",
       debit: openingBal > 0 ? openingBal : 0,
       credit: openingBal < 0 ? Math.abs(openingBal) : 0,
@@ -113,6 +123,10 @@ export const accountStatementHelper = (
   let runningBalance = 0;
   return combined.map((item) => {
     runningBalance += (item.debit || 0) - (item.credit || 0);
-    return { ...item, balance: runningBalance };
+    return {
+      ...item,
+      date: formatDateToTR(item.date),
+      balance: runningBalance,
+    };
   });
 };

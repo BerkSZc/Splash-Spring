@@ -69,22 +69,27 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             item.setMaterial(material);
             item.setSalesInvoice(salesInvoice);
 
-            //KDV HESAPLAMA
-            BigDecimal kdv = item.getKdv().add(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(100));
 
-            BigDecimal lineTotal = item.getUnitPrice().multiply(kdv)
-                    .multiply(item.getQuantity());
+            // Malzemenin bulunduğu satırın kdv siz fiyatı
+            BigDecimal lineTotal = item.getUnitPrice()
+                    .multiply(item.getQuantity())
+                    .setScale(2, RoundingMode.HALF_UP);
 
-            BigDecimal kdvTutarHesaplama = item.getKdv().divide(BigDecimal.valueOf(100))
-                    .multiply(item.getUnitPrice()).multiply(item.getQuantity());
+            BigDecimal kdv = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
+            BigDecimal kdvTutarHesaplama = kdv
+                    .multiply(item.getUnitPrice()).multiply(item.getQuantity())
+                    .setScale(2, RoundingMode.HALF_UP);
 
 
             item.setKdvTutar(kdvTutarHesaplama);
-            kdvToplam = kdvToplam.add(kdvTutarHesaplama);
+            kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
 
             item.setLineTotal(lineTotal);
-            totalPrice = totalPrice.add(lineTotal);
+            totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
         }
+        totalPrice = totalPrice.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
+
         salesInvoice.setKdvToplam(kdvToplam);
         salesInvoice.setTotalPrice(totalPrice);
 
@@ -103,9 +108,6 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             history.setQuantity(item.getQuantity());
             repository.save(history);
         }
-
-
-
 
         return salesInvoice;
     }
@@ -163,19 +165,22 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         BigDecimal kdvToplam = BigDecimal.ZERO;
 
         for (SalesInvoiceItem item : oldItems) {
-            BigDecimal qty = item.getQuantity();
-            BigDecimal price = item.getUnitPrice();
+            //KDV HESAPLAMA
             BigDecimal kdvOran = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
 
-            BigDecimal kdvTutar = price.multiply(qty).multiply(kdvOran);
-            BigDecimal lineTotal = price.multiply(qty).add(kdvTutar);
+            //Malzemenin bulunduğu satırın kdv tutarı
+            BigDecimal kdvTutar = item.getUnitPrice().multiply(item.getQuantity()).multiply(kdvOran);
+
+            //Malzemenin bulunduğu satırın Kdv siz fiyatı
+            BigDecimal lineTotal = item.getUnitPrice().multiply(item.getQuantity());
 
             item.setKdvTutar(kdvTutar);
             item.setLineTotal(lineTotal);
 
-            kdvToplam = kdvToplam.add(kdvTutar);
-            total = total.add(lineTotal);
+            kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
+            total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
         }
+        total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
         oldInvoice.setKdvToplam(kdvToplam);
         oldInvoice.setTotalPrice(total);

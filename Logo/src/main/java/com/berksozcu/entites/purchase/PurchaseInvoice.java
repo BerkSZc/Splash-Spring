@@ -33,12 +33,12 @@ public class PurchaseInvoice {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    //Kdv Toplam kdv_toplam
-    @Column(name = "kdv_toplam")
+    // kdv fiyatlarının toplanmış hali
+    @Column(name = "kdv_toplam", precision = 18, scale = 2)
     private BigDecimal kdvToplam;
 
-    //Tutar
-    @Column(name = "total_price")
+    //KDV dahil net tutar
+    @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
 
 

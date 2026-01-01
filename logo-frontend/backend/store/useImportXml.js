@@ -93,4 +93,21 @@ export const useImportXml = create(() => ({
       toast.error("Error at importMaterials: " + backendErr);
     }
   },
+
+  importPayrolls: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await axiosInstance.post("/import/payrolls", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      toast.success("Aktarma başarıyla tamamlandı");
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen hata";
+      toast.error("Error at importMaterials: " + backendErr);
+    }
+  },
 }));

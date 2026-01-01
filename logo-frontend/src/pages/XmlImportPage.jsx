@@ -7,6 +7,7 @@ function XmlImportPage() {
   const materialInputRef = useRef(null);
   const customerInputRef = useRef(null);
   const collectionInputRef = useRef(null);
+  const payrollInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -16,6 +17,7 @@ function XmlImportPage() {
     importCustomers,
     importCollections,
     importSalesInvoice,
+    importPayrolls,
   } = useImportXml();
 
   const upload = async (file, type) => {
@@ -33,6 +35,8 @@ function XmlImportPage() {
       await importCollections(file);
     } else if (type === "sales-invoice") {
       await importSalesInvoice(file);
+    } else if (type === "payroll") {
+      await importPayrolls(file);
     }
 
     setLoading(false);
@@ -123,6 +127,53 @@ function XmlImportPage() {
               </span>
               <span className="font-bold uppercase tracking-wider text-sm">
                 {loading ? "Yükleniyor..." : "Satış Faturası XML"}
+              </span>
+            </div>
+            <svg
+              className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+          {/* ÇEK VE SENET İŞLEMLERİ - YENİ */}
+          <input
+            type="file"
+            accept=".xml"
+            ref={payrollInputRef}
+            className="hidden"
+            onChange={(e) => upload(e.target.files[0], "payroll")}
+          />
+          <button
+            onClick={() => payrollInputRef.current.click()}
+            disabled={loading}
+            className="group w-full flex items-center justify-between bg-purple-600/10 hover:bg-purple-600 border border-purple-600/20 text-purple-400 hover:text-white p-4 rounded-2xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
+          >
+            <div className="flex items-center gap-4">
+              <span className="p-2 bg-purple-600/20 rounded-lg group-hover:bg-white/20 transition-colors">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </span>
+              <span className="font-bold uppercase tracking-wider text-sm text-left leading-tight">
+                {loading ? "Yükleniyor..." : "Çek ve Senet XML"}
               </span>
             </div>
             <svg

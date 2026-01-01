@@ -12,14 +12,15 @@ CREATE TABLE IF NOT EXISTS customer (
     district VARCHAR(100),
     vd_no VARCHAR(50),
     customer_code VARCHAR(255),
+    opening_balance DECIMAL(15,2);
     archived BOOLEAN NOT NULL DEFAULT FALSE;
 );
 
 -- Örnek müşteriler
-INSERT INTO customer (name, balance, address, country, local, district, vdNo, customer_code)
+INSERT INTO customer (name, balance, address, country, local, district, vdNo, customer_code, opening_balance)
 VALUES
-('Müşteri A', 1000.00, 'Adres 1', 'Türkiye', 'İstanbul', 'Kadıköy', '1234567890', 'dsadas'),
-('Müşteri B', 500.00, 'Adres 2', 'Türkiye', 'Ankara', 'Çankaya', '0987654321', 'dsadasdasd');
+('Müşteri A', 1000.00, 'Adres 1', 'Türkiye', 'İstanbul', 'Kadıköy', '1234567890', 'dsadas', 0),
+('Müşteri B', 500.00, 'Adres 2', 'Türkiye', 'Ankara', 'Çankaya', '0987654321', 'dsadasdasd', 0);
 
 -- ---------------------------
 -- 2. MALZEME TABLOSU
@@ -174,3 +175,24 @@ name VARCHAR(255),
 schema_name VARCHAR(255),
 description VARCHAR(255)
 )
+
+CREATE TYPE payroll_model_enum AS ENUM ('INPUT', 'OUTPUT');
+CREATE TYPE payroll_type_enum AS ENUM ('CHEQUE', 'BOND');
+
+-- Bordro İşlemleri (Çek-Senet İşlemleri)
+CREATE TABLE IF NOT EXISTS payroll (
+    id SERIAL PRIMARY KEY,
+    transaction_date DATE NOT NULL,
+    expired_date DATE,
+    payroll_model payroll_model_enum NOT NULL,
+    payroll_type payroll_type_enum NOT NULL,
+    customer_id BIGINT,
+    file_no VARCHAR(100),
+    bank_name VARCHAR(255),
+    bank_branch VARCHAR(255),
+    amount DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
+
+    CONSTRAINT fk_payroll_customer
+        FOREIGN KEY (customer_id)
+        REFERENCES customer(id) ON DELETE CASCADE
+);

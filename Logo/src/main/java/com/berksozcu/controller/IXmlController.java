@@ -7,14 +7,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface IXmlController {
 
-    public ResponseEntity<?> importPurchaseInvoices(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importPurchaseInvoices(@RequestParam("file") MultipartFile file);
 
-    public ResponseEntity<?> importSalesInvoices(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importSalesInvoices(@RequestParam("file") MultipartFile file);
 
-    public ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file);
 
-    public ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file);
 
-    public ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file);
+
+     ResponseEntity<?> importPayrolls(@RequestParam("file") MultipartFile file);
 
 }

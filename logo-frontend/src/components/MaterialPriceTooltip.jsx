@@ -1,3 +1,5 @@
+//Fatura oluşturma sayfası için malzeme fiyatının geçmişini öğrenme ve seçme alanı
+
 import { useState, useEffect } from "react";
 import { useMaterialPriceHistory } from "../../backend/store/useMaterialPriceHistory.js";
 

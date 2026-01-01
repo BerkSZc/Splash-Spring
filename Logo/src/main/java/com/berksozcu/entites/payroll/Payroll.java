@@ -53,5 +53,6 @@ public class Payroll {
     @Column(name = "bank_branch")
     private String bankBranch;
 
+    @Column(precision = 18, scale = 2)
     private BigDecimal amount;
 }
