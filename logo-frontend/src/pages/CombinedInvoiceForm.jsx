@@ -7,6 +7,7 @@ import MaterialPriceTooltip from "../components/MaterialPriceTooltip.jsx";
 import MaterialSearchSelect from "../components/MaterialSearchSelect.jsx";
 import { useYear } from "../context/YearContext.jsx";
 import toast from "react-hot-toast";
+import CustomerSearchSelect from "../components/CustomerSearchSelect.jsx";
 
 export default function CombinedInvoiceForm() {
   const [mode, setMode] = useState("sales"); // "sales" | "purchase"
@@ -132,12 +133,19 @@ export default function CombinedInvoiceForm() {
       kdvToplam: isSales ? salesCalculation.kdv : purchaseCalculation.kdv,
       totalPrice: isSales ? salesCalculation.total : purchaseCalculation.total,
       ...(isSales ? { customer: { id: Number(currentForm.customerId) } } : {}),
-      items: currentForm.items.map((i) => ({
-        material: { id: Number(i.materialId) },
-        unitPrice: Number(i.unitPrice),
-        quantity: Number(i.quantity),
-        kdv: Number(i.kdv),
-      })),
+      items: currentForm.items.map((i) => {
+        const netTutar = Number(i.unitPrice) * Number(i.quantity);
+        const satirKdv = (netTutar * Number(i.kdv)) / 100;
+
+        return {
+          material: { id: Number(i.materialId) },
+          unitPrice: Number(i.unitPrice),
+          quantity: Number(i.quantity),
+          kdv: Number(i.kdv),
+          kdvTutar: satirKdv, // Backend'deki kdv_tutar sütunu için
+          lineTotal: netTutar + satirKdv, // Backend'deki line_total sütunu için
+        };
+      }),
     };
 
     try {
@@ -226,30 +234,19 @@ export default function CombinedInvoiceForm() {
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
                 Müşteri / Firma
               </label>
-              <select
-                required
+              <CustomerSearchSelect
+                customers={customers}
                 value={
                   mode === "sales"
                     ? salesForm.customerId
                     : purchaseForm.customerId
                 }
-                onChange={(e) =>
+                onChange={(id) =>
                   mode === "sales"
-                    ? setSalesForm({ ...salesForm, customerId: e.target.value })
-                    : setPurchaseForm({
-                        ...purchaseForm,
-                        customerId: e.target.value,
-                      })
+                    ? setSalesForm({ ...salesForm, customerId: id })
+                    : setPurchaseForm({ ...purchaseForm, customerId: id })
                 }
-                className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none cursor-pointer"
-              >
-                <option value="">Seçiniz...</option>
-                {customers?.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} - (Bakiye: {c.balance}₺)
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 
@@ -269,6 +266,7 @@ export default function CombinedInvoiceForm() {
                     <th className="px-4 py-2">Birim Fiyat</th>
                     <th className="px-4 py-2">Miktar</th>
                     <th className="px-4 py-2">KDV %</th>
+                    <th className="px-4 py-2 text-right">KDV Tutarı</th>
                     <th className="px-4 py-2 text-right">Satır Toplamı</th>
                     <th className="px-4 py-2 w-10"></th>
                   </tr>
@@ -340,6 +338,17 @@ export default function CombinedInvoiceForm() {
                             handleItemChange(mode, i, "kdv", e.target.value)
                           }
                         />
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-xs text-gray-400">
+                        {(
+                          (Number(item.unitPrice) *
+                            Number(item.quantity) *
+                            Number(item.kdv)) /
+                            100 || 0
+                        ).toLocaleString("tr-TR", {
+                          minimumFractionDigits: 2,
+                        })}{" "}
+                        ₺
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">
                         {(

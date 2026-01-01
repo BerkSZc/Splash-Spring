@@ -1,5 +1,6 @@
 package com.berksozcu.xml.entites.sales;
 
+import jakarta.persistence.Column;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;

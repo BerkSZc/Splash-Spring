@@ -38,6 +38,14 @@ export default function InvoicePage() {
 
   const [printItem, setPrintItem] = useState(null);
 
+  const formatDateToTR = (dateString) => {
+    if (!dateString || typeof dateString !== "string") return dateString;
+    if (dateString.includes(".")) return dateString; // Zaten formatlıysa dokunma
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}.${month}.${year}`;
+  };
+
   const executePrint = (dataToPrint) => {
     // Eğer fonksiyon parametresiz çağrıldıysa state'deki printItem'ı kullan
     const inv = dataToPrint || printItem;
@@ -163,12 +171,22 @@ export default function InvoicePage() {
   useEffect(() => {
     if (!form) return;
 
-    const total = form.items.reduce((sum, i) => sum + i.lineTotal, 0);
-    const kdvMiktari = form.items.reduce((sum, i) => {
-      const base = Number(i.unitPrice) * Number(i.quantity);
-      return sum + (base * Number(i.kdv)) / 100;
+    // 1. ARA TOPLAM (MATRAH): Sadece Fiyat * Miktar
+    const araToplam = form.items.reduce((sum, i) => {
+      return sum + (Number(i.unitPrice) * Number(i.quantity) || 0);
     }, 0);
-    setTotals({ totalPrice: total, kdvToplam: kdvMiktari });
+
+    // 2. TOPLAM KDV: Her satırın kendi KDV'si
+    const kdvMiktari = form.items.reduce((sum, i) => {
+      const base = Number(i.unitPrice) * Number(i.quantity) || 0;
+      return sum + (base * (Number(i.kdv) || 0)) / 100;
+    }, 0);
+
+    setTotals({
+      totalPrice: araToplam, // KDV Hariç Net
+      kdvToplam: kdvMiktari, // Vergi
+      grandTotal: araToplam + kdvMiktari, // Ödenecek Brüt
+    });
   }, [form?.items]);
 
   const handleSave = async () => {
@@ -317,7 +335,7 @@ export default function InvoicePage() {
                         {inv.fileNo}
                       </td>
                       <td className="p-5 text-gray-300 font-mono text-sm">
-                        {inv.date}
+                        {formatDateToTR(inv.date)}
                       </td>
                       <td className="p-5 font-bold text-white">
                         {inv.customer?.name}
@@ -453,86 +471,100 @@ export default function InvoicePage() {
                       <th className="p-5 text-xs font-bold uppercase px-7">
                         KDV %
                       </th>
-                      <th className="px-4 py-2 text-right">
-                        {invoiceType === "purchase"
-                          ? "Toplam (Dahil)"
-                          : "Toplam"}
-                      </th>
+                      <th className="px-4 py-2 text-right">KDV Tutarı</th>
+                      <th className="px-4 py-2 text-right">Satır Toplamı</th>
                       <th className="px-4 py-2 w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {form.items.map((item, i) => (
-                      <tr key={i} className="bg-gray-800/50">
-                        <td className="px-4 py-3 rounded-l-xl w-1/3">
-                          <MaterialSearchSelect
-                            materials={materials}
-                            value={item.materialId}
-                            onChange={(id) => {
-                              const updated = [...form.items];
-                              updated[i].materialId = id;
-                              setForm({ ...form, items: updated });
-                            }}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2 flex-nowrap min-w-[140px]">
+                    {form.items.map((item, i) => {
+                      const lineNet =
+                        Number(item.unitPrice) * Number(item.quantity) || 0;
+                      const lineKdvAmount = (lineNet * Number(item.kdv)) / 100;
+                      return (
+                        <tr key={i} className="bg-gray-800/50">
+                          <td className="px-4 py-3 rounded-l-xl w-1/3">
+                            <MaterialSearchSelect
+                              materials={materials}
+                              value={item.materialId}
+                              onChange={(id) => {
+                                const updated = [...form.items];
+                                updated[i].materialId = id;
+                                setForm({ ...form, items: updated });
+                              }}
+                            />
+                          </td>
+
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2 flex-nowrap min-w-[140px]">
+                              <input
+                                type="number"
+                                name="unitPrice"
+                                value={item.unitPrice}
+                                onChange={(e) => handleItemChange(i, e)}
+                                className="flex-1  bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none min-w-0
+                              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ..."
+                              />
+                              <MaterialPriceTooltip
+                                materialId={item.materialId}
+                                onSelect={(p, e) => handlePriceSelect(i, p, e)}
+                                disabled={!item.materialId}
+                              />
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
                             <input
                               type="number"
-                              name="unitPrice"
-                              value={item.unitPrice}
+                              name="quantity"
+                              value={item.quantity}
                               onChange={(e) => handleItemChange(i, e)}
-                              className="flex-1  bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none min-w-0
-                              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ..."
-                            />
-                            <MaterialPriceTooltip
-                              materialId={item.materialId}
-                              onSelect={(p, e) => handlePriceSelect(i, p, e)}
-                              disabled={!item.materialId}
-                            />
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            name="quantity"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(i, e)}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none
+                              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none
                             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ..."
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[10px] text-gray-500 md:hidden uppercase font-bold">
-                              KDV %
-                            </label>
-                            <input
-                              type="number"
-                              name="kdv"
-                              value={item.kdv}
-                              onChange={(e) => handleItemChange(i, e)}
-                              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none transition-all
-                              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ..."
-                              placeholder="20"
                             />
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">
-                          {item.lineTotal.toFixed(2)} ₺
-                        </td>
-                        <td className="px-4 py-3 rounded-r-xl text-center">
-                          {form.items.length > 1 && (
-                            <button
-                              onClick={() => removeItem(i)}
-                              className="text-gray-500 hover:text-red-500 transition-colors"
-                            >
-                              🗑️
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-1">
+                              <input
+                                type="number"
+                                name="kdv"
+                                value={item.kdv}
+                                onChange={(e) => handleItemChange(i, e)}
+                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none transition-all
+                              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ..."
+                                placeholder="20"
+                              />
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-xs text-gray-400 italic">
+                            {lineKdvAmount.toLocaleString("tr-TR", {
+                              minimumFractionDigits: 2,
+                            })}{" "}
+                            ₺
+                          </td>
+
+                          <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">
+                            {(
+                              Number(item.unitPrice) * Number(item.quantity) ||
+                              0
+                            ).toLocaleString("tr-TR", {
+                              minimumFractionDigits: 2,
+                            })}{" "}
+                            ₺
+                          </td>
+
+                          <td className="px-4 py-3 rounded-r-xl text-center">
+                            {form.items.length > 1 && (
+                              <button
+                                onClick={() => removeItem(i)}
+                                className="text-gray-500 hover:text-red-500 transition-colors"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 <button
@@ -553,38 +585,66 @@ export default function InvoicePage() {
                     <>
                       <div className="flex justify-between text-gray-400 text-sm">
                         <span>Ara Toplam:</span>
-                        <span className="font-mono">
-                          {totals.totalPrice.toFixed(2)} ₺
+                        <span className="font-mono text-white">
+                          {totals.totalPrice.toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
                         </span>
                       </div>
                       <div className="flex justify-between text-blue-400 text-sm font-semibold">
                         <span>Hesaplanan KDV:</span>
                         <span className="font-mono">
-                          +{totals.kdvToplam.toFixed(2)} ₺
+                          +
+                          {totals.kdvToplam.toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
                         </span>
                       </div>
                       <div className="flex justify-between text-2xl font-black pt-3 border-t border-gray-700 mt-2">
                         <span className="text-white">Genel Toplam:</span>
                         <span className="text-emerald-400">
-                          {(totals.totalPrice + totals.kdvToplam).toFixed(2)} ₺
+                          {(
+                            totals.totalPrice + totals.kdvToplam
+                          ).toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
                         </span>
                       </div>
                     </>
                   ) : (
                     <>
-                      {/* Satın almada KDV dahil olsa bile içindeki KDV'yi üstte gösteriyoruz */}
                       <div className="flex justify-between text-gray-400 text-sm">
-                        <span>Toplam KDV Tutarı:</span>
-                        <span className="font-mono text-blue-400">
-                          {totals.kdvToplam.toFixed(2)} ₺
+                        <span>Ara Toplam (KDV Hariç):</span>
+                        <span className="font-mono text-white">
+                          {totals.totalPrice.toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
+                        </span>
+                      </div>
+                      {/* Satın almada KDV dahil olsa bile içindeki KDV'yi üstte gösteriyoruz */}
+                      <div className="flex justify-between text-blue-400 text-sm font-semibold">
+                        <span>Toplam KDV:</span>
+                        <span className="font-mono">
+                          +
+                          {totals.kdvToplam.toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
                         </span>
                       </div>
                       <div className="flex justify-between text-2xl font-black pt-3 border-t border-gray-700 mt-2">
                         <span className="text-white font-bold">
                           Genel Toplam:
                         </span>
-                        <span className="text-blue-400">
-                          {totals.totalPrice.toFixed(2)} ₺
+                        <span className="text-emerald-400 font-mono">
+                          {totals.grandTotal?.toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
                         </span>
                       </div>
                     </>
@@ -718,58 +778,88 @@ export default function InvoicePage() {
                         <th className="py-2 px-1">Açıklama</th>
                         <th className="py-2 px-1 text-center">Miktar</th>
                         <th className="py-2 px-1 text-right">Fiyat</th>
+                        <th className="py-2 px-1 text-right">KDV Tutarı</th>
                         <th className="py-2 px-1 text-right">Toplam</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {printItem.items?.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="py-3 px-1 font-bold text-xs">
-                            {item.material?.code} - {item.material?.comment}
-                          </td>
-                          <td className="py-3 px-1 text-center font-mono">
-                            {item.quantity}
-                          </td>
-                          <td className="py-3 px-1 text-right font-mono">
-                            {item.unitPrice.toLocaleString("tr-TR")} ₺
-                          </td>
-                          <td className="py-3 px-1 text-right font-black">
-                            {(item.unitPrice * item.quantity).toLocaleString(
-                              "tr-TR"
-                            )}{" "}
-                            ₺
-                          </td>
-                        </tr>
-                      ))}
+                      {printItem.items?.map((item, idx) => {
+                        const netTotal = item.unitPrice * item.quantity;
+                        const kdvAmount = (netTotal * (item.kdv || 20)) / 100;
+
+                        return (
+                          <tr key={idx}>
+                            <td className="py-3 px-1 font-bold text-xs">
+                              {item.material?.code} - {item.material?.comment}
+                            </td>
+                            <td className="py-3 px-1 text-center font-mono">
+                              {item.quantity}
+                            </td>
+                            <td className="py-3 px-1 text-right font-mono">
+                              {item.unitPrice.toLocaleString("tr-TR")} ₺
+                            </td>
+                            <td className="py-3 px-1 text-right font-mono text-[10px] text-gray-500 italic">
+                              {kdvAmount.toLocaleString("tr-TR", {
+                                minimumFractionDigits: 2,
+                              })}{" "}
+                              ₺
+                            </td>
+                            <td className="py-3 px-1 text-right font-black text-xs">
+                              {netTotal.toLocaleString("tr-TR", {
+                                minimumFractionDigits: 2,
+                              })}{" "}
+                              ₺
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
 
                   <div className="flex justify-end">
                     <div className="w-64 space-y-1">
+                      {/* 1. ARA TOPLAM HESABI (Sadece Kalemlerden) */}
                       <div className="flex justify-between text-[11px] border-b pb-1">
-                        <span className="text-gray-500 font-bold">
-                          ARA TOPLAM:
+                        <span className="text-gray-500 font-bold uppercase">
+                          Ara Toplam:
                         </span>
-                        <span className="font-mono">
-                          {printItem.totalPrice.toFixed(2)} ₺
+                        <span className="font-mono text-black">
+                          {(printItem.items || [])
+                            .reduce(
+                              (sum, i) => sum + i.unitPrice * i.quantity,
+                              0
+                            )
+                            .toLocaleString("tr-TR", {
+                              minimumFractionDigits: 2,
+                            })}{" "}
+                          ₺
                         </span>
                       </div>
+
+                      {/* 2. KDV TOPLAM HESABI */}
                       <div className="flex justify-between text-[11px] border-b pb-1">
-                        <span className="text-gray-500 font-bold">
-                          KDV TOPLAM:
+                        <span className="text-gray-500 font-bold uppercase">
+                          KDV Toplam:
                         </span>
-                        <span className="font-mono">
-                          {printItem.kdvToplam?.toFixed(2) || 0} ₺
+                        <span className="font-mono text-black">
+                          {(printItem.kdvToplam || 0).toLocaleString("tr-TR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          ₺
                         </span>
                       </div>
-                      <div className="flex justify-between text-xl font-black pt-2">
-                        <span className="text-xs self-center">
-                          GENEL TOPLAM:
+
+                      {/* 3. GENEL TOPLAM HESABI (Net + KDV) */}
+                      <div className="flex justify-between text-xl font-black pt-2 border-t-2 border-black mt-2">
+                        <span className="text-[10px] self-center uppercase">
+                          Genel Toplam:
                         </span>
-                        <span>
-                          {(invoiceType === "sales"
-                            ? printItem.totalPrice + (printItem.kdvToplam || 0)
-                            : printItem.totalPrice
+                        <span className="text-black">
+                          {(
+                            (printItem.items || []).reduce(
+                              (sum, i) => sum + i.unitPrice * i.quantity,
+                              0
+                            ) + (printItem.kdvToplam || 0)
                           ).toLocaleString("tr-TR", {
                             minimumFractionDigits: 2,
                           })}{" "}

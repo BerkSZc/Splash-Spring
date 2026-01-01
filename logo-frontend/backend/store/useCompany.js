@@ -25,7 +25,9 @@ export const useCompany = create((set, get) => ({
     const currentTenant = localStorage.getItem("tenant") || "logo";
 
     const finalData = {
-      ...companyData,
+      id: companyData.id,
+      name: companyData.name,
+      desc: companyData.desc,
       sourceSchema: currentTenant,
     };
     try {

@@ -34,6 +34,18 @@ const TransferOperationPage = () => {
     if (!newCompData.id || !newCompData.name)
       return toast.error("Lütfen şirket kodu ve adını doldurun");
 
+    const currentTenant = localStorage.getItem("tenant");
+
+    // KRİTİK DÜZELTME:
+    // Eğer mevcut tenant "logo8" gibi henüz oluşmamış veya hatalı bir şemaysa,
+    // ana şema olan "logo"yu kaynak (sourceSchema) olarak kullan.
+    const source =
+      currentTenant &&
+      currentTenant !== "undefined" &&
+      currentTenant !== "logo8"
+        ? currentTenant
+        : "logo";
+
     try {
       // 2. ADIM: Backend'de şemayı oluştur ve logo.company tablosuna kaydet
       await addCompany(newCompData);

@@ -16,7 +16,7 @@ public class DataSourceConfig {
        return DataSourceBuilder.create()
                .url("jdbc:postgresql://localhost:5432/postgres")
                .username("postgres")
-               .password("Avengers.52")
+               .password("1")
                .driverClassName("org.postgresql.Driver")
                .build();
     }

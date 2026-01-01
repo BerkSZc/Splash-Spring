@@ -1,3 +1,5 @@
+//Fatura oluşturma sayfası için malzeme seçme alanı
+
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 

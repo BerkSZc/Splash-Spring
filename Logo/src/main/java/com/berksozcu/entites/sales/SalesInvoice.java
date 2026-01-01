@@ -34,16 +34,16 @@ public class SalesInvoice {
     @Column(name = "file_no", unique = true)
     private String fileNo;
 
-    //Kdv Toplam
-    @Column(name = "kdv_toplam")
+    //Tüm malzemelerden sonra hesaplanan toplam kdv
+    @Column(name = "kdv_toplam", precision = 18, scale = 2)
     private BigDecimal kdvToplam;
 
 
     //Fatura Tipi
     private Integer type;
 
-    //Toplam Tutar
-    @Column(name = "total_price")
+    //Kdv dahit net toplam tutar
+    @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
 
     @OneToMany(mappedBy = "salesInvoice", cascade=CascadeType.ALL, orphanRemoval = true)

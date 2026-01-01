@@ -35,13 +35,15 @@ public class SalesInvoiceItem {
     @Column(name = "quantity", precision = 18, scale = 2)
     private BigDecimal quantity; //
 
-    //Kdv Oranı
+    //Kdv Oranı bkz %20
+    @Column(precision = 18, scale = 2)
     private BigDecimal kdv;
 
-    // Toplam Kdv Tutarı
-    @Column(name = "kdv_tutar")
+    // Malzemenin bulunduğu satırın kdv tutarı
+    @Column(name = "kdv_tutar", precision = 18, scale = 2)
     private BigDecimal kdvTutar;
 
+    //Malzemenin bulunduğu satırın Kdv siz fiyatı
     @Column(name = "line_total", precision = 18, scale = 2)
     private BigDecimal lineTotal; // unitPrice * quantity
 }

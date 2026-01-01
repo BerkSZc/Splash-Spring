@@ -35,13 +35,15 @@ public class CompanyServiceImpl implements ICompanyService {
         if(companyRepository.existsBySchemaName(schemaName))
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_KODU_MEVCUT));
 
+        String finalSource = checkSchemaExists(sourceSchema) ? sourceSchema : "logo";
+
+
         //Kopyalanacak Tablolar
         String[] allTables = {"customer", "material", "material_price_history"
                 , "payment_company", "purchase_invoice", "purchase_invoice_item", "received_collection",
         "sales_invoice", "sales_invoice_item", "app_user", "payroll"};
 
         List<String> tablesWithData = List.of("customer", "material", "app_user");
-
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
@@ -54,12 +56,12 @@ public class CompanyServiceImpl implements ICompanyService {
                 for (String tableName : allTables) {
                     statement.execute(String.format(
                             "CREATE TABLE %s.%s (LIKE %s.%s INCLUDING ALL)",
-                            schemaName, tableName, sourceSchema,tableName
+                            schemaName, tableName, finalSource,tableName
                     ));
                     if(tablesWithData.contains(tableName)) {
                         statement.execute(String.format(
                                 "INSERT INTO %s.%s SELECT * FROM %s.%s",
-                                schemaName, tableName, sourceSchema, tableName
+                                schemaName, tableName, finalSource, tableName
                         ));
                         updateSequence(statement, schemaName, tableName);
                     }
@@ -71,6 +73,7 @@ public class CompanyServiceImpl implements ICompanyService {
                 company.setName(companyName);
                 company.setSchemaName(schemaName);
                 company.setDescription(description);
+
 
                 companyRepository.save(company);
             } catch (SQLException e) {
@@ -90,5 +93,12 @@ public class CompanyServiceImpl implements ICompanyService {
                 schemaName, tableName, schemaName, tableName
         );
         statement.execute(sql);
+    }
+
+    private boolean checkSchemaExists(String schemaName) throws SQLException {
+        try (Connection conn = dataSource.getConnection()) {
+            var rs = conn.getMetaData().getSchemas(null, schemaName);
+            return rs.next();
+        }
     }
 }

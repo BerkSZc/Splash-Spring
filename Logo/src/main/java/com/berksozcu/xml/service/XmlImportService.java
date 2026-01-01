@@ -7,6 +7,9 @@ import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
+import com.berksozcu.entites.payroll.Payroll;
+import com.berksozcu.entites.payroll.PayrollModel;
+import com.berksozcu.entites.payroll.PayrollType;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
 import com.berksozcu.entites.sales.SalesInvoice;
@@ -21,6 +24,9 @@ import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
 import com.berksozcu.xml.entites.materials.ItemsXml;
 import com.berksozcu.xml.entites.materials.MaterialXml;
+import com.berksozcu.xml.entites.payrolls.PayrollRollXml;
+import com.berksozcu.xml.entites.payrolls.PayrollTxXml;
+import com.berksozcu.xml.entites.payrolls.PayrollsXml;
 import com.berksozcu.xml.entites.purchase.InvoiceXml;
 import com.berksozcu.xml.entites.purchase.PurchaseInvoicesXml;
 import com.berksozcu.xml.entites.purchase.TransactionXml;
@@ -63,6 +69,9 @@ public class XmlImportService {
 
     @Autowired
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
+
+    @Autowired
+    private PayrollRepository payrollRepository;
 
     @Transactional
     public void importPurchaseInvoices(MultipartFile file) throws Exception {
@@ -374,6 +383,56 @@ public class XmlImportService {
 
             }
 
+        }
+    }
+
+    @Transactional
+    public void importPayrolls(MultipartFile file) throws Exception {
+    JAXBContext context = JAXBContext.newInstance(PayrollsXml.class);
+    Unmarshaller unmarshaller = context.createUnmarshaller();
+        PayrollsXml rollsXml = (PayrollsXml) unmarshaller.unmarshal(file.getInputStream());
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        for(PayrollRollXml roll : rollsXml.getRolls()) {
+            String customerCode = roll.getMasterCode();
+            Customer customer = customerRepository.findByCode(customerCode)
+                    .orElse(null);
+            if (customer == null) {
+                System.err.println("Müşteri bulunamadı: " + customerCode + " -> Bordro atlandı.");
+                continue;
+            }
+            PayrollModel model = (roll.getType() <= 2) ? PayrollModel.INPUT : PayrollModel.OUTPUT;
+
+            if (roll.getTransactions() != null && roll.getTransactions().getList() != null) {
+                for (PayrollTxXml tx : roll.getTransactions().getList()) {
+                    Payroll payroll = new Payroll();
+                    payroll.setCustomer(customer);
+                    payroll.setFileNo(tx.getNumber());
+
+                    BigDecimal amount = parseBigDecimal(tx.getAmount());
+                    payroll.setAmount(amount);
+
+                    payroll.setTransactionDate(LocalDate.parse(tx.getDate(), dtf));
+                    payroll.setExpiredDate(LocalDate.parse(tx.getDueDate(), dtf));
+                    payroll.setPayrollModel(model);
+
+                    // Varsayılan tip çek olsun (XML'den çek-senet ayrımı da yapılabilir)
+                    payroll.setPayrollType(PayrollType.CHEQUE);
+
+                    // 3. Müşteri Bakiyesini Güncelle
+                    if (model == PayrollModel.INPUT) {
+                        // Müşteriden çek aldık, borcu azalır (Subtract)
+                        customer.setBalance(customer.getBalance().subtract(amount));
+                    } else {
+                        // Müşteriye çek verdik veya ciro ettik, borcu/alacağı artar (Add)
+                        customer.setBalance(customer.getBalance().add(amount));
+                    }
+
+                    payrollRepository.save(payroll);
+                }
+            }
+            customerRepository.save(customer);
         }
     }
 

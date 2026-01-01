@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useClient } from "../../backend/store/useClient.js";
 import { useYear } from "../context/YearContext.jsx";
 import { usePayroll } from "../../backend/store/usePayroll.js";
+import CustomerSearchSelect from "../components/CustomerSearchSelect.jsx";
 
 export default function PayrollTransactionPage() {
   const { customers, getAllCustomers } = useClient();
@@ -112,7 +113,7 @@ export default function PayrollTransactionPage() {
       await addCheque(form.customerId, payload);
     }
     resetForm();
-    getPayrollByYear(year);
+    await getPayrollByYear(year);
   };
 
   const resetForm = () => {
@@ -204,7 +205,7 @@ export default function PayrollTransactionPage() {
         </div>
 
         {/* Form Kartı */}
-        <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem] backdrop-blur-sm shadow-2xl">
+        <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem]  shadow-2xl ">
           <h3
             className={`text-xl font-bold mb-8 flex items-center gap-3 ${currentTheme.color}`}
           >
@@ -245,21 +246,11 @@ export default function PayrollTransactionPage() {
                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">
                   Müşteri / Firma
                 </label>
-                <select
-                  required
+                <CustomerSearchSelect
+                  customers={customers}
                   value={form.customerId}
-                  onChange={(e) =>
-                    setForm({ ...form, customerId: e.target.value })
-                  }
-                  className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition"
-                >
-                  <option value="">Seçiniz...</option>
-                  {customers?.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(id) => setForm({ ...form, customerId: id })}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">

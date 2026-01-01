@@ -44,6 +44,9 @@ public class PayrollServiceImpl implements IPayrollService {
         payroll.setTransactionDate(newPayroll.getTransactionDate());
         payroll.setPayrollModel(newPayroll.getPayrollModel());
         payroll.setPayrollType(newPayroll.getPayrollType());
+        payroll.setBankName(newPayroll.getBankName());
+        payroll.setBankBranch(newPayroll.getBankBranch());
+
 
         updateBalance(customer, newPayroll);
 

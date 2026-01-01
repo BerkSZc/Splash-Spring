@@ -1,3 +1,5 @@
+//Navbar daki sağ üst tarafta yıl seçim ekranı
+
 import { useEffect, useRef, useState } from "react";
 import { useYear } from "../context/YearContext";
 

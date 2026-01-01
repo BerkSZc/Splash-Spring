@@ -3,6 +3,7 @@ import { useClient } from "../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../backend/store/useReceivedCollection.js";
 import { usePaymentCompany } from "../../backend/store/usePaymentCompany.js";
 import { useYear } from "../context/YearContext.jsx";
+import CustomerSearchSelect from "../components/CustomerSearchSelect.jsx";
 
 export default function CollectionPage() {
   const { customers, getAllCustomers } = useClient();
@@ -177,7 +178,7 @@ export default function CollectionPage() {
 
         {/* Arama ve Ekleme Formu Kartı */}
         <div className="grid grid-cols-1 gap-8">
-          <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem] backdrop-blur-sm">
+          <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem] ">
             <h3
               className={`text-xl font-bold mb-6 flex items-center gap-3 ${
                 type === "received" ? "text-emerald-400" : "text-blue-400"
@@ -215,21 +216,11 @@ export default function CollectionPage() {
                 <label className="text-xs font-bold text-gray-500 uppercase ml-1">
                   Müşteri / Firma
                 </label>
-                <select
-                  required
+                <CustomerSearchSelect
+                  customers={customers}
                   value={addForm.customerId}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, customerId: e.target.value })
-                  }
-                  className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition cursor-pointer"
-                >
-                  <option value="">Seçiniz...</option>
-                  {customers?.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(id) => setAddForm({ ...addForm, customerId: id })}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase ml-1">

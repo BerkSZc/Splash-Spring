@@ -1,10 +1,12 @@
 import axios from "axios";
+import { useAuthentication } from "../store/useAuthentication";
 
 export const axiosInstance = axios.create({
   baseURL: "/rest/api",
 
   withCredentials: true,
 });
+let isDirecting = false;
 
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -26,16 +28,32 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token süresi dolmuş
-      localStorage.clear();
+    const status = error.response ? error.response.status : null;
 
+    if ((status === 401 || status === 403) && !isDirecting) {
+      isDirecting = true;
+      // Token süresi dolmuş
+      useAuthentication.getState().logout?.();
       localStorage.removeItem("token");
       window.location.href = "/login"; // otomatik yönlendirme
     }
     return Promise.reject(error);
   }
 );
+
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response && error.response.status === 401) {
+//       // Token süresi dolmuş
+//       localStorage.clear();
+
+//       localStorage.removeItem("token");
+//       window.location.href = "/login"; // otomatik yönlendirme
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 // EKSTRA 403 kontrolü
 
@@ -61,19 +79,4 @@ axiosInstance.interceptors.response.use(
 //     return config;
 //   },
 //   (error) => Promise.reject(error)
-// );
-
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     const status = error.response ? error.response.status : null;
-
-//     if ((status === 401 || status === 403) && !isDirecting) {
-//       isDirecting = true;
-//       // Token süresi dolmuş
-//       localStorage.removeItem("token");
-//       window.location.href = "/login"; // otomatik yönlendirme
-//     }
-//     return Promise.reject(error);
-//   }
 // );
