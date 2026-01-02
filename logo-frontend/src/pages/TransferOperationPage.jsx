@@ -36,19 +36,12 @@ const TransferOperationPage = () => {
 
     const currentTenant = localStorage.getItem("tenant");
 
-    // KRİTİK DÜZELTME:
-    // Eğer mevcut tenant "logo8" gibi henüz oluşmamış veya hatalı bir şemaysa,
-    // ana şema olan "logo"yu kaynak (sourceSchema) olarak kullan.
     const source =
-      currentTenant &&
-      currentTenant !== "undefined" &&
-      currentTenant !== "logo8"
-        ? currentTenant
-        : "logo";
+      currentTenant && currentTenant !== "undefined" ? currentTenant : "logo";
 
     try {
       // 2. ADIM: Backend'de şemayı oluştur ve logo.company tablosuna kaydet
-      await addCompany(newCompData);
+      await addCompany({ ...newCompData, sourceSchema: source });
 
       // Formu temizle
       setNewCompData({ id: "", name: "", desc: "" });
@@ -56,7 +49,7 @@ const TransferOperationPage = () => {
       // Şirket listesini veritabanından tekrar çek (Güncel hali için)
       getAllCompanies();
     } catch (error) {
-      console.error("Hata:", error);
+      toast.error("Şirket oluşturulamadı:", error);
     }
   };
   return (

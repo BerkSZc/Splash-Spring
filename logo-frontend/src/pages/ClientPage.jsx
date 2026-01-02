@@ -118,6 +118,7 @@ export default function ClientsPage() {
   const [form, setForm] = useState({
     name: "",
     balance: 0,
+    openingBalance: 0,
     address: "",
     country: "",
     local: "",
@@ -156,6 +157,7 @@ export default function ClientsPage() {
     setForm({
       name: customer.name || "",
       balance: customer.balance || "",
+      openingBalance: customer.openingBalance || "",
       address: customer.address || "",
       country: customer.country || "",
       local: customer.local || "",
@@ -170,6 +172,7 @@ export default function ClientsPage() {
     setForm({
       name: "",
       balance: 0,
+      openingBalance: 0,
       address: "",
       country: "",
       local: "",
@@ -325,13 +328,14 @@ export default function ClientsPage() {
                 <input
                   type={type}
                   name={key}
-                  value={form[key]}
+                  value={form[key] ?? (type === "number" ? 0 : "")}
                   onChange={handleChange}
                   disabled={
                     key === "balance" || // Güncel bakiye her zaman kilitli (sistem hesaplar)
                     key === "number" //|| // Numara alanı kilitli (otomatik artıyor olabilir)
                     // (key === "openingBalance" && !!editClient) // Düzenleme modunda açılış bakiyesi değiştirilemez
                   }
+                  required={key !== "balance" || key !== "number"}
                   className="w-full bg-gray-900/60 border-2 border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none
                    [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />

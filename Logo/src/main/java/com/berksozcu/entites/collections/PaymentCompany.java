@@ -29,6 +29,7 @@ public class PaymentCompany {
     private String comment;
 
     //Tutar
+    @Column(precision = 18, scale = 2)
     private BigDecimal price;
 
     @ManyToOne

@@ -20,7 +20,7 @@ export default function YearDropdown() {
         setOpen(false);
     };
 
-    //Bir yere tıklanırsa haberimiz olmamız için koyarız
+    //Bir yere tıklanırsa haberimiz olması için koyarız
     document.addEventListener("mousedown", handleOutsideClick);
 
     return () => {
