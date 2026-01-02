@@ -7,8 +7,11 @@ import { usePaymentCompany } from "../../backend/store/usePaymentCompany.js";
 import { useYear } from "../context/YearContext.jsx";
 import { useTenant } from "../context/TenantContext.jsx";
 import QuickLinkCard from "../components/QuickLinkCard.jsx";
+import { useCompany } from "../../backend/store/useCompany.js";
 
 export function HomePage() {
+  const { companies, getAllCompanies } = useCompany();
+
   const { purchase, getAllPurchaseInvoices, getPurchaseInvoiceByYear } =
     usePurchaseInvoice();
   const { sales, getAllSalesInvoices, getSalesInvoicesByYear } =
@@ -22,6 +25,7 @@ export function HomePage() {
 
   // Sayfa yüklendiğinde verileri çek
   useEffect(() => {
+    getAllCompanies();
     getAllCustomers();
     getCollections();
     getPayments();
@@ -33,6 +37,11 @@ export function HomePage() {
   // Borçlar ve Alacaklar toplamını hesapla
   const totalAlacak = collections.reduce((sum, c) => sum + Number(c.price), 0);
   const totalBorc = payments.reduce((sum, p) => sum + Number(p.price), 0);
+
+  const currentCompany = companies?.find((c) => c.schemaName === tenant);
+  const companyDisplayName = currentCompany
+    ? currentCompany.name
+    : tenant?.toUpperCase();
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
@@ -46,7 +55,7 @@ export function HomePage() {
             <p className="text-gray-400 text-lg">
               {year} Mali Yılı -{" "}
               <span className="text-blue-500 font-mono">
-                {tenant?.toUpperCase()}
+                {companyDisplayName}
               </span>{" "}
               Çalışma Alanı Özeti
             </p>

@@ -1,4 +1,3 @@
-// Yazılcak faturanın Templati ayarlaması
 // Yazılacak faturanın Templati ayarlaması
 export const generateInvoiceHTML = (inv, invoiceType) => {
   // 1. ARA TOPLAM (MATRAH) HESAPLA: Sadece Fiyat * Miktar (Tutarlılık için kalemlerden hesaplanmaya devam ediyor)

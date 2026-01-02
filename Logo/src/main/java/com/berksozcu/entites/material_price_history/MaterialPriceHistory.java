@@ -29,6 +29,7 @@ public class MaterialPriceHistory {
     private InvoiceType invoiceType;
 
     //fiyat
+    @Column(precision = 18, scale = 2)
     private BigDecimal price;
 
     //tarih
@@ -39,6 +40,7 @@ public class MaterialPriceHistory {
     private String customerName;
 
     //Miktar
+    @Column(precision = 18, scale = 2)
     private BigDecimal quantity;
 
 }

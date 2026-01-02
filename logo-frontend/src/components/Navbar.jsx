@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthentication } from "../../backend/store/useAuthentication";
 import YearDropdown from "./YearDropdown.jsx";
+import CompanyDropDown from "./CompanyDropDown.jsx";
 
 export default function Navbar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -139,6 +140,7 @@ export default function Navbar() {
           {isAuthenticated && (
             <nav className="flex justify-between items-center px-6 py-3 ">
               <div className="flex items-center gap-4">
+                <CompanyDropDown />
                 <YearDropdown />
               </div>
             </nav>

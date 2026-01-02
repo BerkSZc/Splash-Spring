@@ -3,8 +3,8 @@ package com.berksozcu.xml.service;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.customer.Customer;
-import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.material.Material;
+import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.entites.payroll.Payroll;
@@ -14,9 +14,6 @@ import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
 import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.entites.sales.SalesInvoiceItem;
-import com.berksozcu.exception.BaseException;
-import com.berksozcu.exception.ErrorMessage;
-import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
 import com.berksozcu.xml.entites.collections.CollectionXml;
 import com.berksozcu.xml.entites.collections.CollectionsXml;
@@ -40,10 +37,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -127,18 +126,13 @@ public class XmlImportService {
                     continue; // veya throw new BaseException(...) ile işlemi durdur
                 }
 
-
-                //Malzeme Fiyat Geçmişi
-                MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
-
-                materialPriceHistory.setMaterial(material);
-                materialPriceHistory.setDate(LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-                materialPriceHistory.setInvoiceType(InvoiceType.PURCHASE);
-                materialPriceHistory.setCustomerName(customer.getName());
-                materialPriceHistory.setPrice(tx.getPRICE());
-                materialPriceHistory.setQuantity(tx.getQUANTITY());
-
-                materialPriceHistoryRepository.save(materialPriceHistory);
+                //Malzeme Fiyat Geçmişi Kayıt İşlemi
+                saveMaterialPrice(material,
+                        LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                        customer.getName(),
+                        tx.getPRICE(),
+                        tx.getQUANTITY(),
+                        InvoiceType.PURCHASE);
 
                 //Fatura Kalemleri
                 PurchaseInvoiceItem item = new PurchaseInvoiceItem();
@@ -177,7 +171,7 @@ public class XmlImportService {
 
         Map<String, Material> materialMap = materialRepository.findAll()
                 .stream().collect(Collectors.toMap(m -> m.getCode().trim().toUpperCase(),
-                                                            m -> m));
+                        m -> m));
 
         for (SalesInvoiceXml xmlInv : invoicesXml.getSalesInvoices()) {
             SalesInvoice invoice = new SalesInvoice();
@@ -211,18 +205,12 @@ public class XmlImportService {
                     continue;
                 }
 
-
-                //Malzeme Fiyat Geçmişi Kaydet
-                MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
-
-                materialPriceHistory.setMaterial(material);
-                materialPriceHistory.setDate(LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-                materialPriceHistory.setInvoiceType(InvoiceType.SALES);
-                materialPriceHistory.setCustomerName(customer.getName());
-                materialPriceHistory.setPrice(tx.getPRICE());
-                materialPriceHistory.setQuantity(tx.getQUANTITY());
-
-                materialPriceHistoryRepository.save(materialPriceHistory);
+                saveMaterialPrice(material,
+                        LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                        customer.getName(),
+                        tx.getPRICE(),
+                        tx.getQUANTITY(),
+                        InvoiceType.SALES);
 
                 // Fatura Kalemleri
                 SalesInvoiceItem item = new SalesInvoiceItem();
@@ -300,8 +288,8 @@ public class XmlImportService {
             customer.setAddress(c.getADDRESS1());
 
             BigDecimal initialRisk = parseBigDecimal(c.getACC_RISK_TOTAL());
-        customer.setOpeningBalance(initialRisk);
-        customer.setBalance(initialRisk);
+            customer.setOpeningBalance(initialRisk);
+            customer.setBalance(initialRisk);
             customer.setVdNo(c.getTAX_ID());
 
             customerRepository.save(customer);
@@ -388,13 +376,13 @@ public class XmlImportService {
 
     @Transactional
     public void importPayrolls(MultipartFile file) throws Exception {
-    JAXBContext context = JAXBContext.newInstance(PayrollsXml.class);
-    Unmarshaller unmarshaller = context.createUnmarshaller();
+        JAXBContext context = JAXBContext.newInstance(PayrollsXml.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
         PayrollsXml rollsXml = (PayrollsXml) unmarshaller.unmarshal(file.getInputStream());
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-        for(PayrollRollXml roll : rollsXml.getRolls()) {
+        for (PayrollRollXml roll : rollsXml.getRolls()) {
             String customerCode = roll.getMasterCode();
             Customer customer = customerRepository.findByCode(customerCode)
                     .orElse(null);
@@ -439,6 +427,19 @@ public class XmlImportService {
     private BigDecimal parseBigDecimal(String value) {
         if (value == null || value.isBlank()) return BigDecimal.ZERO;
         return new BigDecimal(value.replace(",", "."));
+    }
+
+    private void saveMaterialPrice(Material material, LocalDate date, String customerName, BigDecimal price, BigDecimal quantity, InvoiceType invoiceType) {
+        MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
+
+        materialPriceHistory.setMaterial(material);
+        materialPriceHistory.setPrice(price);
+        materialPriceHistory.setInvoiceType(invoiceType);
+        materialPriceHistory.setDate(date);
+        materialPriceHistory.setCustomerName(customerName);
+        materialPriceHistory.setQuantity(quantity);
+
+        materialPriceHistoryRepository.save(materialPriceHistory);
     }
 
 

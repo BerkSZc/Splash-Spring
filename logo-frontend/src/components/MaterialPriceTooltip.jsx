@@ -37,6 +37,14 @@ export default function MaterialPriceTooltip({
     }
   };
 
+  const formatDateToTR = (dateString) => {
+    if (!dateString || typeof dateString !== "string") return dateString;
+    if (dateString.includes(".")) return dateString;
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}.${month}.${year}`;
+  };
+
   return (
     <>
       <button
@@ -165,7 +173,7 @@ export default function MaterialPriceTooltip({
                           Tarih
                         </span>
                         <span className="text-gray-200 font-bold text-sm">
-                          {currentItem.date}
+                          {formatDateToTR(currentItem.date)}
                         </span>
                       </div>
                     </div>

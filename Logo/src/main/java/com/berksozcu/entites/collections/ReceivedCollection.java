@@ -29,6 +29,7 @@ public class ReceivedCollection {
     private String comment;
 
     //tutar
+    @Column(precision = 18, scale = 2)
     private BigDecimal price;
 
     @ManyToOne

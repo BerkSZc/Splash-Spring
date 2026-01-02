@@ -21,7 +21,7 @@ import java.math.BigDecimal;
         @Column(name = "customer_code")
         private String code;
 
-        @Column(name = "opening_balance")
+        @Column(name = "opening_balance", precision = 18, scale = 2)
         private BigDecimal openingBalance;
 
         //Müşteri Unvanı
