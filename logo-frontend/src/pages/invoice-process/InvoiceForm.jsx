@@ -1,0 +1,164 @@
+import { useInvoiceLogic } from "./hooks/useInvoiceLogic.js";
+import CustomerSearchSelect from "../../components/CustomerSearchSelect";
+import InvoiceItemsTable from "./components/InvoiceItemsTable";
+
+export default function InvoiceForm() {
+  const { state, handlers } = useInvoiceLogic();
+  const {
+    mode,
+    salesForm,
+    purchaseForm,
+    materials,
+    customers,
+    salesCalculation,
+    purchaseCalculation,
+  } = state;
+
+  const currentForm = mode === "sales" ? salesForm : purchaseForm;
+  const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
+
+  return (
+    <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* BAŞLIK VE MOD SEÇİMİ */}
+        <div className="flex justify-between items-center bg-gray-900/40 p-6 rounded-[2rem] border border-gray-800 backdrop-blur-sm">
+          <div>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+              Fatura Oluştur
+            </h1>
+            <p className="text-gray-400 mt-1">
+              {mode === "sales" ? "Müşteriye Satış" : "Firmadan Satın Alma"}
+            </p>
+          </div>
+          <select
+            className="bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-2 text-white focus:border-blue-500 outline-none font-bold"
+            value={mode}
+            onChange={(e) => handlers.setMode(e.target.value)}
+          >
+            <option value="sales">Satış Faturası</option>
+            <option value="purchase">Satın Alma Faturası</option>
+          </select>
+        </div>
+
+        <form onSubmit={handlers.submitForm} className="space-y-8">
+          {/* ÜST BİLGİLER */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem]">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                Tarih
+              </label>
+              <input
+                type="date"
+                required
+                value={currentForm.date}
+                onChange={(e) =>
+                  mode === "sales"
+                    ? handlers.setSalesForm({
+                        ...salesForm,
+                        date: e.target.value,
+                      })
+                    : handlers.setPurchaseForm({
+                        ...purchaseForm,
+                        date: e.target.value,
+                      })
+                }
+                className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                Belge No
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Örn: FAT2025001"
+                value={currentForm.fileNo}
+                onChange={(e) =>
+                  mode === "sales"
+                    ? handlers.setSalesForm({
+                        ...salesForm,
+                        fileNo: e.target.value,
+                      })
+                    : handlers.setPurchaseForm({
+                        ...purchaseForm,
+                        fileNo: e.target.value,
+                      })
+                }
+                className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                Müşteri / Firma
+              </label>
+              <CustomerSearchSelect
+                customers={customers}
+                value={currentForm.customerId}
+                onChange={(id) =>
+                  mode === "sales"
+                    ? handlers.setSalesForm({ ...salesForm, customerId: id })
+                    : handlers.setPurchaseForm({
+                        ...purchaseForm,
+                        customerId: id,
+                      })
+                }
+              />
+            </div>
+          </div>
+
+          <InvoiceItemsTable
+            mode={mode}
+            items={currentForm.items}
+            materials={materials}
+            onItemChange={handlers.handleItemChange}
+            onAddItem={handlers.addItem}
+            onRemoveItem={handlers.removeItem}
+          />
+
+          {/* ALT TOPLAMLAR VE KAYDET */}
+          <div className="flex flex-col md:flex-row justify-between items-end gap-6 bg-gray-900/40 p-8 rounded-[2.5rem] border border-gray-800">
+            <div className="space-y-2 text-gray-400 text-sm italic">
+              * Kalemlerin toplamı otomatik olarak hesaplanmaktadır.
+            </div>
+            <div className="space-y-4 text-right min-w-[250px]">
+              <div className="flex justify-between items-center text-gray-400">
+                <span>Ara Toplam:</span>
+                <span className="font-mono text-white">
+                  {currentCalc.total.toLocaleString("tr-TR", {
+                    minimumFractionDigits: 2,
+                  })}{" "}
+                  ₺
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-gray-400">
+                <span>KDV Toplam:</span>
+                <span className="font-mono text-blue-400">
+                  {currentCalc.kdv.toLocaleString("tr-TR", {
+                    minimumFractionDigits: 2,
+                  })}{" "}
+                  ₺
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-2xl font-bold border-t border-gray-800 pt-2">
+                <span className="text-white">Genel Toplam:</span>
+                <span className="text-emerald-400">
+                  {currentCalc.grandTotal.toLocaleString("tr-TR", {
+                    minimumFractionDigits: 2,
+                  })}{" "}
+                  ₺
+                </span>
+              </div>
+              <button
+                type="submit"
+                className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
+              >
+                Faturayı Kaydet ve Sisteme İşle
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

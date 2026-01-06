@@ -27,9 +27,10 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     private PaymentCompanyRepository paymentCompanyRepository;
 
     @Override
+    @Transactional
     public PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany) {
         Customer customer = customerRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("User not found")
+                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
         if(customer.isArchived()) {

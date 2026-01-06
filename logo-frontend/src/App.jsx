@@ -1,17 +1,16 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { HomePage } from "./pages/HomePage";
-import MalzemeEkle from "./pages/MalzemeEkle";
-import MaterialList from "./pages/MaterialList";
+import { HomePage } from "./pages/home/HomePage";
+import MaterialPage from "./pages/material/MaterialPage";
 
-import ClientsPage from "./pages/ClientPage";
-import InvoicePage from "./pages/InvoicePage";
-import CollectionPage from "./pages/CollectionPage";
-import CombinedInvoiceForm from "./pages/CombinedInvoiceForm";
+import ClientsPage from "./pages/client/ClientsPage";
+import InvoicePage from "./pages/invoice/InvoicePage";
+import CollectionPage from "./pages/collection/CollectionPage";
+import InvoiceForm from "./pages/invoice-process/InvoiceForm";
 import { useAuthentication } from "../backend/store/useAuthentication";
-import AuthPage from "./authentication/AuthPage";
-import XmlImportPage from "./pages/XmlImportPage";
-import TransferOperationPage from "./pages/TransferOperationPage";
-import PayrollTransactionsPage from "./pages/PayrollTransactionsPage";
+import AuthPage from "./pages/auth/AuthPage";
+import XmlPage from "./pages/xml/XmlPage";
+import CompanyPage from "./pages/company/CompanyPage";
+import PayrollPage from "./pages/payroll/PayrollPage";
 
 function App() {
   const { isAuthenticated } = useAuthentication();
@@ -19,7 +18,7 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/devir" element={<TransferOperationPage />} />
+        <Route path="/devir" element={<CompanyPage />} />
 
         <Route
           path="/login"
@@ -32,16 +31,13 @@ function App() {
         <Route
           path="/malzeme-ekle"
           element={
-            isAuthenticated ? <MalzemeEkle /> : <Navigate to={"/login"} />
+            isAuthenticated ? <MaterialPage /> : <Navigate to={"/login"} />
           }
         />
-        <Route path="/malzemeler" element={<MaterialList />} />
 
         <Route
           path="/ekleme"
-          element={
-            isAuthenticated ? <XmlImportPage /> : <Navigate to={"/login"} />
-          }
+          element={isAuthenticated ? <XmlPage /> : <Navigate to={"/login"} />}
         />
         <Route
           path="/musteriler"
@@ -53,11 +49,7 @@ function App() {
         <Route
           path="/payroll"
           element={
-            isAuthenticated ? (
-              <PayrollTransactionsPage />
-            ) : (
-              <Navigate to={"/login"} />
-            )
+            isAuthenticated ? <PayrollPage /> : <Navigate to={"/login"} />
           }
         />
         <Route
@@ -79,11 +71,7 @@ function App() {
         <Route
           path="/faturalar-islemleri"
           element={
-            isAuthenticated ? (
-              <CombinedInvoiceForm />
-            ) : (
-              <Navigate to={"/login"} />
-            )
+            isAuthenticated ? <InvoiceForm /> : <Navigate to={"/login"} />
           }
         />
       </Routes>

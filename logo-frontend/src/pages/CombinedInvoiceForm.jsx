@@ -1,3 +1,7 @@
+/*----------------------
+          KALDIRILCAK
+---------------------*/
+
 import { useEffect, useMemo, useState } from "react";
 import { useMaterial } from "../../backend/store/useMaterial.js";
 import { useClient } from "../../backend/store/useClient.js";

@@ -1,0 +1,133 @@
+import MaterialSearchSelect from "../../../components/MaterialSearchSelect.jsx";
+import MaterialPriceTooltip from "../../../components/MaterialPriceTooltip.jsx";
+
+export default function InvoiceItemsTable({
+  mode,
+  items,
+  materials,
+  onItemChange,
+  onAddItem,
+  onRemoveItem,
+}) {
+  return (
+    <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden">
+      <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800/30">
+        <h3 className="font-bold text-lg flex items-center gap-2">
+          <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
+          Fatura Kalemleri
+        </h3>
+      </div>
+      <div className="overflow-x-auto p-4">
+        <table className="w-full text-left border-separate border-spacing-y-2">
+          <thead>
+            <tr className="text-gray-500 text-xs uppercase tracking-widest">
+              <th className="px-4 py-2">Malzeme</th>
+              <th className="px-4 py-2">Birim Fiyat</th>
+              <th className="px-4 py-2">Miktar</th>
+              <th className="px-4 py-2">KDV %</th>
+              <th className="px-4 py-2 text-right">KDV Tutarı</th>
+              <th className="px-4 py-2 text-right">Satır Toplamı</th>
+              <th className="px-4 py-2 w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i} className="bg-gray-800/50 group">
+                <td className="px-4 py-3 rounded-l-xl w-1/3">
+                  <MaterialSearchSelect
+                    materials={materials}
+                    value={item.materialId}
+                    onChange={(id) => onItemChange(mode, i, "materialId", id)}
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={item.unitPrice}
+                      onChange={(e) =>
+                        onItemChange(mode, i, "unitPrice", e.target.value)
+                      }
+                    />
+                    <MaterialPriceTooltip
+                      materialId={item.materialId}
+                      onSelect={(p, e) => {
+                        if (e) e.stopPropagation();
+                        onItemChange(mode, i, "unitPrice", p);
+                      }}
+                      disabled={!item?.materialId}
+                    />
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <input
+                    type="number"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      onItemChange(mode, i, "quantity", e.target.value)
+                    }
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <input
+                    type="number"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    value={item.kdv}
+                    onChange={(e) =>
+                      onItemChange(mode, i, "kdv", e.target.value)
+                    }
+                  />
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-xs text-gray-400">
+                  {(
+                    (Number(item.unitPrice) *
+                      Number(item.quantity) *
+                      Number(item.kdv)) /
+                      100 || 0
+                  ).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}{" "}
+                  ₺
+                </td>
+                <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">
+                  {(
+                    Number(item.unitPrice) * Number(item.quantity) || 0
+                  ).toLocaleString()}{" "}
+                  ₺
+                </td>
+                <td className="px-4 py-3 rounded-r-xl">
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(mode, i)}
+                    className="text-gray-500 hover:text-red-500 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+          type="button"
+          onClick={() => onAddItem(mode)}
+          className="mt-4 flex items-center gap-2 text-blue-400 hover:text-blue-300 font-bold px-4 py-2 rounded-lg transition-all"
+        >
+          <span className="text-xl">+</span> Yeni Kalem Ekle
+        </button>
+      </div>
+    </div>
+  );
+}

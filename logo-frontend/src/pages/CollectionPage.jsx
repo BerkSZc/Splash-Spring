@@ -1,3 +1,7 @@
+/*----------------------
+            KALDIRILCAK
+-----------------------*/
+
 import { useEffect, useState } from "react";
 import { useClient } from "../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../backend/store/useReceivedCollection.js";

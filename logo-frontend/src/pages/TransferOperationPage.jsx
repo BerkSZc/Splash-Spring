@@ -1,3 +1,7 @@
+/*------------------------------
+                    KALDIRILCAK
+------------------------------*/
+
 import React, { useEffect, useState } from "react";
 import { useYear } from "../context/YearContext";
 import { useTenant } from "../context/TenantContext.jsx";
