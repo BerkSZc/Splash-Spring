@@ -1,3 +1,7 @@
+/*---------------------------------
+                      KALDIRILCAK
+----------------------------------*/
+
 import { useEffect, useState } from "react";
 import { useClient } from "../../backend/store/useClient.js";
 import { useYear } from "../context/YearContext.jsx";

@@ -1,3 +1,5 @@
+// KALDIRILCAK
+
 import { useEffect, useState, useRef } from "react";
 import { useClient } from "../../backend/store/useClient";
 import { useSalesInvoice } from "../../backend/store/useSalesInvoice";

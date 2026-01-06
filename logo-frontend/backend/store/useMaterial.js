@@ -16,7 +16,6 @@ export const useMaterial = create((set, get) => ({
       toast.error("Error at addMaterial: ", backendErr);
     }
   },
-
   getMaterials: async () => {
     try {
       const res = await axiosInstance.get("/material/list");

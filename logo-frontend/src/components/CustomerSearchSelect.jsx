@@ -89,7 +89,7 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
                     <div className="text-xs opacity-60">Kodu: {c.code}</div>
                   </div>
                   <div className="text-xs font-mono bg-black/20 px-2 py-1 rounded">
-                    {c.balance.toLocaleString()} ₺
+                    {c?.balance?.toLocaleString()} ₺
                   </div>
                 </div>
               ))

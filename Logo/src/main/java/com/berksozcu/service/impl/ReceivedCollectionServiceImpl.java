@@ -26,10 +26,11 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     private ReceivedCollectionRepository receivedCollectionRepository;
 
     @Override
+    @Transactional
     public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection) {
 
         Customer customer = customerRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("Customer not found")
+                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
         if(customer.isArchived()) {

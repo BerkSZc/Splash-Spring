@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+/*---------------------------------------
+                            KALDIRILCAK
+---------------------------------------*/
+
+import { useState } from "react";
 import { useAuthentication } from "../../backend/store/useAuthentication.js";
 import toast from "react-hot-toast";
 

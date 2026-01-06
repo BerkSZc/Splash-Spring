@@ -1,3 +1,7 @@
+/*-------------------------------
+                  KALDIRILCAK
+------------------------------*/
+
 import React, { useEffect } from "react";
 import { usePurchaseInvoice } from "../../backend/store/usePurchaseInvoice.js";
 import { useSalesInvoice } from "../../backend/store/useSalesInvoice.js";
