@@ -67,6 +67,7 @@ import java.util.List;
                         .findById(item.getMaterial().getId())
                         .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
+
                 item.setMaterial(material);
                 item.setPurchaseInvoice(newPurchaseInvoice);
 

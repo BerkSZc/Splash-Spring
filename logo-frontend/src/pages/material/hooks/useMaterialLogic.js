@@ -14,6 +14,16 @@ export const useMaterialLogic = () => {
     getMaterials();
   }, []);
 
+  const initialForm = {
+    code: "",
+    comment: "",
+    unit: "KG",
+    purchasePrice: 0,
+    purchaseCurrency: "TRY",
+    salesPrice: 0,
+    salesCurrency: "TRY",
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -27,13 +37,21 @@ export const useMaterialLogic = () => {
     } else {
       await addMaterial(form);
     }
-    setForm({ code: "", comment: "", unit: "KG" });
+    setForm(initialForm);
     await getMaterials();
   };
 
   const handleEdit = (item) => {
     setEditId(item.id);
-    setForm({ code: item.code, comment: item.comment, unit: item.unit });
+    setForm({
+      code: item.code || "",
+      comment: item.comment || "",
+      unit: item.unit || "KG",
+      purchasePrice: item.purchasePrice ?? "",
+      purchaseCurrency: item.purchaseCurrency || "TRY",
+      salesPrice: item.salesPrice ?? "",
+      salesCurrency: item.salesCurrency || "TRY",
+    });
     formRef.current.scrollIntoView({ behavior: "smooth" });
   };
 

@@ -22,6 +22,10 @@ public class MaterialServiceImpl implements IMaterialService {
         material.setCode(newMaterial.getCode());
         material.setComment(newMaterial.getComment());
         material.setUnit(newMaterial.getUnit());
+        material.setPurchasePrice(newMaterial.getPurchasePrice());
+        material.setSalesPrice(newMaterial.getSalesPrice());
+        material.setPurchaseCurrency(newMaterial.getPurchaseCurrency());
+        material.setSalesCurrency(newMaterial.getSalesCurrency());
 
         return materialRepository.save(material);
     }
@@ -38,6 +42,10 @@ public class MaterialServiceImpl implements IMaterialService {
            optional.get().setComment(updateMaterial.getComment());
            optional.get().setCode(updateMaterial.getCode());
            optional.get().setUnit(updateMaterial.getUnit());
+           optional.get().setPurchaseCurrency(updateMaterial.getPurchaseCurrency());
+           optional.get().setSalesCurrency(updateMaterial.getSalesCurrency());
+           optional.get().setPurchasePrice(updateMaterial.getPurchasePrice());
+           optional.get().setSalesPrice(updateMaterial.getSalesPrice());
            materialRepository.save(optional.get());
        }
     }
