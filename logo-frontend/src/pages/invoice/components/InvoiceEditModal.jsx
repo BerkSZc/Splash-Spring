@@ -5,6 +5,7 @@ export default function InvoiceEditModal({
   editingInvoice,
   form,
   setForm,
+  onItemChange,
   totals,
   invoiceType,
   materials,
@@ -119,9 +120,7 @@ export default function InvoiceEditModal({
                       materials={materials}
                       value={item.materialId}
                       onChange={(id) => {
-                        const updated = [...form.items];
-                        updated[i].materialId = id;
-                        setForm({ ...form, items: updated });
+                        onItemChange(i, "materialId", id);
                       }}
                     />
                   </td>

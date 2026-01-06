@@ -5,6 +5,7 @@ import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import toast from "react-hot-toast";
+import { useCurrency } from "../../../../backend/store/useCurrency.js";
 
 export const useInvoiceLogic = () => {
   const [mode, setMode] = useState("sales");
@@ -12,6 +13,7 @@ export const useInvoiceLogic = () => {
   const { customers, getAllCustomers } = useClient();
   const { addSalesInvoice, getSalesInvoicesByYear } = useSalesInvoice();
   const { addPurchaseInvoice, getPurchaseInvoiceByYear } = usePurchaseInvoice();
+  const { convertCurrency } = useCurrency();
   const { year } = useYear();
 
   const initalItem = {
@@ -69,13 +71,53 @@ export const useInvoiceLogic = () => {
     return { total, kdv, grandTotal: total + kdv };
   }, [purchaseForm.items]);
 
-  const handleItemChange = (formType, index, field, value) => {
-    const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
+  const handleMaterialSelect = async (formType, index, materialId) => {
+    const selectedMaterial = materials.find((m) => m.id === Number(materialId));
+
+    if (!selectedMaterial) return;
+
+    const isSales = formType === "sales";
+
+    const basePrice = isSales
+      ? selectedMaterial.salesPrice || 0
+      : selectedMaterial.purchasePrice || 0;
+
+    const currency = isSales
+      ? selectedMaterial.salesCurrency || "TRY"
+      : selectedMaterial.purchaseCurrency || "TRY";
+
+    let finalPrice = 0;
+
+    if (currency !== "TRY") {
+      const calculatedPrice = await convertCurrency(basePrice, currency);
+      finalPrice = calculatedPrice || basePrice;
+    } else {
+      finalPrice = basePrice;
+    }
+
+    const setter = isSales ? setSalesForm : setPurchaseForm;
     setter((prev) => {
       const newItems = [...prev.items];
-      newItems[index] = { ...newItems[index], [field]: value };
+      newItems[index] = {
+        ...newItems[index],
+        materialId: materialId,
+        unitPrice: finalPrice || 0,
+      };
       return { ...prev, items: newItems };
     });
+  };
+
+  const handleItemChange = (formType, index, field, value) => {
+    if (field === "materialId") {
+      handleMaterialSelect(formType, index, value);
+    } else {
+      const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
+      setter((prev) => {
+        const newItems = [...prev.items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        return { ...prev, items: newItems };
+      });
+    }
   };
 
   const resetForm = () => {

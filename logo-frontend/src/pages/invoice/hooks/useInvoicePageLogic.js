@@ -3,6 +3,7 @@ import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice";
 import { useMaterial } from "../../../../backend/store/useMaterial";
 import { useClient } from "../../../../backend/store/useClient";
+import { useCurrency } from "../../../../backend/store/useCurrency.js";
 import { useYear } from "../../../context/YearContext";
 import { useTenant } from "../../../context/TenantContext";
 import { generateInvoiceHTML } from "../../../utils/printHelpers.js";
@@ -22,6 +23,7 @@ export const useInvoicePageLogic = () => {
   } = useSalesInvoice();
   const { materials, getMaterials } = useMaterial();
   const { customers, getAllCustomers } = useClient();
+  const { convertCurrency } = useCurrency();
   const { year } = useYear();
   const { tenant } = useTenant();
 
@@ -90,6 +92,52 @@ export const useInvoicePageLogic = () => {
       printWindow.document.write(html);
       printWindow.document.close();
       setPrintItem(null);
+    }
+  };
+
+  const handleMaterialSelect = async (index, materialId) => {
+    const selectedMaterial = materials.find((m) => m.id === Number(materialId));
+    if (!selectedMaterial) return;
+
+    let finalPrice = 0;
+
+    const basePrice =
+      invoiceType === "sales"
+        ? selectedMaterial.salesPrice || 0
+        : selectedMaterial.purchasePrice || 0;
+
+    const currency =
+      invoiceType === "sales"
+        ? selectedMaterial.salesCurrency || "TRY"
+        : selectedMaterial.purchaseCurrency || "TRY";
+
+    if (currency !== "TRY" && basePrice > 0) {
+      const calculatedPrice = await convertCurrency(basePrice, currency);
+      finalPrice = calculatedPrice || basePrice;
+    } else {
+      finalPrice = basePrice;
+    }
+
+    setForm((prev) => {
+      const newItems = [...prev.items];
+      newItems[index] = {
+        ...newItems[index],
+        materialId: String(materialId),
+        unitPrice: finalPrice,
+      };
+      return { ...prev, items: newItems };
+    });
+  };
+
+  const handleItemChange = (index, field, value) => {
+    if (field === "materialId") {
+      handleMaterialSelect(index, value);
+    } else {
+      setForm((prev) => {
+        const newItems = [...prev.items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        return { ...prev, items: newItems };
+      });
     }
   };
 
@@ -186,6 +234,7 @@ export const useInvoicePageLogic = () => {
       setSearchTerm,
       setPrintItem,
       setForm,
+      handleItemChange,
       executePrint,
       handleEdit,
       handleSave,

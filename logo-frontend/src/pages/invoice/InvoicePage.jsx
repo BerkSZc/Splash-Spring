@@ -69,6 +69,7 @@ export default function InvoicePage() {
         <InvoiceEditModal
           editingInvoice={state.editingInvoice}
           form={state.form}
+          onItemChange={handlers.handleItemChange}
           setForm={handlers.setForm}
           totals={state.totals}
           invoiceType={state.invoiceType}

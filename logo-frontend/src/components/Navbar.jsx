@@ -55,7 +55,7 @@ export default function Navbar() {
           {/* DESKTOP MENU */}
           <div className="hidden md:flex space-x-6 items-center">
             <Link className="hover:text-gray-300" to={"/malzeme-ekle"}>
-              Malzeme Ekle
+              Malzemeler
             </Link>
 
             <Link className="hover:text-gray-300" to={"/tahsilatlar"}>

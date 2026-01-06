@@ -7,6 +7,8 @@ import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.service.ICompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +34,7 @@ public class CompanyServiceImpl implements ICompanyService {
         if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
             throw new IllegalArgumentException("Geçersiz şema ismi!");
         }
-        if(companyRepository.existsBySchemaName(schemaName))
+        if (companyRepository.existsBySchemaName(schemaName))
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_KODU_MEVCUT));
 
         String finalSource = checkSchemaExists(sourceSchema) ? sourceSchema : "logo";
@@ -41,24 +43,23 @@ public class CompanyServiceImpl implements ICompanyService {
         //Kopyalanacak Tablolar
         String[] allTables = {"customer", "material", "material_price_history"
                 , "payment_company", "purchase_invoice", "purchase_invoice_item", "received_collection",
-        "sales_invoice", "sales_invoice_item", "app_user", "payroll"};
+                "sales_invoice", "sales_invoice_item", "app_user", "payroll", "currency_rate"};
 
-        List<String> tablesWithData = List.of("customer", "material", "app_user");
+        List<String> tablesWithData = List.of("customer", "material", "app_user", "currency_rate");
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
             try (Statement statement = connection.createStatement()) {
                 // 1. Şemayı oluştur
                 statement.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
-                System.out.println("Şema oluşturuldu: " + schemaName);
 
                 // 2. Tabloları oluştur
                 for (String tableName : allTables) {
                     statement.execute(String.format(
                             "CREATE TABLE %s.%s (LIKE %s.%s INCLUDING ALL)",
-                            schemaName, tableName, finalSource,tableName
+                            schemaName, tableName, finalSource, tableName
                     ));
-                    if(tablesWithData.contains(tableName)) {
+                    if (tablesWithData.contains(tableName)) {
                         statement.execute(String.format(
                                 "INSERT INTO %s.%s SELECT * FROM %s.%s",
                                 schemaName, tableName, finalSource, tableName
@@ -87,6 +88,18 @@ public class CompanyServiceImpl implements ICompanyService {
         return companyRepository.findAll();
     }
 
+
+    @EventListener(ApplicationReadyEvent.class)
+    protected void createDefaultCompany() {
+        if (!companyRepository.existsBySchemaName("logo")) {
+            Company defaultCompany = new Company();
+            defaultCompany.setName("Ana Şirket (Varsayılan)");
+            defaultCompany.setSchemaName("logo");
+            defaultCompany.setDescription("Sistem ana şeması");
+            companyRepository.save(defaultCompany);
+        }
+    }
+
     private void updateSequence(Statement statement, String schemaName, String tableName) throws SQLException {
         String sql = String.format(
                 "SELECT setval(pg_get_serial_sequence('%s.%s', 'id'), coalesce(max(id), 1)) FROM %s.%s",
@@ -101,4 +114,7 @@ public class CompanyServiceImpl implements ICompanyService {
             return rs.next();
         }
     }
+
+
 }
+
