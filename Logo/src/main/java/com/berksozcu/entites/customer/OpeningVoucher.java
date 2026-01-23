@@ -37,4 +37,15 @@ public class OpeningVoucher {
     @Column(precision = 18, scale = 2)
     private BigDecimal credit;
 
+    //Devir öncesi yılın son bakiyesi
+    @Column(name = "final_balance", precision = 18, scale = 2)
+    private BigDecimal finalBalance;
+
+    @Column(name = "yearly_debit", precision = 18, scale = 2
+    )
+    private BigDecimal yearlyDebit;
+
+    @Column(name = "yearly_credit", precision = 18, scale = 2)
+    private BigDecimal yearlyCredit;
+
 }

@@ -1,3 +1,4 @@
+//Fatura yazdırma templatei
 export const generateInvoiceHTML = (inv, invoiceType) => {
   const kdvToplam = Number(inv?.kdvToplam || 0);
   const totalPrice = Number(inv?.totalPrice || 0);
@@ -7,7 +8,7 @@ export const generateInvoiceHTML = (inv, invoiceType) => {
   const typeTitle = isPurchase ? "Satın Alma Faturası" : "Satış Faturası";
   const primaryColor = isPurchase ? "" : "#1e3a8a";
 
-  const currentBalance = Number(inv?.customer?.balance || 0);
+  const currentBalance = Number(inv?.customer?.yearlyBalance || 0);
   const usdRate = Number(inv?.usdSellingRate || 0);
   const eurRate = Number(inv?.eurSellingRate || 0);
 
@@ -110,22 +111,22 @@ export const generateInvoiceHTML = (inv, invoiceType) => {
                     item?.quantity
                   }</td>
                   <td class="py-3 px-2 text-right font-mono text-gray-600">${Number(
-                    item?.unitPrice
+                    item?.unitPrice,
                   ).toLocaleString("tr-TR", {
                     minimumFractionDigits: 2,
                   })} ₺</td>
                   <td class="py-3 px-2 text-right font-mono text-gray-500">${Number(
-                    item?.kdvTutar || 0
+                    item?.kdvTutar || 0,
                   ).toLocaleString("tr-TR", {
                     minimumFractionDigits: 2,
                   })} ₺</td>
                   <td class="py-3 px-2 text-right font-bold text-gray-900">${Number(
-                    item.lineTotal
+                    item.lineTotal,
                   ).toLocaleString("tr-TR", {
                     minimumFractionDigits: 2,
                   })} ₺</td>
                 </tr>
-              `
+              `,
                 )
                 .join("")}
             </tbody>
@@ -141,7 +142,7 @@ export const generateInvoiceHTML = (inv, invoiceType) => {
                     <p class="text-[8px] font-bold text-gray-400 uppercase">USD KURU</p>
                     <p class="text-xs font-mono font-bold">${usdRate.toLocaleString(
                       "tr-TR",
-                      { minimumFractionDigits: 4 }
+                      { minimumFractionDigits: 4 },
                     )} ₺</p>
                   </div>
                 `
@@ -154,7 +155,7 @@ export const generateInvoiceHTML = (inv, invoiceType) => {
                     <p class="text-[8px] font-bold text-gray-400 uppercase">EUR KURU</p>
                     <p class="text-xs font-mono font-bold">${eurRate.toLocaleString(
                       "tr-TR",
-                      { minimumFractionDigits: 4 }
+                      { minimumFractionDigits: 4 },
                     )} ₺</p>
                   </div>
                 `
@@ -177,14 +178,14 @@ export const generateInvoiceHTML = (inv, invoiceType) => {
                 <span>ARA TOPLAM (MATRAH)</span>
                 <span class="font-mono text-gray-800">${subTotal.toLocaleString(
                   "tr-TR",
-                  { minimumFractionDigits: 2 }
+                  { minimumFractionDigits: 2 },
                 )} ₺</span>
               </div>
               <div class="flex justify-between text-[10px] text-gray-500 font-medium px-1 pb-1">
                 <span>TOPLAM KDV</span>
                 <span class="font-mono text-gray-800">${kdvToplam.toLocaleString(
                   "tr-TR",
-                  { minimumFractionDigits: 2 }
+                  { minimumFractionDigits: 2 },
                 )} ₺</span>
               </div>
               <div class="flex justify-between items-center p-3 rounded-xl border border-gray-900 bg-gray-50/30">

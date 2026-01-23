@@ -1,11 +1,13 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.customer.Customer;
+import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
+import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.ReceivedCollectionRepository;
 import com.berksozcu.service.IReceivedCollectionService;
 import jakarta.transaction.Transactional;
@@ -25,6 +27,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     @Autowired
     private ReceivedCollectionRepository receivedCollectionRepository;
 
+    @Autowired
+    private OpeningVoucherRepository openingVoucherRepository;
+
     @Override
     @Transactional
     public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection) {
@@ -33,8 +38,28 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
-        if(customer.isArchived()) {
+        if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+        }
+
+        LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(customer.getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(receivedCollection.getPrice());
+                    newVoucher.setDate(LocalDate.of(receivedCollection.getDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(receivedCollection.getCustomer());
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(receivedCollection.getPrice());
         }
 
         receivedCollection.setCustomer(customer);
@@ -45,8 +70,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         receivedCollection.setPrice(receivedCollection.getPrice());
         receivedCollection.setCustomerName(receivedCollection.getCustomer().getName());
 
-        customer.setBalance(customer.getBalance().subtract(receivedCollection.getPrice()));
-
+        voucher.setFinalBalance(voucher.getFinalBalance().subtract(receivedCollection.getPrice()));
+        voucher.setCredit(voucher.getCredit().add(receivedCollection.getPrice()));
+        openingVoucherRepository.save(voucher);
         receivedCollectionRepository.save(receivedCollection);
         customerRepository.save(customer);
 
@@ -66,6 +92,26 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         ReceivedCollection oldCollection = receivedCollectionRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI)));
 
+        LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(receivedCollection.getCustomer().getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(receivedCollection.getPrice());
+                    newVoucher.setDate(LocalDate.of(receivedCollection.getDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(receivedCollection.getCustomer());
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(receivedCollection.getPrice());
+        }
+
         Customer customer = oldCollection.getCustomer();
 
         Customer newCustomer = receivedCollection.getCustomer();
@@ -73,15 +119,18 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         boolean sameCustomer = customer.getId().equals(newCustomer.getId());
 
 
-        if(sameCustomer) {
+        if (sameCustomer) {
             BigDecimal fark = receivedCollection.getPrice().subtract(oldCollection.getPrice());
-            customer.setBalance(customer.getBalance().subtract(fark));
+            voucher.setFinalBalance(voucher.getFinalBalance().subtract(fark));
+            voucher.setCredit(voucher.getCredit().add(fark));
             customerRepository.save(customer);
         } else {
-            customer.setBalance(customer.getBalance().add(oldCollection.getPrice()));
+            voucher.setFinalBalance(voucher.getFinalBalance().add(oldCollection.getPrice()));
+            voucher.setCredit(voucher.getCredit().subtract(oldCollection.getPrice()));
             customerRepository.save(customer);
 
-            newCustomer.setBalance(newCustomer.getBalance().subtract(receivedCollection.getPrice()));
+            voucher.setCredit(voucher.getCredit().add(oldCollection.getPrice()));
+            voucher.setFinalBalance(voucher.getFinalBalance().subtract(receivedCollection.getPrice()));
             customerRepository.save(newCustomer);
         }
 
@@ -90,6 +139,7 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         oldCollection.setPrice(receivedCollection.getPrice());
         oldCollection.setComment(receivedCollection.getComment());
         oldCollection.setCustomer(newCustomer);
+        openingVoucherRepository.save(voucher);
 
         return receivedCollectionRepository.save(oldCollection);
     }
@@ -100,8 +150,33 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         ReceivedCollection receivedCollection = receivedCollectionRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI))
         );
+
+        LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(receivedCollection.getCustomer().getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(receivedCollection.getPrice());
+                    newVoucher.setDate(LocalDate.of(receivedCollection.getDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(receivedCollection.getCustomer());
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(receivedCollection.getPrice());
+        }
+
+
         Customer customer = receivedCollection.getCustomer();
-        customer.setBalance(customer.getBalance().add(receivedCollection.getPrice()));
+        voucher.setFinalBalance(voucher.getFinalBalance().add(receivedCollection.getPrice()));
+        voucher.setCredit(voucher.getCredit().subtract(receivedCollection.getPrice()));
+
+        openingVoucherRepository.save(voucher);
         customerRepository.save(customer);
         receivedCollectionRepository.deleteById(id);
     }

@@ -9,7 +9,7 @@ export default function InvoicePrintPreview({
   const totalPrice = Number(printItem.totalPrice || 0);
   const subTotal = totalPrice - kdvToplam;
 
-  const currentBalance = Number(printItem?.customer?.balance || 0);
+  const currentBalance = Number(printItem?.customer?.yearlyBalance || 0);
   const usdRate = Number(printItem?.usdSellingRate || 0);
   const eurRate = Number(printItem?.eurSellingRate || 0);
 
@@ -146,7 +146,7 @@ export default function InvoicePrintPreview({
                     </td>
                     <td className="py-3 px-2 text-right font-bold text-gray-900">
                       {Number(
-                        item?.lineTotal || item.unitPrice * item.quantity
+                        item?.lineTotal || item.unitPrice * item.quantity,
                       ).toLocaleString("tr-TR", {
                         minimumFractionDigits: 2,
                       })}{" "}
@@ -234,7 +234,7 @@ export default function InvoicePrintPreview({
             <div className="mt-8 flex justify-end">
               <div className="p-3 border border-emerald-200 rounded-xl w-fit min-w-[200px] bg-emerald-50/20 text-right">
                 <h3 className="text-[8px] font-bold text-emerald-700 uppercase tracking-widest mb-0.5">
-                  Güncel Borç Bakiyesi
+                  {printItem?.date?.split("-")[0]} Yılı Dönem Bakiyesi
                 </h3>
                 <p className="text-lg font-bold text-emerald-900 font-mono">
                   {currentBalance.toLocaleString("tr-TR", {
@@ -243,7 +243,7 @@ export default function InvoicePrintPreview({
                   ₺
                 </p>
                 <p className="text-[8px] text-emerald-600 italic font-medium">
-                  * Bu fatura dahil toplam bakiye.
+                  * Fatura tarihi itibarıyla mühürlenmiş bakiye.
                 </p>
               </div>
             </div>

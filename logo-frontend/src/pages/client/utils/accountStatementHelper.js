@@ -8,6 +8,7 @@ export const accountStatementHelper = (
   collections,
   payrolls,
   year,
+  customerVoucher,
 ) => {
   let combined = [];
   if (!selectedCustomer) return [];
@@ -25,9 +26,12 @@ export const accountStatementHelper = (
   const displayYear = year || new Date().getFullYear();
   if (
     selectedCustomer.openingBalance &&
-    Number(selectedCustomer.openingBalance) !== 0
+    Number(customerVoucher.yearlyCredit) !== 0 &&
+    Number(customerVoucher.yearlyDebit) !== 0
   ) {
-    const openingBal = Number(selectedCustomer.openingBalance);
+    const openingBal =
+      Number(customerVoucher.yearlyDebit) -
+      Number(customerVoucher.yearlyCredit);
     combined.push({
       date: `${displayYear}-01-01`,
       desc: "Açılış Fişi",

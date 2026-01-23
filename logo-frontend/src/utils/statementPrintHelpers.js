@@ -1,11 +1,11 @@
 export const generateStatementHTML = (customer, statementData, year) => {
   const totalDebit = statementData.reduce(
     (sum, item) => sum + (item.debit || 0),
-    0
+    0,
   );
   const totalCredit = statementData.reduce(
     (sum, item) => sum + (item.credit || 0),
-    0
+    0,
   );
   const finalBalance = totalDebit - totalCredit;
 
@@ -41,7 +41,7 @@ export const generateStatementHTML = (customer, statementData, year) => {
           item.balance >= 0 ? "(B)" : "(A)"
         }</span>
       </td>
-    </tr>`
+    </tr>`,
     )
     .join("");
 
@@ -96,7 +96,7 @@ export const generateStatementHTML = (customer, statementData, year) => {
             <div style="text-align: right;">
               <h2 style="font-size: 16px; margin: 0;">SÖZCÜ MATBAA</h2>
               <p style="font-size: 9px; margin: 4px 0;">Rapor Tarihi: ${new Date().toLocaleDateString(
-                "tr-TR"
+                "tr-TR",
               )}</p>
             </div>
           </div>
@@ -132,11 +132,11 @@ export const generateStatementHTML = (customer, statementData, year) => {
                 <td colspan="2" style="padding: 8px; text-align: right; font-size: 10px;">TOPLAM</td>
                 <td style="padding: 8px; text-align: right; font-size: 10px;">${totalDebit.toLocaleString(
                   "tr-TR",
-                  { minimumFractionDigits: 2 }
+                  { minimumFractionDigits: 2 },
                 )} ₺</td>
                 <td style="padding: 8px; text-align: right; font-size: 10px;">${totalCredit.toLocaleString(
                   "tr-TR",
-                  { minimumFractionDigits: 2 }
+                  { minimumFractionDigits: 2 },
                 )} ₺</td>
                 <td style="padding: 8px; text-align: right; font-size: 10px; background-color: #e5e7eb;">
                   ${Math.abs(finalBalance).toLocaleString("tr-TR", {

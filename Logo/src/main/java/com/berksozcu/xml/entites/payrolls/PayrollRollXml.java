@@ -14,6 +14,8 @@ public class PayrollRollXml {
     private Integer type; // Bordro Tipi
     @XmlElement(name = "MASTER_CODE")
     private String masterCode; // Müşteri Kodu
+    @XmlElement(name = "DATE")
+    private String date;
     @XmlElement(name = "TRANSACTIONS")
     private PayrollTransactionsXml transactions;
 

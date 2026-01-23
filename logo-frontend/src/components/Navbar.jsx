@@ -139,7 +139,7 @@ export default function Navbar() {
           </div>
           {isAuthenticated && (
             <nav className="flex justify-between items-center px-6 py-3 ">
-              <div className="flex items-center gap-4 absolute right-30">
+              <div className="flex items-center gap-3 ml-auto">
                 <CompanyDropDown />
                 <YearDropdown />
               </div>

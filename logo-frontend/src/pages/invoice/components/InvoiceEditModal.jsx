@@ -26,85 +26,6 @@ export default function InvoiceEditModal({
     onItemChange(i, name, value);
   };
 
-  // const handleItemChange = (i, e) => {
-  //   const { name, value } = e.target;
-  //   const updated = [...form.items];
-
-  //   updated[i] = { ...updated[i], [name]: value };
-  //   const qty = Number(updated[i].quantity) || 0;
-  //   const price = Number(updated[i].unitPrice) || 0;
-  //   const kdv = Number(updated[i].kdv) || 0;
-
-  //   const currentLineTotal = price * qty;
-  //   const currentKdvTutar = (currentLineTotal * kdv) / 100;
-
-  //   updated[i].lineTotal = currentLineTotal;
-  //   updated[i].kdvTutar = currentKdvTutar;
-  //   setForm({ ...form, items: updated });
-  // };
-
-  // const handlePriceSelect = (index, price, e) => {
-  //   if (e) {
-  //     e.preventDefault();
-  //     e.stopPropagation();
-  //   }
-  //   const updated = [...form.items];
-  //   updated[index].unitPrice = price;
-
-  //   const qty = Number(updated[index].quantity) || 0;
-  //   const kdv = Number(updated[index].kdv) || 0;
-
-  //   const currentLineTotal = price * qty;
-  //   const currentKdvTutar = (currentLineTotal * kdv) / 100;
-
-  //   updated[index].lineTotal = currentLineTotal;
-  //   updated[index].kdvTutar = currentKdvTutar;
-  //   setForm({ ...form, items: updated });
-  // };
-
-  // const calculateRow = (price, qty, kdvRate) => {
-  //   const lineTotal = (Number(price) || 0) * (Number(qty) || 0);
-  //   const kdvTutar = (lineTotal * (Number(kdvRate) || 0)) / 100;
-  //   return { lineTotal, kdvTutar };
-  // };
-
-  // const currentTotals = useMemo(() => {
-  //   return form.items.reduce(
-  //     (acc, item) => {
-  //       const { lineTotal, kdvTutar } = calculateRow(
-  //         item.unitPrice,
-  //         item.quantity,
-  //         item.kdv
-  //       );
-
-  //       return {
-  //         subTotal: acc.subTotal + lineTotal,
-  //         kdvTotal: acc.kdvTotal + kdvTutar,
-  //       };
-  //     },
-  //     { subTotal: 0, kdvTotal: 0 }
-  //   );
-  // }, [form.items]);
-
-  // const addItem = () =>
-  //   setForm({
-  //     ...form,
-  //     items: [
-  //       ...form.items,
-  //       {
-  //         materialId: "",
-  //         unitPrice: "",
-  //         quantity: "",
-  //         kdv: 20,
-  //         kdvTutar: "",
-  //         lineTotal: 0,
-  //       },
-  //     ],
-  //   });
-
-  // const removeItem = (idx) =>
-  //   setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
-
   return (
     <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
       <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[3rem] w-full max-w-[1000px] max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -320,7 +241,7 @@ export default function InvoiceEditModal({
                   {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
-                  }
+                  },
                 )}{" "}
                 ₺
               </span>

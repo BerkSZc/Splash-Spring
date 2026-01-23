@@ -1,6 +1,7 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.customer.Customer;
+import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
@@ -9,10 +10,7 @@ import com.berksozcu.entites.sales.SalesInvoiceItem;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
-import com.berksozcu.repository.CustomerRepository;
-import com.berksozcu.repository.MaterialPriceHistoryRepository;
-import com.berksozcu.repository.MaterialRepository;
-import com.berksozcu.repository.SalesInvoiceRepository;
+import com.berksozcu.repository.*;
 import com.berksozcu.service.ICurrencyRateService;
 import com.berksozcu.service.ISalesInvoiceService;
 import jakarta.transaction.Transactional;
@@ -47,6 +45,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     @Autowired
     private ICurrencyRateService currencyRateService;
 
+    @Autowired
+    private OpeningVoucherRepository openingVoucherRepository;
+
     @Override
     @Transactional
     public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice) {
@@ -59,6 +60,26 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         if (salesInvoiceRepository.existsByFileNo(salesInvoice.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+        }
+
+        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(customer.getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(salesInvoice.getTotalPrice());
+                    newVoucher.setDate(start);
+                    newVoucher.setCustomer(salesInvoice.getCustomer());
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(salesInvoice.getTotalPrice());
         }
 
         salesInvoice.setCustomer(customer);
@@ -102,23 +123,15 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         salesInvoice.setKdvToplam(kdvToplam);
         salesInvoice.setTotalPrice(totalPrice);
 
-        BigDecimal currentBalance = customer.getBalance() != null ? customer.getBalance() : BigDecimal.ZERO;
+        voucher.setFinalBalance(voucher.getFinalBalance().add(totalPrice));
+        voucher.setDebit(voucher.getDebit().add(totalPrice));
 
-        customer.setBalance(currentBalance.add(totalPrice));
-
+        openingVoucherRepository.save(voucher);
         salesInvoiceRepository.save(salesInvoice);
         customerRepository.save(customer);
 
         for (SalesInvoiceItem item : salesInvoice.getItems()) {
-            MaterialPriceHistory history = new MaterialPriceHistory();
-            history.setDate(salesInvoice.getDate());
-            history.setInvoiceType(InvoiceType.SALES);
-            history.setMaterial(item.getMaterial());
-            history.setCustomerName(customer.getName());
-            history.setPrice(item.getUnitPrice());
-            history.setQuantity(item.getQuantity());
-            history.setInvoiceId(salesInvoice.getId());
-            materialPriceHistoryRepository.save(history);
+            savePriceHistory(item, salesInvoice, customer);
         }
 
         return salesInvoice;
@@ -136,15 +149,30 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         SalesInvoice oldInvoice = salesInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
+        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomer(salesInvoice.getCustomer());
+                    newVoucher.setDate(start);
+                    newVoucher.setFinalBalance(salesInvoice.getTotalPrice());
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFileNo("001");
+                    newVoucher.setCustomerName(salesInvoice.getCustomer().getName());
+                    return newVoucher;
+                });
 
         Customer customer = oldInvoice.getCustomer();
 
-        customer.setBalance(customer.getBalance().subtract(oldInvoice.getTotalPrice()));
+        voucher.setFinalBalance(voucher.getFinalBalance().subtract(oldInvoice.getTotalPrice()));
+        voucher.setDebit(voucher.getDebit().add(oldInvoice.getTotalPrice()));
 
         for (SalesInvoiceItem oldItem : oldInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(oldItem.getMaterial().getId(), oldInvoice.getId());
         }
-
 
         oldInvoice.setDate(salesInvoice.getDate());
         oldInvoice.setFileNo(salesInvoice.getFileNo());
@@ -197,27 +225,19 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            MaterialPriceHistory history = new MaterialPriceHistory();
-            history.setMaterial(item.getMaterial());
-            history.setInvoiceId(oldInvoice.getId());
-            history.setInvoiceType(InvoiceType.SALES);
-            history.setPrice(item.getUnitPrice());
-            history.setQuantity(item.getQuantity());
-            history.setDate(oldInvoice.getDate());
-            history.setCustomerName(customer.getName());
-            materialPriceHistoryRepository.save(history);
+            savePriceHistory(item, oldInvoice, customer);
+
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
-
 
 
         oldInvoice.setKdvToplam(kdvToplam);
         oldInvoice.setTotalPrice(total);
 
         // 5- Yeni toplamı müşterinin bakiyesine ekle
-        BigDecimal currentBalance = customer.getBalance() != null ? customer.getBalance() : BigDecimal.ZERO;
-        customer.setBalance(currentBalance.add(total));
-
+        voucher.setFinalBalance(voucher.getFinalBalance().add(total));
+        voucher.setDebit(voucher.getDebit().add(total));
+        openingVoucherRepository.save(voucher);
         customerRepository.save(customer);
 
         return salesInvoiceRepository.save(oldInvoice);
@@ -230,13 +250,34 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         SalesInvoice salesInvoice = salesInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
+        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(salesInvoice.getCustomer().getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(salesInvoice.getTotalPrice());
+                    newVoucher.setDate(LocalDate.of(salesInvoice.getDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(salesInvoice.getCustomer());
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(salesInvoice.getTotalPrice());
+        }
+
         Customer customer = salesInvoice.getCustomer();
 
         for (SalesInvoiceItem salesInvoiceItem : salesInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(salesInvoiceItem.getMaterial().getId(), id);
         }
 
-        customer.setBalance(customer.getBalance().subtract(salesInvoice.getTotalPrice()));
+        voucher.setFinalBalance(voucher.getFinalBalance().subtract(salesInvoice.getTotalPrice()));
+        voucher.setDebit(voucher.getDebit().subtract(salesInvoice.getTotalPrice()));
         customerRepository.save(customer);
 
         salesInvoiceRepository.deleteById(id);
@@ -247,6 +288,18 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
         return salesInvoiceRepository.findByDateBetween(start, end);
+    }
+
+    private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer) {
+        MaterialPriceHistory saveHistory = new MaterialPriceHistory();
+        saveHistory.setMaterial(item.getMaterial());
+        saveHistory.setInvoiceId(invoice.getId());
+        saveHistory.setInvoiceType(InvoiceType.SALES);
+        saveHistory.setPrice(item.getUnitPrice());
+        saveHistory.setQuantity(item.getQuantity());
+        saveHistory.setDate(invoice.getDate());
+        saveHistory.setCustomerName(customer.getName());
+        materialPriceHistoryRepository.save(saveHistory);
     }
 }
 

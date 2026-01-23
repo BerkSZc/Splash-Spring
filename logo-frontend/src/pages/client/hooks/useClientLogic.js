@@ -22,7 +22,7 @@ export const useClientLogic = () => {
   const { payments, getPaymentCollectionsByYear } = usePaymentCompany();
   const { collections, getReceivedCollectionsByYear } = useReceivedCollection();
   const { payrolls, getPayrollByYear } = usePayroll();
-  const { getOpeningVoucherByYear } = useVoucher();
+  const { getAllOpeningVoucherByYear, vouchers } = useVoucher();
   const { year } = useYear();
 
   const formRef = useRef(null);
@@ -42,8 +42,8 @@ export const useClientLogic = () => {
   const [form, setForm] = useState({
     name: "",
     balance: 0,
-    debit: 0,
-    credit: 0,
+    yearlyDebit: 0,
+    yearlyCredit: 0,
     address: "",
     country: "",
     local: "",
@@ -52,11 +52,22 @@ export const useClientLogic = () => {
   });
 
   useEffect(() => {
-    getAllCustomers();
-  }, [getAllCustomers]);
+    const refreshBalances = async () => {
+      if (year) {
+        await getAllCustomers();
+        const dateString = `${year}-01-01`;
+        await getAllOpeningVoucherByYear(dateString);
+      }
+    };
+
+    refreshBalances();
+  }, [year, getAllCustomers, getAllOpeningVoucherByYear]);
 
   useEffect(() => {
     if (selectedCustomerForStatement && year) {
+      const customerVoucher = vouchers?.find(
+        (v) => v.customer?.id === selectedCustomerForStatement?.id,
+      );
       const data = accountStatementHelper(
         selectedCustomerForStatement,
         sales,
@@ -65,6 +76,7 @@ export const useClientLogic = () => {
         collections,
         payrolls,
         year,
+        customerVoucher,
       );
       setStatementData(data);
     }
@@ -76,6 +88,7 @@ export const useClientLogic = () => {
     collections,
     payrolls,
     year,
+    vouchers,
   ]);
 
   useEffect(() => {
@@ -101,15 +114,19 @@ export const useClientLogic = () => {
 
   const handleOpenStatement = async (customer) => {
     setOpenMenuId(null);
-    const date = `${year}-01-01`;
-    const voucher = await getOpeningVoucherByYear(customer.id, date);
+
+    const customerVoucher = vouchers?.find(
+      (v) => v.customer?.id === customer?.id,
+    );
     const updatedCustomer = {
       ...customer,
-      // Veritabanında 353.068,39 ₺ varsa onu al, yoksa 0 setle
-      openingBalance: voucher ? voucher.debit - voucher.credit : 0,
+      openingBalance: customerVoucher
+        ? Number(customerVoucher.yearlyDebit) -
+          Number(customerVoucher.yearlyCredit)
+        : 0,
+      finalBalance: customerVoucher ? customerVoucher.finalBalance : 0,
     };
 
-    // 3. Güncellenmiş müşteri ile ekstre verilerini hazırla
     setSelectedCustomerForStatement(updatedCustomer);
     await Promise.all([
       getSalesInvoicesByYear(year),
@@ -121,24 +138,35 @@ export const useClientLogic = () => {
     setShowPrintModal(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const netOpeningBalance =
-      Number(form.debit || 0) - Number(form.credit || 0);
-    const payload = { ...form, openingBalance: netOpeningBalance };
 
-    if (!editClient) payload.balance = form.openingBalance;
+    const customerPayload = {
+      name: form.name,
+      address: form.address,
+      country: form.country,
+      yearlyDebit: Number(form.yearlyDebit || 0),
+      yearlyCredit: Number(form.yearlyCredit || 0),
+      local: form.local,
+      district: form.district,
+      vdNo: form.vdNo,
+    };
+
     if (editClient) {
-      updateCustomer(editClient.id, form, year);
+      await updateCustomer(editClient.id, customerPayload, year);
       setEditClient(null);
     } else {
-      addCustomer({ ...payload, balance: netOpeningBalance });
+      // Yeni kayıt
+      await addCustomer(customerPayload);
     }
+
+    const dateString = `${year}-01-01`;
+    await getAllOpeningVoucherByYear(dateString);
+
     setForm({
       name: "",
-      debit: 0,
-      credit: 0,
-      balance: 0,
+      yearlyDebit: 0,
+      yearlyCredit: 0,
       address: "",
       country: "",
       local: "",
@@ -150,17 +178,18 @@ export const useClientLogic = () => {
   const handleEdit = async (customer) => {
     if (customer.archived) return;
 
-    const date = `${year}-01-01`;
-    const voucher = await getOpeningVoucherByYear(customer.id, date);
+    const customerVoucher = vouchers?.find(
+      (v) => String(v.customer?.id) === String(customer?.id),
+    );
 
     setOpenMenuId(null);
 
     setEditClient(customer);
     setForm({
       name: customer.name || "",
-      balance: customer.balance || "",
-      debit: voucher.debit || 0,
-      credit: voucher.credit || 0,
+      finalBalance: customerVoucher?.finalBalance || 0,
+      yearlyDebit: customerVoucher.yearlyDebit || 0,
+      yearlyCredit: customerVoucher.yearlyCredit || 0,
       address: customer.address || "",
       country: customer.country || "",
       local: customer.local || "",
@@ -175,8 +204,9 @@ export const useClientLogic = () => {
     setForm({
       name: "",
       balance: 0,
-      debit: 0,
-      credit: 0,
+      yearlyDebit: 0,
+      yearlyCredit: 0,
+      finalBalance: 0,
       address: "",
       country: "",
       local: "",

@@ -21,18 +21,8 @@ import java.math.BigDecimal;
         @Column(name = "customer_code")
         private String code;
 
-        @Column(name = "opening_balance", precision = 18, scale = 2)
-        private BigDecimal openingBalance;
-
-//        @Transient
-//        private BigDecimal yearlyOpeningBalance;
-
         //Müşteri Unvanı
         private String name;
-
-        //Bakiye
-        @Column(name = "balance", precision = 18, scale = 2)
-        private BigDecimal balance;
 
         //Adres
         private String address;
@@ -50,12 +40,6 @@ import java.math.BigDecimal;
         @Column(name= "vd_no")
         private String vdNo;
 
-
-        @Column(precision = 18, scale = 2)
-        private BigDecimal debit;
-
-        @Column(precision = 18, scale = 2)
-        private BigDecimal credit;
 
         @Column(nullable = false)
         private boolean archived = false;

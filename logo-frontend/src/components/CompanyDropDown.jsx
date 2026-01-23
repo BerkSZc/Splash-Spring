@@ -40,6 +40,7 @@ const CompanyDropDown = () => {
       <button
         onClick={() => setOpen(!open)}
         className="
+        top-2 right-2
           flex items-center gap-2
           bg-indigo-600 text-white
           px-3 py-1

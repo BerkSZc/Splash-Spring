@@ -3,6 +3,7 @@ package com.berksozcu.controller.impl;
 import com.berksozcu.controller.ICustomerController;
 import com.berksozcu.controller.base.RestBaseController;
 import com.berksozcu.controller.base.RootEntity;
+import com.berksozcu.dto.customer.DtoCustomer;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.service.ICustomerService;
 import com.berksozcu.service.IPurchaseInvoiceService;
@@ -42,7 +43,7 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
 
     @Override
     @PutMapping("/update-customer/{id}")
-    public void updateCustomer(@PathVariable(name = "id") Long id, @RequestBody Customer updateCustomer,
+    public void updateCustomer(@PathVariable(name = "id") Long id, @RequestBody DtoCustomer updateCustomer,
     @RequestParam int currentYear) {
         customerService.updateCustomer(id, updateCustomer, currentYear);
     }

@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.customer.DtoCustomer;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.exception.BaseException;
@@ -11,7 +12,6 @@ import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.PurchaseInvoiceRepository;
 import com.berksozcu.service.ICustomerService;
 import jakarta.transaction.Transactional;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -34,7 +33,6 @@ public class CustomerServiceImpl implements ICustomerService {
     @Autowired
     private MaterialRepository materialRepository;
 
-
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
@@ -47,7 +45,6 @@ public class CustomerServiceImpl implements ICustomerService {
         Customer customer = new Customer();
         customer.setId(optional.get().getId());
         customer.setName(optional.get().getName());
-        customer.setBalance(optional.get().getBalance());
 
         return customer;
     }
@@ -64,17 +61,11 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setLocal(newCustomer.getLocal());
         customer.setDistrict(newCustomer.getDistrict());
         customer.setVdNo(newCustomer.getVdNo());
-        customer.setCredit(newCustomer.getCredit());
-        customer.setDebit(newCustomer.getDebit());
-        customer.setOpeningBalance(newCustomer.getDebit().subtract(newCustomer.getCredit()).setScale(2, RoundingMode.HALF_EVEN));
-        customer.setBalance(newCustomer.getOpeningBalance());
         customerRepository.save(customer);
 
         OpeningVoucher openingVoucher = new OpeningVoucher();
         openingVoucher.setCustomerName(customer.getName());
         openingVoucher.setCustomer(customer);
-        openingVoucher.setCredit(newCustomer.getCredit());
-        openingVoucher.setDebit(newCustomer.getDebit());
         openingVoucher.setDescription("Yeni Müşteri");
         openingVoucher.setFileNo("001");
         openingVoucher.setDate(LocalDate.now());
@@ -90,7 +81,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional
-    public void updateCustomer(Long id, Customer updateCustomer, int currentYear) {
+    public void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear) {
         Customer oldCustomer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
@@ -104,46 +95,43 @@ public class CustomerServiceImpl implements ICustomerService {
         oldCustomer.setVdNo(updateCustomer.getVdNo());
         oldCustomer.setCountry(updateCustomer.getCountry());
 
-        LocalDate start= LocalDate.of(currentYear, 1, 1);
-        LocalDate end= LocalDate.of(currentYear, 12, 31);
+        LocalDate start = LocalDate.of(currentYear, 1, 1);
+        LocalDate end = LocalDate.of(currentYear, 12, 31);
 
-        BigDecimal newDebit= updateCustomer.getDebit() != null ? updateCustomer.getDebit() : BigDecimal.ZERO;
-        BigDecimal newCredit= updateCustomer.getCredit() != null ? updateCustomer.getCredit() : BigDecimal.ZERO;
-        BigDecimal newNetValue = newDebit.subtract(newCredit.setScale(2, RoundingMode.UP));
-        BigDecimal oldValueDiff = BigDecimal.ZERO;
-
-        Optional<OpeningVoucher> optional = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end);
-
-        if(optional.isPresent()) {
-            OpeningVoucher openingVoucher = optional.get();
-            oldValueDiff = openingVoucher.getDebit().subtract(openingVoucher.getCredit().setScale(2, RoundingMode.UP));
-
-            openingVoucher.setCredit(updateCustomer.getCredit());
-            openingVoucher.setDebit(updateCustomer.getDebit());
-            openingVoucherRepository.save(openingVoucher);
-        } else {
-            OpeningVoucher newOpeningVoucher = new OpeningVoucher();
-            newOpeningVoucher.setCustomer(oldCustomer);
-            newOpeningVoucher.setCustomerName(oldCustomer.getName());
-            newOpeningVoucher.setDate(start);
-            newOpeningVoucher.setDebit(updateCustomer.getDebit());
-            newOpeningVoucher.setCredit(updateCustomer.getCredit());
-            newOpeningVoucher.setDescription(currentYear + " Yılı Manuel Devir");
-            newOpeningVoucher.setFileNo("01");
-            openingVoucherRepository.save(newOpeningVoucher);
-        }
-
-        BigDecimal diff = newNetValue.subtract(oldValueDiff);
-
-        BigDecimal currentBalance =  oldCustomer.getBalance() != null ? oldCustomer.getBalance() : BigDecimal.ZERO;
+        OpeningVoucher openingVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newV = new OpeningVoucher();
+                    newV.setCustomer(oldCustomer);
+                    newV.setCustomerName(oldCustomer.getName());
+                    newV.setDate(start);
+                    newV.setFileNo("01");
+                    newV.setDescription(currentYear + " Yılı Manuel Devir");
+                    newV.setFinalBalance(BigDecimal.ZERO);
+                    newV.setYearlyCredit(BigDecimal.ZERO);
+                    newV.setYearlyCredit(BigDecimal.ZERO);
+                    return newV;
+                });
 
 
-        oldCustomer.setBalance(currentBalance.add(diff).setScale(2, RoundingMode.HALF_UP));
+        BigDecimal updatedCredit = updateCustomer.getYearlyCredit();
+        BigDecimal updatedDebit = updateCustomer.getYearlyDebit();
 
-        oldCustomer.setOpeningBalance(newNetValue);
+        BigDecimal oldCredit = openingVoucher.getYearlyCredit();
+        BigDecimal oldDebit = openingVoucher.getYearlyDebit();
 
+        BigDecimal newCredit = updatedCredit.subtract(oldCredit);
+        BigDecimal newDebit = updatedDebit.subtract(oldDebit);
+
+        BigDecimal currentBalance = openingVoucher.getFinalBalance() != null ? openingVoucher.getFinalBalance() : BigDecimal.ZERO;
+
+        openingVoucher.setYearlyCredit(updatedCredit);
+        openingVoucher.setYearlyDebit(updatedDebit);
+        openingVoucher.setFinalBalance(currentBalance.add(newCredit).add(newDebit));
+
+        openingVoucherRepository.save(openingVoucher);
         customerRepository.save(oldCustomer);
     }
+
 
     @Override
     public List<Customer> findByArchivedTrue() {

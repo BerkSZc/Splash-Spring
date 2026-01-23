@@ -79,7 +79,11 @@ export default function StatementModal({
                         : "-"}
                     </td>
                     <td className="p-2 text-right align-top font-bold whitespace-nowrap">
-                      {item.balance.toLocaleString("tr-TR")} ₺
+                      {item.balance.toLocaleString("tr-TR", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                      ₺
                     </td>
                   </tr>
                 ))}

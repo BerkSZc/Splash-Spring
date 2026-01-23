@@ -1,3 +1,5 @@
+import { useVoucher } from "../../../../backend/store/useVoucher";
+
 export default function ClientRow({
   customer,
   isSelected,
@@ -9,6 +11,8 @@ export default function ClientRow({
   onOpenStatement,
   onArchiveToggle,
 }) {
+  const { vouchers } = useVoucher();
+  const myVoucher = vouchers?.find((v) => v?.customer?.id === customer?.id);
   return (
     <tr
       key={customer.id}
@@ -57,11 +61,13 @@ export default function ClientRow({
       <td className="p-5 text-right font-mono">
         <span
           className={`text-lg font-bold ${
-            Number(customer.balance) < 0 ? "text-red-400" : "text-emerald-400"
+            Number(myVoucher?.finalBalance ?? 0) < 0
+              ? "text-red-400"
+              : "text-emerald-400"
           }`}
         >
           ₺{" "}
-          {Number(customer.balance || 0).toLocaleString("tr-TR", {
+          {Number(myVoucher?.finalBalance ?? 0).toLocaleString("tr-TR", {
             minimumFractionDigits: 2,
           })}
         </span>

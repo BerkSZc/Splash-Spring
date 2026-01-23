@@ -6,7 +6,6 @@ export default function ClientForm({
   handleCancelEdit,
   formRef,
 }) {
-  // Form alanlarını dizi olarak tanımlıyoruz
   const formFields = [
     {
       key: "name",
@@ -21,24 +20,24 @@ export default function ClientForm({
       colSpan: "md:col-span-2",
     },
     {
-      key: "debit",
-      label: "Borç (Devir)",
+      key: "yearlyDebit",
+      label: "Borç (Yıllık Devir)",
       type: "number",
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/5",
       borderColor: "focus:border-emerald-500",
     },
     {
-      key: "credit",
-      label: "Alacak (Devir)",
+      key: "yearlyCredit",
+      label: "Alacak (Yıllık Devir)",
       type: "number",
       color: "text-red-400",
       bgColor: "bg-red-500/5",
       borderColor: "focus:border-red-400",
     },
     {
-      key: "balance",
-      label: "Net Bakiye (Otomatik)",
+      key: "finalBalance",
+      label: "Yıllık Net Bakiye (Otomatik)",
       type: "number",
       disabled: true,
     },

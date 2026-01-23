@@ -1,18 +1,19 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.customer.Customer;
+import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
+import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.PayrollRepository;
 import com.berksozcu.service.IPayrollService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -28,6 +29,9 @@ public class PayrollServiceImpl implements IPayrollService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private OpeningVoucherRepository openingVoucherRepository;
+
     @Transactional
     @Override
     public Payroll addPayroll(Long id, Payroll newPayroll) {
@@ -35,6 +39,27 @@ public class PayrollServiceImpl implements IPayrollService {
         Customer customer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
+
+        LocalDate start = LocalDate.of(newPayroll.getTransactionDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(newPayroll.getTransactionDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(customer.getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(newPayroll.getAmount());
+                    newVoucher.setDate(LocalDate.of(newPayroll.getTransactionDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(newPayroll.getCustomer());
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(newPayroll.getAmount());
+        }
+
         Payroll payroll = new Payroll();
 
         payroll.setCustomer(customer);
@@ -47,13 +72,14 @@ public class PayrollServiceImpl implements IPayrollService {
         payroll.setBankName(newPayroll.getBankName());
         payroll.setBankBranch(newPayroll.getBankBranch());
 
-
-        updateBalance(customer, newPayroll);
-
+        updateBalance(customer, newPayroll, voucher);
+        openingVoucherRepository.save(voucher);
         customerRepository.save(customer);
         return payrollRepository.save(payroll);
     }
 
+
+    //TODO: BUNU KONTROL ET HATALI GİBİ
     @Transactional
     @Override
     public Payroll editPayroll(Long id, Payroll editPayroll) {
@@ -63,18 +89,42 @@ public class PayrollServiceImpl implements IPayrollService {
         );
         Customer customer = oldPayroll.getCustomer();
 
+        LocalDate start = LocalDate.of(editPayroll.getTransactionDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(editPayroll.getTransactionDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(editPayroll.getCustomer().getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(editPayroll.getAmount());
+                    newVoucher.setDate(LocalDate.of(editPayroll.getTransactionDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(customer);
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(editPayroll.getAmount());
+        }
+
         if (oldPayroll.getPayrollModel() == PayrollModel.INPUT) {
-            customer.setBalance(customer.getBalance().add(oldPayroll.getAmount()));
+            voucher.setFinalBalance(voucher.getFinalBalance().add(oldPayroll.getAmount()));
+            voucher.setCredit(voucher.getCredit().add(oldPayroll.getAmount()));
         } else {
-            customer.setBalance(customer.getBalance().subtract(oldPayroll.getAmount()));
+            voucher.setFinalBalance(voucher.getFinalBalance().subtract(oldPayroll.getAmount()));
+            voucher.setCredit(voucher.getCredit().subtract(oldPayroll.getAmount()));
         }
 
         BeanUtils.copyProperties(editPayroll, oldPayroll, "id", "customer");
 
         if (oldPayroll.getPayrollModel() == PayrollModel.INPUT) {
-            customer.setBalance(customer.getBalance().subtract(oldPayroll.getAmount()));
+            voucher.setFinalBalance(voucher.getFinalBalance().subtract(oldPayroll.getAmount()));
+            voucher.setCredit(voucher.getCredit().add(oldPayroll.getAmount()));
         } else {
-            customer.setBalance(customer.getBalance().add(oldPayroll.getAmount()));
+            voucher.setFinalBalance(voucher.getFinalBalance().add(oldPayroll.getAmount()));
+            voucher.setDebit(voucher.getDebit().add(oldPayroll.getAmount()));
         }
 
         customerRepository.save(customer);
@@ -87,15 +137,38 @@ public class PayrollServiceImpl implements IPayrollService {
         Payroll payroll = payrollRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
+
         Customer customer = payroll.getCustomer();
 
-        if (payroll.getPayrollModel() == PayrollModel.INPUT) {
 
-            customer.setBalance(customer.getBalance().add(payroll.getAmount()));
+        LocalDate start = LocalDate.of(payroll.getTransactionDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(payroll.getTransactionDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+                .orElseGet(() -> {
+                    OpeningVoucher newVoucher = new OpeningVoucher();
+                    newVoucher.setCustomerName(customer.getName());
+                    newVoucher.setDescription("Eklendi");
+                    newVoucher.setFileNo("001");
+                    newVoucher.setDebit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(payroll.getAmount());
+                    newVoucher.setDate(LocalDate.of(payroll.getTransactionDate().getYear(), 1, 1));
+                    newVoucher.setCustomer(customer);
+                    return newVoucher;
+                });
+        if (voucher.getFinalBalance() == null) {
+            voucher.setFinalBalance(payroll.getAmount());
+        }
+
+
+        if (payroll.getPayrollModel() == PayrollModel.INPUT) {
+            voucher.setFinalBalance(voucher.getFinalBalance().add(payroll.getAmount()));
+            voucher.setCredit(voucher.getCredit().subtract(payroll.getAmount()));
             customerRepository.save(customer);
         } else {
-            customer.setBalance(customer.getBalance().subtract(payroll.getAmount()));
-
+            voucher.setFinalBalance(voucher.getFinalBalance().subtract(payroll.getAmount()));
+            voucher.setDebit(voucher.getDebit().subtract(payroll.getAmount()));
         }
         customerRepository.save(customer);
         payrollRepository.delete(payroll);
@@ -108,13 +181,13 @@ public class PayrollServiceImpl implements IPayrollService {
         return payrollRepository.findByTransactionDateBetween(start, end);
     }
 
-    private void updateBalance(Customer customer, Payroll newPayroll) {
+    private void updateBalance(Customer customer, Payroll newPayroll, OpeningVoucher voucher) {
         if (newPayroll.getPayrollModel() == PayrollModel.INPUT) {
-
-            customer.setBalance(customer.getBalance().subtract(newPayroll.getAmount()));
+            voucher.setFinalBalance(voucher.getFinalBalance().subtract(newPayroll.getAmount()));
+            voucher.setCredit(voucher.getCredit().add(newPayroll.getAmount()));
         } else {
-
-            customer.setBalance(customer.getBalance().add(newPayroll.getAmount()));
+            voucher.setFinalBalance(voucher.getFinalBalance().add(newPayroll.getAmount()));
+            voucher.setDebit(voucher.getDebit().add(newPayroll.getAmount()));
         }
     }
 }

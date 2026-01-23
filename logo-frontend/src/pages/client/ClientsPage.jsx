@@ -10,7 +10,7 @@ export default function ClientsPage() {
 
   // Seçili olan müşterilerin listesi (Arşiv aksiyonu için)
   const selectedList = state.filteredCustomers.filter((c) =>
-    state.selectedCustomers.includes(c.id)
+    state.selectedCustomers.includes(c.id),
   );
 
   return (
@@ -81,7 +81,9 @@ export default function ClientsPage() {
             openMenuId={state.openMenuId}
             onCheckboxChange={(id) =>
               handlers.setSelectedCustomers((prev) =>
-                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+                prev.includes(id)
+                  ? prev.filter((x) => x !== id)
+                  : [...prev, id],
               )
             }
             onToggleMenu={(id) =>
@@ -124,7 +126,7 @@ export default function ClientsPage() {
         }}
         onArchiveClick={() => {
           handlers.setArchiveAction(
-            selectedList.every((c) => c.archived) ? "unarchive" : "archive"
+            selectedList.every((c) => c.archived) ? "unarchive" : "archive",
           );
           handlers.setShowArchiveModal(true);
           handlers.setContextMenu(null);
