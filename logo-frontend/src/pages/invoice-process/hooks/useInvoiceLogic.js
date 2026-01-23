@@ -25,17 +25,37 @@ export const useInvoiceLogic = () => {
     lineTotal: 0,
   };
 
-  const initialFormState = {
-    date: new Date().toISOString().slice(0, 10),
-    fileNo: "",
-    customerId: "",
-    usdSellingRate: "",
-    eurSellingRate: "",
-    items: [{ ...initalItem }],
+  const getInitialFormState = (selectedYear) => {
+    const currentActualDate = new Date();
+    const currentActualYear = currentActualDate.getFullYear();
+
+    let startDate;
+
+    if (Number(selectedYear) == currentActualYear) {
+      startDate = currentActualDate.toISOString().slice(0, 10);
+    } else {
+      startDate = `${selectedYear}-01-01`;
+    }
+    return {
+      date: startDate,
+      fileNo: "",
+      customerId: "",
+      usdSellingRate: "",
+      eurSellingRate: "",
+      items: [{ ...initalItem }],
+    };
   };
 
-  const [salesForm, setSalesForm] = useState({ ...initialFormState });
-  const [purchaseForm, setPurchaseForm] = useState({ ...initialFormState });
+  useEffect(() => {
+    const newState = getInitialFormState(year);
+    setSalesForm((prev) => ({ ...prev, date: newState.date }));
+    setPurchaseForm((prev) => ({ ...prev, date: newState.date }));
+  }, [year]);
+
+  const [salesForm, setSalesForm] = useState(() => getInitialFormState(year));
+  const [purchaseForm, setPurchaseForm] = useState(() =>
+    getInitialFormState(year),
+  );
 
   useEffect(() => {
     const fetchAndSetRates = async () => {
@@ -240,7 +260,7 @@ export const useInvoiceLogic = () => {
 
   const resetForm = () => {
     const initialForm = {
-      date: new Date().toISOString().slice(0, 10),
+      date: getInitialFormState(year),
       fileNo: "",
       customerId: "",
       items: [{ ...initalItem }],
@@ -321,6 +341,12 @@ export const useInvoiceLogic = () => {
     }
   };
 
+  const currentForm = mode === "sales" ? salesForm : purchaseForm;
+  const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
+
+  const minDate = `${year}-01-01`;
+  const maxDate = `${year}-12-31`;
+
   return {
     state: {
       mode,
@@ -330,6 +356,10 @@ export const useInvoiceLogic = () => {
       customers,
       salesCalculation,
       purchaseCalculation,
+      maxDate,
+      minDate,
+      currentForm,
+      currentCalc,
     },
     handlers: {
       setMode,

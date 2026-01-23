@@ -10,12 +10,11 @@ export default function InvoiceForm() {
     purchaseForm,
     materials,
     customers,
-    salesCalculation,
-    purchaseCalculation,
+    maxDate,
+    minDate,
+    currentForm,
+    currentCalc,
   } = state;
-
-  const currentForm = mode === "sales" ? salesForm : purchaseForm;
-  const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
@@ -62,6 +61,8 @@ export default function InvoiceForm() {
                         date: e.target.value,
                       })
                 }
+                max={maxDate}
+                min={minDate}
                 className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition-all"
               />
             </div>

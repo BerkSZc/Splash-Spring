@@ -99,8 +99,8 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
                             OpeningVoucher newVoucher = new OpeningVoucher();
                             newVoucher.setFinalBalance(closingVoucher.getFinalBalance().setScale(2, RoundingMode.HALF_UP));
                             newVoucher.setCustomerName(customer.getName());
-                            newVoucher.setDebit(closingVoucher.getDebit());
-                            newVoucher.setCredit(closingVoucher.getCredit());
+                            newVoucher.setDebit(BigDecimal.ZERO);
+                            newVoucher.setCredit(BigDecimal.ZERO);
                             newVoucher.setDescription("Yeni Eklendi");
                             newVoucher.setDate(openingDate);
                             newVoucher.setCustomer(customer);
@@ -111,16 +111,8 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
                         });
 
         openingVoucher.setFinalBalance(closingVoucher.getFinalBalance());
-
-
-        // Borç / Alacak sadece açılışta yazılır
-        if (closingVoucher.getFinalBalance().compareTo(BigDecimal.ZERO) >= 0) {
-            openingVoucher.setDebit(closingVoucher.getDebit().setScale(2, RoundingMode.HALF_UP));
-            openingVoucher.setCredit(closingVoucher.getCredit().setScale(2, RoundingMode.HALF_UP));
-        } else {
-            openingVoucher.setDebit(closingVoucher.getDebit().setScale(2, RoundingMode.HALF_UP));
-            openingVoucher.setCredit(closingVoucher.getCredit().abs().setScale(2,RoundingMode.HALF_UP));
-        }
+        openingVoucher.setDebit(BigDecimal.ZERO);
+        openingVoucher.setCredit(BigDecimal.ZERO);
 
         customerRepository.save(customer);
         return openingVoucherRepository.save(openingVoucher);

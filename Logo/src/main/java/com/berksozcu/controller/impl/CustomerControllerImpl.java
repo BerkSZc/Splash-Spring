@@ -30,9 +30,10 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
 
     @Override
     @PostMapping("/add-customer")
-    public RootEntity<Customer> addCustomer(@RequestBody Customer customer) {
+    public RootEntity<Customer> addCustomer(@RequestBody DtoCustomer customer,
+    @RequestParam int year) {
         return
-                ok(customerService.addCustomer(customer));
+                ok(customerService.addCustomer(customer, year));
     }
 
     @Override

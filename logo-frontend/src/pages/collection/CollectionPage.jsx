@@ -16,6 +16,8 @@ export default function CollectionPage() {
     filteredList,
     customers,
     year,
+    maxDate,
+    minDate,
   } = state;
 
   return (
@@ -48,6 +50,8 @@ export default function CollectionPage() {
           setAddForm={handlers.setAddForm}
           handleAdd={handlers.handleAdd}
           customers={customers}
+          minDate={minDate}
+          maxDate={maxDate}
         />
 
         {/* Liste Tablosu */}

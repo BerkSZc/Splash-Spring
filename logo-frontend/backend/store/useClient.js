@@ -15,9 +15,11 @@ export const useClient = create((set, get) => ({
       toast.error("Error at getAllClient:" + backendErr);
     }
   },
-  addCustomer: async (customer) => {
+  addCustomer: async (customer, year) => {
     try {
-      await axiosInstance.post("/customer/add-customer", customer);
+      await axiosInstance.post("/customer/add-customer", customer, {
+        params: { year },
+      });
       toast.success("Musteri eklendi");
       await get().getAllCustomers();
     } catch (error) {

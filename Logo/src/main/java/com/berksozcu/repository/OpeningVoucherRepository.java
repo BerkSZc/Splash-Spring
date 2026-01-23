@@ -14,8 +14,6 @@ public interface OpeningVoucherRepository extends JpaRepository<OpeningVoucher, 
 
     Optional<OpeningVoucher> findByCustomerIdAndDate(Long customerId, LocalDate date);
 
-    List<OpeningVoucher> findByDate(LocalDate date);
-
     Optional<OpeningVoucher> findByCustomerIdAndDateBetween(Long customerId, LocalDate start, LocalDate end);
 
     List<OpeningVoucher> findAllByCustomerIdAndDateBetween(Long customerId, LocalDate start, LocalDate end);

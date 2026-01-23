@@ -6,6 +6,8 @@ export default function FinancialForm({
   setAddForm,
   handleAdd,
   customers,
+  minDate,
+  maxDate,
 }) {
   return (
     <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem]">
@@ -34,6 +36,8 @@ export default function FinancialForm({
             value={addForm.date}
             required
             onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
+            min={minDate}
+            max={maxDate}
             className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition"
           />
         </div>

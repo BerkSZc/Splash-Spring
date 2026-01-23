@@ -13,6 +13,7 @@ import com.berksozcu.repository.PurchaseInvoiceRepository;
 import com.berksozcu.service.ICustomerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -52,7 +53,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional
-    public Customer addCustomer(Customer newCustomer) {
+    public Customer addCustomer(DtoCustomer newCustomer, int year) {
         Customer customer = new Customer();
         customer.setName(newCustomer.getName());
         customer.setAddress(newCustomer.getAddress());
@@ -61,16 +62,30 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setLocal(newCustomer.getLocal());
         customer.setDistrict(newCustomer.getDistrict());
         customer.setVdNo(newCustomer.getVdNo());
+        customer.setCode("0123");
         customerRepository.save(customer);
 
-        OpeningVoucher openingVoucher = new OpeningVoucher();
-        openingVoucher.setCustomerName(customer.getName());
-        openingVoucher.setCustomer(customer);
-        openingVoucher.setDescription("Yeni Müşteri");
-        openingVoucher.setFileNo("001");
-        openingVoucher.setDate(LocalDate.now());
-        openingVoucherRepository.save(openingVoucher);
+        LocalDate date = LocalDate.of(year, 1, 1);
 
+        BigDecimal finalBalance = newCustomer.getYearlyDebit().subtract(newCustomer.getYearlyCredit().setScale(2, RoundingMode.HALF_UP));
+
+             OpeningVoucher openingVoucher =
+                     openingVoucherRepository.findByCustomerIdAndDate(customer.getId(), date)
+                        .orElseGet(() -> {
+                            OpeningVoucher newOpeningVoucher = new OpeningVoucher();
+                            newOpeningVoucher.setCustomerName(customer.getName());
+                            newOpeningVoucher.setCustomer(customer);
+                            newOpeningVoucher.setDescription("Yeni Müşteri");
+                            newOpeningVoucher.setFileNo("001");
+                            newOpeningVoucher.setDate(date);
+                            newOpeningVoucher.setFinalBalance(finalBalance);
+                            newOpeningVoucher.setYearlyDebit(newCustomer.getYearlyDebit());
+                            newOpeningVoucher.setYearlyCredit(newCustomer.getYearlyCredit());
+                            newOpeningVoucher.setDebit(BigDecimal.ZERO);
+                            newOpeningVoucher.setCredit(BigDecimal.ZERO);
+                            return newOpeningVoucher;
+                        });
+                openingVoucherRepository.save(openingVoucher);
         return customer;
     }
 
@@ -122,11 +137,13 @@ public class CustomerServiceImpl implements ICustomerService {
         BigDecimal newCredit = updatedCredit.subtract(oldCredit);
         BigDecimal newDebit = updatedDebit.subtract(oldDebit);
 
+        BigDecimal finalBalance = newDebit.subtract(newCredit).setScale(2, RoundingMode.HALF_UP);
+
         BigDecimal currentBalance = openingVoucher.getFinalBalance() != null ? openingVoucher.getFinalBalance() : BigDecimal.ZERO;
 
         openingVoucher.setYearlyCredit(updatedCredit);
         openingVoucher.setYearlyDebit(updatedDebit);
-        openingVoucher.setFinalBalance(currentBalance.add(newCredit).add(newDebit));
+        openingVoucher.setFinalBalance(currentBalance.add(finalBalance));
 
         openingVoucherRepository.save(openingVoucher);
         customerRepository.save(oldCustomer);

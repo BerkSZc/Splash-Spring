@@ -66,7 +66,7 @@ export const useClientLogic = () => {
   useEffect(() => {
     if (selectedCustomerForStatement && year) {
       const customerVoucher = vouchers?.find(
-        (v) => v.customer?.id === selectedCustomerForStatement?.id,
+        (v) => v?.customer?.id === selectedCustomerForStatement?.id,
       );
       const data = accountStatementHelper(
         selectedCustomerForStatement,
@@ -116,7 +116,7 @@ export const useClientLogic = () => {
     setOpenMenuId(null);
 
     const customerVoucher = vouchers?.find(
-      (v) => v.customer?.id === customer?.id,
+      (v) => v?.customer?.id === customer?.id,
     );
     const updatedCustomer = {
       ...customer,
@@ -157,7 +157,7 @@ export const useClientLogic = () => {
       setEditClient(null);
     } else {
       // Yeni kayıt
-      await addCustomer(customerPayload);
+      await addCustomer(customerPayload, year);
     }
 
     const dateString = `${year}-01-01`;
@@ -179,7 +179,7 @@ export const useClientLogic = () => {
     if (customer.archived) return;
 
     const customerVoucher = vouchers?.find(
-      (v) => String(v.customer?.id) === String(customer?.id),
+      (v) => String(v?.customer?.id) === String(customer?.id),
     );
 
     setOpenMenuId(null);

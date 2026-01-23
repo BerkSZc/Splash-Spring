@@ -8,7 +8,7 @@ import java.util.List;
 public interface ICustomerService {
     Customer findCustomerById(Long id);
 
-    Customer addCustomer(Customer customer);
+     Customer addCustomer(DtoCustomer newCustomer, int year);
 
     List<Customer> getAllCustomer();
 

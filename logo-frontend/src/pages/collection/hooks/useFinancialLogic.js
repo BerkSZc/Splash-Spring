@@ -3,6 +3,7 @@ import { useClient } from "../../../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
 import { useYear } from "../../../context/YearContext.jsx";
+import toast from "react-hot-toast";
 
 export const useFinancialLogic = () => {
   const { customers, getAllCustomers } = useClient();
@@ -28,12 +29,24 @@ export const useFinancialLogic = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
 
+  const getInitialDate = (selectedYear) => {
+    const currentActualYear = new Date().getFullYear();
+
+    return Number(selectedYear) === currentActualYear
+      ? new Date().toISOString().slice(0, 10)
+      : `${selectedYear}-01-01`;
+  };
+
   const [addForm, setAddForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
+    date: getInitialDate(year),
     customerId: "",
     price: "",
     comment: "",
   });
+
+  useEffect(() => {
+    setAddForm((prev) => ({ ...prev, date: getInitialDate(year) }));
+  }, [year]);
 
   const [editForm, setEditForm] = useState({
     date: "",
@@ -65,11 +78,18 @@ export const useFinancialLogic = () => {
         item.date?.toLowerCase().includes(text) ||
         String(item.price).includes(text)
       );
-    }
+    },
   );
 
   const handleAdd = async (e) => {
     e.preventDefault();
+
+    const selectedYear = new Date(addForm.date).getFullYear();
+    if (selectedYear !== Number(year)) {
+      toast.error("Mali yıl arasında ekleme yapın");
+      return;
+    }
+
     const customerId = Number(addForm.customerId);
     const price = Number(addForm.price);
     const payload = {
@@ -88,7 +108,7 @@ export const useFinancialLogic = () => {
     }
 
     setAddForm({
-      date: new Date().toISOString().slice(0, 10),
+      date: getInitialDate(year),
       customerId: "",
       price: "",
       comment: "",
@@ -155,6 +175,8 @@ export const useFinancialLogic = () => {
       filteredList,
       customers,
       year,
+      minDate: `${year}-01-01`,
+      maxDate: `${year}-12-31`,
     },
     handlers: {
       setType,
