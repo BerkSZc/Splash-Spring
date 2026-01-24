@@ -50,9 +50,7 @@ public class CurrencyControllerImpl implements ICurrencyController {
 
     @GetMapping("/today-rates")
     @Override
-    public Map<String, BigDecimal> getTodayRates(
-            @RequestParam("currencyDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate currencyDate
-    ) {
+    public Map<String, BigDecimal> getTodayRates(@RequestParam LocalDate currencyDate) {
     Map<String, BigDecimal> rates = new HashMap<>();
 
     rates.put("EUR", currencyRateService.getTodaysRate("EUR", currencyDate));

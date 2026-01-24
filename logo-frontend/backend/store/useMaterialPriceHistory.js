@@ -5,16 +5,34 @@ import { axiosInstance } from "../lib/axios";
 export const useMaterialPriceHistory = create((set) => ({
   history: [],
 
-  getHistoryByType: async (materialId, invoiceType) => {
+  getHistoryByAllYear: async (materialId, invoiceType) => {
     try {
       const res = await axiosInstance.get(
-        `/history/find-by-type/${materialId}?invoiceType=${invoiceType}`
+        `/history/find-by-all-year/${materialId}`,
+        {
+          params: { invoiceType },
+        },
       );
       set({ history: res.data });
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getHistoryByType: " + backendErr);
+      toast.error("Error at getHistoryByAllYear: " + backendErr);
+    }
+  },
+  getHistoryByYear: async (materialId, invoiceType, year) => {
+    try {
+      const res = await axiosInstance.get(
+        `/history/find-by-year/${materialId}`,
+        {
+          params: { invoiceType, year },
+        },
+      );
+      set({ history: res.data });
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error("Error at getHistoryByYear: " + backendErr);
     }
   },
 }));

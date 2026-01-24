@@ -47,7 +47,7 @@ export default function InvoiceForm() {
               <input
                 type="date"
                 required
-                value={currentForm.date}
+                value={currentForm.date || ""}
                 onChange={(e) =>
                   mode === "sales"
                     ? handlers.setSalesForm({
