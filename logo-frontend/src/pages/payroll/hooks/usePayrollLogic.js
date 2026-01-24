@@ -34,6 +34,10 @@ export const usePayrollLogic = () => {
     comment: "",
   });
 
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, transactionDate: getInitialDate(year) }));
+  }, [year]);
+
   const payrollType = type === "cheque_in" || "cheque_out" ? "ÇEK" : "SENET";
 
   useEffect(() => {

@@ -1,7 +1,8 @@
 //Fatura oluşturma sayfası için malzeme fiyatının geçmişini öğrenme ve seçme alanı
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMaterialPriceHistory } from "../../backend/store/useMaterialPriceHistory.js";
+import { useYear } from "../context/YearContext.jsx";
 
 export default function MaterialPriceTooltip({
   materialId,
@@ -9,16 +10,52 @@ export default function MaterialPriceTooltip({
   disabled,
 }) {
   const [open, setOpen] = useState(false);
-  const { history, getHistoryByType } = useMaterialPriceHistory();
+  const [showMenu, setShowMenu] = useState(false);
+  const [searchMode, setSearchMode] = useState(null);
+
+  const { history, getHistoryByAllYear, getHistoryByYear } =
+    useMaterialPriceHistory();
   const [selectedType, setSelectedType] = useState("PURCHASE");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { year } = useYear();
+  const menuRef = useRef(null);
 
   useEffect(() => {
-    if (open) {
-      getHistoryByType(materialId, selectedType);
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const performSearch = (type, mode) => {
+    if (!materialId || !mode) return;
+
+    if (mode === "YEARLY") {
+      getHistoryByYear(materialId, type, year);
+    } else {
+      getHistoryByAllYear(materialId, type);
+    }
+  };
+
+  const handleMenuClick = (mode) => {
+    setSearchMode(mode);
+    setShowMenu(false);
+    setOpen(true);
+    setCurrentIndex(0);
+    performSearch(selectedType, mode);
+  };
+
+  useEffect(() => {
+    if (open && searchMode) {
+      performSearch(selectedType, searchMode);
       setCurrentIndex(0);
     }
-  }, [open, selectedType, materialId]);
+  }, [selectedType, materialId, open]);
 
   const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
   const handleNext = () =>
@@ -46,32 +83,43 @@ export default function MaterialPriceTooltip({
   };
 
   return (
-    <>
+    <div className="relative" ref={menuRef}>
       <button
         type="button"
-        onClick={() => !disabled && setOpen(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!disabled) setShowMenu(!showMenu);
+        }}
         disabled={disabled}
         className={`p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-all border border-gray-700 flex items-center justify-center ${
           disabled
             ? "opacity-30 cursor-not-allowed"
             : "hover:text-blue-400 active:scale-95"
         }`}
-        title="Fiyat Geçmişi"
       >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <span className="font-black tracking-widest text-lg leading-none mb-1">
+          ...
+        </span>
       </button>
+
+      {showMenu && (
+        <div className="absolute left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <button
+            type="button"
+            onClick={() => handleMenuClick("YEARLY")}
+            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-blue-600 hover:text-white transition-colors border-b border-gray-800"
+          >
+            📅 {year} Yılı İçinde Ara
+          </button>
+          <button
+            type="button"
+            onClick={() => handleMenuClick("ALL")}
+            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+          >
+            🌍 Tüm Yıllarda Ara
+          </button>
+        </div>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
@@ -270,6 +318,6 @@ export default function MaterialPriceTooltip({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -19,7 +19,7 @@ export const useCurrency = create(() => ({
   getDailyRates: async (currencyDate) => {
     try {
       const res = await axiosInstance.get("/currency/today-rates", {
-        params: { currencyDate: currencyDate },
+        params: { currencyDate },
       });
       return res.data;
     } catch (error) {

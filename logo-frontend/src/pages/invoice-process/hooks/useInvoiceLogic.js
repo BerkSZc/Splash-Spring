@@ -59,12 +59,9 @@ export const useInvoiceLogic = () => {
 
   useEffect(() => {
     const fetchAndSetRates = async () => {
-      // mode'a göre hangi formun tarihini kullanacağımızı seçiyoruz
       const currentFormDate =
         mode === "sales" ? salesForm.date : purchaseForm.date;
-
       if (currentFormDate) {
-        // Backend'e tarihi parametre olarak gönderiyoruz
         const rates = await getDailyRates(currentFormDate);
 
         if (rates) {
@@ -259,14 +256,9 @@ export const useInvoiceLogic = () => {
   };
 
   const resetForm = () => {
-    const initialForm = {
-      date: getInitialFormState(year),
-      fileNo: "",
-      customerId: "",
-      items: [{ ...initalItem }],
-    };
-    setSalesForm(initialForm);
-    setPurchaseForm(initialForm);
+    const initialState = getInitialFormState(year);
+    setSalesForm(initialState);
+    setPurchaseForm(initialState);
   };
 
   const addItem = (formType) => {
@@ -304,8 +296,14 @@ export const useInvoiceLogic = () => {
       return;
     }
 
+    if (!currentForm.customerId) {
+      toast.error("Müşteri seçin!");
+      return;
+    }
+
     const payload = {
       date: currentForm.date,
+      currencyDate: currentForm.date,
       fileNo: currentForm.fileNo,
       kdvToplam: currentCalc.kdv,
       totalPrice: currentCalc.total,
