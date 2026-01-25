@@ -19,5 +19,5 @@ public class PurchaseInvoicesXml {
 
         @XmlElement(name = "INVOICE")
         private List<InvoiceXml> invoices;
-    }
+ }
 

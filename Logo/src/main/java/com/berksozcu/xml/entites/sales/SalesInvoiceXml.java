@@ -31,6 +31,4 @@ public class SalesInvoiceXml {
 
     @XmlElement(name = "TRANSACTIONS")
     private TransactionsXml TRANSACTIONS;
-
-
 }

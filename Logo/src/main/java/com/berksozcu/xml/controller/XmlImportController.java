@@ -1,4 +1,4 @@
-package com.berksozcu.controller.impl;
+package com.berksozcu.xml.controller;
 
 import com.berksozcu.controller.IXmlController;
 import com.berksozcu.xml.service.XmlImportService;
@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/rest/api/import")
-public class XmlControllerImpl implements IXmlController {
+public class XmlImportController implements IXmlController {
 
     @Autowired
     private XmlImportService importService;

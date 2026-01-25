@@ -13,5 +13,4 @@ public class TransactionsXml {
 
     @XmlElement(name = "TRANSACTION")
     private List<TransactionXml> list;
-
 }

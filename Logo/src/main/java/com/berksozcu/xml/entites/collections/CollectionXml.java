@@ -1,6 +1,5 @@
 package com.berksozcu.xml.entites.collections;
 
-import com.berksozcu.xml.entites.sales.AttachmentArp;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;

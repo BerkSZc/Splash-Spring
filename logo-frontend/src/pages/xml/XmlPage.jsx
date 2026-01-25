@@ -5,35 +5,53 @@ function XmlPage() {
   const { state, refs, handlers } = useXmlImportLogic();
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 flex items-center justify-center">
-      <div className="max-w-xl w-full space-y-8">
+    <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 relative">
+      {/* SAĞ ÜST MOD SEÇİCİ */}
+      <div className="absolute top-8 right-8 flex p-1 bg-gray-900 border border-gray-800 rounded-xl z-50">
+        <button
+          onClick={() => handlers.setViewMode("import")}
+          className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            state.viewMode === "import"
+              ? "bg-blue-600 text-white shadow-lg"
+              : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          İÇE AKTAR (IMPORT)
+        </button>
+        <button
+          onClick={() => handlers.setViewMode("export")}
+          className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            state.viewMode === "export"
+              ? "bg-orange-600 text-white shadow-lg"
+              : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          DIŞA AKTAR (EXPORT)
+        </button>
+      </div>
+
+      <div className="max-w-xl mx-auto space-y-8 pt-16">
         {/* ÜST BAŞLIK */}
         <div className="text-center space-y-2">
-          <div className="inline-block p-3 bg-blue-600/10 rounded-2xl text-blue-500 mb-2">
-            <svg
-              className="w-10 h-10"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-          </div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight">
-            XML Veri Aktarma Merkezi
+            XML Veri {state.viewMode === "import" ? "Aktarma" : "Çıkartma"}{" "}
+            Merkezi
           </h2>
           <p className="text-gray-400">
-            Dış kaynaklı XML dosyalarınızı sisteme hızlıca entegre edin.
+            {state.viewMode === "import"
+              ? "Dış kaynaklı XML dosyalarınızı sisteme hızlıca entegre edin."
+              : `${state.year} yılına ait verilerinizi XML olarak indirin.`}
           </p>
         </div>
 
         {/* ANA PANEL */}
-        <div className="bg-gray-900/40 border border-gray-800 p-8 rounded-[2.5rem] backdrop-blur-sm shadow-2xl space-y-4">
+        <div
+          className={`bg-gray-900/40 border p-8 rounded-[2.5rem] backdrop-blur-sm shadow-2xl space-y-4 transition-all duration-500 ${
+            state.viewMode === "import"
+              ? "border-gray-800"
+              : "border-orange-900/30"
+          }`}
+        >
           {/* HIDDEN INPUTS */}
           <input
             type="file"
@@ -87,19 +105,19 @@ function XmlPage() {
 
           {/* BUTTONS */}
           <ImportButton
-            label="Satın Alma Fatura XML"
-            icon="🛒"
-            variant="blue"
+            label={`Satın Alma Fatura ${state.viewMode === "import" ? "Yükle" : "İndir"}`}
+            icon={state.viewMode === "import" ? "🛒" : "📥"}
+            variant={state.viewMode === "import" ? "blue" : "orange"}
             disabled={state.loading}
-            onClick={() => refs.purchaseInvoiceInputRef.current.click()}
+            onClick={() => handlers.handleAction("invoice")}
           />
 
           <ImportButton
-            label="Satış Faturası XML"
+            label={`Satış Fatura ${state.viewMode === "import" ? "Yükle" : "İndir"} `}
             icon="💰"
-            variant="emerald"
+            variant={state.viewMode === "import" ? "emerald" : "orange"}
             disabled={state.loading}
-            onClick={() => refs.salesInvoiceInputRef.current.click()}
+            onClick={() => handlers.handleAction("sales")}
           />
 
           <ImportButton
@@ -168,10 +186,6 @@ function XmlPage() {
             onClick={() => refs.collectionInputRef.current.click()}
           />
         </div>
-
-        <p className="text-center text-gray-500 text-xs tracking-widest uppercase">
-          Lütfen sadece LOGO uyumlu XML dosyalarını kullanın.
-        </p>
       </div>
     </div>
   );

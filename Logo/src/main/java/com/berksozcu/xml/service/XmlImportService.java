@@ -15,6 +15,9 @@ import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
 import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.entites.sales.SalesInvoiceItem;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
 import com.berksozcu.xml.entites.collections.CollectionXml;
 import com.berksozcu.xml.entites.collections.CollectionsXml;
@@ -49,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class XmlImportService {
@@ -218,6 +222,11 @@ public class XmlImportService {
                         m -> m));
 
         for (SalesInvoiceXml xmlInv : invoicesXml.getSalesInvoices()) {
+
+            if(salesInvoiceRepository.existsByFileNo(xmlInv.getNUMBER())) {
+                throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+            }
+
             SalesInvoice invoice = new SalesInvoice();
             LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 

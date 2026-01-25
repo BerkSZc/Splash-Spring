@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { useImportXml } from "../../../../backend/store/useImportXml";
+import { useExportXml } from "../../../../backend/store/useExportXml";
+import { useYear } from "../../../context/YearContext";
 
 export const useXmlImportLogic = () => {
   const purchaseInvoiceInputRef = useRef(null);
@@ -11,6 +13,8 @@ export const useXmlImportLogic = () => {
   const voucherInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState("import");
+  const { year } = useYear();
 
   const {
     importPurchaseInvoice,
@@ -22,10 +26,35 @@ export const useXmlImportLogic = () => {
     importVouchers,
   } = useImportXml();
 
+  const { exportPurchaseInvoice, exportSalesInvoice } = useExportXml();
+
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (file) {
       upload(file, type, e.target);
+    }
+  };
+
+  const handleAction = async (type) => {
+    if (viewMode === "import") {
+      const refMap = {
+        invoice: purchaseInvoiceInputRef,
+        sales: salesInvoiceInputRef,
+        materials: materialInputRef,
+        customers: customerInputRef,
+        cash: collectionInputRef,
+        payroll: payrollInputRef,
+        vouchers: voucherInputRef,
+      };
+      refMap[type]?.current?.click();
+    } else {
+      setLoading(true);
+      try {
+        if (type === "invoice") await exportPurchaseInvoice(year);
+        else if (type === "sales-invoice") await exportSalesInvoice(year);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -48,7 +77,7 @@ export const useXmlImportLogic = () => {
   };
 
   return {
-    state: { loading },
+    state: { loading, viewMode, year },
     refs: {
       purchaseInvoiceInputRef,
       salesInvoiceInputRef,
@@ -58,6 +87,6 @@ export const useXmlImportLogic = () => {
       payrollInputRef,
       voucherInputRef,
     },
-    handlers: { handleFileChange },
+    handlers: { handleFileChange, setViewMode, handleAction },
   };
 };
