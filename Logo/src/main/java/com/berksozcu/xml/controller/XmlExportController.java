@@ -45,4 +45,56 @@ public class XmlExportController extends RestBaseController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    @GetMapping("/materials")
+    public ResponseEntity<byte[]> exportMaterials() {
+        try {
+            byte[] xmlContent = xmlExportService.exportMaterials();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @GetMapping("/customers")
+    public ResponseEntity<byte[]> exportCustomers() {
+        try {
+            byte[] xmlContent = xmlExportService.exportCustomers();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @GetMapping("/collections")
+    public ResponseEntity<byte[]> exportCollections(@RequestParam int year) {
+        try {
+            byte[] xmlContent = xmlExportService.exportCollections(year);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @GetMapping("/payrolls")
+    public ResponseEntity<byte[]> exportPayrolls(@RequestParam int year) {
+        try {
+            byte[] xmlContent = xmlExportService.exportPayrolls(year);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

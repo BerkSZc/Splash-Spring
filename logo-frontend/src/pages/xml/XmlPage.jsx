@@ -72,7 +72,7 @@ function XmlPage() {
             accept=".xml"
             ref={refs.payrollInputRef}
             className="hidden"
-            onChange={(e) => handlers.handleFileChange(e, "payroll")}
+            onChange={(e) => handlers.handleFileChange(e, "payrolls")}
           />
           <input
             type="file"
@@ -93,7 +93,7 @@ function XmlPage() {
             accept=".xml"
             ref={refs.collectionInputRef}
             className="hidden"
-            onChange={(e) => handlers.handleFileChange(e, "cash")}
+            onChange={(e) => handlers.handleFileChange(e, "collections")}
           />
           <input
             type="file"
@@ -129,7 +129,7 @@ function XmlPage() {
           />
 
           <ImportButton
-            label="Çek ve Senet XML"
+            label={`Çek ve Senet XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon={
               <svg
                 className="w-6 h-6"
@@ -147,12 +147,12 @@ function XmlPage() {
             }
             variant="purple"
             disabled={state.loading}
-            onClick={() => refs.payrollInputRef.current.click()}
+            onClick={() => handlers.handleAction("payrolls")}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <button
-              onClick={() => refs.materialInputRef.current.click()}
+              onClick={() => handlers.handleAction("materials")}
               disabled={state.loading}
               className="group flex flex-col items-center justify-center bg-gray-800/50 hover:bg-gray-700 border border-gray-700 p-6 rounded-2xl transition-all duration-300 active:scale-[0.98]"
             >
@@ -160,12 +160,13 @@ function XmlPage() {
                 📦
               </span>
               <span className="text-xs font-bold text-gray-300 uppercase tracking-widest text-center">
-                Malzeme XML
+                Malzeme XML{" "}
+                {state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}
               </span>
             </button>
 
             <button
-              onClick={() => refs.customerInputRef.current.click()}
+              onClick={() => handlers.handleAction("customers")}
               disabled={state.loading}
               className="group flex flex-col items-center justify-center bg-gray-800/50 hover:bg-gray-700 border border-gray-700 p-6 rounded-2xl transition-all duration-300 active:scale-[0.98]"
             >
@@ -173,17 +174,18 @@ function XmlPage() {
                 👥
               </span>
               <span className="text-xs font-bold text-gray-300 uppercase tracking-widest text-center">
-                Cari XML
+                Cari XML{" "}
+                {state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}
               </span>
             </button>
           </div>
 
           <ImportButton
-            label="Kasa İşlemleri XML"
+            label={`Kasa İşlemleri XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon="🏦"
             variant="orange"
             disabled={state.loading}
-            onClick={() => refs.collectionInputRef.current.click()}
+            onClick={() => handlers.handleAction("collections")}
           />
         </div>
       </div>

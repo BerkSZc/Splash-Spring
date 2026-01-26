@@ -49,10 +49,4 @@ public class Material {
     @Column(name = "sales_currency")
     @Enumerated(EnumType.STRING)
     private Currency salesCurrency= Currency.TRY;
-//
-//   @Column(name = "Son Satın Alma Fiyatı")
-//   private BigDecimal lastPurchasePrice;
-//
-//   @Column(name = "Son Satış Fiyatı")
-//   private BigDecimal lastSalesPrice;
 }

@@ -35,7 +35,6 @@ export const useAuthentication = create((set) => ({
       set({ loading: true });
       const response = await axiosInstance.post("/auth/save", user);
       const token = response.data.data.token;
-      console.log("Token:" + token);
 
       localStorage.setItem("token", token);
 

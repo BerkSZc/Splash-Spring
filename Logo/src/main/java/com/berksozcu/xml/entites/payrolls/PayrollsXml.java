@@ -16,5 +16,4 @@ import java.util.List;
 public class PayrollsXml {
     @XmlElement(name = "CHQPN_ROLL")
     private List<PayrollRollXml> rolls;
-
 }

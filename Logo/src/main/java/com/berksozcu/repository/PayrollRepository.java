@@ -11,5 +11,4 @@ import java.util.List;
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     List<Payroll> findByTransactionDateBetween(LocalDate start, LocalDate end);
 
-    List<Payroll> findByCustomerIdAndTransactionDateBefore(Long customerId, LocalDate date);
 }

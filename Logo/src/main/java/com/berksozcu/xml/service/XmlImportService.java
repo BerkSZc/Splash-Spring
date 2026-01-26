@@ -102,6 +102,11 @@ public class XmlImportService {
 
         for (InvoiceXml xmlInv : invoicesXml.getInvoices()) {
 
+            if(invoiceRepository.existsByFileNo(xmlInv.getDOC_NUMBER())) {
+                System.out.println("Fatura NO mevcut: " + xmlInv.getDOC_NUMBER());
+                continue;
+            }
+
             PurchaseInvoice invoice = new PurchaseInvoice();
             LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
             // Tarih Logo formatı: 01.01.2025
@@ -224,7 +229,8 @@ public class XmlImportService {
         for (SalesInvoiceXml xmlInv : invoicesXml.getSalesInvoices()) {
 
             if(salesInvoiceRepository.existsByFileNo(xmlInv.getNUMBER())) {
-                throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+                System.out.println("Fatura no mevcut: " + xmlInv.getNUMBER());
+                continue;
             }
 
             SalesInvoice invoice = new SalesInvoice();
@@ -331,6 +337,12 @@ public class XmlImportService {
                 continue;
             }
 
+            if(materialRepository.existsByCode(m.getCODE())) {
+                System.out.println("Malzeme Kodu mevcut atlandı: " + m.getCODE());
+                continue;
+            }
+
+
             String code = m.getCODE().trim().toUpperCase();
             Optional<Material> existing = materialRepository.findByCode(code);
 
@@ -359,6 +371,11 @@ public class XmlImportService {
         CustomersXml customersXml = (CustomersXml) unmarshaller.unmarshal(file.getInputStream());
 
         for (CustomerXml c : customersXml.getCustomers()) {
+
+            if(customerRepository.existsByCode(c.getCODE())) {
+                System.out.println("Müşteri kodu mevcut: " + c.getCODE());
+                continue;
+            }
             Customer customer = new Customer();
 
             customer.setCode(c.getCODE());

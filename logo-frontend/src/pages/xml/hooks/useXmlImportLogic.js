@@ -26,7 +26,14 @@ export const useXmlImportLogic = () => {
     importVouchers,
   } = useImportXml();
 
-  const { exportPurchaseInvoice, exportSalesInvoice } = useExportXml();
+  const {
+    exportPurchaseInvoice,
+    exportSalesInvoice,
+    exportMaterials,
+    exportCustomers,
+    exportCollections,
+    exportPayrolls,
+  } = useExportXml();
 
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
@@ -42,8 +49,8 @@ export const useXmlImportLogic = () => {
         sales: salesInvoiceInputRef,
         materials: materialInputRef,
         customers: customerInputRef,
-        cash: collectionInputRef,
-        payroll: payrollInputRef,
+        collections: collectionInputRef,
+        payrolls: payrollInputRef,
         vouchers: voucherInputRef,
       };
       refMap[type]?.current?.click();
@@ -52,6 +59,10 @@ export const useXmlImportLogic = () => {
       try {
         if (type === "invoice") await exportPurchaseInvoice(year);
         else if (type === "sales-invoice") await exportSalesInvoice(year);
+        else if (type === "materials") await exportMaterials();
+        else if (type === "customers") await exportCustomers();
+        else if (type === "collections") await exportCollections(year);
+        else if (type === "payrolls") await exportPayrolls(year);
       } finally {
         setLoading(false);
       }
@@ -66,9 +77,9 @@ export const useXmlImportLogic = () => {
       if (type === "invoice") await importPurchaseInvoice(file);
       else if (type === "materials") await importMaterials(file);
       else if (type === "customers") await importCustomers(file);
-      else if (type === "cash") await importCollections(file);
+      else if (type === "collections") await importCollections(file);
       else if (type === "sales-invoice") await importSalesInvoice(file);
-      else if (type === "payroll") await importPayrolls(file);
+      else if (type === "payrolls") await importPayrolls(file);
       else if (type === "vouchers") await importVouchers(file);
     } finally {
       setLoading(false);

@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface MaterialRepository extends JpaRepository<Material, Long> {
 
     Optional<Material> findByCode(@Param("value") String code);
+
+    boolean existsByCode(String code);
 }

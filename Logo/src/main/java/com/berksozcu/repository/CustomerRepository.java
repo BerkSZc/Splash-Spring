@@ -21,4 +21,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     @Modifying
     @Query("UPDATE Customer c SET c.archived = :status WHERE c.id IN :ids")
     void updateArchivedStatus(@Param("ids") List<Long> ids, @Param("status") boolean status);
+
+    boolean existsByCode(String code);
 }

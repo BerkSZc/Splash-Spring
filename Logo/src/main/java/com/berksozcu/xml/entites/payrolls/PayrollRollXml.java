@@ -18,5 +18,4 @@ public class PayrollRollXml {
     private String date;
     @XmlElement(name = "TRANSACTIONS")
     private PayrollTransactionsXml transactions;
-
 }
