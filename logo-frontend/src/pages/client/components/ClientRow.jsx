@@ -57,6 +57,9 @@ export default function ClientRow({
         <div className="text-[10px] text-blue-500 uppercase font-bold mt-1 tracking-widest">
           {customer.country}
         </div>
+        <div className="text-[10px] text-white-500 uppercase font-bold mt-1 tracking-widest">
+          {customer.code}
+        </div>
       </td>
       <td className="p-5 text-right font-mono">
         <span

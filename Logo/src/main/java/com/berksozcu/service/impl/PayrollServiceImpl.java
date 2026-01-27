@@ -40,6 +40,10 @@ public class PayrollServiceImpl implements IPayrollService {
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
+        if(payrollRepository.existsByFileNo(newPayroll.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
+        }
+
         LocalDate start = LocalDate.of(newPayroll.getTransactionDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPayroll.getTransactionDate().getYear(), 12, 31);
 
@@ -51,7 +55,9 @@ public class PayrollServiceImpl implements IPayrollService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(newPayroll.getAmount());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(newPayroll.getTransactionDate().getYear(), 1, 1));
                     newVoucher.setCustomer(newPayroll.getCustomer());
                     return newVoucher;
@@ -79,7 +85,6 @@ public class PayrollServiceImpl implements IPayrollService {
     }
 
 
-    //TODO: BUNU KONTROL ET HATALI GİBİ
     @Transactional
     @Override
     public Payroll editPayroll(Long id, Payroll editPayroll) {
@@ -88,6 +93,11 @@ public class PayrollServiceImpl implements IPayrollService {
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
         Customer customer = oldPayroll.getCustomer();
+
+        if(payrollRepository.existsByFileNo(editPayroll.getFileNo())
+        &&  !oldPayroll.getFileNo().equals(editPayroll.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
+        }
 
         LocalDate start = LocalDate.of(editPayroll.getTransactionDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(editPayroll.getTransactionDate().getYear(), 12, 31);
@@ -100,7 +110,9 @@ public class PayrollServiceImpl implements IPayrollService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(editPayroll.getAmount());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(editPayroll.getTransactionDate().getYear(), 1, 1));
                     newVoucher.setCustomer(customer);
                     return newVoucher;

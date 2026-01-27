@@ -54,15 +54,19 @@ public class CustomerServiceImpl implements ICustomerService {
     @Override
     @Transactional
     public Customer addCustomer(DtoCustomer newCustomer, int year) {
+
+        if(customerRepository.existsByCode(newCustomer.getCode())) {
+            throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
+        }
+
         Customer customer = new Customer();
         customer.setName(newCustomer.getName());
         customer.setAddress(newCustomer.getAddress());
         customer.setCountry(newCustomer.getCountry());
-        customer.setCode(newCustomer.getCode());
         customer.setLocal(newCustomer.getLocal());
         customer.setDistrict(newCustomer.getDistrict());
         customer.setVdNo(newCustomer.getVdNo());
-        customer.setCode("0123");
+        customer.setCode(newCustomer.getCode());
         customerRepository.save(customer);
 
         LocalDate date = LocalDate.of(year, 1, 1);
@@ -103,6 +107,12 @@ public class CustomerServiceImpl implements ICustomerService {
         if (oldCustomer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
+
+        if(customerRepository.existsByCode(updateCustomer.getCode())
+        && !updateCustomer.getCode().equals(oldCustomer.getCode())) {
+            throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
+        }
+
         oldCustomer.setName(updateCustomer.getName());
         oldCustomer.setAddress(updateCustomer.getAddress());
         oldCustomer.setLocal(updateCustomer.getLocal());

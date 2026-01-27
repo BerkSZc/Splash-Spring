@@ -40,6 +40,11 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
+
+        if(paymentCompanyRepository.existsByFileNo(paymentCompany.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
+        }
+
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
 
@@ -51,7 +56,9 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(paymentCompany.getPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setYearlyDebit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(paymentCompany.getDate().getYear(), 1, 1));
                     newVoucher.setCustomer(paymentCompany.getCustomer());
                     return newVoucher;
@@ -59,7 +66,6 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         if (voucher.getFinalBalance() == null) {
             voucher.setFinalBalance(paymentCompany.getPrice());
         }
-
 
         paymentCompany.setCustomer(customer);
 
@@ -99,6 +105,11 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         Customer newCustomer = customerRepository.findById(paymentCompany.getCustomer().getId())
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
+        if(paymentCompanyRepository.existsByFileNo(paymentCompany.getFileNo())
+        && !oldPayment.getFileNo().equals(paymentCompany.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
+        }
+
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
 
@@ -110,7 +121,9 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(paymentCompany.getPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(paymentCompany.getDate().getYear(), 1, 1));
                     newVoucher.setCustomer(paymentCompany.getCustomer());
                     return newVoucher;

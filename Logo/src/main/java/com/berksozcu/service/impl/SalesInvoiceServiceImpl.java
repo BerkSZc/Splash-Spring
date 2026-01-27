@@ -73,7 +73,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(salesInvoice.getTotalPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(start);
                     newVoucher.setCustomer(salesInvoice.getCustomer());
                     return newVoucher;
@@ -152,14 +154,21 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
 
+        if(salesInvoiceRepository.existsByFileNo(salesInvoice.getFileNo())
+        && !oldInvoice.getFileNo().equals(salesInvoice.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+        }
+
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> {
                     OpeningVoucher newVoucher = new OpeningVoucher();
                     newVoucher.setCustomer(salesInvoice.getCustomer());
                     newVoucher.setDate(start);
-                    newVoucher.setFinalBalance(salesInvoice.getTotalPrice());
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setFileNo("001");
                     newVoucher.setCustomerName(salesInvoice.getCustomer().getName());
                     return newVoucher;
@@ -227,7 +236,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            savePriceHistory(item, oldInvoice, customer);
+            savePriceHistory(item, oldInvoice, salesInvoice.getCustomer());
 
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
@@ -301,6 +310,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         saveHistory.setQuantity(item.getQuantity());
         saveHistory.setDate(invoice.getDate());
         saveHistory.setCustomerName(customer.getName());
+        saveHistory.setCustomer(customer);
         materialPriceHistoryRepository.save(saveHistory);
     }
 }

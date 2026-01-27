@@ -1,5 +1,6 @@
 package com.berksozcu.entites.material_price_history;
 
+import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.material.Material;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,5 +46,9 @@ public class MaterialPriceHistory {
     //Miktar
     @Column(precision = 18, scale = 2)
     private BigDecimal quantity;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
 }

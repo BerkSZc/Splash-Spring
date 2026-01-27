@@ -14,7 +14,7 @@ export default function ClientForm({
       colSpan: "md:col-span-2",
     },
     {
-      key: "customerCode",
+      key: "code",
       label: "Müşteri Kodu",
       type: "text",
     },
@@ -81,7 +81,7 @@ export default function ClientForm({
               value={form[field.key] ?? (field.type === "number" ? 0 : "")}
               onChange={handleChange}
               disabled={field.disabled}
-              className={`w-full border-2 rounded-xl px-4 py-3 text-white transition-all outline-none 
+              className={`w-full border-2 rounded-xl px-4 py-3 uppercase text-white transition-all outline-none 
                 ${field.bgColor || "bg-gray-900/60"} 
                 ${field.disabled ? "bg-gray-800/50 border-gray-800 text-gray-400 cursor-not-allowed" : `border-gray-800 ${field.borderColor || "focus:border-blue-500"}`} 
                 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}

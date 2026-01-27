@@ -11,4 +11,5 @@ import java.util.List;
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     List<Payroll> findByTransactionDateBetween(LocalDate start, LocalDate end);
 
+    boolean existsByFileNo(String fileNo);
 }

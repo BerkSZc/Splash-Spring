@@ -174,7 +174,8 @@ public class XmlImportService {
                             customer.getName(),
                             tx.getPRICE(),
                             tx.getQUANTITY(),
-                            InvoiceType.PURCHASE);
+                            InvoiceType.PURCHASE,
+                            customer);
 
                     //Fatura Kalemleri
                     PurchaseInvoiceItem item = new PurchaseInvoiceItem();
@@ -292,7 +293,8 @@ public class XmlImportService {
                         customer.getName(),
                         tx.getPRICE(),
                         tx.getQUANTITY(),
-                        InvoiceType.SALES);
+                        InvoiceType.SALES,
+                        customer);
 
                 // Fatura Kalemleri
                 SalesInvoiceItem item = new SalesInvoiceItem();
@@ -674,7 +676,7 @@ public class XmlImportService {
         return new BigDecimal(value.replace(",", "."));
     }
 
-    private void saveMaterialPrice(Material material, LocalDate date, String customerName, BigDecimal price, BigDecimal quantity, InvoiceType invoiceType) {
+    private void saveMaterialPrice(Material material, LocalDate date, String customerName, BigDecimal price, BigDecimal quantity, InvoiceType invoiceType, Customer customer) {
         MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
 
         materialPriceHistory.setMaterial(material);
@@ -683,6 +685,7 @@ public class XmlImportService {
         materialPriceHistory.setDate(date);
         materialPriceHistory.setCustomerName(customerName);
         materialPriceHistory.setQuantity(quantity);
+        materialPriceHistory.setCustomer(customer);
 
         materialPriceHistoryRepository.save(materialPriceHistory);
     }

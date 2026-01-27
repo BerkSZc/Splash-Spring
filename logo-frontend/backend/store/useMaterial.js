@@ -36,14 +36,14 @@ export const useMaterial = create((set, get) => ({
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const updated = res.data;
 
       set((state) => ({
         materials: state.materials.map((mat) =>
-          String(mat._id) === String(updated._id || updated.id) ? updated : mat
+          String(mat._id) === String(updated._id || updated.id) ? updated : mat,
         ),
       }));
 
@@ -52,7 +52,7 @@ export const useMaterial = create((set, get) => ({
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at updateMaterials: ", backendErr);
+      toast.error("Error at updateMaterials: " + backendErr);
     }
   },
 }));

@@ -5,6 +5,7 @@ export default function InvoiceItemsTable({
   mode,
   items,
   materials,
+  customerId,
   onItemChange,
   onAddItem,
   onRemoveItem,
@@ -94,6 +95,7 @@ export default function InvoiceItemsTable({
                       />
                       <MaterialPriceTooltip
                         materialId={item.materialId}
+                        customerId={customerId}
                         onSelect={(p, e) => {
                           if (e) e.stopPropagation();
                           onItemChange(mode, i, "unitPrice", p);

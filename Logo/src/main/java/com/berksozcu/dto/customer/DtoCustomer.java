@@ -35,5 +35,4 @@ public class DtoCustomer {
     private BigDecimal yearlyDebit = BigDecimal.ZERO;
 
     private boolean archived = false;
-
 }

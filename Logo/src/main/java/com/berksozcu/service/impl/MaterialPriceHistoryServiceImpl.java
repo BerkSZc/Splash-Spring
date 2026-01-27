@@ -31,4 +31,22 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
         return materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndDateBetweenOrderByDateDesc(materialId, invoiceType,
                 start, end);
     }
+
+    @Override
+    public List<MaterialPriceHistory> getHistoryByCustomerAndYear(Long customerId, Long materialId,
+                  InvoiceType invoiceType, int year) {
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+        return materialPriceHistoryRepository
+                .findByCustomerIdAndMaterialIdAndInvoiceTypeAndDateBetweenOrderByDateDesc(customerId,
+                        materialId, invoiceType, start, end);
+    }
+
+    @Override
+    public List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(Long customerId, Long materialId,
+                  InvoiceType invoiceType) {
+        return materialPriceHistoryRepository
+                .findByCustomerIdAndMaterialIdAndInvoiceTypeOrderByDateDesc(customerId,
+                        materialId, invoiceType);
+    }
 }

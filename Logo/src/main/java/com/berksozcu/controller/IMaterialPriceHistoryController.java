@@ -8,9 +8,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 public interface IMaterialPriceHistoryController {
-    public List<MaterialPriceHistory> getHistoryAllYear(
-            @PathVariable(name = "materialId") Long materialId, @RequestParam InvoiceType invoiceType
-    );
-    public List<MaterialPriceHistory> getHistoryByYear(Long materialId, InvoiceType invoiceType,
-                                                       int year);
+     List<MaterialPriceHistory> getHistoryAllYear(Long materialId,  InvoiceType invoiceType);
+
+     List<MaterialPriceHistory> getHistoryByYear(Long materialId, InvoiceType invoiceType, int year);
+
+     List<MaterialPriceHistory> getHistoryByCustomerAndYear(Long customerId, Long materialId,
+  InvoiceType invoiceType, int year);
+
+     List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(Long customerId, Long materialId,
+           InvoiceType invoiceType);
 }

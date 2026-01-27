@@ -145,7 +145,7 @@ export default function InvoiceEditModal({
                         name="unitPrice"
                         value={item.unitPrice}
                         onChange={(e) => handleLocalItemChange(i, e)}
-                        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none"
+                        className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none"
                       />
                       <MaterialPriceTooltip
                         materialId={item.materialId}

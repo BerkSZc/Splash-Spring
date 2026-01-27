@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useMaterialPriceHistory } from "../../backend/store/useMaterialPriceHistory.js";
 import { useYear } from "../context/YearContext.jsx";
+import toast from "react-hot-toast";
 
 export default function MaterialPriceTooltip({
   materialId,
+  customerId,
   onSelect,
   disabled,
 }) {
@@ -13,8 +15,13 @@ export default function MaterialPriceTooltip({
   const [showMenu, setShowMenu] = useState(false);
   const [searchMode, setSearchMode] = useState(null);
 
-  const { history, getHistoryByAllYear, getHistoryByYear } =
-    useMaterialPriceHistory();
+  const {
+    history,
+    getHistoryByAllYear,
+    getHistoryByYear,
+    getHistoryByCustomerAndYear,
+    getHistoryByCustomerAndAllYear,
+  } = useMaterialPriceHistory();
   const [selectedType, setSelectedType] = useState("PURCHASE");
   const [currentIndex, setCurrentIndex] = useState(0);
   const { year } = useYear();
@@ -37,12 +44,20 @@ export default function MaterialPriceTooltip({
 
     if (mode === "YEARLY") {
       getHistoryByYear(materialId, type, year);
-    } else {
+    } else if (mode === "ALL") {
       getHistoryByAllYear(materialId, type);
+    } else if (mode === "CUSTOMER-YEARLY") {
+      getHistoryByCustomerAndYear(customerId, materialId, type, year);
+    } else if (mode === "CUSTOMER-ALL") {
+      getHistoryByCustomerAndAllYear(customerId, materialId, type);
     }
   };
 
   const handleMenuClick = (mode) => {
+    if (mode === "CUSTOMER-YEARLY" && !customerId) {
+      toast.error("Önce bir müşteri seçmelisiniz!"); //
+      return;
+    }
     setSearchMode(mode);
     setShowMenu(false);
     setOpen(true);
@@ -117,6 +132,20 @@ export default function MaterialPriceTooltip({
             className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
           >
             🌍 Tüm Yıllarda Ara
+          </button>
+          <button
+            type="button"
+            onClick={() => handleMenuClick("CUSTOMER-YEARLY")}
+            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+          >
+            Müşteriye göre {year} Yılı için Ara
+          </button>
+          <button
+            type="button"
+            onClick={() => handleMenuClick("CUSTOMER-ALL")}
+            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+          >
+            Müşteriye göre Tüm Yıllarda Ara
           </button>
         </div>
       )}

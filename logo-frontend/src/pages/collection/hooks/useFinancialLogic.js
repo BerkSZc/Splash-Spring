@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
@@ -28,6 +28,7 @@ export const useFinancialLogic = () => {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
 
   const getInitialDate = (selectedYear) => {
     const currentActualYear = new Date().getFullYear();
@@ -44,6 +45,21 @@ export const useFinancialLogic = () => {
     comment: "",
     fileNo: "",
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+    if (openMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
 
   useEffect(() => {
     setAddForm((prev) => ({ ...prev, date: getInitialDate(year) }));
@@ -183,6 +199,12 @@ export const useFinancialLogic = () => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}.${month}.${year}`;
+  };
+
   return {
     state: {
       type,
@@ -195,6 +217,7 @@ export const useFinancialLogic = () => {
       filteredList,
       customers,
       year,
+      menuRef,
     },
     handlers: {
       setType,
@@ -208,6 +231,7 @@ export const useFinancialLogic = () => {
       handleSave,
       handleDelete,
       toggleMenu,
+      formatDate,
     },
   };
 };

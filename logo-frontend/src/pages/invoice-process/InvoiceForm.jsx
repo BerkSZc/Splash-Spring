@@ -109,6 +109,7 @@ export default function InvoiceForm() {
             mode={mode}
             items={currentForm.items}
             materials={materials}
+            customerId={currentForm.customerId}
             onItemChange={handlers.handleItemChange}
             onAddItem={handlers.addItem}
             onRemoveItem={handlers.removeItem}

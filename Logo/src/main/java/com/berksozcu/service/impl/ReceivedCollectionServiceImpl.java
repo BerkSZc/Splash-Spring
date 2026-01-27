@@ -42,6 +42,10 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
+        if(receivedCollectionRepository.existsByFileNo(receivedCollection.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
+        }
+
         LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
 
@@ -53,7 +57,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(receivedCollection.getPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(receivedCollection.getDate().getYear(), 1, 1));
                     newVoucher.setCustomer(receivedCollection.getCustomer());
                     return newVoucher;
@@ -96,6 +102,11 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
 
+        if(receivedCollectionRepository.existsByFileNo(receivedCollection.getFileNo())
+        && !oldCollection.getFileNo().equals(receivedCollection.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
+        }
+
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> {
                     OpeningVoucher newVoucher = new OpeningVoucher();
@@ -104,7 +115,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(receivedCollection.getPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(receivedCollection.getDate().getYear(), 1, 1));
                     newVoucher.setCustomer(receivedCollection.getCustomer());
                     return newVoucher;

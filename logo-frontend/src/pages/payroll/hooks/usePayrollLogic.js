@@ -147,6 +147,11 @@ export const usePayrollLogic = () => {
       return;
     }
 
+    if (!form.fileNo) {
+      toast.error("Seri No girişi yapın!");
+      return;
+    }
+
     if (!form.customerId) {
       toast.error("Müşteri Seçin!");
       return;

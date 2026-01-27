@@ -1,6 +1,9 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.material.Material;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.service.IMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,11 @@ public class MaterialServiceImpl implements IMaterialService {
 
     @Override
     public Material addMaterial(Material newMaterial) {
+
+        if(materialRepository.existsByCode(newMaterial.getCode())) {
+            throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
+        }
+
         Material material = new Material();
         material.setId(newMaterial.getId());
         material.setCode(newMaterial.getCode());
@@ -37,16 +45,22 @@ public class MaterialServiceImpl implements IMaterialService {
 
     @Override
     public void updateMaterial(Long id, Material updateMaterial) {
-       Optional<Material> optional = materialRepository.findById(id);
-       if (optional.isPresent()) {
-           optional.get().setComment(updateMaterial.getComment());
-           optional.get().setCode(updateMaterial.getCode());
-           optional.get().setUnit(updateMaterial.getUnit());
-           optional.get().setPurchaseCurrency(updateMaterial.getPurchaseCurrency());
-           optional.get().setSalesCurrency(updateMaterial.getSalesCurrency());
-           optional.get().setPurchasePrice(updateMaterial.getPurchasePrice());
-           optional.get().setSalesPrice(updateMaterial.getSalesPrice());
-           materialRepository.save(optional.get());
+        Material existingMaterial = materialRepository.findById(id)
+                .orElseThrow(() ->
+                        new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
+
+            if(materialRepository.existsByCode(updateMaterial.getCode())
+                    && !updateMaterial.getCode().equals(existingMaterial.getCode()))  {
+                throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
+            }
+           existingMaterial.setComment(updateMaterial.getComment());
+           existingMaterial.setCode(updateMaterial.getCode());
+           existingMaterial.setUnit(updateMaterial.getUnit());
+           existingMaterial.setPurchaseCurrency(updateMaterial.getPurchaseCurrency());
+           existingMaterial.setSalesCurrency(updateMaterial.getSalesCurrency());
+           existingMaterial.setPurchasePrice(updateMaterial.getPurchasePrice());
+           existingMaterial.setSalesPrice(updateMaterial.getSalesPrice());
+           materialRepository.save(existingMaterial);
        }
     }
-}
+

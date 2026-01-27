@@ -31,4 +31,22 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
         return materialPriceHistory.getHistoryByYear(materialId, invoiceType, year);
     }
 
+    @Override
+    @GetMapping("/find-by-customer-year/{customerId}/{materialId}")
+    public List<MaterialPriceHistory> getHistoryByCustomerAndYear(
+            @PathVariable(name = "customerId") Long customerId,
+            @PathVariable(name = "materialId") Long materialId,
+           @RequestParam InvoiceType invoiceType,
+            @RequestParam int year) {
+        return materialPriceHistory.getHistoryByCustomerAndYear(customerId, materialId, invoiceType, year);
+    }
+
+    @Override
+    @GetMapping("/find-by-customer-all-year/{customerId}/{materialId}")
+    public List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(
+            @PathVariable(name = "customerId") Long customerId,
+            @PathVariable(name = "materialId") Long materialId,
+           @RequestParam InvoiceType invoiceType) {
+        return materialPriceHistory.getHistoryByCustomerAndAllYear(customerId, materialId, invoiceType);
+    }
 }

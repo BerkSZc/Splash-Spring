@@ -50,7 +50,7 @@ export const useClientLogic = () => {
     local: "",
     district: "",
     vdNo: "",
-    customerCode: "",
+    code: "",
   });
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export const useClientLogic = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.customerCode) {
+    if (!form.name || !form.code) {
       toast.error("Müşteri ismi ve Müşteri kodunu ekleyin!");
       return;
     }
@@ -156,7 +156,7 @@ export const useClientLogic = () => {
       local: form.local,
       district: form.district,
       vdNo: form.vdNo,
-      customerCode: form.customerCode.trim().toUpperCase(),
+      code: form.code.trim().toUpperCase(),
     };
 
     if (editClient) {
@@ -179,7 +179,7 @@ export const useClientLogic = () => {
       local: "",
       district: "",
       vdNo: "",
-      customerCode: "",
+      code: "",
     });
   };
 
@@ -203,7 +203,7 @@ export const useClientLogic = () => {
       local: customer.local || "",
       district: customer.district || "",
       vdNo: customer.vdNo || "",
-      customerCode: customer.customerCode || "",
+      code: customer.code || "",
     });
     formRef.current.scrollIntoView({ behavior: "smooth" });
   };
@@ -221,7 +221,7 @@ export const useClientLogic = () => {
       local: "",
       district: "",
       vdNo: "",
-      customerCode: "",
+      code: "",
     });
   };
 
@@ -246,9 +246,14 @@ export const useClientLogic = () => {
     ? customers
         .filter((c) => {
           if (!search) return true;
-          return (c.name || "")
-            .toLocaleLowerCase("tr-TR")
-            .includes(search.toLocaleLowerCase("tr-TR"));
+          return (
+            (c.name || "")
+              .toLocaleLowerCase("tr-TR")
+              .includes(search.toLocaleLowerCase("tr-TR")) ||
+            (c.code || "")
+              .toLocaleLowerCase("tr-TR")
+              .includes(search.toLocaleLowerCase("tr-TR"))
+          );
         })
         .filter((c) => (showArchived ? c.archived : !c.archived))
     : [];

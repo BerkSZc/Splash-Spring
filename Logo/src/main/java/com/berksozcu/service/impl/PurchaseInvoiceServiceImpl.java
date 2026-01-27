@@ -82,7 +82,9 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(newPurchaseInvoice.getTotalPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1));
                     newVoucher.setCustomer(newPurchaseInvoice.getCustomer());
                     return newVoucher;
@@ -147,6 +149,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             history.setCustomerName(customer.getName());
             history.setQuantity(item.getQuantity());
             history.setInvoiceId(newPurchaseInvoice.getId());
+            history.setCustomer(newPurchaseInvoice.getCustomer());
 
             materialPriceHistoryRepository.save(history);
 
@@ -183,6 +186,11 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
 
+        if(purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())
+        && !oldInvoice.getFileNo().equals(newPurchaseInvoice.getFileNo())) {
+            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+        }
+
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> {
                     OpeningVoucher newVoucher = new OpeningVoucher();
@@ -191,7 +199,9 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(newPurchaseInvoice.getTotalPrice());
+                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1));
                     newVoucher.setCustomer(newPurchaseInvoice.getCustomer());
                     return newVoucher;
@@ -264,12 +274,13 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
             MaterialPriceHistory history = new MaterialPriceHistory();
             history.setMaterial(item.getMaterial());
-            history.setInvoiceId(oldInvoice.getId());
+            history.setInvoiceId(newPurchaseInvoice.getId());
             history.setInvoiceType(InvoiceType.PURCHASE);
             history.setPrice(item.getUnitPrice());
             history.setQuantity(item.getQuantity());
             history.setDate(oldInvoice.getDate());
             history.setCustomerName(customer.getName());
+            history.setCustomer(newPurchaseInvoice.getCustomer());
             materialPriceHistoryRepository.save(history);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
