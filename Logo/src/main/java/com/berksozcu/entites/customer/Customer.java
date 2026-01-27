@@ -18,7 +18,7 @@ import java.math.BigDecimal;
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
-        @Column(name = "customer_code")
+        @Column(name = "customer_code", nullable = false, unique = true)
         private String code;
 
         //Müşteri Unvanı

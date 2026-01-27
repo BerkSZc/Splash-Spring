@@ -65,7 +65,7 @@ function XmlPage() {
             accept=".xml"
             ref={refs.salesInvoiceInputRef}
             className="hidden"
-            onChange={(e) => handlers.handleFileChange(e, "sales-invoice")}
+            onChange={(e) => handlers.handleFileChange(e, "sales")}
           />
           <input
             type="file"

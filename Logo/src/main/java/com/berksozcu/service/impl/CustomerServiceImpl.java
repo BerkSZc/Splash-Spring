@@ -109,6 +109,7 @@ public class CustomerServiceImpl implements ICustomerService {
         oldCustomer.setDistrict(updateCustomer.getDistrict());
         oldCustomer.setVdNo(updateCustomer.getVdNo());
         oldCustomer.setCountry(updateCustomer.getCountry());
+        oldCustomer.setCode(updateCustomer.getCode());
 
         LocalDate start = LocalDate.of(currentYear, 1, 1);
         LocalDate end = LocalDate.of(currentYear, 12, 31);

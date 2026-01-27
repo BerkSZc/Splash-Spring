@@ -3,7 +3,7 @@ import PayrollForm from "./components/PayrollForm";
 import PayrollTable from "./components/PayrollTable";
 
 export default function PayrollPage() {
-  const { state, handlers } = usePayrollLogic();
+  const { state, handlers, refs } = usePayrollLogic();
   const {
     type,
     editing,
@@ -15,12 +15,13 @@ export default function PayrollPage() {
     customers,
     year,
     payrollType,
-    maxDate,
-    minDate,
   } = state;
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 font-sans">
+    <div
+      className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 font-sans"
+      ref={refs.formRef}
+    >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Üst Bilgi Paneli */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-6">
@@ -89,6 +90,7 @@ export default function PayrollPage() {
           setSearch={handlers.setSearch}
           onEdit={handlers.handleEditClick}
           onDelete={handlers.openDeleteModel}
+          formatDate={handlers.formatDate}
         />
 
         {state.deleteTarget && (

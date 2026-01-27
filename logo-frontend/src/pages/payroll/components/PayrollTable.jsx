@@ -5,6 +5,7 @@ export default function PayrollTable({
   setSearch,
   onEdit,
   onDelete,
+  formatDate,
 }) {
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden backdrop-blur-sm shadow-xl">
@@ -49,11 +50,11 @@ export default function PayrollTable({
                 className="hover:bg-blue-500/5 transition-all group"
               >
                 <td className="p-6 text-gray-400 font-mono text-sm">
-                  {item.transactionDate}
+                  {formatDate(item.transactionDate)}
                 </td>
                 <td className="p-6">
                   <span className="bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full text-sm font-bold font-mono">
-                    {item.expiredDate}
+                    {formatDate(item.expiredDate)}
                   </span>
                 </td>
                 <td className="p-6">

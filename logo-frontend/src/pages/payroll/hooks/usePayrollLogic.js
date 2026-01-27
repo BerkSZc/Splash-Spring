@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
@@ -10,6 +10,7 @@ export const usePayrollLogic = () => {
   const { payrolls, addCheque, editCheque, deleteCheque, getPayrollByYear } =
     usePayroll();
 
+  const formRef = useRef(null);
   const [type, setType] = useState("cheque_in");
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -177,6 +178,7 @@ export const usePayrollLogic = () => {
       bankBranch: item.bankBranch || "",
       comment: item.comment || "",
     });
+    formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const openDeleteModel = (item) => {
@@ -189,6 +191,12 @@ export const usePayrollLogic = () => {
       await getPayrollByYear(year);
       setDeleteTarget(null);
     }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}.${month}.${year}`;
   };
 
   return {
@@ -205,6 +213,7 @@ export const usePayrollLogic = () => {
       year,
       payrollType,
     },
+    refs: { formRef },
     handlers: {
       setType,
       setSearch,
@@ -215,6 +224,7 @@ export const usePayrollLogic = () => {
       openDeleteModel,
       handleEditClick,
       confirmDelete,
+      formatDate,
     },
   };
 };

@@ -8,6 +8,7 @@ import { useYear } from "../../../context/YearContext.jsx";
 import { accountStatementHelper } from "../utils/accountStatementHelper.js";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
 import { useVoucher } from "../../../../backend/store/useVoucher.js";
+import toast from "react-hot-toast";
 
 export const useClientLogic = () => {
   const {
@@ -49,6 +50,7 @@ export const useClientLogic = () => {
     local: "",
     district: "",
     vdNo: "",
+    customerCode: "",
   });
 
   useEffect(() => {
@@ -140,6 +142,10 @@ export const useClientLogic = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.name || !form.customerCode) {
+      toast.error("Müşteri ismi ve Müşteri kodunu ekleyin!");
+      return;
+    }
 
     const customerPayload = {
       name: form.name,
@@ -150,6 +156,7 @@ export const useClientLogic = () => {
       local: form.local,
       district: form.district,
       vdNo: form.vdNo,
+      customerCode: form.customerCode.trim().toUpperCase(),
     };
 
     if (editClient) {
@@ -172,6 +179,7 @@ export const useClientLogic = () => {
       local: "",
       district: "",
       vdNo: "",
+      customerCode: "",
     });
   };
 
@@ -195,6 +203,7 @@ export const useClientLogic = () => {
       local: customer.local || "",
       district: customer.district || "",
       vdNo: customer.vdNo || "",
+      customerCode: customer.customerCode || "",
     });
     formRef.current.scrollIntoView({ behavior: "smooth" });
   };
@@ -212,6 +221,7 @@ export const useClientLogic = () => {
       local: "",
       district: "",
       vdNo: "",
+      customerCode: "",
     });
   };
 

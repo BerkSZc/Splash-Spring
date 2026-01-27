@@ -14,10 +14,14 @@ export default function ClientForm({
       colSpan: "md:col-span-2",
     },
     {
+      key: "customerCode",
+      label: "Müşteri Kodu",
+      type: "text",
+    },
+    {
       key: "vdNo",
       label: "Vergi No / T.C.",
       type: "text",
-      colSpan: "md:col-span-2",
     },
     {
       key: "yearlyDebit",

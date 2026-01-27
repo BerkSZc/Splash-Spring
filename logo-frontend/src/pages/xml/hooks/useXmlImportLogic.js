@@ -59,7 +59,7 @@ export const useXmlImportLogic = () => {
       setLoading(true);
       try {
         if (type === "invoice") await exportPurchaseInvoice(year);
-        else if (type === "sales-invoice") await exportSalesInvoice(year);
+        else if (type === "sales") await exportSalesInvoice(year);
         else if (type === "materials") await exportMaterials();
         else if (type === "customers") await exportCustomers();
         else if (type === "collections") await exportCollections(year);
@@ -80,7 +80,7 @@ export const useXmlImportLogic = () => {
       else if (type === "materials") await importMaterials(file);
       else if (type === "customers") await importCustomers(file);
       else if (type === "collections") await importCollections(file);
-      else if (type === "sales-invoice") await importSalesInvoice(file);
+      else if (type === "sales") await importSalesInvoice(file);
       else if (type === "payrolls") await importPayrolls(file);
       else if (type === "vouchers") await importVouchers(file);
     } finally {
