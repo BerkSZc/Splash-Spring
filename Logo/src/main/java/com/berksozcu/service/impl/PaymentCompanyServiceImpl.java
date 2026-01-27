@@ -70,6 +70,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         paymentCompany.setComment(paymentCompany.getComment());
         paymentCompany.setPrice(paymentCompany.getPrice());
         paymentCompany.setCustomerName(paymentCompany.getCustomer().getName());
+        paymentCompany.setFileNo(paymentCompany.getFileNo());
 
         voucher.setFinalBalance(voucher.getFinalBalance().add(paymentCompany.getPrice()));
         voucher.setDebit(voucher.getDebit().add(paymentCompany.getPrice()));
@@ -140,6 +141,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         oldPayment.setComment(paymentCompany.getComment());
         oldPayment.setPrice(paymentCompany.getPrice());
         oldPayment.setCustomer(newCustomer);
+        oldPayment.setFileNo(paymentCompany.getFileNo());
 
         openingVoucherRepository.save(voucher);
         return paymentCompanyRepository.save(oldPayment);

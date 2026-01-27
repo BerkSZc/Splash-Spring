@@ -39,4 +39,8 @@ public class ReceivedCollection {
     //Müşteri ismi
     @Column(name = "customer_name")
     private String customerName;
+
+    //İşlem numarası
+    @Column(name = "file_no")
+    private String fileNo;
 }

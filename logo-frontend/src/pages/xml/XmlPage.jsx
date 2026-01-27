@@ -121,11 +121,11 @@ function XmlPage() {
           />
 
           <ImportButton
-            label="Açılış Fişleri (Devir Bakiyesi) XML"
+            label={`Devir Bakiyesi XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon="📂"
             variant="dark-green"
             disabled={state.loading}
-            onClick={() => refs.voucherInputRef.current.click()}
+            onClick={() => handlers.handleAction("vouchers")}
           />
 
           <ImportButton

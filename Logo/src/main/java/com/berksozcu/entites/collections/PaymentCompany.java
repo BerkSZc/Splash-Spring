@@ -39,4 +39,8 @@ public class PaymentCompany {
     //Müşteri İsmi
     @Column(name = "customer_name")
     private String customerName;
+
+    //İşlem no
+    @Column(name = "file_no")
+    private String fileNo;
 }

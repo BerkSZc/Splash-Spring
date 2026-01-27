@@ -42,6 +42,7 @@ export const useFinancialLogic = () => {
     customerId: "",
     price: "",
     comment: "",
+    fileNo: "",
   });
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export const useFinancialLogic = () => {
     customerId: "",
     price: "",
     comment: "",
+    fileNo: "",
   });
 
   useEffect(() => {
@@ -89,12 +91,19 @@ export const useFinancialLogic = () => {
       toast.error("Mali yıl arasında ekleme yapın");
       return;
     }
+
+    if (!addForm.customerId) {
+      toast.error("Müşteri seçin!");
+      return;
+    }
+
     const customerId = Number(addForm.customerId);
     const price = Number(addForm.price);
     const payload = {
       date: addForm.date,
       comment: addForm.comment,
       price: price,
+      fileNo: addForm.fileNo,
       customer: { id: customerId },
     };
 
@@ -111,6 +120,7 @@ export const useFinancialLogic = () => {
       customerId: "",
       price: "",
       comment: "",
+      fileNo: "",
     });
   };
 
@@ -122,6 +132,7 @@ export const useFinancialLogic = () => {
       customerId: item.customer?.id || "",
       price: item.price,
       comment: item.comment,
+      fileNo: item.fileNo || "",
     });
   };
 
@@ -135,6 +146,7 @@ export const useFinancialLogic = () => {
       date: editForm.date,
       comment: editForm.comment,
       price: price,
+      fileNo: editForm.fileNo,
       customer: { id: customerId },
     };
 

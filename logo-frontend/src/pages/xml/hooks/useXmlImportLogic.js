@@ -33,6 +33,7 @@ export const useXmlImportLogic = () => {
     exportCustomers,
     exportCollections,
     exportPayrolls,
+    exportOpeningVouchers,
   } = useExportXml();
 
   const handleFileChange = (e, type) => {
@@ -63,6 +64,7 @@ export const useXmlImportLogic = () => {
         else if (type === "customers") await exportCustomers();
         else if (type === "collections") await exportCollections(year);
         else if (type === "payrolls") await exportPayrolls(year);
+        else if (type === "vouchers") await exportOpeningVouchers(year);
       } finally {
         setLoading(false);
       }

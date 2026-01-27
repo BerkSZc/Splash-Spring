@@ -45,36 +45,46 @@ export default function Navbar() {
 
   return (
     <nav className="bg-gray-800 text-white relative dark:bg-gray-900 dark:text-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* LOGO */}
-          <div className="text-xl font-bold">
-            <Link to={"/home"}>LOGO</Link>
+          <div className="text-xl font-bold  space-x-4">
+            <Link to={"/home"}>SPLASH</Link>
           </div>
-
           {/* DESKTOP MENU */}
-          <div className="hidden md:flex space-x-6 items-center">
+          <div className="hidden md:flex space-x-5 items-center mx-auto">
             <Link className="hover:text-gray-300" to={"/malzeme-ekle"}>
               Malzemeler
             </Link>
 
-            <Link className="hover:text-gray-300" to={"/tahsilatlar"}>
-              Tahsilatlar
+            <Link
+              className="hover:text-gray-300 whitespace-nowrap"
+              to={"/tahsilatlar"}
+            >
+              Kasa İşlemleri
             </Link>
 
-            <Link className="hover:text-gray-300" to={"/faturalar-islemleri"}>
+            <Link
+              className="hover:text-gray-300 whitespace-nowrap"
+              to={"/faturalar-islemleri"}
+            >
               Fatura İşlemleri
             </Link>
 
             <Link className="hover:text-gray-300" to={"/faturalar"}>
               Faturalar
             </Link>
-            <Link className="hover:text-gray-300" to={"/payroll"}>
+            <Link
+              className="hover:text-gray-300 whitespace-nowrap"
+              to={"/payroll"}
+            >
               Çek-Senet İşlemleri
             </Link>
 
-            <Link className="hover:text-gray-300" to={"/ekleme"}>
-              Araçlar{" "}
+            <Link
+              className="hover:text-gray-300 whitespace-nowrap"
+              to={"/ekleme"}
+            >
+              Veri İşlemleri{" "}
             </Link>
 
             <Link className="hover:text-gray-300" to={"/musteriler"}>
@@ -139,7 +149,7 @@ export default function Navbar() {
           </div>
           {isAuthenticated && (
             <nav className="flex justify-between items-center px-6 py-3 ">
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-3 ml-30">
                 <CompanyDropDown />
                 <YearDropdown />
               </div>

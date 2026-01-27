@@ -3,6 +3,7 @@ package com.berksozcu.xml.service;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.customer.Customer;
+import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
@@ -19,6 +20,10 @@ import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
 import com.berksozcu.xml.entites.materials.ItemsXml;
 import com.berksozcu.xml.entites.materials.MaterialXml;
+import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
+import com.berksozcu.xml.entites.opening_balances.ArpTransactionsXml;
+import com.berksozcu.xml.entites.opening_balances.ArpVoucherXml;
+import com.berksozcu.xml.entites.opening_balances.ArpVouchersXml;
 import com.berksozcu.xml.entites.payrolls.PayrollRollXml;
 import com.berksozcu.xml.entites.payrolls.PayrollTransactionsXml;
 import com.berksozcu.xml.entites.payrolls.PayrollTxXml;
@@ -65,6 +70,9 @@ public class XmlExportService {
 
     @Autowired
     private PaymentCompanyRepository paymentCompanyRepository;
+
+    @Autowired
+    private OpeningVoucherRepository openingVoucherRepository;
 
     @Autowired
     private PayrollRepository payrollRepository;
@@ -186,6 +194,8 @@ public class XmlExportService {
             mXml.setCODE(m.getCode());
             mXml.setNAME(m.getComment());
             mXml.setUNITSET_CODE("ADET");
+            mXml.setPURCHASE_PRICE(m.getPurchasePrice().setScale(2, RoundingMode.HALF_UP).toString());
+            mXml.setSALES_PRICE(m.getSalesPrice().setScale(2, RoundingMode.HALF_UP).toString());
 
             materialXmlList.add(mXml);
         }
@@ -250,6 +260,7 @@ public class XmlExportService {
             cXml.setAMOUNT(rc.getPrice().setScale(2, RoundingMode.HALF_UP).toString());
             cXml.setDESCRIPTION(rc.getComment());
             cXml.setSIGN(1);
+            cXml.setNUMBER(rc.getFileNo());
             cXml.setSD_CODE("1");
 
 
@@ -267,6 +278,7 @@ public class XmlExportService {
             cXml.setDATE(py.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             cXml.setAMOUNT(py.getPrice().setScale(2, RoundingMode.HALF_UP).toString());
             cXml.setDESCRIPTION(py.getComment());
+            cXml.setNUMBER(py.getFileNo());
             cXml.setSIGN(0);
 
             AttachmentArp attachmentArp = new AttachmentArp();
@@ -328,6 +340,48 @@ public class XmlExportService {
         rootXml.setRolls(payrollsXmlList);
 
         JAXBContext context =  JAXBContext.newInstance(PayrollsXml.class);
+        Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        marshaller.marshal(rootXml, baos);
+        return baos.toByteArray();
+    }
+
+    @Transactional
+    public byte[] exportOpeningVouchers(int year) throws Exception {
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+        List<OpeningVoucher> voucherList = openingVoucherRepository.findAllByDateBetween(start, end);
+
+        ArpVouchersXml rootXml = new ArpVouchersXml();
+        List<ArpVoucherXml> voucherXmlList = new ArrayList<>();
+
+        if(!voucherList.isEmpty()) {
+            ArpVoucherXml vXml = new ArpVoucherXml();
+            vXml.setNumber("DEVIR_" + year);
+            vXml.setDate(start.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+
+            ArpTransactionsXml txsWrapper = new ArpTransactionsXml();
+            List<ArpTransactionXml> txList = new ArrayList<>();
+
+            for(OpeningVoucher op : voucherList) {
+                ArpTransactionXml tx = new ArpTransactionXml();
+                tx.setARP_CODE(op.getCustomer().getName());
+                tx.setDESCRIPTION(op.getDescription());
+                tx.setCREDIT(op.getCredit().setScale(2, RoundingMode.HALF_UP).toString());
+                tx.setDEBIT(op.getDebit().setScale(2, RoundingMode.HALF_UP).toString());
+
+                txList.add(tx);
+            }
+            txsWrapper.setList(txList);
+            vXml.setTransactions(txsWrapper);
+            voucherXmlList.add(vXml);
+        }
+            rootXml.setVouchers(voucherXmlList);
+
+        JAXBContext context = JAXBContext.newInstance(ArpVouchersXml.class);
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");

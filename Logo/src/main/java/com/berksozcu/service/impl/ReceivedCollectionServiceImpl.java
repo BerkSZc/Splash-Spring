@@ -69,6 +69,7 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         receivedCollection.setDate(receivedCollection.getDate());
         receivedCollection.setPrice(receivedCollection.getPrice());
         receivedCollection.setCustomerName(receivedCollection.getCustomer().getName());
+        receivedCollection.setFileNo(receivedCollection.getFileNo());
 
         voucher.setFinalBalance(voucher.getFinalBalance().subtract(receivedCollection.getPrice()));
         voucher.setCredit(voucher.getCredit().add(receivedCollection.getPrice()));
@@ -139,6 +140,8 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         oldCollection.setPrice(receivedCollection.getPrice());
         oldCollection.setComment(receivedCollection.getComment());
         oldCollection.setCustomer(newCustomer);
+        oldCollection.setFileNo(receivedCollection.getFileNo());
+
         openingVoucherRepository.save(voucher);
 
         return receivedCollectionRepository.save(oldCollection);

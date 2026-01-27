@@ -17,4 +17,10 @@ public class MaterialXml {
 
     @XmlElement(name = "UNITSET_CODE")
     private String UNITSET_CODE;
+
+    @XmlElement(name = "PURCHASE_PRICE")
+    private String PURCHASE_PRICE;
+
+    @XmlElement(name = "SALES_PRICE")
+    private String SALES_PRICE;
 }

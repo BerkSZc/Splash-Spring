@@ -80,6 +80,20 @@ export default function FinancialEditModal({
               className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition resize-none"
             ></textarea>
           </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase ml-1 tracking-widest">
+              İşlem No
+            </label>
+            <input
+              required
+              rows="3"
+              value={editForm.fileNo || ""}
+              onChange={(e) =>
+                setEditForm({ ...editForm, fileNo: e.target.value })
+              }
+              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition resize-none"
+            ></input>
+          </div>
         </div>
         <div className="flex gap-4 mt-10 font-bold">
           <button

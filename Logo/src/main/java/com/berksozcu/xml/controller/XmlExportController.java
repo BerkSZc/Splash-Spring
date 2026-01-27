@@ -97,4 +97,17 @@ public class XmlExportController extends RestBaseController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    @GetMapping("/vouchers")
+    public ResponseEntity<byte[]> exportOpeningVouchers(@RequestParam int year) {
+        try {
+            byte[] xmlContent = xmlExportService.exportOpeningVouchers(year);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

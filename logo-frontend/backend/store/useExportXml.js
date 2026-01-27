@@ -105,7 +105,7 @@ export const useExportXml = create(() => ({
       link.click();
       link.remove();
 
-      toast.success(`${year}'na ait Kasa İşlemleri dışarıya aktarıldı`);
+      toast.success(`${year} yılına ait Kasa İşlemleri dışarıya aktarıldı`);
       return true;
     } catch (error) {
       const backendErr = error?.response?.data || "Bilinmeyen hata";
@@ -127,11 +127,33 @@ export const useExportXml = create(() => ({
       link.click();
       link.remove();
 
-      toast.success(`${year}'na ait Bordro İşlemleri dışarıya aktarıldı`);
+      toast.success(`${year} yılına ait Bordro İşlemleri dışarıya aktarıldı`);
       return true;
     } catch (error) {
       const backendErr = error?.response?.data || "Bilinmeyen hata";
       toast.error("Error at exportPayrolls: " + backendErr);
+      return false;
+    }
+  },
+  exportOpeningVouchers: async (year) => {
+    try {
+      const response = await axiosInstance.get("/export/vouchers", {
+        params: { year },
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Devir_Bakiye_${year}.xml`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success(`${year} yılına ait Devir İşlemleri dışarıya aktarıldı`);
+      return true;
+    } catch (error) {
+      const backendErr = error?.response?.data || "Bilinmeyen hata";
+      toast.error("Error at exportOpeningVouchers: " + backendErr);
       return false;
     }
   },

@@ -14,4 +14,6 @@ public interface PaymentCompanyRepository extends JpaRepository<PaymentCompany, 
     List<PaymentCompany> findByDateBetween(LocalDate start, LocalDate end);
 
     List<PaymentCompany> findAllByDateBetween(LocalDate start, LocalDate end);
+
+    boolean existsByFileNo(String fileNo);
 }
