@@ -12,8 +12,6 @@ export default function InvoiceEditModal({
   addItem,
   removeItem,
   handlePriceSelect,
-  totals,
-  invoiceType,
   materials,
   customers,
   onCancel,
@@ -149,6 +147,7 @@ export default function InvoiceEditModal({
                       />
                       <MaterialPriceTooltip
                         materialId={item.materialId}
+                        customerId={form.customerId}
                         onSelect={(p, e) => handlePriceSelect(i, p, e)}
                         disabled={!item.materialId}
                       />

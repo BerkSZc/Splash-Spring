@@ -53,7 +53,7 @@ export default function InvoiceItemsTable({
         </div>
       </div>
 
-      <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden">
+      <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-visible">
         <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800/30">
           <h3 className="font-bold text-lg flex items-center gap-2">
             <span className="w-2 h-6 bg-blue-500 rounded-full"></span>

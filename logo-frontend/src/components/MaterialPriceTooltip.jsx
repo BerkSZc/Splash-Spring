@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMaterialPriceHistory } from "../../backend/store/useMaterialPriceHistory.js";
 import { useYear } from "../context/YearContext.jsx";
 import toast from "react-hot-toast";
+import { createPortal } from "react-dom";
 
 export default function MaterialPriceTooltip({
   materialId,
@@ -26,10 +27,16 @@ export default function MaterialPriceTooltip({
   const [currentIndex, setCurrentIndex] = useState(0);
   const { year } = useYear();
   const menuRef = useRef(null);
+  const menuPopupRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        menuPopupRef.current &&
+        !menuPopupRef.current.contains(event.target)
+      ) {
         setShowMenu(false);
       }
     };
@@ -53,8 +60,14 @@ export default function MaterialPriceTooltip({
     }
   };
 
-  const handleMenuClick = (mode) => {
-    if (mode === "CUSTOMER-YEARLY" && !customerId) {
+  const handleMenuClick = (e, mode) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (
+      (mode === "CUSTOMER-YEARLY" || mode === "CUSTOMER-ALL") &&
+      !customerId
+    ) {
       toast.error("Önce bir müşteri seçmelisiniz!"); //
       return;
     }
@@ -117,38 +130,48 @@ export default function MaterialPriceTooltip({
         </span>
       </button>
 
-      {showMenu && (
-        <div className="absolute left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-          <button
-            type="button"
-            onClick={() => handleMenuClick("YEARLY")}
-            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-blue-600 hover:text-white transition-colors border-b border-gray-800"
+      {showMenu &&
+        document.body &&
+        createPortal(
+          <div
+            ref={menuPopupRef}
+            className="fixed left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+            style={{
+              top: menuRef.current?.getBoundingClientRect().bottom + 8,
+              left: menuRef.current?.getBoundingClientRect().left - 150,
+            }}
           >
-            📅 {year} Yılı İçinde Ara
-          </button>
-          <button
-            type="button"
-            onClick={() => handleMenuClick("ALL")}
-            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
-          >
-            🌍 Tüm Yıllarda Ara
-          </button>
-          <button
-            type="button"
-            onClick={() => handleMenuClick("CUSTOMER-YEARLY")}
-            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
-          >
-            Müşteriye göre {year} Yılı için Ara
-          </button>
-          <button
-            type="button"
-            onClick={() => handleMenuClick("CUSTOMER-ALL")}
-            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
-          >
-            Müşteriye göre Tüm Yıllarda Ara
-          </button>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={(e) => handleMenuClick(e, "YEARLY")}
+              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-blue-600 hover:text-white transition-colors border-b border-gray-800"
+            >
+              📅 {year} Yılı İçinde Ara
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleMenuClick(e, "ALL")}
+              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              🌍 Tüm Yıllarda Ara
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleMenuClick(e, "CUSTOMER-YEARLY")}
+              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              Müşteriye göre {year} Yılı için Ara
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleMenuClick(e, "CUSTOMER-ALL")}
+              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+            >
+              Müşteriye göre Tüm Yıllarda Ara
+            </button>
+          </div>,
+          document.body,
+        )}
 
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">

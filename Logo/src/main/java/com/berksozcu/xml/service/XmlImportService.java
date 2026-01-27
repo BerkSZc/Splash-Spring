@@ -686,7 +686,6 @@ public class XmlImportService {
         materialPriceHistory.setCustomerName(customerName);
         materialPriceHistory.setQuantity(quantity);
         materialPriceHistory.setCustomer(customer);
-
         materialPriceHistoryRepository.save(materialPriceHistory);
     }
 
