@@ -3,8 +3,8 @@ services:
     image: postgres:15-alpine
     container_name: logo_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Avengers.52
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
@@ -32,10 +32,10 @@ services:
     networks:
       - logo_network
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
-      JWT_SECRET: IfyUyq6cKzLRdGk2Zl0gHB2DDO2xjaTsBxY5hEXZRUs
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: Avengers.52
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: logo
