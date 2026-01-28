@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: logo_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Avengers.52
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - logo_network
+    volumes:
+      - ./Logo/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./Logo
+      dockerfile: Dockerfile
+    container_name: logo_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - logo_network
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      JWT_SECRET: IfyUyq6cKzLRdGk2Zl0gHB2DDO2xjaTsBxY5hEXZRUs
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Avengers.52
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: logo
+
+  frontend:
+    build:
+      context: ./logo-frontend
+      dockerfile: Dockerfile
+    container_name: react_logo_app
+    ports:
+      - "3000:80"
+    networks:
+      - logo_network
+    depends_on:
+      - backend
+
+networks:
+  logo_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
+# DataSourceConfig sınıdaki url yi postgres yap çalıştırıken
