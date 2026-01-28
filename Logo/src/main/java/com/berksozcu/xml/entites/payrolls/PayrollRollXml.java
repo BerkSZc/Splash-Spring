@@ -12,6 +12,8 @@ import lombok.Setter;
 public class PayrollRollXml {
     @XmlElement(name = "TYPE")
     private Integer type; // Bordro Tipi
+    @XmlElement(name = "NUMBER")
+    private String number;
     @XmlElement(name = "MASTER_CODE")
     private String masterCode; // Müşteri Kodu
     @XmlElement(name = "DATE")

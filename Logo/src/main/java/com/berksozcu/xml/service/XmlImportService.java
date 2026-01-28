@@ -524,6 +524,15 @@ public class XmlImportService {
 
         for (PayrollRollXml roll : rollsXml.getRolls()) {
 
+            if (roll.getType() != null && roll.getType().equals(11)) {
+                System.out.println(">>> İşlem bordrosu (11) yakalandı ve atlanıyor.");
+                continue;
+            }
+
+            if (existingPayrolls.contains(roll.getNumber())) {
+                System.out.println("İşlem no mevcut: " + roll.getNumber());
+                continue;
+            }
             String customerCode = roll.getMasterCode();
             Customer customer = customerRepository.findByCode(customerCode)
                     .orElse(null);
@@ -561,10 +570,7 @@ public class XmlImportService {
 
             if (roll.getTransactions() != null && roll.getTransactions().getList() != null) {
                 for (PayrollTxXml tx : roll.getTransactions().getList()) {
-                    if (existingPayrolls.contains(tx.getNumber())) {
-                        System.out.println("İşlem no mevcut: " + tx.getNumber());
-                        continue;
-                    }
+
                     Payroll payroll = new Payroll();
                     payroll.setCustomer(customer);
                     payroll.setFileNo(tx.getNumber());
