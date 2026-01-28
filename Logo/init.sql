@@ -2,7 +2,7 @@ CREATE SCHEMA IF NOT EXISTS logo;
 
 ALTER ROLE postgres SET search_path TO logo, public;
 
-CREATE TABLE IF NOT EXISTS customer (
+CREATE TABLE IF NOT EXISTS logo.customer (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(255),
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS customer (
 );
 
 -- Örnek müşteriler
-INSERT INTO customer (name, address, country, local, district, vd_no, customer_code)
+INSERT INTO logo.customer (name, address, country, local, district, vd_no, customer_code)
 VALUES
 ('Müşteri A', 'Adres 1', 'Türkiye', 'İstanbul', 'Kadıköy', '1234567890', 'K13'),
 ('Müşteri B', 'Adres 2', 'Türkiye', 'Ankara', 'Çankaya', '0987654321', 'T51');
@@ -28,7 +28,7 @@ VALUES
 CREATE TYPE unit_status AS ENUM ('KG', 'ADET', 'M');
 CREATE TYPE currency_status AS ENUM ('TRY', 'EUR', 'USD');
 
-CREATE TABLE IF NOT EXISTS material (
+CREATE TABLE IF NOT EXISTS logo.material (
     id BIGSERIAL PRIMARY KEY ,
     code VARCHAR(50) NOT NULL,
     comment VARCHAR(255),
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS material (
 );
 
 -- Örnek malzemeler
-INSERT INTO material (code, comment, unit, purchase_price, sales_price, purchase_currency, sales_currency)
+INSERT INTO logo.material (code, comment, unit, purchase_price, sales_price, purchase_currency, sales_currency)
 VALUES
 ('M001', 'Malzeme 1', 'ADET', 2.00, 5.00, 'EUR', 'USD'),
 ('M002', 'Malzeme 2', 'KG', 3.00, 8.00, 'EUR', 'USD');
@@ -48,7 +48,7 @@ VALUES
 -- ---------------------------
 -- 3. SATIN ALMA FATURASI TABLOSU
 -- ---------------------------
-CREATE TABLE IF NOT EXISTS purchase_invoice (
+CREATE TABLE IF NOT EXISTS logo.purchase_invoice (
     id BIGSERIAL PRIMARY KEY ,
     file_no VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
@@ -57,13 +57,13 @@ CREATE TABLE IF NOT EXISTS purchase_invoice (
     kdv_toplam DECIMAL(15,2) DEFAULT 0,
     eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
-    FOREIGN KEY (customer_id) REFERENCES customer(id)
+    FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
 );
 
 -- ---------------------------
 -- 4. SATIN ALMA FATURA KALEMLERİ
 -- ---------------------------
-CREATE TABLE IF NOT EXISTS purchase_invoice_item (
+CREATE TABLE IF NOT EXISTS logo.purchase_invoice_item (
     id BIGSERIAL PRIMARY KEY ,
     purchase_invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
@@ -72,14 +72,14 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_item (
     line_total DECIMAL(15,2) NOT NULL,
     kdv DECIMAL(5,2) DEFAULT 20,
     kdv_tutar DECIMAL(15,2) DEFAULT 0,
-    FOREIGN KEY (purchase_invoice_id) REFERENCES purchase_invoice(id) ON DELETE CASCADE,
-    FOREIGN KEY (material_id) REFERENCES material(id)
+    FOREIGN KEY (purchase_invoice_id) REFERENCES logo.purchase_invoice(id) ON DELETE CASCADE,
+    FOREIGN KEY (material_id) REFERENCES logo.material(id)
 );
 
 -- ---------------------------
 -- 5. SATIŞ FATURASI TABLOSU
 -- ---------------------------
-CREATE TABLE IF NOT EXISTS sales_invoice (
+CREATE TABLE IF NOT EXISTS logo.sales_invoice (
     id BIGSERIAL PRIMARY KEY ,
     file_no VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
@@ -89,13 +89,13 @@ CREATE TABLE IF NOT EXISTS sales_invoice (
     type INTEGER,
     eur_selling_rate DECIMAL(15, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(15, 4) DEFAULT 0.0000,
-    FOREIGN KEY (customer_id) REFERENCES customer(id)
+    FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
 );
 
 -- ---------------------------
 -- 6. SATIŞ FATURA KALEMLERİ
 -- ---------------------------
-CREATE TABLE IF NOT EXISTS sales_invoice_item (
+CREATE TABLE IF NOT EXISTS logo.sales_invoice_item (
     id BIGSERIAL PRIMARY KEY ,
     sales_invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
@@ -104,13 +104,13 @@ CREATE TABLE IF NOT EXISTS sales_invoice_item (
     line_total DECIMAL(15,2) NOT NULL,
     kdv DECIMAL(5,2) DEFAULT 18,
     kdv_tutar DECIMAL(15,2) DEFAULT 20,
-    FOREIGN KEY (sales_invoice_id) REFERENCES sales_invoice(id) ON DELETE CASCADE,
-    FOREIGN KEY (material_id) REFERENCES material(id)
+    FOREIGN KEY (sales_invoice_id) REFERENCES logo.sales_invoice(id) ON DELETE CASCADE,
+    FOREIGN KEY (material_id) REFERENCES logo.material(id)
 );
 
 CREATE TYPE invoice_status AS ENUM ('PURCHASE', 'SALES');
 
-CREATE TABLE material_price_history (
+CREATE TABLE logo.material_price_history (
     id BIGSERIAL PRIMARY KEY,
     material_id BIGINT,
     invoice_type invoice_status,
@@ -122,9 +122,9 @@ CREATE TABLE material_price_history (
     customer_id BIGINT,
 
     CONSTRAINT cutomer_price
-        FOREIGN KEY (customer_id) REFERENCES customer(id),
+        FOREIGN KEY (customer_id) REFERENCES logo.customer(id),
     CONSTRAINT fk_material_price_history_material
-        FOREIGN KEY (material_id) REFERENCES material(id)
+        FOREIGN KEY (material_id) REFERENCES logo.material(id)
 );
 
 
@@ -132,25 +132,25 @@ CREATE TABLE material_price_history (
 -- ---------------------------
 -- Örnek Satın Alma Faturası
 -- ---------------------------
-INSERT INTO purchase_invoice (file_no, date, customer_id, total_price, kdv_toplam)
+INSERT INTO logo.purchase_invoice (file_no, date, customer_id, total_price, kdv_toplam)
 VALUES ('PA-001', '2025-12-01', 1, 200, 36);
 
-INSERT INTO purchase_invoice_item (purchase_invoice_id, material_id, unit_price, quantity, line_total, kdv)
+INSERT INTO logo.purchase_invoice_item (purchase_invoice_id, material_id, unit_price, quantity, line_total, kdv)
 VALUES (1, 1, 100, 2, 200, 36);
 
 -- ---------------------------
 -- Örnek Satış Faturası
 -- ---------------------------
-INSERT INTO sales_invoice (file_no, date, customer_id, total_price, kdv_toplam, type)
+INSERT INTO logo.sales_invoice (file_no, date, customer_id, total_price, kdv_toplam, type)
 VALUES ('SA-001', '2025-12-01', 2, 300, 54, 1);
 
-INSERT INTO sales_invoice_item (sales_invoice_id, material_id, unit_price, quantity, line_total, kdv)
+INSERT INTO logo.sales_invoice_item (sales_invoice_id, material_id, unit_price, quantity, line_total, kdv)
 VALUES (1, 2, 150, 2, 300, 54);
 
 
 -- Şirketten Ödeme Alma Tablosu
 
-CREATE TABLE IF NOT EXISTS received_collection (
+CREATE TABLE IF NOT EXISTS logo.received_collection (
     id BIGSERIAL PRIMARY KEY ,
     date DATE NOT NULL,
     comment VARCHAR(255),
@@ -158,13 +158,13 @@ CREATE TABLE IF NOT EXISTS received_collection (
     customer_id BIGINT,
     customer_name VARCHAR(255),
     file_no VARCHAR(255),
-    CONSTRAINT fk_received_customer FOREIGN KEY (customer_id) REFERENCES customer(id)
+    CONSTRAINT fk_received_customer FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
 );
 
 
 -- Şirkete Ödeme Tablosu
 
-CREATE TABLE IF NOT EXISTS payment_company (
+CREATE TABLE IF NOT EXISTS logo.payment_company (
     id BIGSERIAL PRIMARY KEY ,
     date DATE NOT NULL,
     comment VARCHAR(255),
@@ -172,18 +172,18 @@ CREATE TABLE IF NOT EXISTS payment_company (
     customer_id BIGINT,
     customer_name VARCHAR(255),
     file_no VARCHAR(255),
-    CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES customer(id)
+    CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
 );
 
 -- Kullanıcı Tablosu
-CREATE TABLE IF NOT EXISTS app_user(
+CREATE TABLE IF NOT EXISTS logo.app_user(
 id BIGSERIAL PRIMARY KEY,
 username VARCHAR(255) NOT NULL,
 password VARCHAR(255) NOT NULL
 );
 
 -- Şirket Tablosu
-CREATE TABLE IF NOT EXISTS company (
+CREATE TABLE IF NOT EXISTS logo.company (
 id BIGSERIAL PRIMARY KEY,
 name VARCHAR(255),
 schema_name VARCHAR(255),
@@ -194,7 +194,7 @@ CREATE TYPE payroll_model_enum AS ENUM ('INPUT', 'OUTPUT');
 CREATE TYPE payroll_type_enum AS ENUM ('CHEQUE', 'BOND');
 
 -- Bordro İşlemleri (Çek-Senet İşlemleri)
-CREATE TABLE IF NOT EXISTS payroll (
+CREATE TABLE IF NOT EXISTS logo.payroll (
     id SERIAL PRIMARY KEY,
     transaction_date DATE NOT NULL,
     expired_date DATE,
@@ -208,10 +208,10 @@ CREATE TABLE IF NOT EXISTS payroll (
 
     CONSTRAINT fk_payroll_customer
         FOREIGN KEY (customer_id)
-        REFERENCES customer(id) ON DELETE CASCADE
+        REFERENCES logo.customer(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS currency_rate (
+CREATE TABLE IF NOT EXISTS logo.currency_rate (
     id SERIAL PRIMARY KEY,
     currency VARCHAR(255),
     buying_rate DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS currency_rate (
     last_updated DATE
 );
 
-CREATE TABLE IF NOT EXISTS opening_voucher (
+CREATE TABLE IF NOT EXISTS logo.opening_voucher (
     id SERIAL PRIMARY KEY,
     customer_id BIGINT,
     customer_name VARCHAR(255),
@@ -234,5 +234,5 @@ CREATE TABLE IF NOT EXISTS opening_voucher (
 
         CONSTRAINT voucher_customer
         FOREIGN KEY (customer_id)
-        REFERENCES customer(id) ON DELETE CASCADE
+        REFERENCES logo.customer(id) ON DELETE CASCADE
 );
