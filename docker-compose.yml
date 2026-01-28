@@ -59,4 +59,4 @@ networks:
 volumes:
   postgres_data:
 
-# DataSourceConfig sınıdaki url yi postgres yap çalıştırıken
+# DataSourceConfig sınıdaki url yi postgres yap çalıştırıken.
