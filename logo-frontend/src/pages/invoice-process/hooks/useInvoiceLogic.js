@@ -13,7 +13,7 @@ export const useInvoiceLogic = () => {
   const { customers, getAllCustomers } = useClient();
   const { addSalesInvoice, getSalesInvoicesByYear } = useSalesInvoice();
   const { addPurchaseInvoice, getPurchaseInvoiceByYear } = usePurchaseInvoice();
-  const { convertCurrency, getDailyRates } = useCurrency();
+  const { convertCurrency, getDailyRates, getFileNo } = useCurrency();
   const { year } = useYear();
 
   const initalItem = {
@@ -57,58 +57,63 @@ export const useInvoiceLogic = () => {
     getInitialFormState(year),
   );
 
+  const calculateItemsWithRates = (items, rates, materials, mode) => {
+    return items.map((item) => {
+      const material = materials.find((m) => m.id === Number(item.materialId));
+      if (!material) return item;
+
+      const mCurrency =
+        mode === "sales" ? material.salesCurrency : material.purchaseCurrency;
+      const mPrice =
+        mode === "sales" ? material.salesPrice : material.purchasePrice;
+
+      let newPrice = item.unitPrice;
+      if (mCurrency === "USD") newPrice = mPrice * (rates.USD || 1);
+      else if (mCurrency === "EUR") newPrice = mPrice * (rates.EUR || 1);
+      else if (mCurrency === "TRY") newPrice = mPrice;
+
+      return { ...item, unitPrice: newPrice };
+    });
+  };
+
   useEffect(() => {
-    const fetchAndSetRates = async () => {
-      const currentFormDate =
-        mode === "sales" ? salesForm.date : purchaseForm.date;
-      if (currentFormDate) {
-        const rates = await getDailyRates(currentFormDate);
+    const updateRates = async () => {
+      const date = mode === "sales" ? salesForm.date : purchaseForm.date;
+      if (!date) return;
 
-        if (rates) {
-          const rateData = {
-            usdSellingRate: rates.USD || "",
-            eurSellingRate: rates.EUR || "",
-          };
+      const rates = await getDailyRates(date);
+      if (!rates) return;
 
-          const updateFormWithRates = (prev) => {
-            const updatedItems = prev.items.map((item) => {
-              const material = materials.find(
-                (m) => m.id === Number(item.materialId),
-              );
-              if (!material) return item;
+      const rateData = {
+        usdSellingRate: rates.USD || "",
+        eurSellingRate: rates.EUR || "",
+      };
+      const setter = mode === "sales" ? setSalesForm : setPurchaseForm;
 
-              const mCurrency =
-                mode === "sales"
-                  ? material.salesCurrency
-                  : material.purchaseCurrency;
-              const mPrice =
-                mode === "sales" ? material.salesPrice : material.purchasePrice;
+      setter((prev) => ({
+        ...prev,
+        ...rateData,
+        items: calculateItemsWithRates(prev.items, rates, materials, mode),
+      }));
+    };
+    updateRates();
+  }, [salesForm.date, purchaseForm.date, materials]);
 
-              let newPrice = item.unitPrice;
-              if (mCurrency === "USD") newPrice = mPrice * (rates.USD || 1);
-              else if (mCurrency === "EUR")
-                newPrice = mPrice * (rates.EUR || 1);
-              else if (mCurrency === "TRY") newPrice = mPrice;
-              return { ...item, unitPrice: newPrice };
-            });
-            return { ...prev, ...rateData, items: updatedItems };
-          };
+  useEffect(() => {
+    const updateFileNo = async () => {
+      const date = mode === "sales" ? salesForm.date : purchaseForm.date;
+      if (!date) return;
 
-          if (mode === "sales") setSalesForm(updateFormWithRates);
-          else setPurchaseForm(updateFormWithRates);
+      const type = mode === "sales" ? "SALES" : "PURCHASE";
+      const nextNo = await getFileNo(date, type);
 
-          // Kurlar geldiğinde formu güncelle
-          if (mode === "sales") {
-            setSalesForm((prev) => ({ ...prev, ...rateData }));
-          } else {
-            setPurchaseForm((prev) => ({ ...prev, ...rateData }));
-          }
-        }
+      if (nextNo) {
+        const setter = mode === "sales" ? setSalesForm : setPurchaseForm;
+        setter((prev) => ({ ...prev, fileNo: nextNo }));
       }
     };
-
-    fetchAndSetRates();
-  }, [mode, salesForm.date, purchaseForm.date, getDailyRates]);
+    updateFileNo();
+  }, [mode, salesForm.date, purchaseForm.date]);
 
   useEffect(() => {
     getMaterials();

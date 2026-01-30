@@ -71,8 +71,6 @@ public class CustomerServiceImpl implements ICustomerService {
 
         LocalDate date = LocalDate.of(year, 1, 1);
 
-        BigDecimal finalBalance = newCustomer.getYearlyDebit().subtract(newCustomer.getYearlyCredit().setScale(2, RoundingMode.HALF_UP));
-
              OpeningVoucher openingVoucher =
                      openingVoucherRepository.findByCustomerIdAndDate(customer.getId(), date)
                         .orElseGet(() -> {
@@ -82,9 +80,9 @@ public class CustomerServiceImpl implements ICustomerService {
                             newOpeningVoucher.setDescription("Yeni Müşteri");
                             newOpeningVoucher.setFileNo("001");
                             newOpeningVoucher.setDate(date);
-                            newOpeningVoucher.setFinalBalance(finalBalance);
-                            newOpeningVoucher.setYearlyDebit(newCustomer.getYearlyDebit());
-                            newOpeningVoucher.setYearlyCredit(newCustomer.getYearlyCredit());
+                            newOpeningVoucher.setFinalBalance(BigDecimal.ZERO);
+                            newOpeningVoucher.setYearlyDebit(BigDecimal.ZERO);
+                            newOpeningVoucher.setYearlyCredit(BigDecimal.ZERO);
                             newOpeningVoucher.setDebit(BigDecimal.ZERO);
                             newOpeningVoucher.setCredit(BigDecimal.ZERO);
                             return newOpeningVoucher;

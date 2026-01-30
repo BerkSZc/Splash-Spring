@@ -2,6 +2,8 @@ package com.berksozcu.repository;
 
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -17,4 +19,7 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     boolean existsByFileNo(String fileNo);
 
     List<PurchaseInvoice> findAllByDateBetween(LocalDate start, LocalDate end);
+
+    @Query("SELECT MAX(p.fileNo) FROM PurchaseInvoice p WHERE p.date BETWEEN :start AND :end AND p.fileNo LIKE 'SÖZ%'")
+    String findMaxFileNoByYear(@Param("start") LocalDate start, @Param("end") LocalDate end);
 }

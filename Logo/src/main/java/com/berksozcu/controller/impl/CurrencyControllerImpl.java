@@ -2,10 +2,12 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.controller.ICurrencyController;
 import com.berksozcu.entites.currency.CurrencyRate;
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CurrencyRateRepository;
+import com.berksozcu.repository.PurchaseInvoiceRepository;
 import com.berksozcu.service.ICurrencyRateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -57,5 +59,10 @@ public class CurrencyControllerImpl implements ICurrencyController {
     rates.put("USD", currencyRateService.getTodaysRate("USD", currencyDate));
 
     return  rates;
+    }
+
+    @GetMapping("/file-no")
+    public String getFileNo(@RequestParam LocalDate date, @RequestParam InvoiceType type) {
+        return currencyRateService.generateFileNo(date, type);
     }
 }

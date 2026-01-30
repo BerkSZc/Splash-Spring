@@ -49,7 +49,6 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
@@ -340,5 +339,4 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate end = LocalDate.of(year, 12, 31);
         return purchaseInvoiceRepository.findByDateBetween(start, end);
     }
-
 }

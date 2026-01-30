@@ -2,6 +2,7 @@ package com.berksozcu.service;
 
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IPurchaseInvoiceService {

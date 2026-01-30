@@ -41,6 +41,6 @@ public class ReceivedCollection {
     private String customerName;
 
     //İşlem numarası
-    @Column(name = "file_no")
+    @Column(name = "file_no", unique = true)
     private String fileNo;
 }

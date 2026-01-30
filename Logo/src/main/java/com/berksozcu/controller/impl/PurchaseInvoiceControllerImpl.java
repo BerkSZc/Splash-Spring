@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/purchase")
-public class PurchaseInvoiceControllerControllerImpl implements IPurchaseInvoiceController {
+public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController {
 
     @Autowired
     private IPurchaseInvoiceService purchaseInvoice;

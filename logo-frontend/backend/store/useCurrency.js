@@ -28,4 +28,17 @@ export const useCurrency = create(() => ({
       toast.error("Error at getDailyRates: " + backendErr);
     }
   },
+  getFileNo: async (date, type) => {
+    try {
+      const res = await axiosInstance.get(`/currency/file-no`, {
+        params: { date, type },
+      });
+      return res.data;
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error("Error at getFileNo: " + backendErr);
+      return "";
+    }
+  },
 }));

@@ -26,7 +26,7 @@ public class PurchaseInvoice {
     private LocalDate date;
 
     //Belge No
-    @Column(name = "file_no")
+    @Column(name = "file_no", unique = true)
     private String fileNo;
 
     @ManyToOne

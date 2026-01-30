@@ -41,6 +41,6 @@ public class PaymentCompany {
     private String customerName;
 
     //İşlem no
-    @Column(name = "file_no")
+    @Column(name = "file_no", unique = true)
     private String fileNo;
 }
