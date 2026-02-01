@@ -57,6 +57,20 @@ function createWindow() {
     console.log("Uygulama yanıt vermiyor, yeniden yükleniyor...");
     mainWindow.reload();
   });
+
+  mainWindow.webContents.on("render-process-gone", (_, details) => {
+    dialog.showMessageBox({
+      type: "error",
+      title: "Uygulama Hatası",
+      message: `Uygulama beklenmedik şekilde kapandı (${details.reason}). Yeniden başlatılıyor.`,
+    });
+    mainWindow.reload();
+  });
+
+  mainWindow.webContents.on("crashed", () => {
+    dialog.showErrorBox("Çökme", "Uygulama çöktü. Yeniden yükleniyor.");
+    mainWindow.reload();
+  });
 }
 
 // 3. Güncelleme Kontrolü (Global Scope)
