@@ -1,16 +1,14 @@
 package com.berksozcu.controller.impl;
 
-import com.berksozcu.controller.ICurrencyController;
+import com.berksozcu.controller.ICommonDataController;
 import com.berksozcu.entites.currency.CurrencyRate;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CurrencyRateRepository;
-import com.berksozcu.repository.PurchaseInvoiceRepository;
-import com.berksozcu.service.ICurrencyRateService;
+import com.berksozcu.service.ICommonDataService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,10 +22,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/rest/api/currency")
-public class CurrencyControllerImpl implements ICurrencyController {
+public class CommonDataControllerImpl implements ICommonDataController {
 
     @Autowired
-    private ICurrencyRateService currencyRateService;
+    private ICommonDataService currencyRateService;
 
     @Autowired
     private CurrencyRateRepository currencyRateRepository;
@@ -62,7 +60,7 @@ public class CurrencyControllerImpl implements ICurrencyController {
     }
 
     @GetMapping("/file-no")
-    public String getFileNo(@RequestParam LocalDate date, @RequestParam InvoiceType type) {
+    public String getFileNo(@RequestParam LocalDate date, @RequestParam String type) {
         return currencyRateService.generateFileNo(date, type);
     }
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
+import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import toast from "react-hot-toast";
 
@@ -22,6 +23,8 @@ export const useFinancialLogic = () => {
     deletePaymentCompany,
     getPaymentCollectionsByYear,
   } = usePaymentCompany();
+
+  const { getFileNo } = useCommonData();
 
   const [type, setType] = useState("received"); // received | payment
   const [editing, setEditing] = useState(null);
@@ -72,6 +75,21 @@ export const useFinancialLogic = () => {
     comment: "",
     fileNo: "",
   });
+
+  useEffect(() => {
+    const updateFileNo = async () => {
+      const date = addForm.date;
+      if (!date) return;
+
+      const mode = type === "received" ? "COLLECTION" : "PAYMENT";
+      const nextNo = await getFileNo(date, mode);
+
+      if (nextNo) {
+        setAddForm((prev) => ({ ...prev, fileNo: nextNo }));
+      }
+    };
+    updateFileNo();
+  }, [type, addForm.date, getFileNo]);
 
   useEffect(() => {
     if (!year) return;
@@ -131,13 +149,19 @@ export const useFinancialLogic = () => {
         await addPayment(customerId, payload);
         await getPaymentCollectionsByYear(year);
       }
+      const resetDate = getInitialDate(year);
+
+      const nextNo = await getFileNo(
+        resetDate,
+        type === "received" ? "COLLECTION" : "PAYMENT",
+      );
 
       setAddForm({
         date: getInitialDate(year),
         customerId: "",
         price: "",
         comment: "",
-        fileNo: "",
+        fileNo: nextNo || "",
       });
     } catch (error) {
       console.error(error);

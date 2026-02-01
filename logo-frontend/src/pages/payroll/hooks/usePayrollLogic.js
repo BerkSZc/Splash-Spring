@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
+import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import toast from "react-hot-toast";
 
 export const usePayrollLogic = () => {
@@ -9,6 +10,8 @@ export const usePayrollLogic = () => {
   const { year } = useYear();
   const { payrolls, addCheque, editCheque, deleteCheque, getPayrollByYear } =
     usePayroll();
+
+  const { getFileNo } = useCommonData();
 
   const formRef = useRef(null);
   const [type, setType] = useState("cheque_in");
@@ -34,11 +37,6 @@ export const usePayrollLogic = () => {
     bankBranch: "",
     comment: "",
   });
-
-  useEffect(() => {
-    setForm((prev) => ({ ...prev, transactionDate: getInitialDate(year) }));
-  }, [year]);
-
   const payrollType = type === "cheque_in" || "cheque_out" ? "ÇEK" : "SENET";
 
   useEffect(() => {
@@ -52,13 +50,6 @@ export const usePayrollLogic = () => {
       document.body.style.overflow = "unset";
     };
   }, [deleteTarget]);
-
-  useEffect(() => {
-    if (year) {
-      getAllCustomers();
-      getPayrollByYear(year);
-    }
-  }, [year, getPayrollByYear, getAllCustomers]);
 
   const currentTheme = useMemo(() => {
     switch (type) {
@@ -76,14 +67,14 @@ export const usePayrollLogic = () => {
           label: "Çek Çıkışı",
           icon: "⬆️",
         };
-      case "note_in":
+      case "bond_in":
         return {
           color: "text-orange-400",
           bg: "bg-orange-500",
           label: "Senet Girişi",
           icon: "📝",
         };
-      case "note_out":
+      case "bond_out":
         return {
           color: "text-purple-400",
           bg: "bg-purple-500",
@@ -100,31 +91,61 @@ export const usePayrollLogic = () => {
     }
   }, [type]);
 
-  const filteredList = (payrolls || []).filter((item) => {
+  const filteredList = useMemo(() => {
     const isCheque = type.includes("cheque");
     const isInput = type.includes("_in");
-    const typeMatch = isCheque
-      ? item.payrollType === "CHEQUE"
-      : item.payrollType === "BOND";
-    const modelMatch = isInput
-      ? item.payrollModel === "INPUT"
-      : item.payrollModel === "OUTPUT";
+    const searchLower = search.toLowerCase();
+    return (payrolls || []).filter((item) => {
+      const typeMatch = isCheque
+        ? item.payrollType === "CHEQUE"
+        : item.payrollType === "BOND";
+      const modelMatch = isInput
+        ? item.payrollModel === "INPUT"
+        : item.payrollModel === "OUTPUT";
 
-    return (
-      typeMatch &&
-      modelMatch &&
-      (item.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        item.fileNo?.toLowerCase().includes(search.toLowerCase()) ||
-        item.bankName?.toLowerCase().includes(search.toLowerCase()))
-    );
-  });
+      return (
+        typeMatch &&
+        modelMatch &&
+        (item.customer?.name?.toLowerCase().includes(searchLower) ||
+          item.fileNo?.toLowerCase().includes(searchLower) ||
+          item.bankName?.toLowerCase().includes(searchLower))
+      );
+    });
+  }, [payrolls, type, search]);
 
-  const totalAmount = filteredList.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0,
+  const totalAmount = useMemo(
+    () => filteredList.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [filteredList],
   );
 
-  const resetForm = () => {
+  useEffect(() => {
+    let isCancelled = false;
+    if (!editing && form.transactionDate) {
+      const fetchNo = async () => {
+        const nextNo = await getFileNo(
+          form.transactionDate,
+          type.toUpperCase(),
+        );
+        if (!isCancelled && nextNo) {
+          setForm((prev) => ({ ...prev, fileNo: nextNo }));
+        }
+      };
+      fetchNo();
+    }
+    return () => {
+      isCancelled = true;
+    };
+  }, [type, form.transactionDate, editing, getFileNo]);
+
+  useEffect(() => {
+    if (year) {
+      getAllCustomers();
+      getPayrollByYear(year);
+      setForm((prev) => ({ ...prev, transactionDate: getInitialDate(year) }));
+    }
+  }, [year, getAllCustomers, getPayrollByYear]);
+
+  const resetForm = async () => {
     setForm({
       transactionDate: getInitialDate(year),
       expiredDate: new Date().toISOString().slice(0, 10),
@@ -136,6 +157,10 @@ export const usePayrollLogic = () => {
       comment: "",
     });
     setEditing(null);
+    const nextNo = await getFileNo(getInitialDate(year), type.toUpperCase());
+    if (nextNo) {
+      setForm((prev) => ({ ...prev, fileNo: nextNo }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -167,8 +192,8 @@ export const usePayrollLogic = () => {
       } else {
         await addCheque(form.customerId, payload);
       }
-      resetForm();
       await getPayrollByYear(year);
+      resetForm();
     } catch (error) {
       console.log(error);
     }

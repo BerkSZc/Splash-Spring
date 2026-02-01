@@ -24,7 +24,7 @@ public class OpeningVoucher {
     @Column(name = "customer_name")
     private String customerName;
 
-    @Column(name = "file_no", unique = true)
+    @Column(name = "file_no")
     private String fileNo;
 
     private String description;

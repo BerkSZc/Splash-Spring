@@ -63,10 +63,10 @@ export default function PayrollPage() {
               <option className="bg-gray-900" value="cheque_out">
                 ⬆️ Çek Çıkışı
               </option>
-              <option className="bg-gray-900" value="note_in">
+              <option className="bg-gray-900" value="bond_in">
                 📝 Senet Girişi
               </option>
-              <option className="bg-gray-900" value="note_out">
+              <option className="bg-gray-900" value="bond_out">
                 📤 Senet Çıkışı
               </option>
             </select>

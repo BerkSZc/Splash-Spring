@@ -11,7 +11,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "payroll")
+@Table(name = "payroll", indexes = {
+        @Index(name = "idx_payroll_date_file_no", columnList = "transaction_date, file_no")
+})
 @Getter
 @Setter
 @NoArgsConstructor

@@ -11,7 +11,7 @@ import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
-import com.berksozcu.service.ICurrencyRateService;
+import com.berksozcu.service.ICommonDataService;
 import com.berksozcu.service.IPurchaseInvoiceService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
 
     @Autowired
-    private ICurrencyRateService currencyRateService;
+    private ICommonDataService currencyRateService;
 
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;

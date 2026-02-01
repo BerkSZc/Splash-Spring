@@ -5,7 +5,7 @@ import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import toast from "react-hot-toast";
-import { useCurrency } from "../../../../backend/store/useCurrency.js";
+import { useCommonData } from "../../../../backend/store/useCommonData.js";
 
 export const useInvoiceLogic = () => {
   const [mode, setMode] = useState("sales");
@@ -13,7 +13,7 @@ export const useInvoiceLogic = () => {
   const { customers, getAllCustomers } = useClient();
   const { addSalesInvoice, getSalesInvoicesByYear } = useSalesInvoice();
   const { addPurchaseInvoice, getPurchaseInvoiceByYear } = usePurchaseInvoice();
-  const { convertCurrency, getDailyRates, getFileNo } = useCurrency();
+  const { convertCurrency, getDailyRates, getFileNo } = useCommonData();
   const { year } = useYear();
 
   const initalItem = {

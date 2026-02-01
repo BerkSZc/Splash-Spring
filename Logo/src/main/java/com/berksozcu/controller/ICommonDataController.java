@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
-public interface ICurrencyController {
+public interface ICommonDataController {
      BigDecimal convertToTry(@RequestParam(required = false) String code,
                                    @RequestParam(required = false) BigDecimal amount);
      Map<String, BigDecimal> getTodayRates(

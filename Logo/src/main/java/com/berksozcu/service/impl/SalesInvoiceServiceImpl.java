@@ -11,7 +11,7 @@ import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
-import com.berksozcu.service.ICurrencyRateService;
+import com.berksozcu.service.ICommonDataService;
 import com.berksozcu.service.ISalesInvoiceService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -43,7 +43,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
 
     @Autowired
-    private ICurrencyRateService currencyRateService;
+    private ICommonDataService currencyRateService;
 
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;

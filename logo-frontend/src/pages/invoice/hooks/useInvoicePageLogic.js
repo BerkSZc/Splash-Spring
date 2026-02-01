@@ -3,7 +3,7 @@ import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice";
 import { useMaterial } from "../../../../backend/store/useMaterial";
 import { useClient } from "../../../../backend/store/useClient";
-import { useCurrency } from "../../../../backend/store/useCurrency.js";
+import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useYear } from "../../../context/YearContext";
 import { useTenant } from "../../../context/TenantContext";
 import { generateInvoiceHTML } from "../../../utils/printHelpers.js";
@@ -24,7 +24,7 @@ export const useInvoicePageLogic = () => {
   } = useSalesInvoice();
   const { materials, getMaterials } = useMaterial();
   const { customers, getAllCustomers } = useClient();
-  const { convertCurrency } = useCurrency();
+  const { convertCurrency } = useCommonData();
   const { year } = useYear();
   const { tenant } = useTenant();
 

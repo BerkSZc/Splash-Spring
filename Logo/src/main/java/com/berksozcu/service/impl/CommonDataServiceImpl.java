@@ -2,13 +2,13 @@ package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.currency.CurrencyRate;
 import com.berksozcu.entites.material_price_history.InvoiceType;
+import com.berksozcu.entites.payroll.PayrollModel;
+import com.berksozcu.entites.payroll.PayrollType;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
-import com.berksozcu.repository.CurrencyRateRepository;
-import com.berksozcu.repository.PurchaseInvoiceRepository;
-import com.berksozcu.repository.SalesInvoiceRepository;
-import com.berksozcu.service.ICurrencyRateService;
+import com.berksozcu.repository.*;
+import com.berksozcu.service.ICommonDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,7 +24,7 @@ import java.time.LocalDate;
 
 
 @Service
-public class CurrencyRateServiceImpl implements ICurrencyRateService {
+public class CommonDataServiceImpl implements ICommonDataService {
 
     private static final String TCMB_URL = "https://www.tcmb.gov.tr/kurlar/today.xml";
     @Autowired
@@ -33,6 +33,13 @@ public class CurrencyRateServiceImpl implements ICurrencyRateService {
     private PurchaseInvoiceRepository purchaseInvoiceRepository;
     @Autowired
     private SalesInvoiceRepository salesInvoiceRepository;
+    @Autowired
+    private PayrollRepository payrollRepository;
+    @Autowired
+    private ReceivedCollectionRepository receivedCollectionRepository;
+    @Autowired
+    private PaymentCompanyRepository paymentCompanyRepository;
+
 
     @Scheduled(cron = "0 0 10 * * *")
     @Override
@@ -74,6 +81,67 @@ public class CurrencyRateServiceImpl implements ICurrencyRateService {
                 .orElse(BigDecimal.ONE);
     }
 
+    @Override
+    public String generateFileNo(LocalDate date, String type) {
+        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
+        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
+
+        String lastNo;
+        String prefix;
+
+     switch (type.toUpperCase()) {
+            case "PURCHASE" ->{
+                lastNo = purchaseInvoiceRepository.findMaxFileNoByYear(start, end);
+                prefix = "ALIS";
+            }
+            case "SALES" -> {
+                lastNo = salesInvoiceRepository.findMaxFileNoByYear(start, end);
+                prefix = "SOZ";
+            }
+            case "COLLECTION" -> {
+                lastNo = receivedCollectionRepository.findMaxFileNoByYear(start, end);
+                prefix = "TAH";
+            }
+            case "PAYMENT" -> {
+                lastNo = paymentCompanyRepository.findMaxFileNoByYear(start, end);
+                prefix = "ODEME";
+            }
+            case "CHEQUE_IN" -> {
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.INPUT, PayrollType.CHEQUE, "%GCEK%");
+                prefix = "GCEK";
+            }
+            case "CHEQUE_OUT" -> {
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.OUTPUT, PayrollType.CHEQUE, "%CCEK%");
+                prefix = "CCEK";
+            }
+            case "BOND_IN" -> {
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.INPUT, PayrollType.BOND, "%GSENET%");
+                prefix = "GSENET";
+            }
+            case "BOND_OUT" -> {
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.OUTPUT, PayrollType.BOND, "%CSENET%");
+                prefix = "CSENET";
+            }
+            default -> {
+                lastNo = null;
+                prefix = "SOZ";
+            }
+        };
+
+        if (lastNo == null || lastNo.isBlank() || !lastNo.startsWith(prefix)) {
+            return String.format("%s%d001", prefix ,date.getYear());
+        }
+
+        try {
+            String numberPart = lastNo.substring(lastNo.length() - 3);
+            int nextNumber = Integer.parseInt(numberPart) + 1;
+
+            return String.format("%s%d%03d", prefix, date.getYear(), nextNumber);
+        } catch (Exception e) {
+            return String.format("%s%d001", prefix, date.getYear());
+        }
+    }
+
     private void saveOrUpdateRate(String code, Element element) {
 
         LocalDate today = LocalDate.now();
@@ -98,26 +166,4 @@ public class CurrencyRateServiceImpl implements ICurrencyRateService {
         System.out.println(">>> UYGULAMA BASLATILDI: TCMB Kurlari veritabanina isleniyor...");
         updateRatesFromTcmb();
     }
-
-    @Override
-    public String generateFileNo(LocalDate date, InvoiceType type) {
-        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
-        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
-
-        String lastNo = type == InvoiceType.PURCHASE ? purchaseInvoiceRepository.findMaxFileNoByYear(start, end)
-                : salesInvoiceRepository.findMaxFileNoByYear(start, end);
-
-        if (lastNo == null || lastNo.isBlank()) {
-            return String.format("SÖZ%d001", date.getYear());
-        }
-        try {
-            String numberPart = lastNo.substring(lastNo.length() - 3);
-            int nextNumber = Integer.parseInt(numberPart) + 1;
-
-            return String.format("SÖZ%d%03d", date.getYear(), nextNumber);
-        } catch (Exception e) {
-            return String.format("SÖZ%d001", date.getYear());
-        }
-    }
-
 }

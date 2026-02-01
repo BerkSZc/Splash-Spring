@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 
-export const useCurrency = create(() => ({
+export const useCommonData = create(() => ({
   convertCurrency: async (amount, code) => {
     try {
       const res = await axiosInstance.get("/currency/convert", {
