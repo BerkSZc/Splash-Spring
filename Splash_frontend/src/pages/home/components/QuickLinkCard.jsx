@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function QuickLinkCard({ title, desc, color, href }) {
   const colors = {
     emerald: "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20",
@@ -12,12 +14,12 @@ export default function QuickLinkCard({ title, desc, color, href }) {
         </h3>
         <p className="text-gray-400 leading-relaxed text-sm mb-8">{desc}</p>
       </div>
-      <a
-        href={href}
+      <Link
+        to={href}
         className={`w-full text-center font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg ${colors[color]}`}
       >
         Yönetime Git
-      </a>
+      </Link>
     </div>
   );
 }

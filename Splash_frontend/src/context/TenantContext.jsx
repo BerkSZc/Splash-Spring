@@ -7,11 +7,9 @@ export const TenantProvider = ({ children }) => {
   const { getAllCompanies } = useCompany();
 
   const [tenant, setTenantState] = useState(
-    localStorage.getItem("tenant") || "logo"
+    localStorage.getItem("tenant") || "logo",
   );
-
   // Şirketleri state içinde tutuyoruz
-
   useEffect(() => {
     getAllCompanies();
   }, []);

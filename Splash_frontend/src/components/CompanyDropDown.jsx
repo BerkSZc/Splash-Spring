@@ -70,8 +70,6 @@ const CompanyDropDown = () => {
                 onClick={() => {
                   changeTenant(c.schemaName);
                   setOpen(false);
-                  // Seçimden sonra sayfayı yenilemek gerekebilir (Axios interceptor'ın yeni tenant'ı görmesi için)
-                  window.location.reload();
                 }}
                 className={`
                   w-full text-left px-4 py-3 text-sm transition-colors
