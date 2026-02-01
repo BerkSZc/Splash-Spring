@@ -73,8 +73,8 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                     newVoucher.setFileNo("001");
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setYearlyDebit(BigDecimal.ZERO);
                     newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
                     newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setDate(start);
                     newVoucher.setCustomer(salesInvoice.getCustomer());
@@ -167,7 +167,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                     newVoucher.setDebit(BigDecimal.ZERO);
                     newVoucher.setCredit(BigDecimal.ZERO);
                     newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
+                    newVoucher.setYearlyDebit(BigDecimal.ZERO);
                     newVoucher.setFinalBalance(BigDecimal.ZERO);
                     newVoucher.setFileNo("001");
                     newVoucher.setCustomerName(salesInvoice.getCustomer().getName());

@@ -584,7 +584,7 @@ public class XmlImportService {
 
                     Payroll payroll = new Payroll();
                     payroll.setCustomer(customer);
-                    payroll.setFileNo(tx.getNumber());
+                    payroll.setFileNo(roll.getNumber() + "-" + tx.getNumber());
 
                     BigDecimal amount = parseBigDecimal(tx.getAmount()).setScale(2, RoundingMode.HALF_UP);
                     payroll.setAmount(amount);
