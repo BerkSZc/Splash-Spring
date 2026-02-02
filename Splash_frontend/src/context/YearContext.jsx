@@ -30,20 +30,20 @@ export const YearProvider = ({ children }) => {
     localStorage.setItem("years", JSON.stringify(updatedYears));
   };
 
-  const removeYear = (removeYear) => {
-    if (years.length === 1) return; // en az 1 yıl kalsın
+  // const removeYear = (removeYear) => {
+  //   if (years.length === 1) return; // en az 1 yıl kalsın
 
-    const updatedYears = years.filter((y) => y !== removeYear);
-    setYears(updatedYears);
-    localStorage.setItem("years", JSON.stringify(updatedYears));
+  //   const updatedYears = years.filter((y) => y !== removeYear);
+  //   setYears(updatedYears);
+  //   localStorage.setItem("years", JSON.stringify(updatedYears));
 
-    // aktif yıl silindiyse başka bir yıla geç
-    if (year === removeYear) {
-      const fallback = updatedYears[updatedYears.length - 1];
-      setYear(fallback);
-      localStorage.setItem("year", fallback);
-    }
-  };
+  //   // aktif yıl silindiyse başka bir yıla geç
+  //   if (year === removeYear) {
+  //     const fallback = updatedYears[updatedYears.length - 1];
+  //     setYear(fallback);
+  //     localStorage.setItem("year", fallback);
+  //   }
+  // };
 
   return (
     <YearContext.Provider
@@ -53,7 +53,6 @@ export const YearProvider = ({ children }) => {
         changeYear,
         setYears,
         addYear,
-        removeYear,
       }}
     >
       {children}

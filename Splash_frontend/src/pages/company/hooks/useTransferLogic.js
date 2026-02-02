@@ -6,13 +6,14 @@ import toast from "react-hot-toast";
 import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
 export const useTransferLogic = () => {
-  const { year, years, changeYear, addYear, removeYear } = useYear();
+  const { year, years, changeYear, addYear } = useYear();
   const { tenant, changeTenant } = useTenant();
   const { addCompany, getAllCompanies, companies, isLoading } = useCompany();
   const { transferAllBalances } = useVoucher();
 
   const [newYear, setNewYear] = useState("");
   const [shouldTransfer, setShouldTransfer] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [newCompData, setNewCompData] = useState({
     id: "",
@@ -24,17 +25,23 @@ export const useTransferLogic = () => {
     getAllCompanies();
   }, [getAllCompanies]);
 
-  const handleAddYear = async () => {
-    const targetYear = Number(newYear);
+  const handleAddYearClick = async () => {
+    if (!newYear.trim()) return toast.error("Lütfen yıl girişi yapın!");
+    if (years.includes(Number(newYear)))
+      return toast.error("Bu mali yıl mevcut");
+    setIsModalOpen(true);
+  };
 
-    if (newYear.trim() && !years.includes(Number(newYear))) {
-      await addYear(Number(newYear));
-
-      if (shouldTransfer && targetYear - year === 1) {
-        await transferAllBalances(targetYear);
-      }
-      setNewYear("");
+  const confirmAndAddYear = async () => {
+    setIsModalOpen(false);
+    if (Number(year + 1) !== Number(newYear)) {
+      return toast.error(
+        `Sadece bir sonraki mali yılı (${Number(year + 1)}) ekleyebilirsiniz!`,
+      );
     }
+    await addYear(Number(newYear));
+    await transferAllBalances(Number(newYear));
+    setNewYear("");
   };
 
   const handleCreateCompany = async () => {
@@ -64,14 +71,16 @@ export const useTransferLogic = () => {
       newYear,
       newCompData,
       shouldTransfer,
+      isModalOpen,
     },
     handlers: {
       changeYear,
-      removeYear,
       changeTenant,
       setNewYear,
       setNewCompData,
-      handleAddYear,
+      handleAddYearClick,
+      confirmAndAddYear,
+      setIsModalOpen,
       handleCreateCompany,
       setShouldTransfer,
     },

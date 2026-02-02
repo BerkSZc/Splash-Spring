@@ -38,8 +38,10 @@ public class SecurityConfig {
                         .permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class);
+                .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthenticationFilter, TenantFilter.class);
+//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+//                .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

@@ -30,8 +30,8 @@ export const accountStatementHelper = (
     Number(customerVoucher.yearlyDebit) !== 0
   ) {
     const openingBal =
-      Number(customerVoucher.yearlyDebit) -
-      Number(customerVoucher.yearlyCredit);
+      Number(customerVoucher.yearlyDebit || 0) -
+      Number(customerVoucher.yearlyCredit || 0);
     combined.push({
       date: `${displayYear}-01-01`,
       desc: "Açılış Fişi",
