@@ -14,7 +14,9 @@ export const useVoucher = create((set) => ({
           params: { targetYear },
         },
       );
-      toast.success(`${targetYear} yılı tüm cari devirleri tamamlandı.`);
+      toast.success(
+        `${targetYear} yılı tüm cari devirleri tamamlandı ve Yeni Mali Yıl oluşturuldu.`,
+      );
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";

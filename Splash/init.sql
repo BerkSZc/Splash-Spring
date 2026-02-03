@@ -236,3 +236,13 @@ CREATE TABLE IF NOT EXISTS logo.opening_voucher (
         FOREIGN KEY (customer_id)
         REFERENCES logo.customer(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS logo.fiscal_year(
+    id SERIAL PRIMARY KEY,
+    year_value INTEGER,
+    company_id BIGINT,
+
+    CONSTRAINT fk_company_year
+    FOREIGN KEY (company_id)
+    REFERENCES logo.company(id) ON DELETE CASCADE
+);

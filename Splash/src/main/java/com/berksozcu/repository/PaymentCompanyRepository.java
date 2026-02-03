@@ -21,4 +21,6 @@ public interface PaymentCompanyRepository extends JpaRepository<PaymentCompany, 
 
     @Query("SELECT MAX(p.fileNo) FROM PaymentCompany p WHERE p.date BETWEEN :start AND :end AND p.fileNo LIKE 'ODEME%'")
     String findMaxFileNoByYear(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    void deleteByDateBetween(LocalDate start, LocalDate end);
 }

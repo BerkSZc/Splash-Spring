@@ -19,4 +19,6 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long
 
     @Query(value = "SELECT MAX(s.fileNo) FROM SalesInvoice s WHERE s.date BETWEEN :start AND :end AND s.fileNo LIKE 'SOZ%'")
     String findMaxFileNoByYear(LocalDate start, LocalDate end);
+
+    void deleteByDateBetween(LocalDate start, LocalDate end);
 }
