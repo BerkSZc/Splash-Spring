@@ -102,10 +102,16 @@ export default function MaterialSearchSelect({
             // Dropdown Koyu Tema Sınıfları
             className="max-h-60 overflow-y-auto rounded-xl border border-gray-800 bg-[#0f172a] shadow-2xl animate-in fade-in zoom-in duration-200 custom-scrollbar"
           >
-            {filtered.length === 0 && (
-              <div className="p-4 text-sm text-gray-500 italic">
-                Sonuç bulunamadı
+            {materials.length === 0 ? (
+              <div className="p-4 text-sm text-blue-400 animate-pulse">
+                Malzemeler yükleniyor...
               </div>
+            ) : (
+              filtered.length === 0 && (
+                <div className="p-4 text-sm text-gray-500 italic">
+                  Sonuç bulunamadı
+                </div>
+              )
             )}
 
             {filtered.map((m) => (

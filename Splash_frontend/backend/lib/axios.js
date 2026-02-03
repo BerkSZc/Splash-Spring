@@ -51,7 +51,7 @@ axiosInstance.interceptors.response.use(
     const status = error?.response?.status;
 
     if (status === 401 || status === 403) {
-      useAuthentication.getState().logout?.();
+      // useAuthentication.getState().logout?.();
 
       window.dispatchEvent(
         new CustomEvent("AUTH_ERROR", {

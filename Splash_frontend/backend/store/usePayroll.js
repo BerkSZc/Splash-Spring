@@ -19,11 +19,14 @@ export const usePayroll = create((set) => ({
     }
   },
 
-  addCheque: async (id, newPayroll) => {
+  addCheque: async (id, newPayroll, schemaName) => {
     try {
       await axiosInstance.post(`payroll/add/${id}`, newPayroll, {
         headers: {
           "Content-Type": "application/json",
+        },
+        params: {
+          schemaName,
         },
       });
       toast.success("Bordro başarıyla eklendi");
@@ -35,11 +38,14 @@ export const usePayroll = create((set) => ({
     }
   },
 
-  editCheque: async (id, newPayroll) => {
+  editCheque: async (id, newPayroll, schemaName) => {
     try {
       await axiosInstance.put(`/payroll/edit/${id}`, newPayroll, {
         headers: {
           "Content-Type": "application/json",
+        },
+        params: {
+          schemaName,
         },
       });
       toast.success("Bordro değiştirildi");
@@ -50,9 +56,13 @@ export const usePayroll = create((set) => ({
       throw error;
     }
   },
-  deleteCheque: async (id) => {
+  deleteCheque: async (id, schemaName) => {
     try {
-      await axiosInstance.delete(`/payroll/delete/${id}`);
+      await axiosInstance.delete(`/payroll/delete/${id}`, {
+        params: {
+          schemaName,
+        },
+      });
       toast.success("Bordro başarıyla silindi");
     } catch (error) {
       const backendErr =

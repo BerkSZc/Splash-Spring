@@ -5,12 +5,13 @@ import toast from "react-hot-toast";
 export const useReceivedCollection = create((set) => ({
   collections: [],
 
-  addCollection: async (id, receivedCollection) => {
+  addCollection: async (id, receivedCollection, schemaName) => {
     try {
       await axiosInstance.post(`/receive/add/${id}`, receivedCollection, {
         headers: {
           "Content-Type": "application/json",
         },
+        params: { schemaName },
       });
       toast.success("Alınan tahsilat eklendi");
     } catch (error) {
@@ -32,12 +33,13 @@ export const useReceivedCollection = create((set) => ({
     }
   },
 
-  editCollection: async (id, receivedCollection) => {
+  editCollection: async (id, receivedCollection, schemaName) => {
     try {
       await axiosInstance.put(`/receive/edit/${id}`, receivedCollection, {
         headers: {
           "Content-Type": "application/json",
         },
+        params: { schemaName },
       });
       toast.success("Tahsilat değiştrildi");
     } catch (error) {
@@ -47,9 +49,11 @@ export const useReceivedCollection = create((set) => ({
       throw error;
     }
   },
-  deleteReceivedCollection: async (id) => {
+  deleteReceivedCollection: async (id, schemaName) => {
     try {
-      await axiosInstance.delete(`/receive/delete/${id}`);
+      await axiosInstance.delete(`/receive/delete/${id}`, {
+        params: { schemaName },
+      });
       toast.success("Tahsilat başarıyla silindi");
     } catch (error) {
       const backendErr =

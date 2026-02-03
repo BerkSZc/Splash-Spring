@@ -1,6 +1,6 @@
 export const YearManager = ({
   year,
-  years,
+  years = [],
   newYear,
   shouldTransfer,
   confirmCheck,
@@ -18,6 +18,7 @@ export const YearManager = ({
   onSetConfirmCheck,
   onSetConfirmDeleteCheck,
 }) => {
+  const allYears = Array.isArray(years) ? years : [];
   return (
     <div className="space-y-6">
       {/* 1. Başlık Bölümü */}
@@ -33,7 +34,7 @@ export const YearManager = ({
             Kayıtlı Dönemler
           </label>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-            {[...years]
+            {[...allYears]
               .sort((a, b) => b - a)
               .map((y) => (
                 <div

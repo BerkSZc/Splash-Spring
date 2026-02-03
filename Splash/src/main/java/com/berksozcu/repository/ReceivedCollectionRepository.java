@@ -3,9 +3,11 @@ package com.berksozcu.repository;
 import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,5 +24,8 @@ ReceivedCollectionRepository extends JpaRepository<ReceivedCollection, Long> {
     @Query("SELECT MAX(p.fileNo) FROM ReceivedCollection p WHERE p.date BETWEEN :start AND :end AND p.fileNo LIKE 'TAH%'")
     String findMaxFileNoByYear(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
-    void deleteByDateBetween(LocalDate start, LocalDate end);
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM ReceivedCollection rc WHERE rc.company.id = :companyId AND rc.date BETWEEN :start AND :end")
+    void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
 }

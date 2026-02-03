@@ -24,6 +24,7 @@ public enum MessageType {
     BIRIM_YOK(1017, "Birim mevcut değil"),
     BORDRO_HATA(1014, "Bordo işlemi bulunamadı"),
     BORDRO_MEVCUT(1014, "Bordo işlemi seri no mevcut"),
+    SIRKET_YETKISIZ(1020, "Bu faturayı düzenlemeye yetkiniz yok"),
     MALI_YIL_MEVCUT(1014, "Şirket mali yılı mevcut"),
     SIRKET_HATA(1013, "Şirket kodu veya adı boş olamaz"),
     SIFRE_HATA(1008, "Şifre en az 8 karakter olmalı"),

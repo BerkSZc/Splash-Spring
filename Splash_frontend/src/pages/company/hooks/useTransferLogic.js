@@ -97,7 +97,7 @@ export const useTransferLogic = () => {
       handleCloseDelete();
       toast.success(`${year} mali yılı ve ilişkili tüm veriler silindi`);
     } catch (error) {
-      console.error(error);
+      toast.error("Hata: " + error?.response?.data?.exception?.message);
     }
   };
 
@@ -114,8 +114,7 @@ export const useTransferLogic = () => {
       setNewCompData({ id: "", name: "", desc: "" });
       getAllCompanies();
     } catch (error) {
-      toast.error("Şirket oluşturulamadı");
-      console.error(error);
+      toast.error("Şirket oluşturulamadı: " + error.response.message);
     }
   };
 

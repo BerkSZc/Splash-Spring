@@ -1,5 +1,6 @@
 package com.berksozcu.entites.sales;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -51,6 +52,10 @@ public class SalesInvoice {
 
     @Column(name = "usd_selling_rate", precision = 18, scale = 2)
     private BigDecimal usdSellingRate;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @OneToMany(mappedBy = "salesInvoice", cascade=CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

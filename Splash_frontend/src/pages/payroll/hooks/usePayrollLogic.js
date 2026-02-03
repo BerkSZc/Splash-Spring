@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useYear } from "../../../context/YearContext.jsx";
+import { useTenant } from "../../../context/TenantContext.jsx";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import toast from "react-hot-toast";
@@ -8,6 +9,7 @@ import toast from "react-hot-toast";
 export const usePayrollLogic = () => {
   const { customers, getAllCustomers } = useClient();
   const { year } = useYear();
+  const { tenant } = useTenant();
   const { payrolls, addCheque, editCheque, deleteCheque, getPayrollByYear } =
     usePayroll();
 
@@ -194,9 +196,9 @@ export const usePayrollLogic = () => {
     };
     try {
       if (editing) {
-        await editCheque(editing.id, payload);
+        await editCheque(editing.id, payload, tenant);
       } else {
-        await addCheque(form.customerId, payload);
+        await addCheque(form.customerId, payload, tenant);
       }
       await getPayrollByYear(year);
       resetForm();
@@ -226,7 +228,7 @@ export const usePayrollLogic = () => {
 
   const confirmDelete = async () => {
     if (deleteTarget) {
-      await deleteCheque(deleteTarget.id);
+      await deleteCheque(deleteTarget.id, tenant);
       await getPayrollByYear(year);
       setDeleteTarget(null);
     }

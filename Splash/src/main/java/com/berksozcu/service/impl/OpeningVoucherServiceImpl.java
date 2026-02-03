@@ -1,13 +1,7 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.entites.collections.PaymentCompany;
-import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
-import com.berksozcu.entites.payroll.Payroll;
-import com.berksozcu.entites.payroll.PayrollModel;
-import com.berksozcu.entites.purchase.PurchaseInvoice;
-import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.repository.*;
 import com.berksozcu.service.IOpeningVoucherService;
 import jakarta.transaction.Transactional;
@@ -29,21 +23,6 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
     private OpeningVoucherRepository openingVoucherRepository;
 
     @Autowired
-    private PurchaseInvoiceRepository purchaseInvoiceRepository;
-
-    @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
-
-    @Autowired
-    private PayrollRepository payrollRepository;
-
-    @Autowired
-    private ReceivedCollectionRepository receivedCollectionRepository;
-
-    @Autowired
-    private PaymentCompanyRepository paymentCompanyRepository;
-
-    @Autowired
     private CustomerRepository customerRepository;
 
 
@@ -55,18 +34,6 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
 
         LocalDate closingDate = LocalDate.of(closingYear, 1, 1);
         LocalDate openingDate = LocalDate.of(targetYear, 1, 1);
-//
-//
-//        BigDecimal debitSum =
-//                totalSales.add(totalPayments)
-//                        .add(debitBalance)
-//                        .add(payrollOut);
-//
-//        BigDecimal creditSum =
-//                totalPurchases.add(totalCollections)
-//                        .add(payrollIn).add(creditBalance);
-
-//        BigDecimal finalBalance = debitSum.subtract(creditSum);
 
         // ---------- KAPANIŞ VOUCHER (31.12) ----------
         OpeningVoucher closingVoucher =

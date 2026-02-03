@@ -5,11 +5,14 @@ import { axiosInstance } from "../lib/axios";
 export const usePurchaseInvoice = create((set) => ({
   purchase: [],
 
-  addPurchaseInvoice: async (id, newPurchaseInvoice) => {
+  addPurchaseInvoice: async (id, newPurchaseInvoice, schemaName) => {
     try {
       await axiosInstance.post(`/purchase/add/${id}`, newPurchaseInvoice, {
         headers: {
           "Content-Type": "application/json",
+        },
+        params: {
+          schemaName,
         },
       });
       toast.success("Fatura eklendi.");
@@ -33,11 +36,14 @@ export const usePurchaseInvoice = create((set) => ({
     }
   },
 
-  editPurchaseInvoice: async (id, purchaseInvoice) => {
+  editPurchaseInvoice: async (id, purchaseInvoice, schemaName) => {
     try {
       await axiosInstance.put(`/purchase/update/${id}`, purchaseInvoice, {
         headers: {
           "Content-Type": "application/json",
+        },
+        params: {
+          schemaName,
         },
       });
       toast.success("Fatura değiştirildi");
@@ -49,9 +55,11 @@ export const usePurchaseInvoice = create((set) => ({
     }
   },
 
-  deletePurchaseInvoice: async (id) => {
+  deletePurchaseInvoice: async (id, schemaName) => {
     try {
-      await axiosInstance.delete(`/purchase/delete/${id}`);
+      await axiosInstance.delete(`/purchase/delete/${id}`, {
+        params: { schemaName },
+      });
       toast.success("Fatura silindi");
     } catch (error) {
       const backendErr =

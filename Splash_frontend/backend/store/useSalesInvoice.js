@@ -5,12 +5,13 @@ import toast from "react-hot-toast";
 export const useSalesInvoice = create((set) => ({
   sales: [],
 
-  addSalesInvoice: async (id, newSalesInvoice) => {
+  addSalesInvoice: async (id, newSalesInvoice, schemaName) => {
     try {
       await axiosInstance.post(`/sales/add/${id}`, newSalesInvoice, {
         headers: {
           "Content-Type": "application/json",
         },
+        params: { schemaName },
       });
       toast.success("Fatura eklendi");
     } catch (error) {
@@ -32,12 +33,13 @@ export const useSalesInvoice = create((set) => ({
     }
   },
 
-  editSalesInvoice: async (id, salesInvoice) => {
+  editSalesInvoice: async (id, salesInvoice, schemaName) => {
     try {
       await axiosInstance.put(`/sales/update/${id}`, salesInvoice, {
         headers: {
           "Content-Type": "application/json",
         },
+        params: { schemaName },
       });
       toast.success("Fatura değiştirildi");
     } catch (error) {
@@ -48,9 +50,11 @@ export const useSalesInvoice = create((set) => ({
     }
   },
 
-  deleteSalesInvoice: async (id) => {
+  deleteSalesInvoice: async (id, schemaName) => {
     try {
-      await axiosInstance.delete(`/sales/delete/${id}`);
+      await axiosInstance.delete(`/sales/delete/${id}`, {
+        params: { schemaName },
+      });
       toast.success("Fatura başarıyla silindi");
     } catch (error) {
       const backendErr =

@@ -16,6 +16,8 @@ public class PayrollRollXml {
     private String number;
     @XmlElement(name = "MASTER_CODE")
     private String masterCode; // Müşteri Kodu
+    @XmlElement(name = "COMPANY_ID")
+    private Long COMPANY_ID;
     @XmlElement(name = "DATE")
     private String date;
     @XmlElement(name = "TRANSACTIONS")

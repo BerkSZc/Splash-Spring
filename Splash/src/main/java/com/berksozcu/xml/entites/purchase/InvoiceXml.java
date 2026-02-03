@@ -14,14 +14,18 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @XmlAccessorType(XmlAccessType.FIELD)
 public class InvoiceXml {
-    @XmlElement(name="DATE")
-    private String DATE;
+
+    @XmlElement(name = "COMPANY_ID")
+    private Long COMPANY_ID;
 
     @XmlElement(name="DOC_NUMBER")
     private String DOC_NUMBER;
 
     @XmlElement(name="ARP_CODE")
     private String ARP_CODE;
+
+    @XmlElement(name="DATE")
+    private String DATE;
 
     @XmlElement(name="TOTAL_VAT")
     private BigDecimal TOTAL_VAT;

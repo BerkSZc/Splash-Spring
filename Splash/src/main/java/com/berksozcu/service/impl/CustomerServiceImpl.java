@@ -7,13 +7,10 @@ import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.CustomerRepository;
-import com.berksozcu.repository.MaterialRepository;
 import com.berksozcu.repository.OpeningVoucherRepository;
-import com.berksozcu.repository.PurchaseInvoiceRepository;
 import com.berksozcu.service.ICustomerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,13 +23,7 @@ import java.util.Optional;
 public class CustomerServiceImpl implements ICustomerService {
 
     @Autowired
-    private PurchaseInvoiceRepository purchaseInvoiceRepository;
-
-    @Autowired
     private CustomerRepository customerRepository;
-
-    @Autowired
-    private MaterialRepository materialRepository;
 
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;

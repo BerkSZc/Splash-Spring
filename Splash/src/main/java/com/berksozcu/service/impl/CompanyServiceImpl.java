@@ -52,6 +52,12 @@ public class CompanyServiceImpl implements ICompanyService {
     @Autowired
     private PaymentCompanyRepository paymentCompanyRepository;
 
+    @Autowired
+    private PurchaseInvoiceItemRepository purchaseInvoiceItemRepository;
+
+    @Autowired
+    private SalesInvoiceItemRepository salesInvoiceItemRepository;
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -133,18 +139,20 @@ public class CompanyServiceImpl implements ICompanyService {
        return yearRepository.save(newYear);
     }
 
-    //TODO: HER BİRİSİNE COMPANY ID EKLENECEK
     @Transactional
     @Override
     public void deleteCompanyAndYear(Long companyId, Integer year) {
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        purchaseInvoiceRepository.deleteByDateBetween(start, end);
-        salesInvoiceRepository.deleteByDateBetween(start, end);
-        payrollRepository.deleteByTransactionDateBetween(start, end);
-        receivedCollectionRepository.deleteByDateBetween(start, end);
-        paymentCompanyRepository.deleteByDateBetween(start, end);
+        purchaseInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        purchaseInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId , start, end);
+
+        salesInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId , start, end);
+        salesInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        payrollRepository.deleteByCompanyIdAndTransactionDateBetween(companyId , start, end);
+        receivedCollectionRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        paymentCompanyRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
 
         yearRepository.deleteYearValueByCompanyId(year, companyId);
     }
@@ -174,7 +182,6 @@ public class CompanyServiceImpl implements ICompanyService {
             return rs.next();
         }
     }
-
 
 }
 

@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 export const usePaymentCompany = create((set) => ({
   payments: [],
 
-  addPayment: async (id, paymentCompany) => {
+  addPayment: async (id, paymentCompany, schemaName) => {
     try {
       const res = await axiosInstance.post(
         `/payment/add/${id}`,
@@ -14,6 +14,7 @@ export const usePaymentCompany = create((set) => ({
           headers: {
             "Content-Type": "application/json",
           },
+          params: { schemaName },
         },
       );
       toast.success("Firmaya ödeme gerçekleştirildi");
@@ -36,12 +37,13 @@ export const usePaymentCompany = create((set) => ({
       toast.error("Error at getPayments: " + backendErr);
     }
   },
-  editPayment: async (id, payment) => {
+  editPayment: async (id, payment, schemaName) => {
     try {
       await axiosInstance.put(`/payment/edit/${id}`, payment, {
         headers: {
           "Content-Type": "application/json",
         },
+        params: { schemaName },
       });
       toast.success("Ödeme değiştirildi");
     } catch (error) {
@@ -51,9 +53,11 @@ export const usePaymentCompany = create((set) => ({
       throw error;
     }
   },
-  deletePaymentCompany: async (id) => {
+  deletePaymentCompany: async (id, schemaName) => {
     try {
-      await axiosInstance.delete(`/payment/delete/${id}`);
+      await axiosInstance.delete(`/payment/delete/${id}`, {
+        params: { schemaName },
+      });
       toast.success("Ödeme başarıyla silindi");
     } catch (error) {
       const backendErr =

@@ -6,10 +6,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface IPurchaseInvoiceService {
-    public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice);
+    public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
     public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id);
     public List<PurchaseInvoice> getAllPurchaseInvoice();
-    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice);
-    public void deletePurchaseInvoice(Long id);
+    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
+    public void deletePurchaseInvoice(Long id, String schemaName);
     public List<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int year);
 }

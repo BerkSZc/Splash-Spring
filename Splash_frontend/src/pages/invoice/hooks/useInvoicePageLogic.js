@@ -273,8 +273,8 @@ export const useInvoicePageLogic = () => {
     }
 
     invoiceType === "purchase"
-      ? await editPurchaseInvoice(editingInvoice.id, payload)
-      : await editSalesInvoice(editingInvoice.id, payload);
+      ? await editPurchaseInvoice(editingInvoice.id, payload, tenant)
+      : await editSalesInvoice(editingInvoice.id, payload, tenant);
     invoiceType === "purchase"
       ? getPurchaseInvoiceByYear(year)
       : getSalesInvoicesByYear(year);
@@ -284,8 +284,8 @@ export const useInvoicePageLogic = () => {
 
   const confirmDelete = async () => {
     invoiceType === "purchase"
-      ? await deletePurchaseInvoice(deleteTarget.id)
-      : await deleteSalesInvoice(deleteTarget.id);
+      ? await deletePurchaseInvoice(deleteTarget.id, tenant)
+      : await deleteSalesInvoice(deleteTarget.id, tenant);
     invoiceType === "purchase"
       ? getPurchaseInvoiceByYear(year)
       : getSalesInvoicesByYear(year);

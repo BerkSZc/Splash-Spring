@@ -88,6 +88,7 @@ public class XmlExportService {
 
         for (PurchaseInvoice inv : purchaseInvoices) {
             InvoiceXml invXml = new InvoiceXml();
+            invXml.setCOMPANY_ID(inv.getCompany().getId());
             invXml.setDATE(inv.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             invXml.setDOC_NUMBER(inv.getFileNo());
             invXml.setARP_CODE(inv.getCustomer().getCode());
@@ -140,6 +141,7 @@ public class XmlExportService {
             SalesInvoiceXml invXml = new SalesInvoiceXml();
 
             invXml.setTYPE(8);
+            invXml.setCOMPANY_ID(inv.getCompany().getId());
             invXml.setDATE(inv.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             invXml.setTOTAL_NET(inv.getTotalPrice().setScale(2, RoundingMode.HALF_UP));
             invXml.setTOTAL_VAT(inv.getKdvToplam().setScale(2, RoundingMode.HALF_UP));
@@ -257,6 +259,7 @@ public class XmlExportService {
         for(ReceivedCollection rc : receivedCollectionList) {
             CollectionXml cXml = new CollectionXml();
             cXml.setTYPE(11);
+            cXml.setCOMPANY_ID(rc.getCompany().getId());
             cXml.setDATE(rc.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             cXml.setAMOUNT(rc.getPrice().setScale(2, RoundingMode.HALF_UP).toString());
             cXml.setDESCRIPTION(rc.getComment());
@@ -276,6 +279,7 @@ public class XmlExportService {
             CollectionXml cXml = new CollectionXml();
             cXml.setTYPE(12);
             cXml.setSD_CODE("2");
+            cXml.setCOMPANY_ID(py.getCompany().getId());
             cXml.setDATE(py.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             cXml.setAMOUNT(py.getPrice().setScale(2, RoundingMode.HALF_UP).toString());
             cXml.setDESCRIPTION(py.getComment());
@@ -321,6 +325,7 @@ public class XmlExportService {
             PayrollRollXml rollXml = new PayrollRollXml();
 
             rollXml.setType(first.getPayrollModel() == PayrollModel.INPUT ? 1 : 3);
+            rollXml.setCOMPANY_ID(first.getCompany().getId());
             rollXml.setMasterCode(first.getCustomer().getCode());
             rollXml.setDate(first.getTransactionDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
 

@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
@@ -43,10 +44,13 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
 
     @Override
     @Transactional
-    public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice) {
+    public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
         if (customer.isArchived()) {
@@ -56,6 +60,10 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         if (purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
+
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        newPurchaseInvoice.setCompany(company);
 
         newPurchaseInvoice.setCustomer(customer);
 
@@ -178,9 +186,17 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
     @Override
     @Transactional
-    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice) {
+    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
+
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         PurchaseInvoice oldInvoice = purchaseInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
+
+        if(!oldInvoice.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
 
         LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
@@ -296,9 +312,15 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
     @Override
     @Transactional
-    public void deletePurchaseInvoice(Long id) {
+    public void deletePurchaseInvoice(Long id, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         PurchaseInvoice purchaseInvoice = purchaseInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
+        if(!purchaseInvoice.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
 
         LocalDate start = LocalDate.of(purchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(purchaseInvoice.getDate().getYear(), 12, 31);

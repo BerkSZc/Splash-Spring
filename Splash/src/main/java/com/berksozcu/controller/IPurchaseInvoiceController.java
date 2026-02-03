@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 public interface IPurchaseInvoiceController {
-    public PurchaseInvoice addPurchaseInvoice( Long id, PurchaseInvoice newPurchaseInvoice);
+    public PurchaseInvoice addPurchaseInvoice( Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
     public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(@PathVariable(name = "id") Long id);
     public List<PurchaseInvoice> getAllPurchaseInvoice();
-    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice);
-    public void deletePurchaseInvoice(@PathVariable(name = "id") Long id);
+    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id
+            , @RequestBody PurchaseInvoice newPurchaseInvoice, String schemaName);
+    public void deletePurchaseInvoice(@PathVariable(name = "id") Long id, String schemaName);
     public List<PurchaseInvoice> getPurchaseInvoiceByYear(@PathVariable int year);
 }

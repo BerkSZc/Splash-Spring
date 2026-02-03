@@ -1,5 +1,6 @@
 package com.berksozcu.entites.payroll;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,10 @@ public class Payroll {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @Column(name = "file_no", unique = true)
     private String fileNo;

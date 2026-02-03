@@ -17,8 +17,9 @@ public class ReceivedCollectionControllerImpl implements IReceivedCollectionCont
 
     @Override
     @PostMapping("/add/{id}")
-    public ReceivedCollection addCollection(@PathVariable(name = "id") Long id, @RequestBody ReceivedCollection receivedCollection) {
-        return receivedCollectionService.addCollection(id, receivedCollection);
+    public ReceivedCollection addCollection(@PathVariable(name = "id") Long id, @RequestBody ReceivedCollection receivedCollection,
+                                            @RequestParam String schemaName) {
+        return receivedCollectionService.addCollection(id, receivedCollection, schemaName);
     }
 
     @Override
@@ -29,14 +30,16 @@ public class ReceivedCollectionControllerImpl implements IReceivedCollectionCont
 
     @Override
     @PutMapping("/edit/{id}")
-    public ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection) {
-        return receivedCollectionService.editReceivedCollection(id, receivedCollection);
+    public ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection,
+            @RequestParam String schemaName) {
+        return receivedCollectionService.editReceivedCollection(id, receivedCollection, schemaName);
     }
 
     @Override
     @DeleteMapping("/delete/{id}")
-    public void deleteReceivedCollection(@PathVariable(name = "id") Long id) {
-        receivedCollectionService.deleteReceivedCollection(id);
+    public void deleteReceivedCollection(@PathVariable(name = "id") Long id,
+            @RequestParam String schemaName) {
+        receivedCollectionService.deleteReceivedCollection(id, schemaName);
     }
 
     @Override

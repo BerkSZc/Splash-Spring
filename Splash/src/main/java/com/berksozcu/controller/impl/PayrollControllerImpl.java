@@ -23,20 +23,23 @@ public class PayrollControllerImpl implements IPayrollController {
 
     @Override
     @PostMapping("/add/{id}")
-    public Payroll addPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll) {
-        return payrollService.addPayroll(id, newPayroll);
+    public Payroll addPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll,
+                              @RequestParam String schemaName) {
+        return payrollService.addPayroll(id, newPayroll, schemaName);
     }
 
     @Override
     @PutMapping("/edit/{id}")
-    public Payroll editPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll) {
-        return payrollService.editPayroll(id, newPayroll);
+    public Payroll editPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll
+    , String schemaName) {
+        return payrollService.editPayroll(id, newPayroll, schemaName);
     }
 
     @Override
     @DeleteMapping("/delete/{id}")
-    public void deletePayroll(@PathVariable(name = "id") Long id) {
-        payrollService.deletePayroll(id);
+    public void deletePayroll(@PathVariable(name = "id") Long id,
+                              String schemaName) {
+        payrollService.deletePayroll(id, schemaName);
     }
 
 }

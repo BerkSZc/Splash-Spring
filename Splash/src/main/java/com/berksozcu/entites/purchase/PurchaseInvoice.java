@@ -1,5 +1,6 @@
 package com.berksozcu.entites.purchase;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -46,6 +47,10 @@ public class PurchaseInvoice {
 
     @Column(name = "usd_selling_rate", precision = 18, scale = 4)
     private BigDecimal usdSellingRate;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
 
     //Burda mappdeBy Jpa tarafına çocuk görevi görür ve ilişkide etkisiz kalır.

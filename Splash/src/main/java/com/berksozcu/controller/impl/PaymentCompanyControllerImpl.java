@@ -18,8 +18,9 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
 
     @Override
     @PostMapping("/add/{id}")
-    public PaymentCompany addPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany) {
-        return paymentCompanyService.addPaymentCompany(id, paymentCompany);
+    public PaymentCompany addPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany,
+                                            @RequestParam String schemaName) {
+        return paymentCompanyService.addPaymentCompany(id, paymentCompany, schemaName);
     }
 
     @Override
@@ -30,14 +31,15 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
 
     @Override
     @PutMapping("/edit/{id}")
-    public PaymentCompany editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany) {
-        return paymentCompanyService.editPaymentCompany(id, paymentCompany);
+    public PaymentCompany editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany,
+                                             @RequestParam String schemaName) {
+        return paymentCompanyService.editPaymentCompany(id, paymentCompany, schemaName);
     }
 
     @Override
     @DeleteMapping("/delete/{id}")
-    public void deletePaymentCompany(@PathVariable(name = "id") Long id) {
-         paymentCompanyService.deletePaymentCompany(id);
+    public void deletePaymentCompany(@PathVariable(name = "id") Long id, @RequestParam String schemaName) {
+         paymentCompanyService.deletePaymentCompany(id, schemaName);
     }
 
     @Override

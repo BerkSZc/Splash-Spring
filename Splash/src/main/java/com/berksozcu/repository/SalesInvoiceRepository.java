@@ -3,8 +3,10 @@ package com.berksozcu.repository;
 import com.berksozcu.entites.sales.SalesInvoice;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,5 +22,8 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long
     @Query(value = "SELECT MAX(s.fileNo) FROM SalesInvoice s WHERE s.date BETWEEN :start AND :end AND s.fileNo LIKE 'SOZ%'")
     String findMaxFileNoByYear(LocalDate start, LocalDate end);
 
-    void deleteByDateBetween(LocalDate start, LocalDate end);
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM SalesInvoice s WHERE s.company.id = :companyId AND s.date BETWEEN :start AND :end")
+    void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
 }

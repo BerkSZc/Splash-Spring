@@ -7,9 +7,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 public interface IReceivedCollectionController {
-     ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection);
+     ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection, String schemaName);
      List<ReceivedCollection> getAll();
-     ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection);
-     void deleteReceivedCollection(@PathVariable(name = "id") Long id);
+     ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection,
+             String schemaName);
+     void deleteReceivedCollection(@PathVariable(name = "id") Long id, String schemaName);
      List<ReceivedCollection> getReceivedCollectionByYear(@PathVariable(name = "year") int year);
 }

@@ -17,6 +17,9 @@ public class SalesInvoiceXml {
     @XmlElement(name = "NUMBER")
     private String NUMBER;
 
+    @XmlElement(name = "COMPANY_ID")
+    private Long COMPANY_ID;
+
     @XmlElement(name = "DATE")
     private String DATE;
 

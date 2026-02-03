@@ -4,11 +4,13 @@ import { useReceivedCollection } from "../../../../backend/store/useReceivedColl
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useYear } from "../../../context/YearContext.jsx";
+import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
 
 export const useFinancialLogic = () => {
   const { customers, getAllCustomers } = useClient();
   const { year } = useYear();
+  const { tenant } = useTenant();
   const {
     collections,
     addCollection,
@@ -149,10 +151,10 @@ export const useFinancialLogic = () => {
 
     try {
       if (type === "received") {
-        await addCollection(customerId, payload);
+        await addCollection(customerId, payload, tenant);
         await getReceivedCollectionsByYear(year);
       } else {
-        await addPayment(customerId, payload);
+        await addPayment(customerId, payload, tenant);
         await getPaymentCollectionsByYear(year);
       }
       const resetDate = getInitialDate(year);
@@ -208,10 +210,10 @@ export const useFinancialLogic = () => {
     }
 
     if (type === "received") {
-      await editCollection(payload.id, payload);
+      await editCollection(payload.id, payload, tenant);
       await getReceivedCollectionsByYear(year);
     } else {
-      await editPayment(payload.id, payload);
+      await editPayment(payload.id, payload, tenant);
       await getPaymentCollectionsByYear(year);
     }
     setEditing(null);
@@ -220,10 +222,10 @@ export const useFinancialLogic = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     if (type === "received") {
-      await deleteReceivedCollection(deleteTarget.id);
+      await deleteReceivedCollection(deleteTarget.id, tenant);
       await getReceivedCollectionsByYear(year);
     } else {
-      await deletePaymentCompany(deleteTarget.id);
+      await deletePaymentCompany(deleteTarget.id, tenant);
       await getPaymentCollectionsByYear(year);
     }
     setDeleteTarget(null);

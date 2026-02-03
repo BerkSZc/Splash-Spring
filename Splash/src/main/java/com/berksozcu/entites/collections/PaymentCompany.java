@@ -1,5 +1,6 @@
 package com.berksozcu.entites.collections;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -35,6 +36,10 @@ public class PaymentCompany {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     //Müşteri İsmi
     @Column(name = "customer_name")

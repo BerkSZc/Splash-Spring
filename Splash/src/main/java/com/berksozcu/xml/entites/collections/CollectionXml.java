@@ -15,6 +15,9 @@ public class CollectionXml {
     @XmlElement(name = "SD_CODE")
     private String SD_CODE;
 
+    @XmlElement(name = "COMPANY_ID")
+    private Long COMPANY_ID;
+
     @XmlElement(name = "DATE")
     private String DATE;
 

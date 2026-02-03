@@ -7,9 +7,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 public interface ISalesInvoiceController {
-    public SalesInvoice addSalesInvoice(Long id,SalesInvoice salesInvoice);
+    public SalesInvoice addSalesInvoice(Long id,SalesInvoice salesInvoice, String schemaName);
     public List<SalesInvoice> getAllSalesInvoice();
-    public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice);
-    public void deleteSalesInvoice(@PathVariable(name = "id") Long id);
+    public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice,
+                                         String schemaName);
+    public void deleteSalesInvoice(@PathVariable(name = "id") Long id, String schemaName);
     public List<SalesInvoice> getSalesInvoiceByYear(@PathVariable(name = "year") int year);
 }

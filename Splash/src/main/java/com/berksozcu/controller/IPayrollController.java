@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface IPayrollController {
      List<Payroll> getPayrollsByYear(@RequestParam int year);
-     Payroll addPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll);
-     Payroll editPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll);
-     void deletePayroll(@PathVariable(name = "id") Long id);
+     Payroll addPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll, String schemaName);
+     Payroll editPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll, String schemaName);
+     void deletePayroll(@PathVariable(name = "id") Long id, String schemaName);
 }

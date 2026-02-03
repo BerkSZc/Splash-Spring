@@ -2,6 +2,7 @@ package com.berksozcu.xml.service;
 
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
@@ -80,8 +81,11 @@ public class XmlImportService {
     @Autowired
     private OpeningVoucherRepository openingBalanceRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Transactional
-    public void importPurchaseInvoices(MultipartFile file) throws Exception {
+    public void importPurchaseInvoices(MultipartFile file, String schemaName) throws Exception {
 
         JAXBContext context = JAXBContext.newInstance(PurchaseInvoicesXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -114,7 +118,7 @@ public class XmlImportService {
             invoice.setDate(date);
 
             invoice.setFileNo(xmlInv.getDOC_NUMBER());
-
+            invoice.setCompany(getCompany(schemaName));
             BigDecimal kdvToplam = xmlInv.getTOTAL_VAT() != null ? xmlInv.getTOTAL_VAT() : BigDecimal.ZERO;
             invoice.setKdvToplam(kdvToplam.setScale(2, RoundingMode.HALF_UP));
 
@@ -218,7 +222,7 @@ public class XmlImportService {
     }
 
     @Transactional
-    public void importSalesInvoices(MultipartFile file) throws Exception {
+    public void importSalesInvoices(MultipartFile file, String schemaName) throws Exception {
         JAXBContext context = JAXBContext.newInstance(SalesInvoicesXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
@@ -245,6 +249,7 @@ public class XmlImportService {
 
             invoice.setFileNo(xmlInv.getNUMBER());
             invoice.setDate(date);
+            invoice.setCompany(getCompany(schemaName));
             BigDecimal totalPrice = xmlInv.getTOTAL_NET().setScale(2, RoundingMode.HALF_UP);
             invoice.setTotalPrice(totalPrice);
 
@@ -394,7 +399,7 @@ public class XmlImportService {
     }
 
     @Transactional
-    public void importCollections(MultipartFile file) throws Exception {
+    public void importCollections(MultipartFile file, String schemaName) throws Exception {
         JAXBContext context = JAXBContext.newInstance(CollectionsXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
@@ -491,6 +496,7 @@ public class XmlImportService {
                 rc.setFileNo(c.getNUMBER());
                 rc.setCustomerName(customer.getName());
                 rc.setComment(c.getDESCRIPTION());
+                rc.setCompany(getCompany(schemaName));
                 voucher.setFinalBalance(voucher.getFinalBalance().subtract(total).setScale(2, RoundingMode.HALF_UP));
                 voucher.setCredit(voucher.getCredit().add(total).setScale(2, RoundingMode.HALF_UP));
                 receivedCollectionRepository.save(rc);
@@ -508,6 +514,7 @@ public class XmlImportService {
                 py.setFileNo(c.getNUMBER());
                 py.setCustomerName(customer.getName());
                 py.setPrice(total);
+                py.setCompany(getCompany(schemaName));
                 voucher.setFinalBalance(voucher.getFinalBalance().add(total).setScale(2, RoundingMode.HALF_UP));
                 voucher.setDebit(voucher.getDebit().add(total).setScale(2, RoundingMode.HALF_UP));
                 paymentCompanyRepository.save(py);
@@ -522,7 +529,7 @@ public class XmlImportService {
     }
 
     @Transactional
-    public void importPayrolls(MultipartFile file) throws Exception {
+    public void importPayrolls(MultipartFile file, String schemaName) throws Exception {
         JAXBContext context = JAXBContext.newInstance(PayrollsXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         PayrollsXml rollsXml = (PayrollsXml) unmarshaller.unmarshal(file.getInputStream());
@@ -592,7 +599,7 @@ public class XmlImportService {
                     payroll.setTransactionDate(headerDate);
                     payroll.setExpiredDate(LocalDate.parse(tx.getDueDate(), dtf));
                     payroll.setPayrollModel(model);
-
+                    payroll.setCompany(getCompany(schemaName));
 
                     // Varsayılan tip çek olsun (XML'den çek-senet ayrımı da yapılabilir)
                     payroll.setPayrollType(PayrollType.CHEQUE);
@@ -706,5 +713,8 @@ public class XmlImportService {
         materialPriceHistoryRepository.save(materialPriceHistory);
     }
 
+    private Company getCompany(String schemaName) {
+        return companyRepository.findBySchemaName(schemaName);
+    }
 
 }

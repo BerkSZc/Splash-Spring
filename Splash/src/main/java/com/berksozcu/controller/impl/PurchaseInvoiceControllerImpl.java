@@ -18,8 +18,9 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
 
     @Override
     @PostMapping("/add/{id}")
-    public PurchaseInvoice addPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice) {
-        return purchaseInvoice.addPurchaseInvoice(id, newPurchaseInvoice);
+    public PurchaseInvoice addPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice
+    , @RequestParam String schemaName) {
+        return purchaseInvoice.addPurchaseInvoice(id, newPurchaseInvoice, schemaName);
     }
 
     @Override
@@ -36,14 +37,16 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
 
     @Override
     @PutMapping("/update/{id}")
-    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice) {
-        return purchaseInvoice.editPurchaseInvoice(id, newPurchaseInvoice);
+    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice,
+                                               @RequestParam String schemaName) {
+        return purchaseInvoice.editPurchaseInvoice(id, newPurchaseInvoice, schemaName);
     }
 
     @Override
     @DeleteMapping("/delete/{id}")
-    public void deletePurchaseInvoice(@PathVariable(name = "id") Long id) {
-         purchaseInvoice.deletePurchaseInvoice(id);
+    public void deletePurchaseInvoice(@PathVariable(name = "id") Long id
+    , @RequestParam String schemaName) {
+         purchaseInvoice.deletePurchaseInvoice(id, schemaName);
     }
 
     @Override

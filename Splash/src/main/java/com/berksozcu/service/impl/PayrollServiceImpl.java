@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.payroll.Payroll;
@@ -7,6 +8,7 @@ import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
+import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.PayrollRepository;
@@ -32,13 +34,18 @@ public class PayrollServiceImpl implements IPayrollService {
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Transactional
     @Override
-    public Payroll addPayroll(Long id, Payroll newPayroll) {
+    public Payroll addPayroll(Long id, Payroll newPayroll, String schemaName) {
 
         Customer customer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
+
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         if(payrollRepository.existsByFileNo(newPayroll.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
@@ -77,6 +84,7 @@ public class PayrollServiceImpl implements IPayrollService {
         payroll.setPayrollType(newPayroll.getPayrollType());
         payroll.setBankName(newPayroll.getBankName());
         payroll.setBankBranch(newPayroll.getBankBranch());
+        payroll.setCompany(company);
 
         updateBalance(customer, newPayroll, voucher);
         openingVoucherRepository.save(voucher);
@@ -87,16 +95,22 @@ public class PayrollServiceImpl implements IPayrollService {
 
     @Transactional
     @Override
-    public Payroll editPayroll(Long id, Payroll editPayroll) {
+    public Payroll editPayroll(Long id, Payroll editPayroll, String schemaName) {
 
         Payroll oldPayroll = payrollRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
         Customer customer = oldPayroll.getCustomer();
 
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         if(payrollRepository.existsByFileNo(editPayroll.getFileNo())
         &&  !oldPayroll.getFileNo().equals(editPayroll.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
+        }
+
+        if(!oldPayroll.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
         LocalDate start = LocalDate.of(editPayroll.getTransactionDate().getYear(), 1, 1);
@@ -145,13 +159,17 @@ public class PayrollServiceImpl implements IPayrollService {
 
     @Transactional
     @Override
-    public void deletePayroll(Long id) {
+    public void deletePayroll(Long id, String schemaName) {
         Payroll payroll = payrollRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
-
         Customer customer = payroll.getCustomer();
 
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        if(!payroll.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
 
         LocalDate start = LocalDate.of(payroll.getTransactionDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(payroll.getTransactionDate().getYear(), 12, 31);

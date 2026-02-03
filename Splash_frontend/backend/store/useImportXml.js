@@ -3,7 +3,7 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 
 export const useImportXml = create(() => ({
-  importPurchaseInvoice: async (file) => {
+  importPurchaseInvoice: async (file, schemaName) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -12,6 +12,7 @@ export const useImportXml = create(() => ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { schemaName },
       });
       toast.success("Aktarma başarıyla tamamlandı");
       return true;
@@ -23,7 +24,7 @@ export const useImportXml = create(() => ({
     }
   },
 
-  importSalesInvoice: async (file) => {
+  importSalesInvoice: async (file, schemaName) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -32,6 +33,7 @@ export const useImportXml = create(() => ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { schemaName },
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
@@ -76,7 +78,7 @@ export const useImportXml = create(() => ({
       toast.error("Error at importCustomers: " + backendErr);
     }
   },
-  importCollections: async (file) => {
+  importCollections: async (file, schemaName) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -84,6 +86,7 @@ export const useImportXml = create(() => ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { schemaName },
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
@@ -93,7 +96,7 @@ export const useImportXml = create(() => ({
     }
   },
 
-  importPayrolls: async (file) => {
+  importPayrolls: async (file, schemaName) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -101,6 +104,7 @@ export const useImportXml = create(() => ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { schemaName },
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {

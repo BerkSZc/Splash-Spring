@@ -1,11 +1,13 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.collections.PaymentCompany;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
+import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.PaymentCompanyRepository;
@@ -30,12 +32,17 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Override
     @Transactional
-    public PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany) {
+    public PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName) {
         Customer customer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
+
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
@@ -77,6 +84,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         paymentCompany.setPrice(paymentCompany.getPrice());
         paymentCompany.setCustomerName(paymentCompany.getCustomer().getName());
         paymentCompany.setFileNo(paymentCompany.getFileNo());
+        paymentCompany.setCompany(company);
 
         voucher.setFinalBalance(voucher.getFinalBalance().add(paymentCompany.getPrice()));
         voucher.setDebit(voucher.getDebit().add(paymentCompany.getPrice()));
@@ -94,7 +102,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
 
     @Override
     @Transactional
-    public PaymentCompany editPaymentCompany(Long id, PaymentCompany paymentCompany) {
+    public PaymentCompany editPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName) {
 
         PaymentCompany oldPayment = paymentCompanyRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
@@ -105,9 +113,15 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         Customer newCustomer = customerRepository.findById(paymentCompany.getCustomer().getId())
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         if(paymentCompanyRepository.existsByFileNo(paymentCompany.getFileNo())
         && !oldPayment.getFileNo().equals(paymentCompany.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
+        }
+
+        if(!oldPayment.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
@@ -162,8 +176,14 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
 
     @Override
     @Transactional
-    public void deletePaymentCompany(Long id) {
+    public void deletePaymentCompany(Long id, String schemaName) {
         PaymentCompany paymentCompany = paymentCompanyRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
+
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        if(!paymentCompany.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
 
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);

@@ -1,11 +1,13 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
+import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.repository.CustomerRepository;
 import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.ReceivedCollectionRepository;
@@ -30,13 +32,18 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Override
     @Transactional
-    public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection) {
+    public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection, String schemaName) {
 
         Customer customer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
+
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
@@ -76,6 +83,7 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         receivedCollection.setPrice(receivedCollection.getPrice());
         receivedCollection.setCustomerName(receivedCollection.getCustomer().getName());
         receivedCollection.setFileNo(receivedCollection.getFileNo());
+        receivedCollection.setCompany(company);
 
         voucher.setFinalBalance(voucher.getFinalBalance().subtract(receivedCollection.getPrice()));
         voucher.setCredit(voucher.getCredit().add(receivedCollection.getPrice()));
@@ -94,18 +102,25 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
 
     @Override
     @Transactional
-    public ReceivedCollection editReceivedCollection(Long id, ReceivedCollection receivedCollection) {
+    public ReceivedCollection editReceivedCollection(Long id, ReceivedCollection receivedCollection, String schemaName) {
 
         ReceivedCollection oldCollection = receivedCollectionRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI)));
 
-        LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         if(receivedCollectionRepository.existsByFileNo(receivedCollection.getFileNo())
         && !oldCollection.getFileNo().equals(receivedCollection.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
+
+        if(!oldCollection.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
+
+            LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
+
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> {
@@ -162,10 +177,16 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
 
     @Override
     @Transactional
-    public void deleteReceivedCollection(Long id) {
+    public void deleteReceivedCollection(Long id, String schemaName) {
         ReceivedCollection receivedCollection = receivedCollectionRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI))
         );
+
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        if(!receivedCollection.getCustomer().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
 
         LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);

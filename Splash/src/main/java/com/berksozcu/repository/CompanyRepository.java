@@ -9,8 +9,7 @@ import java.util.List;
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, Long> {
-//    @Query(value = "SELECT company.schema_name FROM company", nativeQuery = true)
-//    List<Company> findBySchemaName(String schemaName);
+    Company findBySchemaName(String schemaName);
 
     boolean existsBySchemaName(String schemaName);
 }

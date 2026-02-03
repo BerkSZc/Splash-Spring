@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useImportXml } from "../../../../backend/store/useImportXml";
 import { useExportXml } from "../../../../backend/store/useExportXml";
 import { useYear } from "../../../context/YearContext";
+import { useTenant } from "../../../context/TenantContext";
 
 export const useXmlImportLogic = () => {
   const purchaseInvoiceInputRef = useRef(null);
@@ -15,6 +16,7 @@ export const useXmlImportLogic = () => {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("import");
   const { year } = useYear();
+  const { tenant } = useTenant();
 
   const {
     importPurchaseInvoice,
@@ -76,12 +78,12 @@ export const useXmlImportLogic = () => {
     setLoading(true);
 
     try {
-      if (type === "invoice") await importPurchaseInvoice(file);
+      if (type === "invoice") await importPurchaseInvoice(file, tenant);
       else if (type === "materials") await importMaterials(file);
       else if (type === "customers") await importCustomers(file);
-      else if (type === "collections") await importCollections(file);
-      else if (type === "sales") await importSalesInvoice(file);
-      else if (type === "payrolls") await importPayrolls(file);
+      else if (type === "collections") await importCollections(file, tenant);
+      else if (type === "sales") await importSalesInvoice(file, tenant);
+      else if (type === "payrolls") await importPayrolls(file, tenant);
       else if (type === "vouchers") await importVouchers(file);
     } finally {
       setLoading(false);

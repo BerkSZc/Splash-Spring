@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
@@ -37,9 +38,6 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     private CustomerRepository customerRepository;
 
     @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
 
     @Autowired
@@ -48,11 +46,16 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Override
     @Transactional
-    public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice) {
+    public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice, String schemaName) {
         Customer customer = customerRepository.findById(id).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
@@ -91,6 +94,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         salesInvoice.setEurSellingRate(eurRate);
         salesInvoice.setUsdSellingRate(usdRate);
+        salesInvoice.setCompany(company);
 
         BigDecimal totalPrice = BigDecimal.ZERO;
         BigDecimal kdvToplam = BigDecimal.ZERO;
@@ -146,7 +150,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
     @Override
     @Transactional
-    public SalesInvoice editSalesInvoice(Long id, SalesInvoice salesInvoice) {
+    public SalesInvoice editSalesInvoice(Long id, SalesInvoice salesInvoice, String schemaName) {
+
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         SalesInvoice oldInvoice = salesInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
@@ -157,6 +163,10 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         if(salesInvoiceRepository.existsByFileNo(salesInvoice.getFileNo())
         && !oldInvoice.getFileNo().equals(salesInvoice.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+        }
+
+        if(!oldInvoice.getCompany().getId().equals(company.getId())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
@@ -257,9 +267,15 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
     @Override
     @Transactional
-    public void deleteSalesInvoice(Long id) {
+    public void deleteSalesInvoice(Long id, String schemaName) {
         SalesInvoice salesInvoice = salesInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        if(!salesInvoice.getCompany().getId().equals(company.getId())){
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+        }
 
         LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);

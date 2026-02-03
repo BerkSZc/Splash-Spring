@@ -4,9 +4,11 @@ import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,5 +24,10 @@ public interface PaymentCompanyRepository extends JpaRepository<PaymentCompany, 
     @Query("SELECT MAX(p.fileNo) FROM PaymentCompany p WHERE p.date BETWEEN :start AND :end AND p.fileNo LIKE 'ODEME%'")
     String findMaxFileNoByYear(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
-    void deleteByDateBetween(LocalDate start, LocalDate end);
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM PaymentCompany py WHERE py.company.id = :companyId AND py.date BETWEEN :start AND :end")
+    void deleteByCompanyIdAndDateBetween(@Param("companyId") Long companyId,
+                                         @Param("start") LocalDate start,
+                                         @Param("end") LocalDate end);
 }

@@ -17,8 +17,9 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
 
     @Override
     @PostMapping("/add/{id}")
-    public SalesInvoice addSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice) {
-        return salesInvoiceService.addSalesInvoice(id, salesInvoice);
+    public SalesInvoice addSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice,
+                                        @RequestParam String schemaName) {
+        return salesInvoiceService.addSalesInvoice(id, salesInvoice, schemaName);
     }
 
     @Override
@@ -29,14 +30,16 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
 
     @Override
     @PutMapping("/update/{id}")
-    public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice) {
-            return salesInvoiceService.editSalesInvoice(id, salesInvoice);
+    public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice,
+                                         @RequestParam String schemaName) {
+            return salesInvoiceService.editSalesInvoice(id, salesInvoice, schemaName);
     }
 
     @Override
     @DeleteMapping("/delete/{id}")
-    public void deleteSalesInvoice(@PathVariable(name = "id") Long id) {
-        salesInvoiceService.deleteSalesInvoice(id);
+    public void deleteSalesInvoice(@PathVariable(name = "id") Long id,
+                                   @RequestParam String schemaName) {
+        salesInvoiceService.deleteSalesInvoice(id, schemaName);
     }
 
     @Override

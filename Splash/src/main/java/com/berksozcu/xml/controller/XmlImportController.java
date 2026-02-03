@@ -19,9 +19,10 @@ public class XmlImportController implements IXmlController {
 
     @Override
     @PostMapping("/purchase-invoice")
-    public ResponseEntity<?> importPurchaseInvoices(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importPurchaseInvoices(@RequestParam("file") MultipartFile file,
+    @RequestParam String schemaName) {
         try {
-            importService.importPurchaseInvoices(file);
+            importService.importPurchaseInvoices(file, schemaName);
             return ResponseEntity.ok("XML başarıyla aktarıldı!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Hata: " + e.getMessage());
@@ -30,9 +31,10 @@ public class XmlImportController implements IXmlController {
 
     @Override
     @PostMapping("/sales-invoice")
-    public ResponseEntity<?> importSalesInvoices(MultipartFile file) {
+    public ResponseEntity<?> importSalesInvoices(@RequestParam MultipartFile file,
+                                                 @RequestParam String schemaName) {
         try {
-            importService.importSalesInvoices(file);
+            importService.importSalesInvoices(file, schemaName);
             return ResponseEntity.ok("XML başarıyla aktarıldı!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Hata: " + e.getMessage());
@@ -63,9 +65,10 @@ public class XmlImportController implements IXmlController {
 
     @Override
     @PostMapping("/collections")
-    public ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file,
+                                               @RequestParam String schemaName) {
         try {
-            importService.importCollections(file);
+            importService.importCollections(file, schemaName);
             return ResponseEntity.ok("XML başarıyla aktarıldı!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Hata: " + e.getMessage());
@@ -74,9 +77,10 @@ public class XmlImportController implements IXmlController {
 
     @Override
     @PostMapping("/payrolls")
-    public ResponseEntity<?> importPayrolls(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importPayrolls(@RequestParam("file") MultipartFile file,
+                                            @RequestParam String schemaName) {
         try {
-            importService.importPayrolls(file);
+            importService.importPayrolls(file, schemaName);
             return ResponseEntity.ok("XML başarıyla aktarıldı!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Hata: " + e.getMessage());

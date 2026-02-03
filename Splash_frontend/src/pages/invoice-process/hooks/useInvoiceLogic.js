@@ -4,16 +4,18 @@ import { useClient } from "../../../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
 import { useYear } from "../../../context/YearContext.jsx";
+import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 
 export const useInvoiceLogic = () => {
-  const { materials } = useMaterial();
+  const { materials, getMaterials } = useMaterial();
   const { customers } = useClient();
   const { addSalesInvoice, getSalesInvoicesByYear } = useSalesInvoice();
   const { addPurchaseInvoice, getPurchaseInvoiceByYear } = usePurchaseInvoice();
   const { convertCurrency, getDailyRates, getFileNo } = useCommonData();
   const { year } = useYear();
+  const { tenant } = useTenant();
 
   const [mode, setMode] = useState(() => {
     return localStorage.getItem("invoice_mode") || "sales";
@@ -22,6 +24,10 @@ export const useInvoiceLogic = () => {
   useEffect(() => {
     localStorage.setItem("invoice_mode", mode);
   }, [mode]);
+
+  useEffect(() => {
+    if (!materials || materials?.length === 0) getMaterials();
+  }, [getMaterials, materials]);
 
   const initalItem = {
     materialId: "",
@@ -112,7 +118,14 @@ export const useInvoiceLogic = () => {
     return () => {
       isMounted = false;
     };
-  }, [mode, salesForm.date, purchaseForm.date, materials]);
+  }, [
+    mode,
+    salesForm.date,
+    purchaseForm.date,
+    materials,
+    salesForm.fileNo,
+    purchaseForm.fileNo,
+  ]);
 
   const salesCalculation = useMemo(() => {
     const total = salesForm.items.reduce(
@@ -323,10 +336,14 @@ export const useInvoiceLogic = () => {
 
     try {
       if (isSales) {
-        await addSalesInvoice(Number(currentForm.customerId), payload);
+        await addSalesInvoice(Number(currentForm.customerId), payload, tenant);
         await getSalesInvoicesByYear(year);
       } else {
-        await addPurchaseInvoice(Number(currentForm.customerId), payload);
+        await addPurchaseInvoice(
+          Number(currentForm.customerId),
+          payload,
+          tenant,
+        );
         await getPurchaseInvoiceByYear(year);
       }
       resetForm();
