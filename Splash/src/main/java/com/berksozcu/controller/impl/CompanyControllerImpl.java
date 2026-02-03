@@ -1,6 +1,7 @@
 package com.berksozcu.controller.impl;
 
 import com.berksozcu.entites.company.Company;
+import com.berksozcu.entites.company.Year;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -14,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/rest/api/company")
-public class CompanyController {
+public class CompanyControllerImpl {
     @Autowired
     private CompanyServiceImpl companyService;
 
@@ -45,4 +46,18 @@ public class CompanyController {
        return companyService.getAllCompanies();
     }
 
+    @PostMapping("/create-year")
+    public ResponseEntity<Year> createYear(@RequestParam Long companyId, @RequestParam Integer year) {
+        return ResponseEntity.ok(companyService.addYearToCompany(companyId, year));
+    }
+
+    @GetMapping("/get-all-year")
+    public ResponseEntity<List<Year>> getAllYear(@RequestParam Long companyId) {
+        return ResponseEntity.ok(companyService.getYearsByCompany(companyId));
+    }
+
+    @DeleteMapping("/delete-year")
+    public void deleteYear(@RequestParam Long companyId, @RequestParam Integer year) {
+         companyService.deleteCompanyAndYear(companyId, year);
+    }
 }

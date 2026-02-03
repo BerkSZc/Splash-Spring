@@ -26,4 +26,6 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
                                               @Param("model") PayrollModel model,
                                               @Param("type") PayrollType type,
                                               @Param("prefix") String prefix);
+
+    void deleteByTransactionDateBetween(LocalDate start, LocalDate end);
 }

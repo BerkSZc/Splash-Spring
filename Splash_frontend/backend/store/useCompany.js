@@ -20,7 +20,6 @@ export const useCompany = create((set, get) => ({
       set({ isLoading: false });
     }
   },
-
   addCompany: async (companyData) => {
     try {
       await axiosInstance.post("/company/create", companyData, {
@@ -31,7 +30,45 @@ export const useCompany = create((set, get) => ({
       await get().getAllCompanies();
       toast.success("Şirket oluşturuldu");
     } catch (error) {
-      const backendErr = error?.response?.data || "Bilinmeyen Hata";
+      const backendErr =
+        error?.response?.data.exception.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
+  },
+  addYearToCompany: async (companyId, year) => {
+    try {
+      const res = await axiosInstance.post("/company/create-year", null, {
+        params: { companyId, year },
+      });
+      await get().getAllCompanies();
+      return res.data;
+    } catch (error) {
+      const backendErr =
+        error?.response?.data.exception.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
+  },
+  getAllYearByCompanyId: async (companyId) => {
+    try {
+      const res = await axiosInstance.get("/company/get-all-year", {
+        params: { companyId },
+      });
+      return res.data;
+    } catch (error) {
+      const backendErr =
+        error?.response?.data.exception.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
+  },
+  deleteYear: async (companyId, year) => {
+    try {
+      const res = await axiosInstance.delete("/company/delete-year", {
+        params: { companyId, year },
+      });
+      return res.data;
+    } catch (error) {
+      const backendErr =
+        error?.response?.data.exception.message || "Bilinmeyen Hata";
       toast.error(backendErr);
     }
   },

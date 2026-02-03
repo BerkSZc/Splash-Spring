@@ -56,12 +56,20 @@ const CompanyPage = () => {
             years={state.years}
             newYear={state.newYear}
             isModalOpen={state.isModalOpen}
+            confirmCheck={state.confirmCheck}
+            deleteTarget={state.deleteTarget}
+            confirmDeleteCheck={state.confirmDeleteCheck}
             shouldTransfer={state.shouldTransfer}
             onYearChange={handlers.changeYear}
             onYearAdd={handlers.handleAddYearClick}
             onConfirmModal={handlers.confirmAndAddYear}
+            onDeleteYear={handlers.handleDeleteYear}
             onCloseModal={() => handlers.setIsModalOpen(false)}
+            onCloseDelete={handlers.handleCloseDelete}
             onNewYearChange={handlers.setNewYear}
+            onSetConfirmCheck={handlers.setConfirmCheck}
+            onSetDeleteTarget={handlers.setDeleteTarget}
+            onSetConfirmDeleteCheck={handlers.setConfirmDeleteCheck}
           />
         </div>
       </div>
