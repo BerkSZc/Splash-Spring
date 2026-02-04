@@ -13,8 +13,8 @@ export const useHomeLogic = () => {
   const { purchase, getPurchaseInvoiceByYear } = usePurchaseInvoice();
   const { sales, getSalesInvoicesByYear } = useSalesInvoice();
   const { customers, getAllCustomers } = useClient();
-  const { collections, getCollections } = useReceivedCollection();
-  const { payments, getPayments } = usePaymentCompany();
+  const { collections, getReceivedCollectionsByYear } = useReceivedCollection();
+  const { payments, getPaymentCollectionsByYear } = usePaymentCompany();
 
   const { year } = useYear();
   const { tenant } = useTenant();
@@ -22,9 +22,8 @@ export const useHomeLogic = () => {
   useEffect(() => {
     getAllCompanies();
     getAllCustomers();
-    getCollections();
-    getPayments();
-
+    getReceivedCollectionsByYear(year);
+    getPaymentCollectionsByYear(year);
     getPurchaseInvoiceByYear(year);
     getSalesInvoicesByYear(year);
   }, [year, tenant]);

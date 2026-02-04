@@ -11,10 +11,6 @@ export default function Navbar() {
 
   const dropDownRef = useRef(null);
 
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
-
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (
@@ -30,18 +26,6 @@ export default function Navbar() {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [settingsOpen]);
-
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDark]);
-
-  const toggleTheme = () => setIsDark((p) => !p);
 
   return (
     <nav className="bg-gray-800 text-white relative dark:bg-gray-900 dark:text-gray-200">
@@ -103,7 +87,7 @@ export default function Navbar() {
                 onClick={() => setSettingsOpen((prev) => !prev)}
                 className="hover:text-gray-300 flex items-center"
               >
-                Ayarlar
+                Diğer İşlemler
                 <svg
                   className="w-4 h-4 ml-1"
                   fill="none"
@@ -132,10 +116,12 @@ export default function Navbar() {
 
                   {/* DARK MODE TOGGLE */}
                   <button
-                    onClick={toggleTheme}
+                    onClick={() => {
+                      setSettingsOpen(false);
+                    }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
                   >
-                    {isDark ? "Aydınlık Tema" : "Koyu Tema"}
+                    Raporlar
                   </button>
 
                   {isAuthenticated && (

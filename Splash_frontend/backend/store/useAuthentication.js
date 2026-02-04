@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 
 export const useAuthentication = create((set) => ({
   token: localStorage.getItem("token") || null,
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated: false,
   loading: false,
+  authChecked: false,
 
   login: async (user) => {
     try {
@@ -18,6 +19,7 @@ export const useAuthentication = create((set) => ({
       set({
         token: token,
         isAuthenticated: true,
+        authChecked: true,
       });
 
       toast.success("Giriş başarılı");
@@ -41,12 +43,19 @@ export const useAuthentication = create((set) => ({
       set({
         token: token,
         isAuthenticated: true,
+        authChecked: true,
       });
 
       toast.success("Kayıt başarılı");
     } catch (error) {
       const backendMessage =
         error?.response?.data?.exception?.message || "Bilinmeyen hata";
+
+      set({
+        token: null,
+        isAuthenticated: false,
+        authChecked: true,
+      });
 
       toast.error("Error at signUp: " + backendMessage);
     } finally {
@@ -59,7 +68,29 @@ export const useAuthentication = create((set) => ({
     set({
       token: null,
       isAuthenticated: false,
+      authChecked: true,
     });
     toast.success("Çıkış yapıldı");
+  },
+
+  authControl: async () => {
+    try {
+      set({ loading: true });
+      await axiosInstance.get("/auth/me");
+
+      set({
+        isAuthenticated: true,
+        authChecked: true,
+      });
+    } catch (error) {
+      localStorage.removeItem("token");
+      set({
+        token: null,
+        isAuthenticated: false,
+        authChecked: true,
+      });
+    } finally {
+      set({ loading: false });
+    }
   },
 }));

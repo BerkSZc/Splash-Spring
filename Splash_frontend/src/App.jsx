@@ -11,9 +11,19 @@ import AuthPage from "./pages/auth/AuthPage";
 import XmlPage from "./pages/xml/XmlPage";
 import CompanyPage from "./pages/company/CompanyPage";
 import PayrollPage from "./pages/payroll/PayrollPage";
+import { useEffect } from "react";
+import AuthLoading from "./components/AuthLoading";
 
 function App() {
-  const { isAuthenticated } = useAuthentication();
+  const { isAuthenticated, authControl, authChecked } = useAuthentication();
+
+  useEffect(() => {
+    authControl();
+  }, []);
+
+  if (!authChecked) {
+    return <AuthLoading />;
+  }
 
   return (
     <>

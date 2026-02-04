@@ -1,5 +1,4 @@
 import axios from "axios";
-import { useAuthentication } from "../store/useAuthentication";
 
 const isElectron = window?.process?.type === "renderer";
 
@@ -8,7 +7,6 @@ export const axiosInstance = axios.create({
 
   withCredentials: true,
 });
-let isDirecting = false;
 
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -27,32 +25,12 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     const status = error.response ? error.response.status : null;
-
-//     if ((status === 401 || status === 403) && !isDirecting) {
-//       isDirecting = true;
-//       // Token süresi dolmuş
-//       localStorage.removeItem("token");
-//       if (isElectron) {
-//         window.location.hash = "#/login";
-//       } else {
-//         window.location.href = "/login";
-//       } // otomatik yönlendirme
-//     }
-//     return Promise.reject(error);
-//   },
-// );
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
 
     if (status === 401 || status === 403) {
-      // useAuthentication.getState().logout?.();
-
       window.dispatchEvent(
         new CustomEvent("AUTH_ERROR", {
           detail: {
