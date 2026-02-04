@@ -5,13 +5,13 @@ import { axiosInstance } from "../lib/axios";
 export const useVoucher = create((set) => ({
   vouchers: [],
 
-  transferAllBalances: async (targetYear) => {
+  transferAllBalances: async (targetYear, schemaName) => {
     try {
       await axiosInstance.post(
         "/voucher/transfer-all",
         {},
         {
-          params: { targetYear },
+          params: { targetYear, schemaName },
         },
       );
       toast.success(

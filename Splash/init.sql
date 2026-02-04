@@ -53,11 +53,13 @@ CREATE TABLE IF NOT EXISTS logo.purchase_invoice (
     file_no VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
     customer_id BIGINT NOT NULL,
+    company_id BIGINT,
     total_price DECIMAL(15,2) DEFAULT 0,
     kdv_toplam DECIMAL(15,2) DEFAULT 0,
     eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
-    FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
+    FOREIGN KEY (customer_id) REFERENCES logo.customer(id),
+    FOREIGN KEY (company_id) REFERENCES logo.company(id)
 );
 
 -- ---------------------------
@@ -84,12 +86,14 @@ CREATE TABLE IF NOT EXISTS logo.sales_invoice (
     file_no VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
     customer_id BIGINT NOT NULL,
+    company_id BIGINT,
     total_price DECIMAL(15,2) DEFAULT 0,
     kdv_toplam DECIMAL(15,2) DEFAULT 0,
     type INTEGER,
     eur_selling_rate DECIMAL(15, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(15, 4) DEFAULT 0.0000,
-    FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
+    FOREIGN KEY (customer_id) REFERENCES logo.customer(id),
+    FOREIGN KEY (company_id) REFERENCES logo.company(id)
 );
 
 -- ---------------------------
@@ -132,8 +136,8 @@ CREATE TABLE logo.material_price_history (
 -- ---------------------------
 -- Örnek Satın Alma Faturası
 -- ---------------------------
-INSERT INTO logo.purchase_invoice (file_no, date, customer_id, total_price, kdv_toplam)
-VALUES ('PA-001', '2025-12-01', 1, 200, 36);
+INSERT INTO logo.purchase_invoice (file_no, date, customer_id, company_id, total_price, kdv_toplam)
+VALUES ('PA-001', '2025-12-01', 1, 2, 200, 36);
 
 INSERT INTO logo.purchase_invoice_item (purchase_invoice_id, material_id, unit_price, quantity, line_total, kdv)
 VALUES (1, 1, 100, 2, 200, 36);
@@ -141,8 +145,8 @@ VALUES (1, 1, 100, 2, 200, 36);
 -- ---------------------------
 -- Örnek Satış Faturası
 -- ---------------------------
-INSERT INTO logo.sales_invoice (file_no, date, customer_id, total_price, kdv_toplam, type)
-VALUES ('SA-001', '2025-12-01', 2, 300, 54, 1);
+INSERT INTO logo.sales_invoice (file_no, date, customer_id, company_id, total_price, kdv_toplam, type)
+VALUES ('SA-001', '2025-12-01', 2, 3, 300, 54, 1);
 
 INSERT INTO logo.sales_invoice_item (sales_invoice_id, material_id, unit_price, quantity, line_total, kdv)
 VALUES (1, 2, 150, 2, 300, 54);
@@ -156,9 +160,11 @@ CREATE TABLE IF NOT EXISTS logo.received_collection (
     comment VARCHAR(255),
     price DECIMAL(15,2) NOT NULL,
     customer_id BIGINT,
+    company_id BIGINT,
     customer_name VARCHAR(255),
     file_no VARCHAR(255),
-    CONSTRAINT fk_received_customer FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
+    CONSTRAINT fk_received_customer FOREIGN KEY (customer_id) REFERENCES logo.customer(id),
+    CONSTRAINT fk_received_company FOREIGN KEY (company_id) REFERENCES logo.company(id)
 );
 
 
@@ -170,9 +176,11 @@ CREATE TABLE IF NOT EXISTS logo.payment_company (
     comment VARCHAR(255),
     price DECIMAL(15,2) NOT NULL,
     customer_id BIGINT,
+    company_id BIGINT,
     customer_name VARCHAR(255),
     file_no VARCHAR(255),
-    CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES logo.customer(id)
+    CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES logo.customer(id),
+    CONSTRAINT fk_payment_company FOREIGN KEY (company_id) REFERENCES logo.company(id)
 );
 
 -- Kullanıcı Tablosu
@@ -201,6 +209,7 @@ CREATE TABLE IF NOT EXISTS logo.payroll (
     payroll_model payroll_model_enum NOT NULL,
     payroll_type payroll_type_enum NOT NULL,
     customer_id BIGINT,
+    company_id BIGINT,
     file_no VARCHAR(100),
     bank_name VARCHAR(255),
     bank_branch VARCHAR(255),
@@ -208,7 +217,10 @@ CREATE TABLE IF NOT EXISTS logo.payroll (
 
     CONSTRAINT fk_payroll_customer
         FOREIGN KEY (customer_id)
-        REFERENCES logo.customer(id) ON DELETE CASCADE
+        REFERENCES logo.customer(id) ON DELETE CASCADE,
+         CONSTRAINT fk_payroll_company
+        FOREIGN KEY (company_id)
+        REFERENCES logo.company(id)
 );
 
 CREATE TABLE IF NOT EXISTS logo.currency_rate (
@@ -222,6 +234,7 @@ CREATE TABLE IF NOT EXISTS logo.currency_rate (
 CREATE TABLE IF NOT EXISTS logo.opening_voucher (
     id SERIAL PRIMARY KEY,
     customer_id BIGINT,
+    company_id BIGINT,
     customer_name VARCHAR(255),
     file_no VARCHAR(255),
     description VARCHAR(255),
@@ -234,7 +247,10 @@ CREATE TABLE IF NOT EXISTS logo.opening_voucher (
 
         CONSTRAINT voucher_customer
         FOREIGN KEY (customer_id)
-        REFERENCES logo.customer(id) ON DELETE CASCADE
+        REFERENCES logo.customer(id) ON DELETE CASCADE,
+        CONSTRAINT voucher_company
+        FOREIGN KEY (company_id)
+        REFERENCES logo.company(id)
 );
 
 CREATE TABLE IF NOT EXISTS logo.fiscal_year(

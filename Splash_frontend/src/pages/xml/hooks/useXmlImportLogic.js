@@ -84,7 +84,7 @@ export const useXmlImportLogic = () => {
       else if (type === "collections") await importCollections(file, tenant);
       else if (type === "sales") await importSalesInvoice(file, tenant);
       else if (type === "payrolls") await importPayrolls(file, tenant);
-      else if (type === "vouchers") await importVouchers(file);
+      else if (type === "vouchers") await importVouchers(file, tenant);
     } finally {
       setLoading(false);
       if (targetInput) targetInput.value = "";

@@ -7,8 +7,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface IOpeningVoucherService {
-     OpeningVoucher calculateAndSetOpeningVoucher(Customer customer, int targetYear);
-     void transferAllCustomers(int targetYear);
+     OpeningVoucher calculateAndSetOpeningVoucher(Customer customer, int targetYear, String schemaName);
+     void transferAllCustomers(int targetYear, String schemaName);
      List<OpeningVoucher> getAllOpeningVoucherByCustomer(LocalDate date);
      OpeningVoucher getOpeningVoucherByCustomer(Long customerId, LocalDate date);
 

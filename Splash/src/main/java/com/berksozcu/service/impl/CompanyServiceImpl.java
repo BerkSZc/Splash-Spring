@@ -58,6 +58,9 @@ public class CompanyServiceImpl implements ICompanyService {
     @Autowired
     private SalesInvoiceItemRepository salesInvoiceItemRepository;
 
+    @Autowired
+    private OpeningVoucherRepository openingVoucherRepository;
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -153,6 +156,7 @@ public class CompanyServiceImpl implements ICompanyService {
         payrollRepository.deleteByCompanyIdAndTransactionDateBetween(companyId , start, end);
         receivedCollectionRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         paymentCompanyRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        openingVoucherRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
 
         yearRepository.deleteYearValueByCompanyId(year, companyId);
     }

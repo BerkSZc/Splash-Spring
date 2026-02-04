@@ -151,33 +151,21 @@ function XmlPage() {
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <button
+            <ImportButton
+              label={`Malzeme XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
+              icon="📦"
+              variant="blue"
+              disabled={state.loading}
               onClick={() => handlers.handleAction("materials")}
-              disabled={state.loading}
-              className="group flex flex-col items-center justify-center bg-gray-800/50 hover:bg-gray-700 border border-gray-700 p-6 rounded-2xl transition-all duration-300 active:scale-[0.98]"
-            >
-              <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">
-                📦
-              </span>
-              <span className="text-xs font-bold text-gray-300 uppercase tracking-widest text-center">
-                Malzeme XML{" "}
-                {state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}
-              </span>
-            </button>
+            />
 
-            <button
-              onClick={() => handlers.handleAction("customers")}
+            <ImportButton
+              label={`Cari XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
+              icon="👥"
+              variant="red"
               disabled={state.loading}
-              className="group flex flex-col items-center justify-center bg-gray-800/50 hover:bg-gray-700 border border-gray-700 p-6 rounded-2xl transition-all duration-300 active:scale-[0.98]"
-            >
-              <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">
-                👥
-              </span>
-              <span className="text-xs font-bold text-gray-300 uppercase tracking-widest text-center">
-                Cari XML{" "}
-                {state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}
-              </span>
-            </button>
+              onClick={() => handlers.handleAction("customers")}
+            />
           </div>
 
           <ImportButton

@@ -153,13 +153,14 @@ public class XmlImportService {
                         newVoucher.setCredit(BigDecimal.ZERO);
                         newVoucher.setYearlyDebit(BigDecimal.ZERO);
                         newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                        newVoucher.setCompany(getCompany(schemaName));
                         return newVoucher;
                     });
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
             }
-
+            voucher.setCompany(getCompany(schemaName));
             // Fatura satırları
             if (xmlInv.getTRANSACTIONS() != null && xmlInv.getTRANSACTIONS().getList() != null) {
                 for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
@@ -283,13 +284,14 @@ public class XmlImportService {
                         newVoucher.setCredit(BigDecimal.ZERO);
                         newVoucher.setYearlyDebit(BigDecimal.ZERO);
                         newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                        newVoucher.setCompany(getCompany(schemaName));
                         return newVoucher;
                     });
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
             }
-
+            voucher.setCompany(getCompany(schemaName));
             for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
                 if (tx.getMASTER_CODE() == null || tx.getMASTER_CODE().isBlank()) {
                     System.out.println("Atlanan satır (MASTER_CODE boş)");
@@ -480,13 +482,14 @@ public class XmlImportService {
                         newVoucher.setCredit(BigDecimal.ZERO);
                         newVoucher.setYearlyDebit(BigDecimal.ZERO);
                         newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                        newVoucher.setCompany(getCompany(schemaName));
                         return newVoucher;
                     });
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
             }
-
+            voucher.setCompany(getCompany(schemaName));
             if (type == 11) {
                 // Tahsilat
                 ReceivedCollection rc = new ReceivedCollection();
@@ -579,13 +582,14 @@ public class XmlImportService {
                         newVoucher.setCredit(BigDecimal.ZERO);
                         newVoucher.setYearlyDebit(BigDecimal.ZERO);
                         newVoucher.setYearlyCredit(BigDecimal.ZERO);
+                        newVoucher.setCompany(getCompany(schemaName));
                         return newVoucher;
                     });
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
             }
-
+            voucher.setCompany(getCompany(schemaName));
             if (roll.getTransactions() != null && roll.getTransactions().getList() != null) {
                 for (PayrollTxXml tx : roll.getTransactions().getList()) {
 
@@ -630,7 +634,7 @@ public class XmlImportService {
     }
 
     @Transactional
-    public void importOpeningVouchers(MultipartFile file) throws Exception {
+    public void importOpeningVouchers(MultipartFile file, String schemaName) throws Exception {
         JAXBContext context = JAXBContext.newInstance(ArpVouchersXml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         ArpVouchersXml vouchersXml = (ArpVouchersXml) unmarshaller.unmarshal(file.getInputStream());
@@ -641,7 +645,6 @@ public class XmlImportService {
 
         for (ArpVoucherXml voucherXml : vouchersXml.getVouchers()) {
             if (voucherXml.getTransactions() == null || voucherXml.getTransactions().getList() == null) continue;
-
 
             LocalDate voucherDate;
             try {
@@ -674,9 +677,10 @@ public class XmlImportService {
                     openingBalance.setCredit(BigDecimal.ZERO);
                     openingBalance.setYearlyCredit(BigDecimal.ZERO);
                     openingBalance.setYearlyDebit(BigDecimal.ZERO);
+                    openingBalance.setCompany(getCompany(schemaName));
                 }
 
-
+                openingBalance.setCompany(getCompany(schemaName));
                 openingBalance.setYearlyCredit(openingBalance.getYearlyCredit().add(newCredit));
                 openingBalance.setYearlyDebit(openingBalance.getYearlyDebit().add(newDebit));
 

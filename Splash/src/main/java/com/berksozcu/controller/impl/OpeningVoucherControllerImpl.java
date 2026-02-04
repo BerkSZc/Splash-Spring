@@ -22,8 +22,8 @@ public class OpeningVoucherControllerImpl implements IOpeningVoucherController {
 
 
     @PostMapping("/transfer-all")
-    public String transferAll(@RequestParam int targetYear) {
-        openingVoucherService.transferAllCustomers(targetYear);
+    public String transferAll(@RequestParam int targetYear, @RequestParam String schemaName) {
+        openingVoucherService.transferAllCustomers(targetYear, schemaName);
         return "Transfer tamamlandı";
     }
 

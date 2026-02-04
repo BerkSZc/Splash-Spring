@@ -11,6 +11,9 @@ public class ArpVoucherXml {
     @XmlElement(name = "NUMBER")
     private String number;
 
+    @XmlElement(name = "COMPANY_ID")
+    private Long company_id;
+
     @XmlElement(name = "DATE")
     private String date;
 

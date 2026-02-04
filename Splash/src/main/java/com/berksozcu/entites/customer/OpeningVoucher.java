@@ -1,5 +1,6 @@
 package com.berksozcu.entites.customer;
 
+import com.berksozcu.entites.company.Company;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,10 @@ public class OpeningVoucher {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @Column(name = "customer_name")
     private String customerName;
@@ -47,5 +52,4 @@ public class OpeningVoucher {
 
     @Column(name = "yearly_credit", precision = 18, scale = 2)
     private BigDecimal yearlyCredit;
-
 }

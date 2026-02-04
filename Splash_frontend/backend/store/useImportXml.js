@@ -114,7 +114,7 @@ export const useImportXml = create(() => ({
     }
   },
 
-  importVouchers: async (file) => {
+  importVouchers: async (file, schemaName) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -122,6 +122,7 @@ export const useImportXml = create(() => ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { schemaName },
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {

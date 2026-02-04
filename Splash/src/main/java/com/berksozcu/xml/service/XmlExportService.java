@@ -368,7 +368,6 @@ public class XmlExportService {
             ArpVoucherXml vXml = new ArpVoucherXml();
             vXml.setNumber("DEVIR_" + year);
             vXml.setDate(start.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-
             ArpTransactionsXml txsWrapper = new ArpTransactionsXml();
             List<ArpTransactionXml> txList = new ArrayList<>();
 
@@ -378,6 +377,7 @@ public class XmlExportService {
                 tx.setDESCRIPTION(op.getDescription());
                 tx.setCREDIT(op.getCredit().setScale(2, RoundingMode.HALF_UP).toString());
                 tx.setDEBIT(op.getDebit().setScale(2, RoundingMode.HALF_UP).toString());
+                vXml.setCompany_id(op.getCompany().getId());
 
                 txList.add(tx);
             }

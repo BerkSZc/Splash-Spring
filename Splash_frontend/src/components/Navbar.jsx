@@ -121,6 +121,9 @@ export default function Navbar() {
               {settingsOpen && (
                 <div className="absolute right-0 mt-2 bg-gray-700 dark:bg-gray-800 shadow-lg rounded-md w-40 py-2 z-50">
                   <Link
+                    onClick={() => {
+                      setSettingsOpen(false);
+                    }}
                     to="/devir"
                     className="block px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
                   >
@@ -137,7 +140,10 @@ export default function Navbar() {
 
                   {isAuthenticated && (
                     <button
-                      onClick={logout}
+                      onClick={() => {
+                        logout();
+                        setSettingsOpen(false);
+                      }}
                       className="w-full text-left px-4 py-2 hover:bg-red-600 text-red-300 hover:text-white"
                     >
                       Çıkış Yap

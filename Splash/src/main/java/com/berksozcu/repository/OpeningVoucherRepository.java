@@ -1,6 +1,5 @@
 package com.berksozcu.repository;
 
-import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -20,4 +19,5 @@ public interface OpeningVoucherRepository extends JpaRepository<OpeningVoucher, 
 
     List<OpeningVoucher> findAllByDateBetween(LocalDate start, LocalDate end);
 
+    void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
 }

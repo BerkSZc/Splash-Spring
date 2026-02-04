@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.repository.*;
@@ -25,10 +26,15 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
 
     @Transactional
     @Override
-    public OpeningVoucher calculateAndSetOpeningVoucher(Customer customer, int targetYear) {
+    public OpeningVoucher calculateAndSetOpeningVoucher(Customer customer, int targetYear, String schemaName) {
+
+        Company company = companyRepository.findBySchemaName(schemaName);
 
         int closingYear = targetYear - 1;
 
@@ -51,6 +57,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
                             oldVoucher.setFileNo("00001");
                             oldVoucher.setYearlyCredit(BigDecimal.ZERO);
                             oldVoucher.setYearlyDebit(BigDecimal.ZERO);
+                            oldVoucher.setCompany(company);
                             return oldVoucher;
                         });
 
@@ -74,6 +81,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
                             newVoucher.setFileNo("00001");
                             newVoucher.setYearlyCredit(closingVoucher.getCredit().setScale(2, RoundingMode.HALF_UP));
                             newVoucher.setYearlyDebit(closingVoucher.getDebit().setScale(2, RoundingMode.HALF_UP));
+                            newVoucher.setCompany(company);
                             return newVoucher;
                         });
 
@@ -86,12 +94,12 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
     }
 
     @Transactional
-    public void transferAllCustomers(int targetYear) {
+    public void transferAllCustomers(int targetYear, String schemaName) {
         List<Customer> allCustomers = customerRepository.findAll();
 
         for (Customer customer : allCustomers) {
             try {
-                this.calculateAndSetOpeningVoucher(customer, targetYear);
+                this.calculateAndSetOpeningVoucher(customer, targetYear, schemaName);
             } catch (Exception e) {
                 System.err.println("Müşteri devir hatası (" + customer.getName() + "): " + e.getMessage());
             }

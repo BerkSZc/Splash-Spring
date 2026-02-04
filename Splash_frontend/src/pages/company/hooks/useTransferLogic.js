@@ -64,7 +64,7 @@ export const useTransferLogic = () => {
 
   const confirmAndAddYear = async () => {
     setIsModalOpen(false);
-
+    setConfirmCheck(false);
     const selectedCompany = companies?.find((c) => c.schemaName === tenant);
     if (!selectedCompany) return toast.error("Lütfen Bir şirket seçin");
 
@@ -76,7 +76,7 @@ export const useTransferLogic = () => {
       return;
     }
     try {
-      await transferAllBalances(Number(newYear));
+      await transferAllBalances(Number(newYear), tenant);
       await addYearToCompany(selectedCompany.id, Number(newYear));
       await addYear(Number(newYear));
       setNewYear("");
