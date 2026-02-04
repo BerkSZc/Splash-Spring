@@ -262,3 +262,13 @@ CREATE TABLE IF NOT EXISTS logo.fiscal_year(
     FOREIGN KEY (company_id)
     REFERENCES logo.company(id) ON DELETE CASCADE
 );
+
+-- INDEXES
+CREATE INDEX IF NOT EXISTS idx_pur_inv_company_date
+ON logo.purchase_invoice (company_id, date);
+
+CREATE INDEX IF NOT EXISTS idx_sales_inv_company_date
+ON logo.sales_invoice (company_id, date);
+
+CREATE INDEX IF NOT EXISTS idx_payroll_date_file_no
+ON logo.payroll (transaction_date, file_no);

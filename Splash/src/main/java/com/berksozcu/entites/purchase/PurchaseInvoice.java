@@ -13,7 +13,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "purchase_invoice")
+@Table(name = "purchase_invoice", indexes = {
+        @Index(name = "idx_pur_inv_company_date", columnList = ("company_id, date"))
+})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

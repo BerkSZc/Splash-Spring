@@ -1,5 +1,6 @@
 import MaterialSearchSelect from "../../../components/MaterialSearchSelect";
 import MaterialPriceTooltip from "../../../components/MaterialPriceTooltip";
+import CustomerSearchSelect from "../../../components/CustomerSearchSelect";
 
 export default function InvoiceEditModal({
   editingInvoice,
@@ -57,17 +58,11 @@ export default function InvoiceEditModal({
             <label className="text-xs font-bold text-gray-500 uppercase ml-1 tracking-widest">
               Müşteri / Firma
             </label>
-            <select
+            <CustomerSearchSelect
+              customers={customers}
               value={form.customerId}
-              onChange={(e) => setForm({ ...form, customerId: e.target.value })}
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-3 text-white cursor-pointer"
-            >
-              {customers?.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => setForm({ ...form, customerId: id })}
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 p-6 bg-gray-800/30 rounded-3xl border border-gray-700/50">
             <div className="space-y-2">

@@ -82,20 +82,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> {
-                    OpeningVoucher newVoucher = new OpeningVoucher();
-                    newVoucher.setCustomerName(customer.getName());
-                    newVoucher.setDescription("Eklendi");
-                    newVoucher.setFileNo("001");
-                    newVoucher.setDebit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(BigDecimal.ZERO);
-                    newVoucher.setDate(LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1));
-                    newVoucher.setCustomer(newPurchaseInvoice.getCustomer());
-                    return newVoucher;
-                });
+                .orElseGet(() -> defaultVoucher(customer, company, start));
         if (voucher.getFinalBalance() == null) {
             voucher.setFinalBalance(newPurchaseInvoice.getTotalPrice());
         }
@@ -184,6 +171,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         return purchaseInvoiceRepository.findAll();
     }
 
+    //TODO: BURAYI DÜZELT
     @Override
     @Transactional
     public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
@@ -194,15 +182,15 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
 
-        if(!oldInvoice.getCompany().getId().equals(company.getId())) {
+        if (!oldInvoice.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
         LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
 
-        if(purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())
-        && !oldInvoice.getFileNo().equals(newPurchaseInvoice.getFileNo())) {
+        if (purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())
+                && !oldInvoice.getFileNo().equals(newPurchaseInvoice.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
@@ -317,39 +305,28 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         PurchaseInvoice purchaseInvoice = purchaseInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+        Customer customer = purchaseInvoice.getCustomer();
 
-        if(!purchaseInvoice.getCompany().getId().equals(company.getId())) {
+        if (!purchaseInvoice.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
         LocalDate start = LocalDate.of(purchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(purchaseInvoice.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> {
-                    OpeningVoucher newVoucher = new OpeningVoucher();
-                    newVoucher.setCustomerName(purchaseInvoice.getCustomer().getName());
-                    newVoucher.setDescription("Eklendi");
-                    newVoucher.setFileNo("001");
-                    newVoucher.setDebit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(purchaseInvoice.getTotalPrice());
-                    newVoucher.setDate(LocalDate.of(purchaseInvoice.getDate().getYear(), 1, 1));
-                    newVoucher.setCustomer(purchaseInvoice.getCustomer());
-                    return newVoucher;
-                });
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+                .orElseGet(() -> defaultVoucher(customer, company, start));
         if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(purchaseInvoice.getTotalPrice());
+            voucher.setFinalBalance(BigDecimal.ZERO);
         }
 
         for (PurchaseInvoiceItem item : purchaseInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(item.getMaterial().getId(), id);
         }
 
-        Customer customer = purchaseInvoice.getCustomer();
 
         voucher.setFinalBalance(voucher.getFinalBalance().add(purchaseInvoice.getTotalPrice()));
-        voucher.setCredit(voucher.getCredit().add(purchaseInvoice.getTotalPrice()));
+        voucher.setCredit(voucher.getCredit().subtract(purchaseInvoice.getTotalPrice()));
         customerRepository.save(customer);
 
         purchaseInvoiceRepository.deleteById(id);
@@ -360,5 +337,21 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
         return purchaseInvoiceRepository.findByDateBetween(start, end);
+    }
+
+    private OpeningVoucher defaultVoucher(Customer customer, Company company, LocalDate start) {
+        OpeningVoucher newVoucher = new OpeningVoucher();
+        newVoucher.setCustomerName(customer.getName());
+        newVoucher.setDescription("Eklendi");
+        newVoucher.setFileNo("001");
+        newVoucher.setDebit(BigDecimal.ZERO);
+        newVoucher.setCredit(BigDecimal.ZERO);
+        newVoucher.setFinalBalance(BigDecimal.ZERO);
+        newVoucher.setYearlyDebit(BigDecimal.ZERO);
+        newVoucher.setYearlyCredit(BigDecimal.ZERO);
+        newVoucher.setCompany(company);
+        newVoucher.setDate(start);
+        newVoucher.setCustomer(customer);
+        return newVoucher;
     }
 }

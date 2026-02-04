@@ -115,14 +115,15 @@ export default function Navbar() {
                   </Link>
 
                   {/* DARK MODE TOGGLE */}
-                  <button
+                  <Link
                     onClick={() => {
                       setSettingsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
+                    to="/raporlar"
+                    className="block px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
                   >
                     Raporlar
-                  </button>
+                  </Link>
 
                   {isAuthenticated && (
                     <button

@@ -13,6 +13,7 @@ import CompanyPage from "./pages/company/CompanyPage";
 import PayrollPage from "./pages/payroll/PayrollPage";
 import { useEffect } from "react";
 import AuthLoading from "./components/AuthLoading";
+import ReportsPage from "./pages/report/ReportsPage";
 
 function App() {
   const { isAuthenticated, authControl, authChecked } = useAuthentication();
@@ -82,6 +83,12 @@ function App() {
           path="/faturalar-islemleri"
           element={
             isAuthenticated ? <InvoiceForm /> : <Navigate to={"/login"} />
+          }
+        />
+        <Route
+          path="/raporlar"
+          element={
+            isAuthenticated ? <ReportsPage /> : <Navigate to={"/login"} />
           }
         />
       </Routes>
