@@ -15,10 +15,10 @@ export const useClient = create((set, get) => ({
       toast.error("Error at getAllClient:" + backendErr);
     }
   },
-  addCustomer: async (customer, year) => {
+  addCustomer: async (customer, year, schemaName) => {
     try {
       await axiosInstance.post("/customer/add-customer", customer, {
-        params: { year },
+        params: { year, schemaName },
       });
       toast.success("Musteri eklendi");
       await get().getAllCustomers();
@@ -30,7 +30,7 @@ export const useClient = create((set, get) => ({
     }
   },
 
-  updateCustomer: async (id, updateCustomer, currentYear) => {
+  updateCustomer: async (id, updateCustomer, currentYear, schemaName) => {
     try {
       await axiosInstance.put(
         `/customer/update-customer/${id}`,
@@ -39,7 +39,7 @@ export const useClient = create((set, get) => ({
           headers: {
             "Content-Type": "application/json",
           },
-          params: { currentYear },
+          params: { currentYear, schemaName },
         },
       );
       toast.success("Müşteri değiştirildi");
@@ -47,7 +47,7 @@ export const useClient = create((set, get) => ({
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at updateCustomer:" + backendErr);
+      toast.error(backendErr);
       throw error;
     }
   },

@@ -5,6 +5,7 @@ import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
 import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
 import { useYear } from "../../../context/YearContext.jsx";
+import { useTenant } from "../../../context/TenantContext.jsx";
 import { accountStatementHelper } from "../utils/accountStatementHelper.js";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
 import { useVoucher } from "../../../../backend/store/useVoucher.js";
@@ -25,6 +26,7 @@ export const useClientLogic = () => {
   const { payrolls, getPayrollByYear } = usePayroll();
   const { getAllOpeningVoucherByYear, vouchers } = useVoucher();
   const { year } = useYear();
+  const { tenant } = useTenant();
 
   const formRef = useRef(null);
   const [archiveAction, setArchiveAction] = useState("archive");
@@ -160,11 +162,10 @@ export const useClientLogic = () => {
     };
     try {
       if (editClient) {
-        await updateCustomer(editClient.id, customerPayload, year);
+        await updateCustomer(editClient.id, customerPayload, year, tenant);
         setEditClient(null);
       } else {
-        // Yeni kayıt
-        await addCustomer(customerPayload, year);
+        await addCustomer(customerPayload, year, tenant);
       }
 
       const dateString = `${year}-01-01`;

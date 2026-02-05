@@ -25,6 +25,7 @@ export default function MaterialForm() {
           form={state.form}
           onChange={handlers.handleChange}
           onSubmit={handlers.handleSubmit}
+          onCancel={handlers.handleCancel}
         />
 
         {/* LİSTE ALANI */}
@@ -61,13 +62,15 @@ export default function MaterialForm() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {state.filteredMaterials.length === 0 ? (
+            {Array.isArray(state.filteredMaterials) &&
+            state.filteredMaterials.length === 0 ? (
               <div className="col-span-full p-12 text-center bg-gray-900/20 border border-dashed border-gray-800 rounded-3xl">
                 <p className="text-gray-500 italic">
                   Aranan kritere uygun malzeme bulunamadı.
                 </p>
               </div>
             ) : (
+              Array.isArray(state.filteredMaterials) &&
               state.filteredMaterials.map((item) => (
                 <MaterialCard
                   key={item.id}

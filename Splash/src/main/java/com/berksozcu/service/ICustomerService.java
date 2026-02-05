@@ -8,11 +8,11 @@ import java.util.List;
 public interface ICustomerService {
     Customer findCustomerById(Long id);
 
-     Customer addCustomer(DtoCustomer newCustomer, int year);
+     Customer addCustomer(DtoCustomer newCustomer, int year, String schemaName);
 
     List<Customer> getAllCustomer();
 
-     void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear);
+     void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear, String schemaName);
 
     List<Customer> findByArchivedTrue();
 

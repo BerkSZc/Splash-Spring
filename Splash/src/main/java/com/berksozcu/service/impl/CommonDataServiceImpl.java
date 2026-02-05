@@ -60,7 +60,8 @@ public class CommonDataServiceImpl implements ICommonDataService {
                 }
             }
         } catch (Exception e) {
-            throw new BaseException(new ErrorMessage(MessageType.KUR_HATASI));
+            System.out.println("Kur bilgisi alınamadı");
+//            throw new BaseException(new ErrorMessage(MessageType.KUR_HATASI));
         }
     }
 

@@ -4,6 +4,7 @@ export const MaterialFormCard = ({
   form,
   onChange,
   onSubmit,
+  onCancel,
 }) => (
   <div
     ref={formRef}
@@ -133,7 +134,7 @@ export const MaterialFormCard = ({
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-4">
         <button
           type="submit"
           className={`w-full md:w-64 py-4 rounded-xl font-bold transition-all active:scale-95 shadow-lg ${
@@ -144,6 +145,15 @@ export const MaterialFormCard = ({
         >
           {editId ? "Güncelle" : "Sisteme Kaydet"}
         </button>
+        {editId && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full md:w-48 py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition-all active:scale-95 border border-gray-700"
+          >
+            Vazgeç
+          </button>
+        )}
       </div>
     </form>
   </div>

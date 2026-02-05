@@ -11,8 +11,8 @@ import java.util.List;
 
 public interface ICustomerController {
      RootEntity<Customer> findCustomerById(Long id);
-    RootEntity<Customer> addCustomer(DtoCustomer customer, int year);
+    RootEntity<Customer> addCustomer(DtoCustomer customer, int year, String schemaName);
      RootEntity<List<Customer>> getAllCustomer();
-     void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear);
+     void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear, String schemaName);
      void setArchived(@RequestBody List<Long> ids, @RequestParam boolean archived);
 }

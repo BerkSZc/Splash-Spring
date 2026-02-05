@@ -31,9 +31,9 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
     @Override
     @PostMapping("/add-customer")
     public RootEntity<Customer> addCustomer(@RequestBody DtoCustomer customer,
-    @RequestParam int year) {
+    @RequestParam int year, @RequestParam String schemaName) {
         return
-                ok(customerService.addCustomer(customer, year));
+                ok(customerService.addCustomer(customer, year, schemaName));
     }
 
     @Override
@@ -45,8 +45,8 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
     @Override
     @PutMapping("/update-customer/{id}")
     public void updateCustomer(@PathVariable(name = "id") Long id, @RequestBody DtoCustomer updateCustomer,
-    @RequestParam int currentYear) {
-        customerService.updateCustomer(id, updateCustomer, currentYear);
+    @RequestParam int currentYear, @RequestParam String schemaName) {
+        customerService.updateCustomer(id, updateCustomer, currentYear, schemaName);
     }
 
     @Override

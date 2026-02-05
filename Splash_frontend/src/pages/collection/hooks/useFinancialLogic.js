@@ -140,13 +140,16 @@ export const useFinancialLogic = () => {
     }
 
     const customerId = Number(addForm.customerId);
+    const selectedCustomer = customers.find((c) => Number(c.id) === customerId);
+
     const price = Number(addForm.price);
     const payload = {
       date: addForm.date,
-      comment: addForm.comment,
+      comment: addForm.comment || "",
       price: price,
-      fileNo: addForm.fileNo,
+      fileNo: addForm.fileNo || "",
       customer: { id: customerId },
+      customerName: selectedCustomer?.name || "",
     };
 
     try {
@@ -192,14 +195,16 @@ export const useFinancialLogic = () => {
     e.preventDefault();
 
     const customerId = Number(editForm.customerId);
+    const selectedCustomer = customers.find((c) => Number(c.id) === customerId);
     const price = Number(editForm.price);
     const payload = {
       id: editing.id,
       date: editForm.date,
-      comment: editForm.comment,
+      comment: editForm.comment || "",
       price: price,
-      fileNo: editForm.fileNo,
+      fileNo: editForm.fileNo || "",
       customer: { id: customerId },
+      customerName: selectedCustomer?.name || "",
     };
 
     const selectedYear = new Date(editForm.date).getFullYear();

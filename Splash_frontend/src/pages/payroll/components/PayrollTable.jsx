@@ -44,65 +44,66 @@ export default function PayrollTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800/50">
-            {filteredList.map((item) => (
-              <tr
-                key={item.id}
-                className="hover:bg-blue-500/5 transition-all group"
-              >
-                <td className="p-6 text-gray-400 font-mono text-sm">
-                  {formatDate(item.transactionDate)}
-                </td>
-                <td className="p-6">
-                  <span className="bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full text-sm font-bold font-mono">
-                    {formatDate(item.expiredDate)}
-                  </span>
-                </td>
-                <td className="p-6">
-                  <div className="font-bold text-white text-base">
-                    {item.customer?.name}
-                  </div>
-                  <div className="text-[10px] text-gray-500 uppercase font-bold mt-1">
-                    Cari ID: #{item.customer?.id}
-                  </div>
-                </td>
-                <td className="p-6">
-                  <div className="text-white text-sm font-semibold flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
-                    {item.bankName || "Banka Yok"}
-                  </div>
-                  <div className="text-gray-500 text-xs mt-1 ml-3.5 italic">
-                    {item.bankBranch || "Şube Belirtilmemiş"} —{" "}
-                    <span className="text-gray-400 font-mono">
-                      {item.fileNo}
+            {Array.isArray(filteredList) &&
+              filteredList.map((item) => (
+                <tr
+                  key={item.id}
+                  className="hover:bg-blue-500/5 transition-all group"
+                >
+                  <td className="p-6 text-gray-400 font-mono text-sm">
+                    {formatDate(item.transactionDate)}
+                  </td>
+                  <td className="p-6">
+                    <span className="bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full text-sm font-bold font-mono">
+                      {formatDate(item.expiredDate)}
                     </span>
-                  </div>
-                </td>
-                <td className="p-6 text-right">
-                  <p className="text-white font-black font-mono text-lg">
-                    ₺{" "}
-                    {Number(item.amount).toLocaleString("tr-TR", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </p>
-                </td>
-                <td className="p-6 text-center">
-                  <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => onEdit(item)}
-                      className="p-2.5 bg-gray-800 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-all shadow-lg border border-gray-700"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => onDelete(item)}
-                      className="p-2.5 bg-gray-800 hover:bg-red-500/20 text-red-500 rounded-xl transition-all shadow-lg border border-gray-700"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="p-6">
+                    <div className="font-bold text-white text-base">
+                      {item.customer?.name}
+                    </div>
+                    <div className="text-[10px] text-gray-500 uppercase font-bold mt-1">
+                      Cari ID: #{item.customer?.id}
+                    </div>
+                  </td>
+                  <td className="p-6">
+                    <div className="text-white text-sm font-semibold flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                      {item.bankName || "Banka Yok"}
+                    </div>
+                    <div className="text-gray-500 text-xs mt-1 ml-3.5 italic">
+                      {item.bankBranch || "Şube Belirtilmemiş"} —{" "}
+                      <span className="text-gray-400 font-mono">
+                        {item.fileNo}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-6 text-right">
+                    <p className="text-white font-black font-mono text-lg">
+                      ₺{" "}
+                      {Number(item.amount).toLocaleString("tr-TR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </p>
+                  </td>
+                  <td className="p-6 text-center">
+                    <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => onEdit(item)}
+                        className="p-2.5 bg-gray-800 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-all shadow-lg border border-gray-700"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => onDelete(item)}
+                        className="p-2.5 bg-gray-800 hover:bg-red-500/20 text-red-500 rounded-xl transition-all shadow-lg border border-gray-700"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
         {filteredList.length === 0 && (

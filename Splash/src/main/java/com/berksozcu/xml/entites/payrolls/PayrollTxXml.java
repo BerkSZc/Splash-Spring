@@ -16,6 +16,10 @@ public class PayrollTxXml {
     private String amount;
     @XmlElement(name = "DUE_DATE")
     private String dueDate; // Vade
+     @XmlElement(name = "BANK_TITLE")
+    private String bank_title; // Banka ismi
+     @XmlElement(name = "CITY")
+    private String branch; // Banka Şubesi
     @XmlElement(name = "DATE")
     private String date; // İşlem Tarihi
 }

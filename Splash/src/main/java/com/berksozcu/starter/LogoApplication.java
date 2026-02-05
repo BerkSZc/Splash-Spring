@@ -1,7 +1,6 @@
 package com.berksozcu.starter;
 
 import com.berksozcu.entites.customer.Customer;
-import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -21,17 +20,5 @@ public class LogoApplication {
         SpringApplication.run(LogoApplication.class, args);
     }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        ModelMapper modelMapper = new ModelMapper();
-
-        modelMapper.typeMap(Customer.class, Customer.class).addMappings(
-                m -> {
-                    m.skip(Customer::setId);
-                }
-        );
-
-        return modelMapper;
-    }
 
 }

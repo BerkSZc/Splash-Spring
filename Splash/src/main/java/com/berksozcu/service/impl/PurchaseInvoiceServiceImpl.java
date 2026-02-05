@@ -8,6 +8,8 @@ import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
+import com.berksozcu.entites.sales.SalesInvoice;
+import com.berksozcu.entites.sales.SalesInvoiceItem;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -53,6 +55,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
@@ -64,7 +67,6 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         newPurchaseInvoice.setCompany(company);
-
         newPurchaseInvoice.setCustomer(customer);
 
         BigDecimal usdRate = currencyRateService.getRateOrDefault("USD", newPurchaseInvoice.getDate());
@@ -72,6 +74,8 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         newPurchaseInvoice.setUsdSellingRate(usdRate);
         newPurchaseInvoice.setEurSellingRate(eurRate);
+        newPurchaseInvoice.setDate(newPurchaseInvoice.getDate());
+        newPurchaseInvoice.setFileNo(newPurchaseInvoice.getFileNo());
 
         //Fatura toplam fiyatı
         BigDecimal totalPrice = BigDecimal.ZERO;
@@ -82,7 +86,8 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> defaultVoucher(customer, company, start));
+                .orElseGet(() -> getDefaultVoucher(customer, company, start));
+
         if (voucher.getFinalBalance() == null) {
             voucher.setFinalBalance(newPurchaseInvoice.getTotalPrice());
         }
@@ -94,13 +99,11 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                         .findById(item.getMaterial().getId())
                         .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
-
                 item.setMaterial(material);
                 item.setPurchaseInvoice(newPurchaseInvoice);
 
                 //KDV HESAPLAMA
                 BigDecimal kdv = item.getKdv().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-
 
                 //  Malzemenin bulunduğu satırın kdv sini HESAPLAMA
                 BigDecimal kdvTutarHesaplama = item.getUnitPrice().multiply(kdv)
@@ -111,9 +114,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 BigDecimal lineTotal = item.getUnitPrice()
                         .multiply(item.getQuantity()).setScale(2, RoundingMode.HALF_UP);
 
-
                 item.setKdvTutar(kdvTutarHesaplama);
-
                 item.setLineTotal(lineTotal);
 
                 kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
@@ -129,27 +130,12 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         // Müşteri bakiyesini güncelle
         voucher.setFinalBalance(voucher.getFinalBalance().subtract(totalPrice).setScale(2, RoundingMode.HALF_UP));
         voucher.setCredit(voucher.getCredit().add(totalPrice).setScale(2, RoundingMode.HALF_UP));
-        // Cascade ALL olduğundan invoice save = items save
+
         purchaseInvoiceRepository.save(newPurchaseInvoice);
         openingVoucherRepository.save(voucher);
-        customerRepository.save(customer);
 
         for (PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
-            MaterialPriceHistory history = new MaterialPriceHistory();
-            history.setInvoiceType(InvoiceType.PURCHASE);
-            history.setMaterial(item.getMaterial());
-            history.setPrice(item.getUnitPrice());
-            history.setDate(newPurchaseInvoice.getDate());
-            history.setCustomerName(customer.getName());
-            history.setQuantity(item.getQuantity());
-            history.setInvoiceId(newPurchaseInvoice.getId());
-            history.setCustomer(newPurchaseInvoice.getCustomer());
-
-            materialPriceHistoryRepository.save(history);
-
-//            Material material = new Material();
-//            material.setLastPurchasePrice(item.getUnitPrice());
-//            materialRepository.save(material);
+           saveHistoryPrice(item, item.getMaterial(), newPurchaseInvoice);
         }
 
         return newPurchaseInvoice;
@@ -171,7 +157,6 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         return purchaseInvoiceRepository.findAll();
     }
 
-    //TODO: BURAYI DÜZELT
     @Override
     @Transactional
     public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
@@ -181,6 +166,9 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         PurchaseInvoice oldInvoice = purchaseInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
+        Customer oldCustomer = oldInvoice.getCustomer();
+
+        Customer newCustomer = newPurchaseInvoice.getCustomer();
 
         if (!oldInvoice.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
@@ -194,35 +182,25 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> {
-                    OpeningVoucher newVoucher = new OpeningVoucher();
-                    newVoucher.setCustomerName(newPurchaseInvoice.getCustomer().getName());
-                    newVoucher.setDescription("Eklendi");
-                    newVoucher.setFileNo("001");
-                    newVoucher.setDebit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(BigDecimal.ZERO);
-                    newVoucher.setDate(LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1));
-                    newVoucher.setCustomer(newPurchaseInvoice.getCustomer());
-                    return newVoucher;
-                });
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(newPurchaseInvoice.getTotalPrice());
+        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+                .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
+
+        if (oldVoucher.getFinalBalance() == null) {
+            oldVoucher.setFinalBalance(BigDecimal.ZERO);
         }
-        BigDecimal finalBalance = voucher.getFinalBalance() != null ? voucher.getFinalBalance() : BigDecimal.ZERO;
 
-        Customer customer = oldInvoice.getCustomer();
-        voucher.setFinalBalance(finalBalance.add(oldInvoice.getTotalPrice()));
-        voucher.setCredit(voucher.getCredit().add(oldInvoice.getTotalPrice()));
 
+        BigDecimal oldFinalBalance = oldVoucher.getFinalBalance() != null ? oldVoucher.getFinalBalance() : BigDecimal.ZERO;
+
+        oldVoucher.setFinalBalance(oldFinalBalance.add(oldInvoice.getTotalPrice().setScale(2, RoundingMode.HALF_UP)));
+        oldVoucher.setCredit(oldVoucher.getCredit().subtract(oldInvoice.getTotalPrice().setScale(2, RoundingMode.HALF_UP)));
 
         oldInvoice.setDate(newPurchaseInvoice.getDate());
         oldInvoice.setFileNo(newPurchaseInvoice.getFileNo());
         oldInvoice.setEurSellingRate(newPurchaseInvoice.getEurSellingRate());
         oldInvoice.setUsdSellingRate(newPurchaseInvoice.getUsdSellingRate());
+        oldInvoice.setCustomer(newCustomer);
+        oldInvoice.setCompany(company);
 
         for (PurchaseInvoiceItem item : oldInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(item.getMaterial().getId(), oldInvoice.getId());
@@ -275,26 +253,23 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            MaterialPriceHistory history = new MaterialPriceHistory();
-            history.setMaterial(item.getMaterial());
-            history.setInvoiceId(newPurchaseInvoice.getId());
-            history.setInvoiceType(InvoiceType.PURCHASE);
-            history.setPrice(item.getUnitPrice());
-            history.setQuantity(item.getQuantity());
-            history.setDate(oldInvoice.getDate());
-            history.setCustomerName(customer.getName());
-            history.setCustomer(newPurchaseInvoice.getCustomer());
-            materialPriceHistoryRepository.save(history);
+            saveHistoryPrice(item, item.getMaterial(), newPurchaseInvoice);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
         oldInvoice.setKdvToplam(kdvToplam);
         oldInvoice.setTotalPrice(total);
 
-        voucher.setFinalBalance(finalBalance.subtract(total));
-        voucher.setCredit(voucher.getCredit().subtract(total));
-        customerRepository.save(customer);
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+                .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
+        BigDecimal newFinalBalance = newVoucher.getFinalBalance() != null ? newVoucher.getFinalBalance() : BigDecimal.ZERO;
+
+        newVoucher.setFinalBalance(newFinalBalance.subtract(total));
+        newVoucher.setCredit(newVoucher.getCredit().add(total));
+
+        openingVoucherRepository.save(newVoucher);
+        openingVoucherRepository.save(oldVoucher);
         return purchaseInvoiceRepository.save(oldInvoice);
     }
 
@@ -305,6 +280,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         PurchaseInvoice purchaseInvoice = purchaseInvoiceRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+
         Customer customer = purchaseInvoice.getCustomer();
 
         if (!purchaseInvoice.getCompany().getId().equals(company.getId())) {
@@ -315,7 +291,8 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate end = LocalDate.of(purchaseInvoice.getDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
-                .orElseGet(() -> defaultVoucher(customer, company, start));
+                .orElseGet(() -> getDefaultVoucher(customer, company, start));
+
         if (voucher.getFinalBalance() == null) {
             voucher.setFinalBalance(BigDecimal.ZERO);
         }
@@ -324,11 +301,10 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(item.getMaterial().getId(), id);
         }
 
-
         voucher.setFinalBalance(voucher.getFinalBalance().add(purchaseInvoice.getTotalPrice()));
         voucher.setCredit(voucher.getCredit().subtract(purchaseInvoice.getTotalPrice()));
-        customerRepository.save(customer);
 
+        openingVoucherRepository.save(voucher);
         purchaseInvoiceRepository.deleteById(id);
     }
 
@@ -339,7 +315,20 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         return purchaseInvoiceRepository.findByDateBetween(start, end);
     }
 
-    private OpeningVoucher defaultVoucher(Customer customer, Company company, LocalDate start) {
+    private void saveHistoryPrice(PurchaseInvoiceItem item, Material material, PurchaseInvoice invoice) {
+        MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
+        materialPriceHistory.setMaterial(material);
+        materialPriceHistory.setPrice(item.getUnitPrice());
+        materialPriceHistory.setInvoiceId(invoice.getId());
+        materialPriceHistory.setDate(invoice.getDate());
+        materialPriceHistory.setInvoiceType(InvoiceType.PURCHASE);
+        materialPriceHistory.setQuantity(item.getQuantity());
+        materialPriceHistory.setCustomer(invoice.getCustomer());
+        materialPriceHistory.setCustomerName(invoice.getCustomer().getName());
+        materialPriceHistoryRepository.save(materialPriceHistory);
+    }
+
+    private OpeningVoucher getDefaultVoucher(Customer customer, Company company, LocalDate start) {
         OpeningVoucher newVoucher = new OpeningVoucher();
         newVoucher.setCustomerName(customer.getName());
         newVoucher.setDescription("Eklendi");

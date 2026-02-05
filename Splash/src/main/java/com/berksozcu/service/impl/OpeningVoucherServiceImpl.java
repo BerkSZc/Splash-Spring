@@ -45,51 +45,21 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         OpeningVoucher closingVoucher =
                 openingVoucherRepository
                         .findByCustomerIdAndDate(customer.getId(), closingDate)
-                        .orElseGet(() -> {
-                            OpeningVoucher oldVoucher = new OpeningVoucher();
-                            oldVoucher.setFinalBalance(BigDecimal.ZERO);
-                            oldVoucher.setCustomerName(customer.getName());
-                            oldVoucher.setDebit(BigDecimal.ZERO);
-                            oldVoucher.setCredit(BigDecimal.ZERO);
-                            oldVoucher.setDescription("Yeni Eklendi");
-                            oldVoucher.setDate(closingDate);
-                            oldVoucher.setCustomer(customer);
-                            oldVoucher.setFileNo("00001");
-                            oldVoucher.setYearlyCredit(BigDecimal.ZERO);
-                            oldVoucher.setYearlyDebit(BigDecimal.ZERO);
-                            oldVoucher.setCompany(company);
-                            return oldVoucher;
-                        });
+                        .orElseGet(() -> getDefaultVoucher(company, customer, openingDate));
 
         closingVoucher.setFinalBalance(closingVoucher.getFinalBalance().setScale(2, RoundingMode.HALF_UP));
         openingVoucherRepository.save(closingVoucher);
-
 
         // ---------- AÇILIŞ VOUCHER (01.01) ----------
         OpeningVoucher openingVoucher =
                 openingVoucherRepository
                         .findByCustomerIdAndDate(customer.getId(), openingDate)
-                        .orElseGet(() -> {
-                            OpeningVoucher newVoucher = new OpeningVoucher();
-                            newVoucher.setFinalBalance(closingVoucher.getFinalBalance().setScale(2, RoundingMode.HALF_UP));
-                            newVoucher.setCustomerName(customer.getName());
-                            newVoucher.setDebit(BigDecimal.ZERO);
-                            newVoucher.setCredit(BigDecimal.ZERO);
-                            newVoucher.setDescription("Yeni Eklendi");
-                            newVoucher.setDate(openingDate);
-                            newVoucher.setCustomer(customer);
-                            newVoucher.setFileNo("00001");
-                            newVoucher.setYearlyCredit(closingVoucher.getCredit().setScale(2, RoundingMode.HALF_UP));
-                            newVoucher.setYearlyDebit(closingVoucher.getDebit().setScale(2, RoundingMode.HALF_UP));
-                            newVoucher.setCompany(company);
-                            return newVoucher;
-                        });
+                        .orElseGet(() -> getDefaultVoucher(company, customer, openingDate));
 
         openingVoucher.setFinalBalance(closingVoucher.getFinalBalance());
         openingVoucher.setDebit(BigDecimal.ZERO);
         openingVoucher.setCredit(BigDecimal.ZERO);
 
-        customerRepository.save(customer);
         return openingVoucherRepository.save(openingVoucher);
     }
 
@@ -114,7 +84,6 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         LocalDate end = LocalDate.of(date.getYear(), 12, 31);
         List<OpeningVoucher> vouchers = new ArrayList<>();
         for (Customer customer : allCustomers) {
-            // Yeni 'findAllBy...' metodunu kullanıyoruz
             List<OpeningVoucher> results = openingVoucherRepository
                     .findAllByCustomerIdAndDateBetween(customer.getId(), start, end);
 
@@ -129,5 +98,21 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         LocalDate end = LocalDate.of(date.getYear(), 12, 31);
         return openingVoucherRepository.findByCustomerIdAndDateBetween(customerId, start, end)
                 .orElse(null);
+    }
+
+    private OpeningVoucher getDefaultVoucher(Company company, Customer newCustomer, LocalDate date) {
+        OpeningVoucher voucher = new OpeningVoucher();
+        voucher.setCompany(company);
+        voucher.setDate(date);
+        voucher.setCustomer(newCustomer);
+        voucher.setCustomerName(newCustomer.getName());
+        voucher.setDebit(BigDecimal.ZERO);
+        voucher.setCredit(BigDecimal.ZERO);
+        voucher.setYearlyDebit(BigDecimal.ZERO);
+        voucher.setYearlyCredit(BigDecimal.ZERO);
+        voucher.setFinalBalance(BigDecimal.ZERO);
+        voucher.setFileNo("001");
+        voucher.setDescription("Eklendi");
+        return openingVoucherRepository.save(voucher);
     }
 }

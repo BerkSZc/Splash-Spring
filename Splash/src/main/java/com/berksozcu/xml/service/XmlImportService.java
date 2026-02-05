@@ -38,6 +38,7 @@ import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -117,10 +118,14 @@ public class XmlImportService {
             // Tarih Logo formatı: 01.01.2025
             invoice.setDate(date);
 
+            Company company = getCompany(schemaName);
+
             invoice.setFileNo(xmlInv.getDOC_NUMBER());
-            invoice.setCompany(getCompany(schemaName));
+            invoice.setCompany(company);
             BigDecimal kdvToplam = xmlInv.getTOTAL_VAT() != null ? xmlInv.getTOTAL_VAT() : BigDecimal.ZERO;
             invoice.setKdvToplam(kdvToplam.setScale(2, RoundingMode.HALF_UP));
+            invoice.setEurSellingRate(BigDecimal.ONE);
+            invoice.setUsdSellingRate(BigDecimal.ONE);
 
             BigDecimal totalPrice = xmlInv.getTOTAL_NET() != null ? xmlInv.getTOTAL_NET() : BigDecimal.ZERO;
             invoice.setTotalPrice(totalPrice.setScale(2, RoundingMode.HALF_UP));
@@ -141,21 +146,7 @@ public class XmlImportService {
 
             OpeningVoucher voucher = openingBalanceRepository
                     .findByCustomerIdAndDateBetween(customer.getId(), start, end)
-                    .orElseGet(() -> {
-                        OpeningVoucher newVoucher = new OpeningVoucher();
-                        newVoucher.setCustomer(customer);
-                        newVoucher.setCustomerName(customer.getName());
-                        newVoucher.setFileNo("001");
-                        newVoucher.setDescription("Eklenmiş");
-                        newVoucher.setDate(LocalDate.of(date.getYear(), 1, 1)); // Yılın ilk günü olarak işaretle
-                        newVoucher.setFinalBalance(BigDecimal.ZERO);
-                        newVoucher.setDebit(BigDecimal.ZERO);
-                        newVoucher.setCredit(BigDecimal.ZERO);
-                        newVoucher.setYearlyDebit(BigDecimal.ZERO);
-                        newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                        newVoucher.setCompany(getCompany(schemaName));
-                        return newVoucher;
-                    });
+                    .orElseGet(() -> getDefaultVoucher(company,  customer, start));
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
@@ -215,7 +206,6 @@ public class XmlImportService {
                 voucher.setFinalBalance(voucher.getFinalBalance().subtract(invoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
                 voucher.setCredit(voucher.getCredit().add(invoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
                 openingBalanceRepository.save(voucher);
-                customerRepository.save(customer);
                 // Cascade ALL sayesinde item'lar otomatik kaydedilir
                 invoiceRepository.save(invoice);
             }
@@ -253,17 +243,18 @@ public class XmlImportService {
             invoice.setCompany(getCompany(schemaName));
             BigDecimal totalPrice = xmlInv.getTOTAL_NET().setScale(2, RoundingMode.HALF_UP);
             invoice.setTotalPrice(totalPrice);
+            invoice.setEurSellingRate(BigDecimal.ONE);
+            invoice.setUsdSellingRate(BigDecimal.ONE);
 
             invoice.setKdvToplam(xmlInv.getTOTAL_VAT().setScale(2, RoundingMode.HALF_UP));
 
             Customer customer = customerRepository.findByCode(xmlInv.getARP_CODE()).orElse(null);
+            invoice.setCustomer(customer);
 
             if (customer == null) {
                 System.err.println("Müşteri bulunamadı: " + xmlInv.getARP_CODE() + " → Fatura atlandı");
                 continue; // müşteri yoksa faturayı atla
             }
-
-            invoice.setCustomer(customer);
 
             List<SalesInvoiceItem> itemList = new ArrayList<>();
 
@@ -272,26 +263,12 @@ public class XmlImportService {
 
             OpeningVoucher voucher = openingBalanceRepository
                     .findByCustomerIdAndDateBetween(customer.getId(), start, end)
-                    .orElseGet(() -> {
-                        OpeningVoucher newVoucher = new OpeningVoucher();
-                        newVoucher.setCustomer(customer);
-                        newVoucher.setCustomerName(customer.getName());
-                        newVoucher.setFileNo("001");
-                        newVoucher.setDescription("Eklenmiş");
-                        newVoucher.setDate(LocalDate.of(date.getYear(), 1, 1)); // Yılın ilk günü olarak işaretle
-                        newVoucher.setFinalBalance(BigDecimal.ZERO);
-                        newVoucher.setDebit(BigDecimal.ZERO);
-                        newVoucher.setCredit(BigDecimal.ZERO);
-                        newVoucher.setYearlyDebit(BigDecimal.ZERO);
-                        newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                        newVoucher.setCompany(getCompany(schemaName));
-                        return newVoucher;
-                    });
+                    .orElseGet(() -> getDefaultVoucher(getCompany(schemaName), customer, start));
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
             }
-            voucher.setCompany(getCompany(schemaName));
+
             for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
                 if (tx.getMASTER_CODE() == null || tx.getMASTER_CODE().isBlank()) {
                     System.out.println("Atlanan satır (MASTER_CODE boş)");
@@ -325,18 +302,15 @@ public class XmlImportService {
 
                 itemList.add(item);
                 item.setSalesInvoice(invoice);
-
             }
             // Satış faturası tutarını bakiyeye ekliyoruz
             voucher.setFinalBalance(voucher.getFinalBalance().add(invoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
             voucher.setDebit(voucher.getDebit().add(invoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
 
-            openingBalanceRepository.save(voucher);
-            customerRepository.save(customer); // Müşteriyi güncelle
             invoice.setItems(itemList);
+            openingBalanceRepository.save(voucher);
             salesInvoiceRepository.save(invoice);
         }
-
     }
 
     @Transactional
@@ -387,14 +361,14 @@ public class XmlImportService {
             Customer customer = new Customer();
 
             customer.setCode(c.getCODE());
-            customer.setName(c.getTITLE());
+            customer.setName(c.getTITLE() != null ? c.getTITLE() : "");
             customer.setCountry("TÜRKİYE");
-            customer.setLocal(c.getCITY());
-            customer.setDistrict(c.getDISTRICT());
-            customer.setAddress(c.getADDRESS1());
+            customer.setLocal(c.getCITY() != null ? c.getCITY() : "");
+            customer.setDistrict(c.getDISTRICT() != null ? c.getDISTRICT() : "");
+            customer.setAddress(c.getADDRESS1() != null ? c.getADDRESS1() : "");
             customer.setArchived(c.getRECORD_STATUS() != null && c.getRECORD_STATUS() == 1);
 
-            customer.setVdNo(c.getTAX_ID());
+            customer.setVdNo(c.getTAX_ID() != null ? c.getTAX_ID() : "");
 
             customerRepository.save(customer);
         }
@@ -406,7 +380,6 @@ public class XmlImportService {
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
         CollectionsXml collectionsXml = (CollectionsXml) unmarshaller.unmarshal(file.getInputStream());
-
 
         Set<String> existingCollections = receivedCollectionRepository.findAll()
                 .stream()
@@ -459,9 +432,7 @@ public class XmlImportService {
                 System.out.println("Hatalı tarih formatı: " + c.getDATE() + " - kayıt: " + c.getNUMBER());
                 continue;
             }
-
             BigDecimal total = parseBigDecimal(c.getAMOUNT());
-
 
             // --- AYRIM ---
 
@@ -470,21 +441,7 @@ public class XmlImportService {
 
             OpeningVoucher voucher = openingBalanceRepository
                     .findByCustomerIdAndDateBetween(customer.getId(), start, end)
-                    .orElseGet(() -> {
-                        OpeningVoucher newVoucher = new OpeningVoucher();
-                        newVoucher.setCustomer(customer);
-                        newVoucher.setCustomerName(customer.getName());
-                        newVoucher.setFileNo("001");
-                        newVoucher.setDescription("Eklenmiş");
-                        newVoucher.setDate(LocalDate.of(date.getYear(), 1, 1)); // Yılın ilk günü olarak işaretle
-                        newVoucher.setFinalBalance(BigDecimal.ZERO);
-                        newVoucher.setDebit(BigDecimal.ZERO);
-                        newVoucher.setCredit(BigDecimal.ZERO);
-                        newVoucher.setYearlyDebit(BigDecimal.ZERO);
-                        newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                        newVoucher.setCompany(getCompany(schemaName));
-                        return newVoucher;
-                    });
+                    .orElseGet(() -> getDefaultVoucher(getCompany(schemaName), customer, start));
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
@@ -498,36 +455,33 @@ public class XmlImportService {
                 rc.setPrice(total);
                 rc.setFileNo(c.getNUMBER());
                 rc.setCustomerName(customer.getName());
-                rc.setComment(c.getDESCRIPTION());
+                rc.setComment(c.getDESCRIPTION() != null ? c.getDESCRIPTION() : "");
                 rc.setCompany(getCompany(schemaName));
+
                 voucher.setFinalBalance(voucher.getFinalBalance().subtract(total).setScale(2, RoundingMode.HALF_UP));
                 voucher.setCredit(voucher.getCredit().add(total).setScale(2, RoundingMode.HALF_UP));
-                receivedCollectionRepository.save(rc);
-
                 existingCollections.add(c.getNUMBER());
 
+                receivedCollectionRepository.save(rc);
                 openingBalanceRepository.save(voucher);
-                customerRepository.save(customer);
             } else if (type == 12 && "2".equals(sdCode)) {
                 // Firmaya ödeme
                 PaymentCompany py = new PaymentCompany();
                 py.setCustomer(customer);
                 py.setDate(date);
-                py.setComment(c.getDESCRIPTION());
+                py.setComment(c.getDESCRIPTION() != null ? c.getDESCRIPTION() : "");
                 py.setFileNo(c.getNUMBER());
                 py.setCustomerName(customer.getName());
                 py.setPrice(total);
                 py.setCompany(getCompany(schemaName));
+
                 voucher.setFinalBalance(voucher.getFinalBalance().add(total).setScale(2, RoundingMode.HALF_UP));
                 voucher.setDebit(voucher.getDebit().add(total).setScale(2, RoundingMode.HALF_UP));
-                paymentCompanyRepository.save(py);
-
                 existingPayments.add(c.getNUMBER());
 
+                paymentCompanyRepository.save(py);
                 openingBalanceRepository.save(voucher);
-                customerRepository.save(customer);
             }
-
         }
     }
 
@@ -570,26 +524,12 @@ public class XmlImportService {
 
             OpeningVoucher voucher = openingBalanceRepository
                     .findByCustomerIdAndDateBetween(customer.getId(), start, end)
-                    .orElseGet(() -> {
-                        OpeningVoucher newVoucher = new OpeningVoucher();
-                        newVoucher.setCustomer(customer);
-                        newVoucher.setCustomerName(customer.getName());
-                        newVoucher.setFileNo("001");
-                        newVoucher.setDescription("Eklenmiş");
-                        newVoucher.setDate(LocalDate.of(headerDate.getYear(), 1, 1)); // Yılın ilk günü olarak işaretle
-                        newVoucher.setFinalBalance(BigDecimal.ZERO);
-                        newVoucher.setDebit(BigDecimal.ZERO);
-                        newVoucher.setCredit(BigDecimal.ZERO);
-                        newVoucher.setYearlyDebit(BigDecimal.ZERO);
-                        newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                        newVoucher.setCompany(getCompany(schemaName));
-                        return newVoucher;
-                    });
+                    .orElseGet(() -> getDefaultVoucher(getCompany(schemaName), customer, start));
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
             }
-            voucher.setCompany(getCompany(schemaName));
+
             if (roll.getTransactions() != null && roll.getTransactions().getList() != null) {
                 for (PayrollTxXml tx : roll.getTransactions().getList()) {
 
@@ -604,6 +544,8 @@ public class XmlImportService {
                     payroll.setExpiredDate(LocalDate.parse(tx.getDueDate(), dtf));
                     payroll.setPayrollModel(model);
                     payroll.setCompany(getCompany(schemaName));
+                    payroll.setBankName(tx.getBank_title() != null ? tx.getBank_title() : "");
+                    payroll.setBankBranch(tx.getBranch() != null ? tx.getBranch() : "");
 
                     // Varsayılan tip çek olsun (XML'den çek-senet ayrımı da yapılabilir)
                     payroll.setPayrollType(PayrollType.CHEQUE);
@@ -614,22 +556,16 @@ public class XmlImportService {
                         // Müşteriden çek aldık, borcu azalır (Subtract)
                         voucher.setFinalBalance(voucher.getFinalBalance().subtract(amount).setScale(2, RoundingMode.HALF_UP));
                         voucher.setCredit(voucher.getCredit().add(amount).setScale(2, RoundingMode.HALF_UP));
-
                     } else {
                         // Müşteriye çek verdik veya ciro ettik, borcu/alacağı artar (Add)
                         voucher.setFinalBalance(voucher.getFinalBalance().add(amount).setScale(2, RoundingMode.HALF_UP));
                         voucher.setDebit(voucher.getDebit().add(amount).setScale(2, RoundingMode.HALF_UP));
-
                     }
-
                     payrollRepository.save(payroll);
                     existingPayrolls.add(tx.getNumber());
-
                 }
-
             }
             openingBalanceRepository.save(voucher);
-            customerRepository.save(customer);
         }
     }
 
@@ -649,41 +585,36 @@ public class XmlImportService {
             LocalDate voucherDate;
             try {
                 voucherDate = LocalDate.parse(voucherXml.getDate(), dtf);
+
             } catch (Exception e) {
                 voucherDate = LocalDate.of(LocalDate.now().getYear(), 1, 1);
             }
 
             for (ArpTransactionXml tx : voucherXml.getTransactions().getList()) {
+                LocalDate start = LocalDate.of(voucherDate.getYear(), 1, 1);
+                LocalDate end = LocalDate.of(voucherDate.getYear(), 12, 31);
+
+                if(openingBalanceRepository.existsByDateBetweenAndCustomerCode(start.plusDays(1), end, tx.getARP_CODE())) {
+                    System.out.println("Açılış Bakiyesi Mevcut müşteri kodu: " + tx.getARP_CODE());
+                    continue;
+                }
+
                 String arpCode = tx.getARP_CODE() != null ? tx.getARP_CODE().trim() : "";
                 Customer customer = customerRepository.findByCode(arpCode).orElse(null);
 
                 if (customer == null) continue;
 
-
                 BigDecimal newDebit = parseBigDecimal(tx.getDEBIT()).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal newCredit = parseBigDecimal(tx.getCREDIT()).setScale(2, RoundingMode.HALF_UP);
 
-
                 OpeningVoucher openingBalance = openingBalanceRepository
-                        .findByCustomerIdAndDate(customer.getId(), voucherDate)
-                        .orElse(new OpeningVoucher());
-
-                if (openingBalance.getId() == null) {
-                    openingBalance.setCustomer(customer);
-                    openingBalance.setCustomerName(customer.getName());
-                    openingBalance.setDate(voucherDate);
-                    openingBalance.setFinalBalance(BigDecimal.ZERO);
-                    openingBalance.setDebit(BigDecimal.ZERO);
-                    openingBalance.setCredit(BigDecimal.ZERO);
-                    openingBalance.setYearlyCredit(BigDecimal.ZERO);
-                    openingBalance.setYearlyDebit(BigDecimal.ZERO);
-                    openingBalance.setCompany(getCompany(schemaName));
-                }
+                        .findByCustomerIdAndDateBetween(customer.getId(), start, end)
+                        .orElseGet(() -> getDefaultVoucher(getCompany(schemaName), customer, start));
 
                 openingBalance.setCompany(getCompany(schemaName));
                 openingBalance.setYearlyCredit(openingBalance.getYearlyCredit().add(newCredit));
                 openingBalance.setYearlyDebit(openingBalance.getYearlyDebit().add(newDebit));
-
+                openingBalance.setCustomerName(customer.getName() != null ? customer.getName() : "");
                 openingBalance.setDebit(openingBalance.getDebit().add(newDebit));
                 openingBalance.setCredit(openingBalance.getCredit().add(newCredit));
 
@@ -694,7 +625,6 @@ public class XmlImportService {
                 openingBalance.setDescription(tx.getDESCRIPTION() != null ? tx.getDESCRIPTION().trim() : "Devir Bakiye");
 
                 openingBalanceRepository.save(openingBalance);
-                customerRepository.save(customer);
             }
         }
     }
@@ -719,6 +649,22 @@ public class XmlImportService {
 
     private Company getCompany(String schemaName) {
         return companyRepository.findBySchemaName(schemaName);
+    }
+
+    private OpeningVoucher getDefaultVoucher(Company company, Customer newCustomer, LocalDate date) {
+        OpeningVoucher voucher = new OpeningVoucher();
+        voucher.setCompany(company);
+        voucher.setDate(date);
+        voucher.setCustomer(newCustomer);
+        voucher.setCustomerName(newCustomer.getName());
+        voucher.setDebit(BigDecimal.ZERO);
+        voucher.setCredit(BigDecimal.ZERO);
+        voucher.setYearlyDebit(BigDecimal.ZERO);
+        voucher.setYearlyCredit(BigDecimal.ZERO);
+        voucher.setFinalBalance(BigDecimal.ZERO);
+        voucher.setFileNo("001");
+        voucher.setDescription("Eklendi");
+        return openingBalanceRepository.save(voucher);
     }
 
 }

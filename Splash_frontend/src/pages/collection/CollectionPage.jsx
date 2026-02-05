@@ -92,7 +92,7 @@ export default function CollectionPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/50">
-                  {filteredList.length > 0 ? (
+                  {Array.isArray(filteredList) && filteredList.length > 0 ? (
                     filteredList.map((item) => (
                       <tr
                         key={item.id}

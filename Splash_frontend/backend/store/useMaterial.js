@@ -13,7 +13,8 @@ export const useMaterial = create((set, get) => ({
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at addMaterial: ", backendErr);
+      toast.error(backendErr);
+      throw error;
     }
   },
   getMaterials: async () => {
@@ -29,7 +30,7 @@ export const useMaterial = create((set, get) => ({
 
   updateMaterials: async (id, updateMaterial) => {
     try {
-      const res = await axiosInstance.put(
+      await axiosInstance.put(
         `/material/update-material/${id}`,
         updateMaterial,
         {
@@ -38,21 +39,13 @@ export const useMaterial = create((set, get) => ({
           },
         },
       );
-
-      const updated = res.data;
-
-      set((state) => ({
-        materials: state.materials.map((mat) =>
-          String(mat._id) === String(updated._id || updated.id) ? updated : mat,
-        ),
-      }));
-
       toast.success("malzeme değiştirildi");
       await get().getMaterials();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at updateMaterials: " + backendErr);
+      toast.error(backendErr);
+      throw error;
     }
   },
 }));

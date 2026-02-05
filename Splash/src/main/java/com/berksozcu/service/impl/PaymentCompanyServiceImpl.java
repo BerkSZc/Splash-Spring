@@ -55,44 +55,26 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> {
-                    OpeningVoucher newVoucher = new OpeningVoucher();
-                    newVoucher.setCustomerName(customer.getName());
-                    newVoucher.setDescription("Eklendi");
-                    newVoucher.setFileNo("001");
-                    newVoucher.setDebit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                    newVoucher.setYearlyDebit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(BigDecimal.ZERO);
-                    newVoucher.setDate(LocalDate.of(paymentCompany.getDate().getYear(), 1, 1));
-                    newVoucher.setCustomer(paymentCompany.getCustomer());
-                    return newVoucher;
-                });
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+                .orElseGet(() -> getDefaultVoucher(company, customer, start));
+
         if (voucher.getFinalBalance() == null) {
             voucher.setFinalBalance(paymentCompany.getPrice());
         }
 
         paymentCompany.setCustomer(customer);
-
         paymentCompany.setCustomerName(customer.getName());
-
-        paymentCompany.setId(paymentCompany.getId());
         paymentCompany.setDate(paymentCompany.getDate());
         paymentCompany.setComment(paymentCompany.getComment());
         paymentCompany.setPrice(paymentCompany.getPrice());
-        paymentCompany.setCustomerName(paymentCompany.getCustomer().getName());
         paymentCompany.setFileNo(paymentCompany.getFileNo());
         paymentCompany.setCompany(company);
 
         voucher.setFinalBalance(voucher.getFinalBalance().add(paymentCompany.getPrice()));
         voucher.setDebit(voucher.getDebit().add(paymentCompany.getPrice()));
-        openingVoucherRepository.save(voucher);
-        customerRepository.save(customer);
-        paymentCompanyRepository.save(paymentCompany);
 
-        return paymentCompany;
+        openingVoucherRepository.save(voucher);
+       return paymentCompanyRepository.save(paymentCompany);
     }
 
     @Override
@@ -107,11 +89,8 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         PaymentCompany oldPayment = paymentCompanyRepository.findById(id)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
 
-        Customer oldCustomer = customerRepository.findById(oldPayment.getCustomer().getId())
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-
-        Customer newCustomer = customerRepository.findById(paymentCompany.getCustomer().getId())
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+        Customer newCustomer = paymentCompany.getCustomer();
+        Customer oldCustomer = oldPayment.getCustomer();
 
         Company company = companyRepository.findBySchemaName(schemaName);
 
@@ -127,59 +106,44 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> {
-                    OpeningVoucher newVoucher = new OpeningVoucher();
-                    newVoucher.setCustomerName(paymentCompany.getCustomer().getName());
-                    newVoucher.setDescription("Eklendi");
-                    newVoucher.setFileNo("001");
-                    newVoucher.setDebit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setYearlyCredit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(BigDecimal.ZERO);
-                    newVoucher.setDate(LocalDate.of(paymentCompany.getDate().getYear(), 1, 1));
-                    newVoucher.setCustomer(paymentCompany.getCustomer());
-                    return newVoucher;
-                });
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(paymentCompany.getPrice());
+        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+                .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
+
+        if (oldVoucher.getFinalBalance() == null) {
+            oldVoucher.setFinalBalance(paymentCompany.getPrice());
         }
 
-        boolean sameCustomer = oldCustomer.getId().equals(newCustomer.getId());
-
-
-        if (sameCustomer) {
-            BigDecimal fark = paymentCompany.getPrice().subtract(oldPayment.getPrice());
-            voucher.setFinalBalance(voucher.getFinalBalance().subtract(fark));
-            voucher.setDebit(voucher.getDebit().add(fark));
-            customerRepository.save(oldCustomer);
-        } else {
-            voucher.setFinalBalance(voucher.getFinalBalance().add(oldPayment.getPrice()));
-            voucher.setDebit(voucher.getDebit().add(oldPayment.getPrice()));
-            customerRepository.save(oldCustomer);
-
-            voucher.setFinalBalance(voucher.getFinalBalance().subtract(paymentCompany.getPrice()));
-            voucher.setDebit(voucher.getDebit().add(paymentCompany.getPrice()));
-            customerRepository.save(newCustomer);
-        }
+        oldVoucher.setFinalBalance(oldVoucher.getFinalBalance().subtract(oldPayment.getPrice()));
+        oldVoucher.setDebit(oldVoucher.getDebit().subtract(oldPayment.getPrice()));
 
         oldPayment.setDate(paymentCompany.getDate());
         oldPayment.setComment(paymentCompany.getComment());
         oldPayment.setPrice(paymentCompany.getPrice());
         oldPayment.setCustomer(newCustomer);
         oldPayment.setFileNo(paymentCompany.getFileNo());
+        oldPayment.setCompany(company);
+        oldPayment.setCustomerName(paymentCompany.getCustomerName());
 
-        openingVoucherRepository.save(voucher);
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+                        .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
+
+        BigDecimal newFinalBalance = newVoucher.getFinalBalance() != null ? newVoucher.getFinalBalance() : BigDecimal.ZERO;
+        newVoucher.setFinalBalance(newFinalBalance.add(paymentCompany.getPrice()));
+        newVoucher.setDebit(newVoucher.getDebit().add(paymentCompany.getPrice()));
+
+        openingVoucherRepository.save(newVoucher);
+        openingVoucherRepository.save(oldVoucher);
         return paymentCompanyRepository.save(oldPayment);
     }
 
     @Override
     @Transactional
     public void deletePaymentCompany(Long id, String schemaName) {
-        PaymentCompany paymentCompany = paymentCompanyRepository.findById(id).orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
+        PaymentCompany paymentCompany = paymentCompanyRepository.findById(id).orElseThrow(
+                () -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
 
         Company company = companyRepository.findBySchemaName(schemaName);
+        Customer customer = paymentCompany.getCustomer();
 
         if(!paymentCompany.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
@@ -188,27 +152,17 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> {
-                    OpeningVoucher newVoucher = new OpeningVoucher();
-                    newVoucher.setCustomerName(paymentCompany.getCustomer().getName());
-                    newVoucher.setDescription("Eklendi");
-                    newVoucher.setFileNo("001");
-                    newVoucher.setDebit(BigDecimal.ZERO);
-                    newVoucher.setCredit(BigDecimal.ZERO);
-                    newVoucher.setFinalBalance(paymentCompany.getPrice());
-                    newVoucher.setDate(LocalDate.of(paymentCompany.getDate().getYear(), 1, 1));
-                    newVoucher.setCustomer(paymentCompany.getCustomer());
-                    return newVoucher;
-                });
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+                .orElseGet(() -> getDefaultVoucher(company, customer, start));
+
         if (voucher.getFinalBalance() == null) {
             voucher.setFinalBalance(paymentCompany.getPrice());
         }
 
-        Customer customer = paymentCompany.getCustomer();
         voucher.setFinalBalance(voucher.getFinalBalance().subtract(paymentCompany.getPrice()));
         voucher.setDebit(voucher.getDebit().subtract(paymentCompany.getPrice()));
-        customerRepository.save(customer);
+
+        openingVoucherRepository.save(voucher);
         paymentCompanyRepository.deleteById(id);
     }
 
@@ -217,5 +171,21 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
         return paymentCompanyRepository.findByDateBetween(start, end);
+    }
+
+    private OpeningVoucher getDefaultVoucher (Company company, Customer newCustomer, LocalDate date) {
+        OpeningVoucher voucher = new OpeningVoucher();
+        voucher.setCompany(company);
+        voucher.setDate(date);
+        voucher.setCustomer(newCustomer);
+        voucher.setCredit(BigDecimal.ZERO);
+        voucher.setDebit(BigDecimal.ZERO);
+        voucher.setYearlyDebit(BigDecimal.ZERO);
+        voucher.setYearlyCredit(BigDecimal.ZERO);
+        voucher.setFinalBalance(BigDecimal.ZERO);
+        voucher.setCustomerName(newCustomer.getName());
+        voucher.setDescription("Eklendi");
+        voucher.setFileNo("001");
+      return   openingVoucherRepository.save(voucher);
     }
 }

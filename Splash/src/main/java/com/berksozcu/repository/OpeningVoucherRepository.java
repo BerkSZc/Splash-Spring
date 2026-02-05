@@ -19,5 +19,7 @@ public interface OpeningVoucherRepository extends JpaRepository<OpeningVoucher, 
 
     List<OpeningVoucher> findAllByDateBetween(LocalDate start, LocalDate end);
 
+    boolean existsByDateBetweenAndCustomerCode(LocalDate start, LocalDate end, String customerCode);
+
     void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
 }

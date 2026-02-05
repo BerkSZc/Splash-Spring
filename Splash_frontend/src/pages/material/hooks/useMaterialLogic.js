@@ -31,14 +31,19 @@ export const useMaterialLogic = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editId) {
-      await updateMaterials(editId, form);
-      setEditId(null);
-    } else {
-      await addMaterial(form);
+
+    try {
+      if (editId) {
+        await updateMaterials(editId, form);
+        setEditId(null);
+      } else {
+        await addMaterial(form);
+      }
+      setForm(initialForm);
+      await getMaterials();
+    } catch (error) {
+      console.error(error);
     }
-    setForm(initialForm);
-    await getMaterials();
   };
 
   const handleEdit = (item) => {
@@ -58,12 +63,23 @@ export const useMaterialLogic = () => {
   const filteredMaterials = (Array.isArray(materials) ? materials : []).filter(
     (item) =>
       item.code?.toLowerCase().includes(search.toLowerCase()) ||
-      item.comment?.toLowerCase().includes(search.toLowerCase())
+      item.comment?.toLowerCase().includes(search.toLowerCase()),
   );
+
+  const handleCancel = () => {
+    setEditId(null);
+    setForm(initialForm);
+  };
 
   return {
     state: { form, editId, search, filteredMaterials },
     refs: { formRef },
-    handlers: { handleChange, handleSubmit, handleEdit, setSearch },
+    handlers: {
+      handleChange,
+      handleSubmit,
+      handleEdit,
+      setSearch,
+      handleCancel,
+    },
   };
 };

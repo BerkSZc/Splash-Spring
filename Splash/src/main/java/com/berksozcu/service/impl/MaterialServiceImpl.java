@@ -9,6 +9,7 @@ import com.berksozcu.service.IMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,21 +22,18 @@ public class MaterialServiceImpl implements IMaterialService {
     @Override
     public Material addMaterial(Material newMaterial) {
 
-        if(materialRepository.existsByCode(newMaterial.getCode())) {
+        if(materialRepository.existsByCode(newMaterial.getCode().trim())) {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
         }
 
-        Material material = new Material();
-        material.setId(newMaterial.getId());
-        material.setCode(newMaterial.getCode());
-        material.setComment(newMaterial.getComment());
-        material.setUnit(newMaterial.getUnit());
-        material.setPurchasePrice(newMaterial.getPurchasePrice());
-        material.setSalesPrice(newMaterial.getSalesPrice());
-        material.setPurchaseCurrency(newMaterial.getPurchaseCurrency());
-        material.setSalesCurrency(newMaterial.getSalesCurrency());
-
-        return materialRepository.save(material);
+        newMaterial.setCode(newMaterial.getCode());
+        newMaterial.setComment(newMaterial.getComment());
+        newMaterial.setUnit(newMaterial.getUnit());
+        newMaterial.setPurchasePrice(newMaterial.getPurchasePrice() != null ? newMaterial.getPurchasePrice() : BigDecimal.ZERO);
+        newMaterial.setSalesPrice(newMaterial.getSalesPrice() != null ? newMaterial.getPurchasePrice() : BigDecimal.ZERO);
+        newMaterial.setPurchaseCurrency(newMaterial.getPurchaseCurrency());
+        newMaterial.setSalesCurrency(newMaterial.getSalesCurrency());
+        return materialRepository.save(newMaterial);
     }
 
     @Override
