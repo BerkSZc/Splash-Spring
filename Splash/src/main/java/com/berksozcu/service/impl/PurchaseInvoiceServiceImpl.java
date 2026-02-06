@@ -135,7 +135,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         openingVoucherRepository.save(voucher);
 
         for (PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
-           saveHistoryPrice(item, item.getMaterial(), newPurchaseInvoice);
+           saveHistoryPrice(item, newPurchaseInvoice, customer);
         }
 
         return newPurchaseInvoice;
@@ -253,7 +253,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            saveHistoryPrice(item, item.getMaterial(), newPurchaseInvoice);
+            saveHistoryPrice(item, newPurchaseInvoice, newCustomer);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
@@ -315,16 +315,16 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         return purchaseInvoiceRepository.findByDateBetween(start, end);
     }
 
-    private void saveHistoryPrice(PurchaseInvoiceItem item, Material material, PurchaseInvoice invoice) {
+    private void saveHistoryPrice(PurchaseInvoiceItem item, PurchaseInvoice invoice, Customer customer) {
         MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
-        materialPriceHistory.setMaterial(material);
+        materialPriceHistory.setMaterial(item.getMaterial());
         materialPriceHistory.setPrice(item.getUnitPrice());
         materialPriceHistory.setInvoiceId(invoice.getId());
         materialPriceHistory.setDate(invoice.getDate());
         materialPriceHistory.setInvoiceType(InvoiceType.PURCHASE);
         materialPriceHistory.setQuantity(item.getQuantity());
-        materialPriceHistory.setCustomer(invoice.getCustomer());
-        materialPriceHistory.setCustomerName(invoice.getCustomer().getName());
+        materialPriceHistory.setCustomer(customer);
+        materialPriceHistory.setCustomerName(customer.getName());
         materialPriceHistoryRepository.save(materialPriceHistory);
     }
 

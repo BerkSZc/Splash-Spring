@@ -11,7 +11,7 @@ export const generateStatementHTML = (customer, statementData, year) => {
   );
   const finalBalance = totalDebit - totalCredit;
 
-  const rows = statementData
+  const rows = (Array.isArray(statementData) ? statementData : [])
     .map(
       (item) => `
     <tr style="page-break-inside: avoid;">

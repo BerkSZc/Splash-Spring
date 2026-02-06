@@ -11,6 +11,9 @@ public class ArpTransactionXml {
     @XmlElement(name = "ARP_CODE")
     private String ARP_CODE;
 
+    @XmlElement(name = "CUSTOMER_NAME")
+    private String CUSTOMER_NAME;
+
     @XmlElement(name = "TRANNO")
     private String TRANNO;
 

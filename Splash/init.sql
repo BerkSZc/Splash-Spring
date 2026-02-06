@@ -89,7 +89,6 @@ CREATE TABLE IF NOT EXISTS logo.sales_invoice (
     company_id BIGINT,
     total_price DECIMAL(15,2) DEFAULT 0,
     kdv_toplam DECIMAL(15,2) DEFAULT 0,
-    type INTEGER,
     eur_selling_rate DECIMAL(15, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(15, 4) DEFAULT 0.0000,
     FOREIGN KEY (customer_id) REFERENCES logo.customer(id),

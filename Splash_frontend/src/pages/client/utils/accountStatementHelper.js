@@ -16,7 +16,7 @@ export const accountStatementHelper = (
 
   const formatDateToTR = (dateString) => {
     if (!dateString || typeof dateString !== "string") return dateString;
-    if (dateString.includes(".")) return dateString; // Zaten nokta varsa dokunma
+    if (dateString.includes(".")) return dateString;
 
     const [year, month, day] = dateString.split("-");
     return `${day}.${month}.${year}`;
@@ -24,11 +24,7 @@ export const accountStatementHelper = (
 
   // 1. AÇILIŞ FİŞİ (Mevcut Bakiye)
   const displayYear = year || new Date().getFullYear();
-  if (
-    selectedCustomer.openingBalance &&
-    Number(customerVoucher.yearlyCredit) !== 0 &&
-    Number(customerVoucher.yearlyDebit) !== 0
-  ) {
+  if (selectedCustomer && customerVoucher) {
     const openingBal =
       Number(customerVoucher.yearlyDebit || 0) -
       Number(customerVoucher.yearlyCredit || 0);

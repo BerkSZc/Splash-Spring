@@ -49,22 +49,23 @@ export default function YearDropdown() {
 
       {/* DROPDOWN */}
       {open && (
-        <div className="absolute right-0 mt-2 w-28 bg-white rounded-lg shadow-lg border z-50">
-          {years.map((y) => (
-            <button
-              key={y}
-              onClick={() => {
-                changeYear(y);
-                setOpen(false);
-              }}
-              className={`
+        <div className="absolute right-0 mt-2 w-28 bg-white rounded-lg shadow-lg border z-[9999]">
+          {Array.isArray(years) &&
+            years.map((y) => (
+              <button
+                key={y}
+                onClick={() => {
+                  changeYear(y);
+                  setOpen(false);
+                }}
+                className={`
                 w-full text-left px-3 py-2 text-sm hover:bg-gray-100
                 ${y === year ? "font-bold text-black" : "text-black"}
               `}
-            >
-              {y} {y === year && "✓"}
-            </button>
-          ))}
+              >
+                {y} {y === year && "✓"}
+              </button>
+            ))}
         </div>
       )}
     </div>

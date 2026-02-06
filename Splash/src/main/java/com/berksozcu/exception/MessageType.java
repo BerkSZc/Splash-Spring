@@ -21,6 +21,7 @@ public enum MessageType {
     SIRKET_BULUNAMADI(1012, "Şirket mevcut değil"),
     KUR_HATASI(1016, "Kur bilgisi alınamadı"),
     FATURA_NO_MEVCUT(1015, "Fatura No Mevcut"),
+    MALZEME_ALAN_BOS(1021, "Malzeme Alanlarını doldurun!"),
     BIRIM_YOK(1017, "Birim mevcut değil"),
     BORDRO_HATA(1014, "Bordo işlemi bulunamadı"),
     BORDRO_MEVCUT(1014, "Bordo işlemi seri no mevcut"),

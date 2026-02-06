@@ -121,6 +121,7 @@ public class PayrollServiceImpl implements IPayrollService {
                         .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
         BeanUtils.copyProperties(editPayroll, oldPayroll);
+        oldPayroll.setCompany(company);
 
         updateBalance(editPayroll, newVoucher);
 

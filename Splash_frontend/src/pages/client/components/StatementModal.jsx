@@ -66,29 +66,30 @@ export default function StatementModal({
                 </tr>
               </thead>
               <tbody>
-                {statementData.map((item, idx) => (
-                  <tr key={idx} className="border-b border-gray-200">
-                    <td className="p-2 align-top ">{item.date}</td>
-                    <td className="p-2 align-top break-all">{item.desc}</td>
-                    <td className="p-2 text-right align-top">
-                      {item.debit > 0
-                        ? item.debit.toLocaleString("tr-TR")
-                        : "-"}
-                    </td>
-                    <td className="p-2 text-right align-top">
-                      {item.credit > 0
-                        ? item.credit.toLocaleString("tr-TR")
-                        : "-"}
-                    </td>
-                    <td className="p-2 text-right align-top font-bold whitespace-nowrap">
-                      {item.balance.toLocaleString("tr-TR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                      ₺
-                    </td>
-                  </tr>
-                ))}
+                {Array.isArray(statementData) &&
+                  statementData.map((item, idx) => (
+                    <tr key={idx} className="border-b border-gray-200">
+                      <td className="p-2 align-top ">{item.date}</td>
+                      <td className="p-2 align-top break-all">{item.desc}</td>
+                      <td className="p-2 text-right align-top">
+                        {item.debit > 0
+                          ? item.debit.toLocaleString("tr-TR")
+                          : "-"}
+                      </td>
+                      <td className="p-2 text-right align-top">
+                        {item.credit > 0
+                          ? item.credit.toLocaleString("tr-TR")
+                          : "-"}
+                      </td>
+                      <td className="p-2 text-right align-top font-bold whitespace-nowrap">
+                        {item.balance.toLocaleString("tr-TR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                        ₺
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

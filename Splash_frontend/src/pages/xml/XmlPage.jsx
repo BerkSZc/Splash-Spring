@@ -105,15 +105,15 @@ function XmlPage() {
 
           {/* BUTTONS */}
           <ImportButton
-            label={`Satın Alma Fatura ${state.viewMode === "import" ? "Yükle" : "İndir"}`}
+            label={`Satın Alma Fatura ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon={state.viewMode === "import" ? "🛒" : "📥"}
-            variant={state.viewMode === "import" ? "blue" : "orange"}
+            variant={state.viewMode === "import" ? "blue" : "red"}
             disabled={state.loading}
             onClick={() => handlers.handleAction("invoice")}
           />
 
           <ImportButton
-            label={`Satış Fatura ${state.viewMode === "import" ? "Yükle" : "İndir"} `}
+            label={`Satış Fatura ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"} `}
             icon="💰"
             variant={state.viewMode === "import" ? "emerald" : "orange"}
             disabled={state.loading}

@@ -252,13 +252,20 @@ export const useInvoicePageLogic = () => {
   };
 
   const handleSave = async () => {
+    const customerId = Number(form.customerId);
+    const selectedCustomer = customers.find((c) => Number(c.id) === customerId);
     const payload = {
+      id: editingInvoice?.id,
       date: form.date,
       fileNo: form.fileNo,
-      customer: { id: Number(form.customerId) },
+      customer: {
+        id: Number(form.customerId),
+        name: selectedCustomer?.name || "",
+      },
       usdSellingRate: Number(form.usdSellingRate),
       eurSellingRate: Number(form.eurSellingRate),
       items: form.items.map((i) => ({
+        id: i.id || null,
         material: { id: Number(i.materialId) },
         unitPrice: Number(i.unitPrice),
         quantity: Number(i.quantity),

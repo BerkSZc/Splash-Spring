@@ -86,7 +86,8 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         BigDecimal kdvToplam = BigDecimal.ZERO;
 
         for (SalesInvoiceItem item : salesInvoice.getItems()) {
-            Material material = materialRepository.findById(item.getMaterial().getId()).orElseThrow(() -> new RuntimeException("Material Not Found"));
+            Material material = materialRepository.findById(item.getMaterial().getId()).orElseThrow(
+                    () -> new BaseException(new ErrorMessage(MessageType.MALZEME_ALAN_BOS)));
 
             item.setMaterial(material);
             item.setSalesInvoice(salesInvoice);
@@ -226,8 +227,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            savePriceHistory(item, oldInvoice, salesInvoice.getCustomer());
-
+            savePriceHistory(item, salesInvoice, newCustomer);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 

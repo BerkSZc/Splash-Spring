@@ -64,14 +64,15 @@ const CompanyDropDown = () => {
             Şirket Seçimi
           </div>
           <div className="max-h-60 overflow-y-auto custom-scrollbar">
-            {companies.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => {
-                  changeTenant(c.schemaName);
-                  setOpen(false);
-                }}
-                className={`
+            {Array.isArray(companies) &&
+              companies.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    changeTenant(c.schemaName);
+                    setOpen(false);
+                  }}
+                  className={`
                   w-full text-left px-4 py-3 text-sm transition-colors
                   flex items-center justify-between
                   ${
@@ -80,18 +81,18 @@ const CompanyDropDown = () => {
                       : "text-gray-700 hover:bg-gray-100"
                   }
                 `}
-              >
-                <div className="flex flex-col">
-                  <span>{c.name}</span>
-                  <span className="text-[10px] text-gray-400 font-mono">
-                    {c.schemaName}
-                  </span>
-                </div>
-                {c.schemaName === tenant && (
-                  <span className="text-indigo-600 font-bold">✓</span>
-                )}
-              </button>
-            ))}
+                >
+                  <div className="flex flex-col">
+                    <span>{c.name}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {c.schemaName}
+                    </span>
+                  </div>
+                  {c.schemaName === tenant && (
+                    <span className="text-indigo-600 font-bold">✓</span>
+                  )}
+                </button>
+              ))}
           </div>
         </div>
       )}

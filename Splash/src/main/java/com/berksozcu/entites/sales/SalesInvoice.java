@@ -41,10 +41,6 @@ public class SalesInvoice {
     @Column(name = "kdv_toplam", precision = 18, scale = 2)
     private BigDecimal kdvToplam;
 
-
-    //Fatura Tipi
-    private Integer type;
-
     //Kdv dahit net toplam tutar
     @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;

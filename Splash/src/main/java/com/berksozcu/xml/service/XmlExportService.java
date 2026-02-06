@@ -373,10 +373,11 @@ public class XmlExportService {
 
             for(OpeningVoucher op : voucherList) {
                 ArpTransactionXml tx = new ArpTransactionXml();
-                tx.setARP_CODE(op.getCustomer().getName());
+                tx.setARP_CODE(op.getCustomer().getCode());
+                tx.setCUSTOMER_NAME(op.getCustomerName());
                 tx.setDESCRIPTION(op.getDescription());
-                tx.setCREDIT(op.getCredit().setScale(2, RoundingMode.HALF_UP).toString());
-                tx.setDEBIT(op.getDebit().setScale(2, RoundingMode.HALF_UP).toString());
+                tx.setCREDIT(op.getYearlyCredit().setScale(2, RoundingMode.HALF_UP).toString());
+                tx.setDEBIT(op.getYearlyDebit().setScale(2, RoundingMode.HALF_UP).toString());
                 vXml.setCompany_id(op.getCompany().getId());
 
                 txList.add(tx);

@@ -57,6 +57,8 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
                         .orElseGet(() -> getDefaultVoucher(company, customer, openingDate));
 
         openingVoucher.setFinalBalance(closingVoucher.getFinalBalance());
+        openingVoucher.setYearlyDebit(closingVoucher.getDebit());
+        openingVoucher.setYearlyCredit(closingVoucher.getCredit());
         openingVoucher.setDebit(BigDecimal.ZERO);
         openingVoucher.setCredit(BigDecimal.ZERO);
 

@@ -191,6 +191,11 @@ export const usePayrollLogic = () => {
     }
     const payload = {
       ...form,
+      id: editing?.id,
+      customer: {
+        id: Number(form.customerId),
+      },
+      company: form.company,
       payrollType: type.includes("cheque") ? "CHEQUE" : "BOND",
       payrollModel: type.includes("_in") ? "INPUT" : "OUTPUT",
     };

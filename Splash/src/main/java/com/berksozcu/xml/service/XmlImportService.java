@@ -120,7 +120,7 @@ public class XmlImportService {
 
             Company company = getCompany(schemaName);
 
-            invoice.setFileNo(xmlInv.getDOC_NUMBER());
+            invoice.setFileNo(xmlInv.getDOC_NUMBER() != null ? xmlInv.getDOC_NUMBER() : "");
             invoice.setCompany(company);
             BigDecimal kdvToplam = xmlInv.getTOTAL_VAT() != null ? xmlInv.getTOTAL_VAT() : BigDecimal.ZERO;
             invoice.setKdvToplam(kdvToplam.setScale(2, RoundingMode.HALF_UP));
@@ -602,7 +602,10 @@ public class XmlImportService {
                 String arpCode = tx.getARP_CODE() != null ? tx.getARP_CODE().trim() : "";
                 Customer customer = customerRepository.findByCode(arpCode).orElse(null);
 
-                if (customer == null) continue;
+                if (customer == null) {
+                    System.out.println("Müşteri kodu mevcut değil kod: " + arpCode);
+                    continue;
+                }
 
                 BigDecimal newDebit = parseBigDecimal(tx.getDEBIT()).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal newCredit = parseBigDecimal(tx.getCREDIT()).setScale(2, RoundingMode.HALF_UP);
@@ -615,8 +618,8 @@ public class XmlImportService {
                 openingBalance.setYearlyCredit(openingBalance.getYearlyCredit().add(newCredit));
                 openingBalance.setYearlyDebit(openingBalance.getYearlyDebit().add(newDebit));
                 openingBalance.setCustomerName(customer.getName() != null ? customer.getName() : "");
-                openingBalance.setDebit(openingBalance.getDebit().add(newDebit));
-                openingBalance.setCredit(openingBalance.getCredit().add(newCredit));
+//                openingBalance.setDebit(openingBalance.getDebit().add(newDebit));
+//                openingBalance.setCredit(openingBalance.getCredit().add(newCredit));
 
                 BigDecimal rowEffect = newDebit.subtract(newCredit);
 

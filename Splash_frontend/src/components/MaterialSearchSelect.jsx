@@ -114,21 +114,24 @@ export default function MaterialSearchSelect({
               )
             )}
 
-            {filtered.map((m) => (
-              <div
-                key={m.id}
-                onClick={() => {
-                  onChange(m.id);
-                  setOpen(false);
-                }}
-                className="cursor-pointer p-3 border-b border-gray-800/50 hover:bg-blue-600/20 hover:text-blue-400 transition-colors text-sm text-gray-300 flex flex-col"
-              >
-                <span className="font-bold text-white group-hover:text-blue-400">
-                  {m.code}
-                </span>
-                <span className="text-xs text-gray-500 mt-1">{m.comment}</span>
-              </div>
-            ))}
+            {Array.isArray(filtered) &&
+              filtered.map((m) => (
+                <div
+                  key={m.id}
+                  onClick={() => {
+                    onChange(m.id);
+                    setOpen(false);
+                  }}
+                  className="cursor-pointer p-3 border-b border-gray-800/50 hover:bg-blue-600/20 hover:text-blue-400 transition-colors text-sm text-gray-300 flex flex-col"
+                >
+                  <span className="font-bold text-white group-hover:text-blue-400">
+                    {m.code}
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    {m.comment}
+                  </span>
+                </div>
+              ))}
           </div>,
           document.body,
         )}
