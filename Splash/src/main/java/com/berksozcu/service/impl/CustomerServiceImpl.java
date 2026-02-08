@@ -128,6 +128,8 @@ public class CustomerServiceImpl implements ICustomerService {
 
         openingVoucher.setYearlyCredit(updatedCredit);
         openingVoucher.setYearlyDebit(updatedDebit);
+        openingVoucher.setCredit(openingVoucher.getCredit().add(newCredit));
+        openingVoucher.setDebit(openingVoucher.getDebit().add(newDebit));
         openingVoucher.setFinalBalance(currentBalance.add(finalBalance));
 
         openingVoucherRepository.save(openingVoucher);

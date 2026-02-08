@@ -108,7 +108,7 @@ public class XmlImportService {
                 continue;
             }
 
-            if(xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
+            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
                 System.out.println("İptal olmuş fatura atlandı: " + xmlInv.getDOC_NUMBER());
                 continue;
             }
@@ -146,7 +146,7 @@ public class XmlImportService {
 
             OpeningVoucher voucher = openingBalanceRepository
                     .findByCustomerIdAndDateBetween(customer.getId(), start, end)
-                    .orElseGet(() -> getDefaultVoucher(company,  customer, start));
+                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
             if (voucher.getFinalBalance() == null) {
                 voucher.setFinalBalance(BigDecimal.ZERO);
@@ -230,7 +230,7 @@ public class XmlImportService {
                 continue;
             }
 
-            if( xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
+            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
                 System.out.println("İptal edilmiş Fatura atlandı: " + xmlInv.getNUMBER());
                 continue;
             }
@@ -594,7 +594,7 @@ public class XmlImportService {
                 LocalDate start = LocalDate.of(voucherDate.getYear(), 1, 1);
                 LocalDate end = LocalDate.of(voucherDate.getYear(), 12, 31);
 
-                if(openingBalanceRepository.existsByDateBetweenAndCustomerCode(start.plusDays(1), end, tx.getARP_CODE())) {
+                if (openingBalanceRepository.existsByDateBetweenAndCustomerCode(start.plusDays(1), end, tx.getARP_CODE())) {
                     System.out.println("Açılış Bakiyesi Mevcut müşteri kodu: " + tx.getARP_CODE());
                     continue;
                 }
@@ -618,8 +618,8 @@ public class XmlImportService {
                 openingBalance.setYearlyCredit(openingBalance.getYearlyCredit().add(newCredit));
                 openingBalance.setYearlyDebit(openingBalance.getYearlyDebit().add(newDebit));
                 openingBalance.setCustomerName(customer.getName() != null ? customer.getName() : "");
-//                openingBalance.setDebit(openingBalance.getDebit().add(newDebit));
-//                openingBalance.setCredit(openingBalance.getCredit().add(newCredit));
+                openingBalance.setDebit(openingBalance.getDebit().add(newDebit));
+                openingBalance.setCredit(openingBalance.getCredit().add(newCredit));
 
                 BigDecimal rowEffect = newDebit.subtract(newCredit);
 

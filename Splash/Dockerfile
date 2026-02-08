@@ -4,8 +4,10 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
+ENV MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m"
+RUN chmod +x mvnw
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -Dmaven.main.skip=false
 
 
 # Paketleme aşaması
