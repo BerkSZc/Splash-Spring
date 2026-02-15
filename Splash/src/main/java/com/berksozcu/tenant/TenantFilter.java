@@ -23,8 +23,8 @@ public class TenantFilter extends OncePerRequestFilter {
         if (tenantId != null && !tenantId.isEmpty()) {
             TenantContext.setCurrentTenant(tenantId);
         } else {
-            // Header yoksa varsayılan olarak "logo" şemasını kullan
-            TenantContext.setCurrentTenant("logo");
+            // Header yoksa varsayılan şemayı kullan
+            TenantContext.setCurrentTenant("splash");
         }
 
         try {

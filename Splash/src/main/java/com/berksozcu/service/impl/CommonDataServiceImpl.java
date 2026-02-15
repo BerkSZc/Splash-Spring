@@ -7,6 +7,7 @@ import com.berksozcu.repository.*;
 import com.berksozcu.service.ICommonDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -163,6 +164,7 @@ public class CommonDataServiceImpl implements ICommonDataService {
     }
 
     @EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    @Order(2)
     private void onStartup() {
         System.out.println(">>> UYGULAMA BASLATILDI: TCMB Kurlari veritabanina isleniyor...");
         updateRatesFromTcmb();

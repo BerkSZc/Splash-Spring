@@ -7,18 +7,19 @@ import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
 import com.berksozcu.service.ICompanyService;
-import com.berksozcu.service.IOpeningVoucherService;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cglib.core.Local;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -61,6 +62,8 @@ public class CompanyServiceImpl implements ICompanyService {
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -71,14 +74,13 @@ public class CompanyServiceImpl implements ICompanyService {
         if (companyRepository.existsBySchemaName(schemaName))
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_KODU_MEVCUT));
 
-        String finalSource = checkSchemaExists(sourceSchema) ? sourceSchema : "logo";
-
+        String finalSource = checkSchemaExists(sourceSchema) ? sourceSchema : "splash";
 
         //Kopyalanacak Tablolar
-        String[] allTables = {"customer", "material", "material_price_history"
-                , "payment_company", "purchase_invoice", "purchase_invoice_item", "received_collection",
-                "sales_invoice", "sales_invoice_item", "app_user", "payroll", "currency_rate",
-                "opening_voucher", "company", "fiscal_year"};
+        String[] allTables = {"customer", "material", "company", "app_user", "currency_rate",
+                "purchase_invoice", "purchase_invoice_item", "sales_invoice", "sales_invoice_item",
+                "material_price_history", "received_collection",
+                "payment_company", "payroll", "opening_voucher", "fiscal_year"};
 
         List<String> tablesWithData = List.of("app_user", "company", "fiscal_year");
         try (Connection connection = dataSource.getConnection()) {
@@ -102,7 +104,17 @@ public class CompanyServiceImpl implements ICompanyService {
                         updateSequence(statement, schemaName, tableName);
                     }
                 }
-
+                String insertIntoNewSchema = String.format(
+                        "INSERT INTO %s.company (name, schema_name, description) VALUES (?, ?, ?)",
+                        schemaName
+                );
+                try (PreparedStatement pstmt = connection.prepareStatement(insertIntoNewSchema)) {
+                    pstmt.setString(1, companyName);
+                    pstmt.setString(2, schemaName);
+                    pstmt.setString(3, description);
+                    pstmt.executeUpdate();
+                    updateSequence(statement, schemaName, "company");
+                }
                 connection.commit();
 
                 Company company = new Company();
@@ -130,7 +142,7 @@ public class CompanyServiceImpl implements ICompanyService {
     @Transactional
     @Override
     public Year addYearToCompany(Long companyId, Integer year) {
-        if(yearRepository.existsByYearValueAndCompanyId(year, companyId)) {
+        if (yearRepository.existsByYearValueAndCompanyId(year, companyId)) {
             throw new BaseException(new ErrorMessage(MessageType.MALI_YIL_MEVCUT));
         }
         Company company = companyRepository.findById(companyId)
@@ -139,7 +151,7 @@ public class CompanyServiceImpl implements ICompanyService {
         Year newYear = new Year();
         newYear.setCompany(company);
         newYear.setYearValue(year);
-       return yearRepository.save(newYear);
+        return yearRepository.save(newYear);
     }
 
     @Transactional
@@ -149,11 +161,11 @@ public class CompanyServiceImpl implements ICompanyService {
         LocalDate end = LocalDate.of(year, 12, 31);
 
         purchaseInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
-        purchaseInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId , start, end);
+        purchaseInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
 
-        salesInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId , start, end);
+        salesInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         salesInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
-        payrollRepository.deleteByCompanyIdAndTransactionDateBetween(companyId , start, end);
+        payrollRepository.deleteByCompanyIdAndTransactionDateBetween(companyId, start, end);
         receivedCollectionRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         paymentCompanyRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         openingVoucherRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
@@ -162,15 +174,63 @@ public class CompanyServiceImpl implements ICompanyService {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    protected void createDefaultCompany() {
-        if (!companyRepository.existsBySchemaName("logo")) {
-            Company defaultCompany = new Company();
-            defaultCompany.setName("Ana Şirket (Varsayılan)");
-            defaultCompany.setSchemaName("logo");
-            defaultCompany.setDescription("Sistem ana şeması");
-            companyRepository.save(defaultCompany);
+    @Order(0)
+    @Transactional
+    protected void createDefaultCompany() throws SQLException {
+        String defaultSchema = "splash";
+
+        try {
+            Integer schemaCount = jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM information_schema.schemata WHERE schema_name = ?",
+                    Integer.class, defaultSchema);
+
+            if (schemaCount == null || schemaCount == 0) {
+                try (Connection connection = dataSource.getConnection()) {
+                    connection.setAutoCommit(true);
+
+                    try (Statement stmt = connection.createStatement()) {
+                        stmt.execute("CREATE SCHEMA IF NOT EXISTS " + defaultSchema);
+                        stmt.execute("SET search_path TO " + defaultSchema);
+
+                        ClassPathResource resource = new ClassPathResource("init.sql");
+                        ScriptUtils.executeSqlScript(connection, resource);
+
+                        stmt.execute(String.format(
+                                "INSERT INTO %s.company (name, schema_name, description) VALUES ('Ana Şirket', 'splash', 'Varsayılan')",
+                                defaultSchema));
+
+                        System.out.println(">>> Varsayılan şema (splash) ve tablolar kuruldu.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Sema Kurulum Hatasi: " + e.getMessage());
+            // Uygulamanın kurları çekmeye çalışıp patlamasını engellemek için burada durdurabilirsin
         }
     }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(1)
+    public void setDynamicSearchPath() {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM information_schema.schemata WHERE schema_name = 'splash'",
+                    Integer.class);
+
+            if (count != null && count > 0) {
+                jdbcTemplate.execute("SET search_path TO splash, public");
+                System.out.println(">>> Arama yolu 'splash' olarak ayarlandı.");
+            } else {
+                // Yoksa sadece public
+                jdbcTemplate.execute("SET search_path TO public");
+                System.out.println(">>> splash bulunamadı, varsayılan 'public' kullanılıyor.");
+            }
+        } catch (Exception e) {
+            // Hata durumunda güvenli liman: public
+            jdbcTemplate.execute("SET search_path TO public");
+        }
+    }
+
 
     private void updateSequence(Statement statement, String schemaName, String tableName) throws SQLException {
         String sql = String.format(

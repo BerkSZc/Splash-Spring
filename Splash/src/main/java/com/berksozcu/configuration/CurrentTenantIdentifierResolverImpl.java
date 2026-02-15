@@ -10,7 +10,7 @@ public class CurrentTenantIdentifierResolverImpl implements CurrentTenantIdentif
     @Override
     public Object resolveCurrentTenantIdentifier() {
         String tenant = TenantContext.getCurrentTenant();
-        return (tenant != null) ? tenant : "logo";
+        return (tenant != null) ? tenant : "splash";
     }
 
     @Override

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useCompany } from "../../backend/store/useCompany.js";
+import toast from "react-hot-toast";
 
 const TenantContext = createContext();
 
