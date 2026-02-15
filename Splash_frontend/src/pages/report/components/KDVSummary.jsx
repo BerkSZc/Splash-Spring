@@ -34,7 +34,7 @@ export const KDVSummary = ({ data }) => (
           {(Array.isArray(data?.monthlySummary) ? data.monthlySummary : []).map(
             (item, index) => (
               <tr
-                key={index || 0}
+                key={index}
                 className="bg-gray-800/40 hover:bg-gray-800/60 transition-all group"
               >
                 <td className="px-6 py-4 rounded-l-2xl font-bold text-sm">

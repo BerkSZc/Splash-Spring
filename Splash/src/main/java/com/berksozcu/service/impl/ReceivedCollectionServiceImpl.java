@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ReceivedCollectionServiceImpl implements IReceivedCollectionService {
@@ -59,21 +60,16 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(receivedCollection.getPrice());
-        }
-
-        receivedCollection.setComment(receivedCollection.getComment());
-        receivedCollection.setDate(receivedCollection.getDate());
-        receivedCollection.setPrice(receivedCollection.getPrice());
-        receivedCollection.setFileNo(receivedCollection.getFileNo());
+        receivedCollection.setComment(Objects.requireNonNullElse(receivedCollection.getComment(), ""));
+        receivedCollection.setDate(Objects.requireNonNullElse(receivedCollection.getDate(), LocalDate.now()));
+        receivedCollection.setPrice(safeGet(receivedCollection.getPrice()));
+        receivedCollection.setFileNo(Objects.requireNonNullElse(receivedCollection.getFileNo(), ""));
         receivedCollection.setCustomer(customer);
-        receivedCollection.setCustomerName(customer.getName());
+        receivedCollection.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
         receivedCollection.setCompany(company);
 
-        BigDecimal finalBalance = voucher.getFinalBalance() != null ? voucher.getFinalBalance() : BigDecimal.ZERO;
-        voucher.setFinalBalance(finalBalance.subtract(receivedCollection.getPrice()));
-        voucher.setCredit(voucher.getCredit().add(receivedCollection.getPrice()));
+        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(receivedCollection.getPrice())));
+        voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(receivedCollection.getPrice())));
 
         openingVoucherRepository.save(voucher);
         return receivedCollectionRepository.save(receivedCollection);
@@ -108,31 +104,25 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         Customer newCustomer = receivedCollection.getCustomer();
         Customer oldCustomer = oldCollection.getCustomer();
 
-
         OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
-        if (oldVoucher.getFinalBalance() == null) {
-            oldVoucher.setFinalBalance(BigDecimal.ZERO);
-        }
-
-        oldVoucher.setFinalBalance(oldVoucher.getFinalBalance().add(oldCollection.getPrice()));
-        oldVoucher.setCredit(oldVoucher.getCredit().subtract(oldCollection.getPrice()));
+        oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).add(safeGet(oldCollection.getPrice())));
+        oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldCollection.getPrice())));
 
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
                         .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
-        BigDecimal newFinalBalance = newVoucher.getFinalBalance() != null ? newVoucher.getFinalBalance() : BigDecimal.ZERO;
-        newVoucher.setFinalBalance(newFinalBalance.subtract(receivedCollection.getPrice()));
-        newVoucher.setCredit(oldVoucher.getCredit().add(receivedCollection.getPrice()));
+        newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).subtract(safeGet(receivedCollection.getPrice())));
+        newVoucher.setCredit(safeGet(oldVoucher.getCredit()).add(safeGet(receivedCollection.getPrice())));
 
-        oldCollection.setDate(receivedCollection.getDate());
-        oldCollection.setPrice(receivedCollection.getPrice());
-        oldCollection.setComment(receivedCollection.getComment());
+        oldCollection.setDate(Objects.requireNonNullElse(receivedCollection.getDate(), LocalDate.now()));
+        oldCollection.setPrice(safeGet(receivedCollection.getPrice()));
+        oldCollection.setComment(Objects.requireNonNullElse(receivedCollection.getComment(), ""));
         oldCollection.setCustomer(newCustomer);
-        oldCollection.setFileNo(receivedCollection.getFileNo());
+        oldCollection.setFileNo(Objects.requireNonNullElse(receivedCollection.getFileNo(), ""));
         oldCollection.setCompany(company);
-        oldCollection.setCustomerName(receivedCollection.getCustomerName());
+        oldCollection.setCustomerName(Objects.requireNonNullElse(receivedCollection.getCustomerName(), ""));
 
         openingVoucherRepository.save(newVoucher);
         openingVoucherRepository.save(oldVoucher);
@@ -160,12 +150,8 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(receivedCollection.getPrice());
-        }
-
-        voucher.setFinalBalance(voucher.getFinalBalance().add(receivedCollection.getPrice()));
-        voucher.setCredit(voucher.getCredit().subtract(receivedCollection.getPrice()));
+        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(receivedCollection.getPrice())));
+        voucher.setCredit(safeGet(voucher.getCredit()).subtract(safeGet(receivedCollection.getPrice())));
 
         openingVoucherRepository.save(voucher);
         receivedCollectionRepository.deleteById(id);
@@ -182,16 +168,20 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         OpeningVoucher voucher = new OpeningVoucher();
         voucher.setCompany(company);
         voucher.setDescription("Eklendi");
-        voucher.setDate(start);
+        voucher.setDate(Objects.requireNonNullElse(start, LocalDate.now()));
         voucher.setCustomer(newCustomer);
         voucher.setFileNo("001");
-        voucher.setCustomerName(newCustomer.getName());
+        voucher.setCustomerName(Objects.requireNonNullElse(newCustomer.getName(), ""));
         voucher.setFinalBalance(BigDecimal.ZERO);
         voucher.setDebit(BigDecimal.ZERO);
         voucher.setCredit(BigDecimal.ZERO);
         voucher.setYearlyCredit(BigDecimal.ZERO);
         voucher.setYearlyDebit(BigDecimal.ZERO);
        return openingVoucherRepository.save(voucher);
+    }
+
+    private BigDecimal safeGet(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }
 

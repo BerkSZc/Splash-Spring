@@ -14,7 +14,6 @@ export const useXmlImportLogic = () => {
   const payrollInputRef = useRef(null);
   const voucherInputRef = useRef(null);
 
-  const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("import");
   const { year } = useYear();
   const { tenant } = useTenant();
@@ -27,6 +26,7 @@ export const useXmlImportLogic = () => {
     importSalesInvoice,
     importPayrolls,
     importVouchers,
+    loading: importLoading,
   } = useImportXml();
 
   const {
@@ -37,6 +37,7 @@ export const useXmlImportLogic = () => {
     exportCollections,
     exportPayrolls,
     exportOpeningVouchers,
+    loading: exportLoading,
   } = useExportXml();
 
   const handleFileChange = (e, type) => {
@@ -69,7 +70,6 @@ export const useXmlImportLogic = () => {
       };
       refMap[type]?.current?.click();
     } else {
-      setLoading(true);
       try {
         if (type === "invoice") await exportPurchaseInvoice(year);
         else if (type === "sales") await exportSalesInvoice(year);
@@ -78,8 +78,12 @@ export const useXmlImportLogic = () => {
         else if (type === "collections") await exportCollections(year);
         else if (type === "payrolls") await exportPayrolls(year);
         else if (type === "vouchers") await exportOpeningVouchers(year);
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message ||
+          error?.response?.data ||
+          "Bilinmeyen hata";
+        toast.error(backendErr);
       }
     }
   };
@@ -91,7 +95,6 @@ export const useXmlImportLogic = () => {
       return;
     }
     if (!file) return;
-    setLoading(true);
 
     try {
       if (type === "invoice") await importPurchaseInvoice(file, tenant);
@@ -101,14 +104,21 @@ export const useXmlImportLogic = () => {
       else if (type === "sales") await importSalesInvoice(file, tenant);
       else if (type === "payrolls") await importPayrolls(file, tenant);
       else if (type === "vouchers") await importVouchers(file, tenant);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message ||
+        error?.response?.data ||
+        "Bilinmeyen hata";
+      toast.error(backendErr);
     } finally {
-      setLoading(false);
       if (targetInput) targetInput.value = "";
     }
   };
 
+  const isLoading = importLoading || exportLoading;
+
   return {
-    state: { loading, viewMode, year },
+    state: { isLoading, viewMode, year },
     refs: {
       purchaseInvoiceInputRef,
       salesInvoiceInputRef,

@@ -9,12 +9,32 @@ import { useTenant } from "../../../context/TenantContext.jsx";
 import { useCompany } from "../../../../backend/store/useCompany.js";
 
 export const useHomeLogic = () => {
-  const { companies, getAllCompanies } = useCompany();
-  const { purchase, getPurchaseInvoiceByYear } = usePurchaseInvoice();
-  const { sales, getSalesInvoicesByYear } = useSalesInvoice();
-  const { customers, getAllCustomers } = useClient();
-  const { collections, getReceivedCollectionsByYear } = useReceivedCollection();
-  const { payments, getPaymentCollectionsByYear } = usePaymentCompany();
+  const {
+    companies,
+    getAllCompanies,
+    loading: companiesLoading,
+  } = useCompany();
+  const {
+    purchase,
+    getPurchaseInvoiceByYear,
+    loading: purchaseLoading,
+  } = usePurchaseInvoice();
+  const {
+    sales,
+    getSalesInvoicesByYear,
+    loading: salesLoading,
+  } = useSalesInvoice();
+  const { customers, getAllCustomers, loading: customersLoading } = useClient();
+  const {
+    collections,
+    getReceivedCollectionsByYear,
+    loading: collectionsLoading,
+  } = useReceivedCollection();
+  const {
+    payments,
+    getPaymentCollectionsByYear,
+    loading: paymentsLoading,
+  } = usePaymentCompany();
 
   const { year } = useYear();
   const { tenant } = useTenant();
@@ -23,17 +43,22 @@ export const useHomeLogic = () => {
     let ignore = false;
     const fetchData = async () => {
       if (!year || !tenant) return;
-      await Promise.all([
-        getAllCompanies(),
-        getAllCustomers(),
-        getReceivedCollectionsByYear(year),
-        getPaymentCollectionsByYear(year),
-        getPurchaseInvoiceByYear(year),
-        getSalesInvoicesByYear(year),
-      ]);
+      try {
+        await Promise.all([
+          getAllCompanies(),
+          getAllCustomers(),
+          getReceivedCollectionsByYear(year),
+          getPaymentCollectionsByYear(year),
+          getPurchaseInvoiceByYear(year),
+          getSalesInvoicesByYear(year),
+        ]);
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
     };
-    if (ignore) return;
-
     fetchData();
     return () => {
       ignore = true;
@@ -60,8 +85,17 @@ export const useHomeLogic = () => {
     ? currentCompany.name
     : tenant?.toUpperCase();
 
+  const isLoading =
+    companiesLoading ||
+    purchaseLoading ||
+    salesLoading ||
+    customersLoading ||
+    collectionsLoading ||
+    paymentsLoading;
+
   return {
     state: {
+      isLoading,
       purchase: Array.isArray(purchase) ? purchase : [],
       sales: Array.isArray(sales) ? sales : [],
       customers: Array.isArray(customers) ? customers : [],

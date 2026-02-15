@@ -1,11 +1,18 @@
 import { useXmlImportLogic } from "./hooks/useXmlImportLogic";
 import { ImportButton } from "./components/ImportButton";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 function XmlPage() {
   const { state, refs, handlers } = useXmlImportLogic();
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 relative">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       {/* SAĞ ÜST MOD SEÇİCİ */}
       <div className="absolute top-8 right-8 flex p-1 bg-gray-900 border border-gray-800 rounded-xl z-50">
         <button
@@ -108,7 +115,7 @@ function XmlPage() {
             label={`Satın Alma Fatura ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon={state.viewMode === "import" ? "🛒" : "📥"}
             variant={state.viewMode === "import" ? "blue" : "red"}
-            disabled={state.loading}
+            disabled={state.isLoading}
             onClick={() => handlers.handleAction("invoice")}
           />
 
@@ -116,7 +123,7 @@ function XmlPage() {
             label={`Satış Fatura ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"} `}
             icon="💰"
             variant={state.viewMode === "import" ? "emerald" : "orange"}
-            disabled={state.loading}
+            disabled={state.isLoading}
             onClick={() => handlers.handleAction("sales")}
           />
 
@@ -124,7 +131,7 @@ function XmlPage() {
             label={`Devir Bakiyesi XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon="📂"
             variant="dark-green"
-            disabled={state.loading}
+            disabled={state.isLoading}
             onClick={() => handlers.handleAction("vouchers")}
           />
 
@@ -146,7 +153,7 @@ function XmlPage() {
               </svg>
             }
             variant="purple"
-            disabled={state.loading}
+            disabled={state.isLoading}
             onClick={() => handlers.handleAction("payrolls")}
           />
 
@@ -155,7 +162,7 @@ function XmlPage() {
               label={`Malzeme XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
               icon="📦"
               variant="blue"
-              disabled={state.loading}
+              disabled={state.isLoading}
               onClick={() => handlers.handleAction("materials")}
             />
 
@@ -163,7 +170,7 @@ function XmlPage() {
               label={`Cari XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
               icon="👥"
               variant="red"
-              disabled={state.loading}
+              disabled={state.isLoading}
               onClick={() => handlers.handleAction("customers")}
             />
           </div>
@@ -172,7 +179,7 @@ function XmlPage() {
             label={`Kasa İşlemleri XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
             icon="🏦"
             variant="orange"
-            disabled={state.loading}
+            disabled={state.isLoading}
             onClick={() => handlers.handleAction("collections")}
           />
         </div>

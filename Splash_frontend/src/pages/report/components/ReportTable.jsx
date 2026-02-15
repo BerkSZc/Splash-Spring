@@ -18,7 +18,7 @@ export const ReportTable = ({ title, items, color }) => (
         <tbody>
           {(Array.isArray(items) ? items : []).map((item, index) => (
             <tr
-              key={index || 0}
+              key={index}
               className="bg-gray-800/40 hover:bg-gray-800/60 transition-all"
             >
               <td className="px-6 py-4 rounded-l-2xl font-bold">

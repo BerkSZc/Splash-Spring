@@ -39,7 +39,7 @@ export const MaterialFormCard = ({
             name="code"
             value={form.code || ""}
             onChange={onChange}
-            className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none"
+            className="w-full bg-gray-800 border-2 border-gray-700 uppercase rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none"
             placeholder="MZ-001"
             required
           />
@@ -70,7 +70,7 @@ export const MaterialFormCard = ({
             name="comment"
             value={form?.comment || ""}
             onChange={onChange}
-            className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none"
+            className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl uppercase px-4 py-3 text-white focus:border-blue-500 transition-all outline-none"
             placeholder="Malzeme detayı..."
             required
           />
@@ -88,7 +88,7 @@ export const MaterialFormCard = ({
             <input
               type="number"
               name="purchasePrice"
-              value={form?.purchasePrice || 0}
+              value={form?.purchasePrice ?? 0}
               onChange={onChange}
               className="w-2/3 bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
               placeholder="0.00"
@@ -115,7 +115,7 @@ export const MaterialFormCard = ({
             <input
               type="number"
               name="salesPrice"
-              value={form?.salesPrice || 0}
+              value={form?.salesPrice ?? 0}
               onChange={onChange}
               className="w-2/3 bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none"
               placeholder="0.00"

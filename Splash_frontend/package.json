@@ -1,6 +1,6 @@
 {
-  "name": "logo_vs_app",
-  "productName": "Logo-VS-App",
+  "name": "splash_vs_app",
+  "productName": "Splash",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BerkSZc/Logo-Spring"
+    "url": "https://github.com/BerkSZc/Splash-Spring"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
@@ -31,8 +31,8 @@
     "zustand": "^5.0.8"
   },
   "build": {
-    "appId": "com.logo-vs.app",
-    "productName": "Logo-VS-App",
+    "appId": "com.Splash-vs.app",
+    "productName": "Splash",
     "files": [
       "dist/**/*",
       "main.js",
@@ -49,7 +49,7 @@
       {
         "provider": "github",
         "owner": "BerkSZc",
-        "repo": "Logo-Spring",
+        "repo": "Splash-Spring",
         "releaseType": "release"
       }
     ],
@@ -62,7 +62,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Logo VS"
+      "shortcutName": "Splash VS"
     }
   },
   "devDependencies": {

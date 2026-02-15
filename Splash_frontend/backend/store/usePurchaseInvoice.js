@@ -4,8 +4,10 @@ import { axiosInstance } from "../lib/axios";
 
 export const usePurchaseInvoice = create((set) => ({
   purchase: [],
+  loading: false,
 
   addPurchaseInvoice: async (id, newPurchaseInvoice, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.post(`/purchase/add/${id}`, newPurchaseInvoice, {
         headers: {
@@ -17,26 +19,26 @@ export const usePurchaseInvoice = create((set) => ({
       });
       toast.success("Fatura eklendi.");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   getAllPurchaseInvoices: async () => {
+    set({ loading: true });
     try {
       const res = await axiosInstance.get("/purchase/all");
       set({ purchase: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   editPurchaseInvoice: async (id, purchaseInvoice, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.put(`/purchase/update/${id}`, purchaseInvoice, {
         headers: {
@@ -48,36 +50,35 @@ export const usePurchaseInvoice = create((set) => ({
       });
       toast.success("Fatura değiştirildi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   deletePurchaseInvoice: async (id, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.delete(`/purchase/delete/${id}`, {
         params: { schemaName },
       });
       toast.success("Fatura silindi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   getPurchaseInvoiceByYear: async (year) => {
+    set({ loading: true, purchase: [] });
     try {
-      set({ purchase: [] });
       const res = await axiosInstance.get(`/purchase/find-year/${year}`);
       set({ purchase: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getPurchaseInvoiceByYear: " + backendErr);
       set({ purchase: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

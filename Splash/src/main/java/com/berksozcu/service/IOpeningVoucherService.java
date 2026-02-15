@@ -9,7 +9,7 @@ import java.util.List;
 public interface IOpeningVoucherService {
      OpeningVoucher calculateAndSetOpeningVoucher(Customer customer, int targetYear, String schemaName);
      void transferAllCustomers(int targetYear, String schemaName);
-     List<OpeningVoucher> getAllOpeningVoucherByCustomer(LocalDate date);
-     OpeningVoucher getOpeningVoucherByCustomer(Long customerId, LocalDate date);
+     List<OpeningVoucher> getAllOpeningVoucherByCustomer(LocalDate date, String schemaName);
+     OpeningVoucher getOpeningVoucherByCustomer(Long customerId, LocalDate date, String schemaName);
 
 }

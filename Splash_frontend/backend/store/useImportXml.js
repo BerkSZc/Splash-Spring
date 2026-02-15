@@ -2,8 +2,11 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 
-export const useImportXml = create(() => ({
+export const useImportXml = create((set) => ({
+  loading: false,
+
   importPurchaseInvoice: async (file, schemaName) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -15,16 +18,15 @@ export const useImportXml = create(() => ({
         params: { schemaName },
       });
       toast.success("Aktarma başarıyla tamamlandı");
-      return true;
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen hata";
-      toast.error("Error at importPurchaseInvoice: " + backendErr);
-      return false;
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   importSalesInvoice: async (file, schemaName) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -37,12 +39,14 @@ export const useImportXml = create(() => ({
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
-      const backendErr = error?.response?.data || "Bilinmeyen hata";
-      toast.error("Error at importSalesInvoice: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   importMaterials: async (file) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -53,14 +57,13 @@ export const useImportXml = create(() => ({
       });
       toast.success("Aktarma Başarıyla Tamamlandı");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message ||
-        error.message ||
-        "Bilinmeyen hata";
-      toast.error("Error at importMaterials: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   importCustomers: async (file) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -71,14 +74,13 @@ export const useImportXml = create(() => ({
       });
       toast.success("Aktarma Başarıyla Tamamlandı");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message ||
-        error.message ||
-        "Bilinmeyen hata";
-      toast.error("Error at importCustomers: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   importCollections: async (file, schemaName) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -90,13 +92,14 @@ export const useImportXml = create(() => ({
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen hata";
-      toast.error("Error at importCollections: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   importPayrolls: async (file, schemaName) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -108,13 +111,14 @@ export const useImportXml = create(() => ({
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen hata";
-      toast.error("Error at ImportPayrolls: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   importVouchers: async (file, schemaName) => {
+    set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -126,9 +130,9 @@ export const useImportXml = create(() => ({
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen hata";
-      toast.error("Error at importVouchers: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

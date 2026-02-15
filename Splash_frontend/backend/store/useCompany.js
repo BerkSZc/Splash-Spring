@@ -3,24 +3,23 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 
 export const useCompany = create((set, get) => ({
-  isLoading: false,
+  loading: false,
   companies: [],
 
   getAllCompanies: async () => {
-    set({ isLoading: true });
+    set({ loading: true, companies: [] });
     try {
       const res = await axiosInstance.get("/company/find-all");
       set({ companies: res.data });
     } catch (error) {
-      set({ isLoading: false });
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getAllCompanies: " + backendErr);
+      set({ companies: [] });
+      throw error;
     } finally {
-      set({ isLoading: false });
+      set({ loading: false });
     }
   },
   addCompany: async (companyData) => {
+    set({ loading: true });
     try {
       await axiosInstance.post("/company/create", companyData, {
         headers: {
@@ -30,12 +29,13 @@ export const useCompany = create((set, get) => ({
       await get().getAllCompanies();
       toast.success("Şirket oluşturuldu");
     } catch (error) {
-      const backendErr =
-        error?.response?.data.exception.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   addYearToCompany: async (companyId, year) => {
+    set({ loading: true });
     try {
       const res = await axiosInstance.post("/company/create-year", null, {
         params: { companyId, year },
@@ -43,33 +43,35 @@ export const useCompany = create((set, get) => ({
       await get().getAllCompanies();
       return res.data;
     } catch (error) {
-      const backendErr =
-        error?.response?.data.exception.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   getAllYearByCompanyId: async (companyId) => {
+    set({ loading: true });
     try {
       const res = await axiosInstance.get("/company/get-all-year", {
         params: { companyId },
       });
       return res.data;
     } catch (error) {
-      const backendErr =
-        error?.response?.data.exception.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   deleteYear: async (companyId, year) => {
+    set({ loading: true });
     try {
       const res = await axiosInstance.delete("/company/delete-year", {
         params: { companyId, year },
       });
       return res.data;
     } catch (error) {
-      const backendErr =
-        error?.response?.data.exception.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

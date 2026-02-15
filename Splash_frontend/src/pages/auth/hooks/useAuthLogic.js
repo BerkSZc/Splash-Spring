@@ -16,11 +16,16 @@ export const useAuthLogic = () => {
       toast.error("Kullanıcı adı ve şifre gerekli");
       return;
     }
-
-    if (mode === "login") {
-      await login({ username, password });
-    } else {
-      await signUp({ username, password });
+    try {
+      if (mode === "login") {
+        await login({ username, password });
+      } else {
+        await signUp({ username, password });
+      }
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 

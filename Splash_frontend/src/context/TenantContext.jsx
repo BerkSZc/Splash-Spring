@@ -11,8 +11,22 @@ export const TenantProvider = ({ children }) => {
   );
   // Şirketleri state içinde tutuyoruz
   useEffect(() => {
-    getAllCompanies();
-  }, [getAllCompanies]);
+    let ignore = false;
+    const fetchData = async () => {
+      try {
+        await getAllCompanies();
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
+    };
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, [tenant]);
 
   const changeTenant = (newTenant) => {
     const val = String(newTenant);

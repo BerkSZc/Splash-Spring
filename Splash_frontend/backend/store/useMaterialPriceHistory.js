@@ -1,11 +1,12 @@
-import toast from "react-hot-toast";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 
 export const useMaterialPriceHistory = create((set) => ({
   history: [],
+  loading: false,
 
   getHistoryByAllYear: async (materialId, invoiceType) => {
+    set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-all-year/${materialId}`,
@@ -15,13 +16,15 @@ export const useMaterialPriceHistory = create((set) => ({
       );
       set({ history: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getHistoryByAllYear: " + backendErr);
+      set({ history: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   getHistoryByYear: async (materialId, invoiceType, year) => {
+    set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-year/${materialId}`,
@@ -31,9 +34,10 @@ export const useMaterialPriceHistory = create((set) => ({
       );
       set({ history: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getHistoryByYear: " + backendErr);
+      set({ history: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
@@ -43,6 +47,7 @@ export const useMaterialPriceHistory = create((set) => ({
     invoiceType,
     year,
   ) => {
+    set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-customer-year/${customerId}/${materialId}`,
@@ -52,9 +57,10 @@ export const useMaterialPriceHistory = create((set) => ({
       );
       set({ history: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getHistoryByCustomerAndYear: " + backendErr);
+      set({ history: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
@@ -63,6 +69,7 @@ export const useMaterialPriceHistory = create((set) => ({
     materialId,
     invoiceType,
   ) => {
+    set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-customer-all-year/${customerId}/${materialId}`,
@@ -72,9 +79,10 @@ export const useMaterialPriceHistory = create((set) => ({
       );
       set({ history: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getHistoryByCustomerAndAllYear: " + backendErr);
+      set({ history: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

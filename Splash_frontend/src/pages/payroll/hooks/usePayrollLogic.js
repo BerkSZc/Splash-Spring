@@ -5,15 +5,23 @@ import { useTenant } from "../../../context/TenantContext.jsx";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import toast from "react-hot-toast";
+import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
 export const usePayrollLogic = () => {
-  const { customers, getAllCustomers } = useClient();
+  const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const { year } = useYear();
   const { tenant } = useTenant();
-  const { payrolls, addCheque, editCheque, deleteCheque, getPayrollByYear } =
-    usePayroll();
+  const { getAllOpeningVoucherByYear } = useVoucher();
+  const {
+    payrolls,
+    addCheque,
+    editCheque,
+    deleteCheque,
+    getPayrollByYear,
+    loading: payrollsLoading,
+  } = usePayroll();
 
-  const { getFileNo } = useCommonData();
+  const { getFileNo, loading: commonDataLoading } = useCommonData();
 
   const formRef = useRef(null);
   const [editing, setEditing] = useState(null);
@@ -33,6 +41,20 @@ export const usePayrollLogic = () => {
     return currentActualYear === Number(year)
       ? new Date().toISOString().slice(0, 10)
       : `${selectedYear}-01-01`;
+  };
+
+  const syncFinancialData = async () => {
+    try {
+      await Promise.all([
+        getPayrollByYear(year, tenant),
+        getAllCustomers(),
+        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
+      ]);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
   };
 
   const [form, setForm] = useState({
@@ -130,12 +152,18 @@ export const usePayrollLogic = () => {
     let ignore = false;
     if (!editing && form.transactionDate) {
       const fetchNo = async () => {
-        const nextNo = await getFileNo(
-          form.transactionDate,
-          type.toUpperCase(),
-        );
-        if (!ignore && nextNo) {
-          setForm((prev) => ({ ...prev, fileNo: nextNo }));
+        try {
+          const nextNo = await getFileNo(
+            form.transactionDate,
+            type.toUpperCase(),
+          );
+          if (!ignore && nextNo) {
+            setForm((prev) => ({ ...prev, fileNo: nextNo }));
+          }
+        } catch (error) {
+          const backendErr =
+            error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+          toast.error(backendErr);
         }
       };
       fetchNo();
@@ -143,23 +171,35 @@ export const usePayrollLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [type, form.transactionDate, editing, getFileNo]);
+  }, [type, form.transactionDate, editing, tenant]);
 
   useEffect(() => {
     let ignore = false;
     const fetchData = async () => {
-      if (year) {
-        await Promise.all([getAllCustomers(), getPayrollByYear(year)]);
-      }
-      if (!ignore) {
-        setForm((prev) => ({ ...prev, transactionDate: getInitialDate(year) }));
+      try {
+        if (year) {
+          await Promise.all([
+            getAllCustomers(),
+            getPayrollByYear(year, tenant),
+          ]);
+        }
+        if (!ignore) {
+          setForm((prev) => ({
+            ...prev,
+            transactionDate: getInitialDate(year),
+          }));
+        }
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
       }
     };
     fetchData();
     return () => {
       ignore = true;
     };
-  }, [year, getAllCustomers, getPayrollByYear]);
+  }, [year, tenant]);
 
   const resetForm = async () => {
     setForm({
@@ -173,9 +213,15 @@ export const usePayrollLogic = () => {
       comment: "",
     });
     setEditing(null);
-    const nextNo = await getFileNo(getInitialDate(year), type.toUpperCase());
-    if (nextNo) {
-      setForm((prev) => ({ ...prev, fileNo: nextNo }));
+    try {
+      const nextNo = await getFileNo(getInitialDate(year), type.toUpperCase());
+      if (nextNo) {
+        setForm((prev) => ({ ...prev, fileNo: nextNo }));
+      }
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -213,10 +259,13 @@ export const usePayrollLogic = () => {
       } else {
         await addCheque(form.customerId, payload, tenant);
       }
-      await getPayrollByYear(year);
+
+      await syncFinancialData();
       resetForm();
     } catch (error) {
-      console.log(error);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -240,10 +289,17 @@ export const usePayrollLogic = () => {
   };
 
   const confirmDelete = async () => {
-    if (deleteTarget) {
-      await deleteCheque(deleteTarget.id, tenant);
-      await getPayrollByYear(year);
-      setDeleteTarget(null);
+    try {
+      if (deleteTarget) {
+        await deleteCheque(deleteTarget.id, tenant);
+        await getPayrollByYear(year);
+        setDeleteTarget(null);
+      }
+      await syncFinancialData();
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -253,8 +309,11 @@ export const usePayrollLogic = () => {
     return `${day}.${month}.${year}`;
   };
 
+  const isLoading = customersLoading || payrollsLoading || commonDataLoading;
+
   return {
     state: {
+      isLoading,
       type,
       editing,
       search,

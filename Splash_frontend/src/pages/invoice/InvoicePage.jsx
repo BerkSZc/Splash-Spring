@@ -2,12 +2,19 @@ import { useInvoicePageLogic } from "./hooks/useInvoicePageLogic.js";
 import InvoiceTable from "./components/InvoiceTable";
 import InvoiceEditModal from "./components/InvoiceEditModal";
 import InvoicePrintPreview from "./components/InvoicePrintPreview";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export default function InvoicePage() {
   const { state, handlers } = useInvoicePageLogic();
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-7xl mx-auto space-y-10">
         {/* BAŞLIK VE TİP SEÇİMİ */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -66,6 +73,7 @@ export default function InvoicePage() {
           onPrint={handlers.setPrintItem}
           year={state.year}
           formatDateToTR={state.formatDateToTR}
+          isLoading={state.isLoading}
         />
 
         {/* MODALLAR */}

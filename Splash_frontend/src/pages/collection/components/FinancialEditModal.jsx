@@ -1,3 +1,5 @@
+import CustomerSearchSelect from "../../../components/CustomerSearchSelect";
+
 export default function FinancialEditModal({
   editing,
   editForm,
@@ -53,19 +55,11 @@ export default function FinancialEditModal({
             <label className="text-xs font-bold text-gray-500 uppercase ml-1 tracking-widest">
               Müşteri / Firma
             </label>
-            <select
+            <CustomerSearchSelect
+              customers={customers}
               value={editForm?.customerId || ""}
-              onChange={(e) =>
-                setEditForm({ ...editForm, customerId: e.target.value })
-              }
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition cursor-pointer"
-            >
-              {(Array.isArray(customers) ? customers : []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => setEditForm({ ...editForm, customerId: id })}
+            />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase ml-1 tracking-widest">

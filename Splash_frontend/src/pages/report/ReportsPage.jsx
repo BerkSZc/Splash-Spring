@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useReportData } from "./hooks/useReportData.js";
 import { ReportTable } from "./components/ReportTable.jsx";
 import { KDVSummary } from "./components/KDVSummary.jsx";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState("summary");
-  const { data, year } = useReportData();
+  const { data, year, isLoading } = useReportData();
 
   const tabs = [
     { id: "summary", label: "📊 KDV ANALİZ ÖZETİ" },
@@ -15,6 +16,12 @@ const ReportsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white p-6 lg:p-12">
+      {isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-7xl mx-auto mb-10">
         <h1 className="text-3xl font-black tracking-tighter uppercase">
           Finansal Raporlar
@@ -28,7 +35,7 @@ const ReportsPage = () => {
         <div className="flex p-1 bg-gray-900/50 border border-gray-800 rounded-2xl w-fit">
           {(Array.isArray(tabs) ? tabs : []).map((tab) => (
             <button
-              key={tab.id || 0}
+              key={tab.id}
               onClick={() => setActiveTab(tab?.id)}
               className={`px-6 py-3 rounded-xl text-xs font-bold transition-all duration-300 ${
                 activeTab === tab?.id

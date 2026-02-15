@@ -4,6 +4,7 @@ import ClientTable from "./components/ClientTable";
 import StatementModal from "./components/StatementModal";
 import ArchiveConfirmModal from "./components/ArchiveConfirmModal";
 import ContextMenu from "./components/ContextMenu";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export default function ClientsPage() {
   const { state, handlers, refs } = useClientLogic();
@@ -20,6 +21,12 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#030712] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-7xl mx-auto space-y-10">
         {/* 1. BÖLÜM: ÜST BAŞLIK VE ARAMA */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -113,7 +120,7 @@ export default function ClientsPage() {
       </div>
 
       {/* 4. BÖLÜM: MODALLAR VE KONTROLLER */}
-      {state.ArchiveConfirmModal && (
+      {state.showArchiveModal && (
         <ArchiveConfirmModal
           isOpen={state.showArchiveModal}
           count={state.selectedCustomers.length}

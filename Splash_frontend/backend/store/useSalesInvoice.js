@@ -4,8 +4,10 @@ import toast from "react-hot-toast";
 
 export const useSalesInvoice = create((set) => ({
   sales: [],
+  loading: false,
 
   addSalesInvoice: async (id, newSalesInvoice, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.post(`/sales/add/${id}`, newSalesInvoice, {
         headers: {
@@ -15,25 +17,26 @@ export const useSalesInvoice = create((set) => ({
       });
       toast.success("Fatura eklendi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   getAllSalesInvoices: async () => {
+    set({ loading: true });
     try {
       const res = await axiosInstance.get("/sales/all");
       set({ sales: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getAllSalesInvoices:" + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   editSalesInvoice: async (id, salesInvoice, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.put(`/sales/update/${id}`, salesInvoice, {
         headers: {
@@ -43,37 +46,36 @@ export const useSalesInvoice = create((set) => ({
       });
       toast.success("Fatura değiştirildi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   deleteSalesInvoice: async (id, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.delete(`/sales/delete/${id}`, {
         params: { schemaName },
       });
       toast.success("Fatura başarıyla silindi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   getSalesInvoicesByYear: async (year) => {
+    set({ loading: true, sales: [] });
     try {
-      set({ sales: [] });
       const res = await axiosInstance.get(`/sales/find-year/${year}`);
       set({ sales: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getSalesInvoicesByYear: " + backendErr);
       set({ sales: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

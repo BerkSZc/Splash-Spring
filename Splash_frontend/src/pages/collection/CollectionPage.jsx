@@ -2,6 +2,7 @@ import { useFinancialLogic } from "./hooks/useFinancialLogic";
 import FinancialForm from "./components/FinancialForm";
 import FinancialEditModal from "./components/FinancialEditModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export default function CollectionPage() {
   const { state, handlers } = useFinancialLogic();
@@ -20,6 +21,12 @@ export default function CollectionPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-6xl mx-auto space-y-10">
         {/* Üst Başlık */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">

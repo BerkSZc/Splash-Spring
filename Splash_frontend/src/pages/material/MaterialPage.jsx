@@ -1,12 +1,19 @@
 import { useMaterialLogic } from "./hooks/useMaterialLogic.js";
 import { MaterialCard } from "./components/MaterialCard";
 import { MaterialFormCard } from "./components/MaterialFormCard";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export default function MaterialForm() {
   const { state, refs, handlers } = useMaterialLogic();
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-4xl mx-auto space-y-12">
         {/* BAŞLIK */}
         <div className="text-center space-y-2">
@@ -75,7 +82,7 @@ export default function MaterialForm() {
                 : []
               ).map((item) => (
                 <MaterialCard
-                  key={item.id || 0}
+                  key={item.id}
                   item={item || []}
                   onEdit={handlers.handleEdit}
                 />

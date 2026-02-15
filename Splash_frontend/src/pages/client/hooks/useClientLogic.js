@@ -18,13 +18,34 @@ export const useClientLogic = () => {
     addCustomer,
     updateCustomer,
     setArchived,
+    loading: customerLoading,
   } = useClient();
-  const { sales, getSalesInvoicesByYear } = useSalesInvoice();
-  const { purchase, getPurchaseInvoiceByYear } = usePurchaseInvoice();
-  const { payments, getPaymentCollectionsByYear } = usePaymentCompany();
-  const { collections, getReceivedCollectionsByYear } = useReceivedCollection();
-  const { payrolls, getPayrollByYear } = usePayroll();
-  const { getAllOpeningVoucherByYear, vouchers } = useVoucher();
+  const {
+    sales,
+    getSalesInvoicesByYear,
+    loading: salesLoading,
+  } = useSalesInvoice();
+  const {
+    purchase,
+    getPurchaseInvoiceByYear,
+    loading: purchaseLoading,
+  } = usePurchaseInvoice();
+  const {
+    payments,
+    getPaymentCollectionsByYear,
+    loading: paymentsLoading,
+  } = usePaymentCompany();
+  const {
+    collections,
+    getReceivedCollectionsByYear,
+    loading: collectionLoading,
+  } = useReceivedCollection();
+  const { payrolls, getPayrollByYear, loading: payrollsLoading } = usePayroll();
+  const {
+    getAllOpeningVoucherByYear,
+    vouchers,
+    loading: vouchersLoading,
+  } = useVoucher();
   const { year } = useYear();
   const { tenant } = useTenant();
 
@@ -63,7 +84,7 @@ export const useClientLogic = () => {
 
       await Promise.all([
         getAllCustomers(),
-        getAllOpeningVoucherByYear(dateString),
+        getAllOpeningVoucherByYear(dateString, tenant),
       ]);
 
       if (ignore) return;
@@ -72,7 +93,7 @@ export const useClientLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, getAllCustomers, getAllOpeningVoucherByYear]);
+  }, [year, tenant]);
 
   useEffect(() => {
     if (selectedCustomerForStatement && year) {
@@ -99,6 +120,7 @@ export const useClientLogic = () => {
     collections,
     payrolls,
     year,
+    tenant,
     vouchers,
   ]);
 
@@ -137,16 +159,21 @@ export const useClientLogic = () => {
         : 0,
       finalBalance: customerVoucher ? customerVoucher.finalBalance : 0,
     };
-
-    setSelectedCustomerForStatement(updatedCustomer);
-    await Promise.allSettled([
-      getSalesInvoicesByYear(year),
-      getPurchaseInvoiceByYear(year),
-      getPaymentCollectionsByYear(year),
-      getReceivedCollectionsByYear(year),
-      getPayrollByYear(year),
-    ]);
-    setShowPrintModal(true);
+    try {
+      setSelectedCustomerForStatement(updatedCustomer);
+      await Promise.allSettled([
+        getSalesInvoicesByYear(year),
+        getPurchaseInvoiceByYear(year),
+        getPaymentCollectionsByYear(year),
+        getReceivedCollectionsByYear(year),
+        getPayrollByYear(year),
+      ]);
+      setShowPrintModal(true);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -176,7 +203,7 @@ export const useClientLogic = () => {
       }
 
       const dateString = `${year}-01-01`;
-      await getAllOpeningVoucherByYear(dateString);
+      await getAllOpeningVoucherByYear(dateString, tenant);
 
       setForm({
         name: "",
@@ -190,7 +217,9 @@ export const useClientLogic = () => {
         code: "",
       });
     } catch (error) {
-      console.error(error);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -237,8 +266,14 @@ export const useClientLogic = () => {
   };
 
   const handleArchiveToggle = async (customer) => {
-    await setArchived(customer.id, !customer.archived);
-    setOpenMenuId(null);
+    try {
+      await setArchived(customer.id, !customer.archived);
+      setOpenMenuId(null);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
   };
 
   const handleArchiveModalSubmit = async () => {
@@ -249,7 +284,9 @@ export const useClientLogic = () => {
       setShowArchiveModal(false);
       setOpenMenuId(null);
     } catch (error) {
-      console.log("Error" + error);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -270,6 +307,15 @@ export const useClientLogic = () => {
         .filter((c) => (showArchived ? c.archived : !c.archived))
     : [];
 
+  const isLoading =
+    customerLoading ||
+    purchaseLoading ||
+    salesLoading ||
+    collectionLoading ||
+    paymentsLoading ||
+    payrollsLoading ||
+    vouchersLoading;
+
   return {
     state: {
       customers,
@@ -288,6 +334,7 @@ export const useClientLogic = () => {
       filteredCustomers,
       year,
       vouchers,
+      isLoading,
     },
     refs: { formRef },
     handlers: {

@@ -24,9 +24,7 @@ export const useAuthentication = create((set) => ({
 
       toast.success("Giriş başarılı");
     } catch (error) {
-      const backendMessage =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at login: " + backendMessage);
+      throw error;
     } finally {
       set({ loading: false });
     }
@@ -48,16 +46,13 @@ export const useAuthentication = create((set) => ({
 
       toast.success("Kayıt başarılı");
     } catch (error) {
-      const backendMessage =
-        error?.response?.data?.exception?.message || "Bilinmeyen hata";
-
       set({
         token: null,
         isAuthenticated: false,
         authChecked: true,
       });
 
-      toast.error("Error at signUp: " + backendMessage);
+      throw error;
     } finally {
       set({ loading: false });
     }
@@ -89,6 +84,7 @@ export const useAuthentication = create((set) => ({
         isAuthenticated: false,
         authChecked: true,
       });
+      throw error;
     } finally {
       set({ loading: false });
     }

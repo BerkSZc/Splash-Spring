@@ -5,6 +5,7 @@ import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
+import com.berksozcu.entites.payroll.PayrollType;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PayrollServiceImpl implements IPayrollService {
@@ -57,19 +59,15 @@ public class PayrollServiceImpl implements IPayrollService {
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(BigDecimal.ZERO);
-        }
-
         newPayroll.setCustomer(customer);
-        newPayroll.setAmount(newPayroll.getAmount());
-        newPayroll.setFileNo(newPayroll.getFileNo());
-        newPayroll.setExpiredDate(newPayroll.getExpiredDate());
-        newPayroll.setTransactionDate(newPayroll.getTransactionDate());
-        newPayroll.setPayrollModel(newPayroll.getPayrollModel());
-        newPayroll.setPayrollType(newPayroll.getPayrollType());
-        newPayroll.setBankName(newPayroll.getBankName());
-        newPayroll.setBankBranch(newPayroll.getBankBranch());
+        newPayroll.setAmount(safeGet(newPayroll.getAmount()));
+        newPayroll.setFileNo(Objects.requireNonNullElse(newPayroll.getFileNo(), ""));
+        newPayroll.setExpiredDate(Objects.requireNonNullElse(newPayroll.getExpiredDate(), LocalDate.now()));
+        newPayroll.setTransactionDate(Objects.requireNonNullElse(newPayroll.getTransactionDate(), LocalDate.now()));
+        newPayroll.setPayrollModel(Objects.requireNonNullElse(newPayroll.getPayrollModel(), PayrollModel.INPUT));
+        newPayroll.setPayrollType(Objects.requireNonNullElse(newPayroll.getPayrollType(), PayrollType.CHEQUE));
+        newPayroll.setBankName(Objects.requireNonNullElse(newPayroll.getBankName(), ""));
+        newPayroll.setBankBranch(Objects.requireNonNullElse(newPayroll.getBankBranch(), ""));
         newPayroll.setCompany(company);
 
         updateBalance(newPayroll, voucher);
@@ -105,16 +103,13 @@ public class PayrollServiceImpl implements IPayrollService {
         OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
-        if (oldVoucher.getFinalBalance() == null) {
-            oldVoucher.setFinalBalance(BigDecimal.ZERO);
-        }
 
         if (oldPayroll.getPayrollModel() == PayrollModel.INPUT) {
-            oldVoucher.setFinalBalance(oldVoucher.getFinalBalance().add(oldPayroll.getAmount()));
-            oldVoucher.setCredit(oldVoucher.getCredit().subtract(oldPayroll.getAmount()));
+            oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).add(safeGet(oldPayroll.getAmount())));
+            oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldPayroll.getAmount())));
         } else {
-            oldVoucher.setFinalBalance(oldVoucher.getFinalBalance().subtract(oldPayroll.getAmount()));
-            oldVoucher.setCredit(oldVoucher.getCredit().subtract(oldPayroll.getAmount()));
+            oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(safeGet(oldPayroll.getAmount())));
+            oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldPayroll.getAmount())));
         }
 
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
@@ -150,16 +145,13 @@ public class PayrollServiceImpl implements IPayrollService {
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(BigDecimal.ZERO);
-        }
 
         if (payroll.getPayrollModel() == PayrollModel.INPUT) {
-            voucher.setFinalBalance(voucher.getFinalBalance().add(payroll.getAmount()));
-            voucher.setCredit(voucher.getCredit().subtract(payroll.getAmount()));
+            voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(payroll.getAmount())));
+            voucher.setCredit(safeGet(voucher.getCredit()).subtract(safeGet(payroll.getAmount())));
         } else {
-            voucher.setFinalBalance(voucher.getFinalBalance().subtract(payroll.getAmount()));
-            voucher.setDebit(voucher.getDebit().subtract(payroll.getAmount()));
+            voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(payroll.getAmount())));
+            voucher.setDebit(safeGet(voucher.getDebit()).subtract(safeGet(payroll.getAmount())));
         }
         openingVoucherRepository.save(voucher);
         payrollRepository.delete(payroll);
@@ -174,20 +166,20 @@ public class PayrollServiceImpl implements IPayrollService {
 
     private void updateBalance( Payroll newPayroll, OpeningVoucher voucher) {
         if (newPayroll.getPayrollModel() == PayrollModel.INPUT) {
-            voucher.setFinalBalance(voucher.getFinalBalance().subtract(newPayroll.getAmount()));
-            voucher.setCredit(voucher.getCredit().add(newPayroll.getAmount()));
+            voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(newPayroll.getAmount())));
+            voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(newPayroll.getAmount())));
         } else {
-            voucher.setFinalBalance(voucher.getFinalBalance().add(newPayroll.getAmount()));
-            voucher.setDebit(voucher.getDebit().add(newPayroll.getAmount()));
+            voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(newPayroll.getAmount())));
+            voucher.setDebit(safeGet(voucher.getDebit()).add(safeGet(newPayroll.getAmount())));
         }
     }
 
     private OpeningVoucher getDefaultVoucher(Company company, Customer newCustomer, LocalDate date) {
         OpeningVoucher voucher = new OpeningVoucher();
         voucher.setCompany(company);
-        voucher.setDate(date);
+        voucher.setDate(Objects.requireNonNullElse(date, LocalDate.now()));
         voucher.setCustomer(newCustomer);
-        voucher.setCustomerName(newCustomer.getName());
+        voucher.setCustomerName(Objects.requireNonNullElse(newCustomer.getName(), ""));
         voucher.setDebit(BigDecimal.ZERO);
         voucher.setCredit(BigDecimal.ZERO);
         voucher.setYearlyDebit(BigDecimal.ZERO);
@@ -196,5 +188,9 @@ public class PayrollServiceImpl implements IPayrollService {
         voucher.setFileNo("001");
         voucher.setDescription("Eklendi");
         return openingVoucherRepository.save(voucher);
+    }
+
+    private BigDecimal safeGet(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

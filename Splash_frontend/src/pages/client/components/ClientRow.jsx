@@ -63,7 +63,7 @@ export default function ClientRow({
       </td>
       <td className="p-5 text-right font-mono">
         <span
-          className={`text-lg font-bold ${
+          className={`text-lg font-bold whitespace-nowrap ${
             (Number(myVoucher?.finalBalance) || 0) < 0
               ? "text-red-400"
               : "text-emerald-400"

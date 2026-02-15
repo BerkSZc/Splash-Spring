@@ -1,6 +1,7 @@
 import { usePayrollLogic } from "./hooks/usePayrollLogic";
 import PayrollForm from "./components/PayrollForm";
 import PayrollTable from "./components/PayrollTable";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export default function PayrollPage() {
   const { state, handlers, refs } = usePayrollLogic();
@@ -22,6 +23,12 @@ export default function PayrollPage() {
       className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 font-sans"
       ref={refs.formRef}
     >
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Üst Bilgi Paneli */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-6">

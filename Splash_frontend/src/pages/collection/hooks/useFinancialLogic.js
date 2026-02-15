@@ -6,9 +6,10 @@ import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
+import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
 export const useFinancialLogic = () => {
-  const { customers, getAllCustomers } = useClient();
+  const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const { year } = useYear();
   const { tenant } = useTenant();
   const {
@@ -17,6 +18,7 @@ export const useFinancialLogic = () => {
     editCollection,
     deleteReceivedCollection,
     getReceivedCollectionsByYear,
+    loading: collectionsLoading,
   } = useReceivedCollection();
   const {
     payments,
@@ -24,9 +26,12 @@ export const useFinancialLogic = () => {
     editPayment,
     deletePaymentCompany,
     getPaymentCollectionsByYear,
+    loading: paymentsLoading,
   } = usePaymentCompany();
 
-  const { getFileNo } = useCommonData();
+  const { getAllOpeningVoucherByYear } = useVoucher();
+
+  const { getFileNo, loading: commonDataLoading } = useCommonData();
 
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
@@ -47,6 +52,21 @@ export const useFinancialLogic = () => {
     return Number(selectedYear) === currentActualYear
       ? new Date().toISOString().slice(0, 10)
       : `${selectedYear}-01-01`;
+  };
+
+  const syncFinancialData = async () => {
+    try {
+      await Promise.all([
+        getAllCustomers(),
+        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
+      ]);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message ||
+        error.message ||
+        "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
   };
 
   const [addForm, setAddForm] = useState({
@@ -74,7 +94,7 @@ export const useFinancialLogic = () => {
 
   useEffect(() => {
     setAddForm((prev) => ({ ...prev, date: getInitialDate(year) }));
-  }, [year]);
+  }, [year, tenant]);
 
   const [editForm, setEditForm] = useState({
     date: "",
@@ -91,39 +111,46 @@ export const useFinancialLogic = () => {
       if (!date) return;
 
       const mode = type === "received" ? "COLLECTION" : "PAYMENT";
-      const nextNo = await getFileNo(date, mode);
+      try {
+        const nextNo = await getFileNo(date, mode);
 
-      if (!ignore && nextNo) {
-        setAddForm((prev) => ({ ...prev, fileNo: nextNo }));
+        if (!ignore && nextNo && nextNo !== addForm.fileNo) {
+          setAddForm((prev) => ({ ...prev, fileNo: nextNo }));
+        }
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
       }
     };
     updateFileNo();
     return () => {
       ignore = true;
     };
-  }, [type, addForm.date, getFileNo]);
+  }, [type, year, tenant, addForm.date]);
 
   useEffect(() => {
     let ignore = false;
     const fetchData = async () => {
-      if (!year) return;
-      await Promise.all([
-        getAllCustomers(),
-        getReceivedCollectionsByYear(year),
-        getPaymentCollectionsByYear(year),
-      ]);
-      if (ignore) return;
+      if (!year || !tenant) return;
+      try {
+        await Promise.all([
+          getAllCustomers(),
+          getReceivedCollectionsByYear(year),
+          getPaymentCollectionsByYear(year),
+        ]);
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
     };
     fetchData();
     return () => {
       ignore = true;
     };
-  }, [
-    year,
-    getAllCustomers,
-    getReceivedCollectionsByYear,
-    getPaymentCollectionsByYear,
-  ]);
+  }, [year, tenant]);
 
   const shownList = type === "received" ? collections : payments;
 
@@ -181,6 +208,8 @@ export const useFinancialLogic = () => {
         type === "received" ? "COLLECTION" : "PAYMENT",
       );
 
+      await syncFinancialData();
+
       setAddForm({
         date: getInitialDate(year),
         customerId: "",
@@ -189,7 +218,9 @@ export const useFinancialLogic = () => {
         fileNo: nextNo || "",
       });
     } catch (error) {
-      console.error(error);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -227,27 +258,40 @@ export const useFinancialLogic = () => {
       toast.error("Yeni tarih mali yıl aralığında olmalıdır!");
       return;
     }
-
-    if (type === "received") {
-      await editCollection(payload.id, payload, tenant);
-      await getReceivedCollectionsByYear(year);
-    } else {
-      await editPayment(payload.id, payload, tenant);
-      await getPaymentCollectionsByYear(year);
+    try {
+      if (type === "received") {
+        await editCollection(payload.id, payload, tenant);
+        await getReceivedCollectionsByYear(year);
+      } else {
+        await editPayment(payload.id, payload, tenant);
+        await getPaymentCollectionsByYear(year);
+      }
+      await syncFinancialData();
+      setEditing(null);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
-    setEditing(null);
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    if (type === "received") {
-      await deleteReceivedCollection(deleteTarget.id, tenant);
-      await getReceivedCollectionsByYear(year);
-    } else {
-      await deletePaymentCompany(deleteTarget.id, tenant);
-      await getPaymentCollectionsByYear(year);
+    try {
+      if (type === "received") {
+        await deleteReceivedCollection(deleteTarget.id, tenant);
+        await getReceivedCollectionsByYear(year);
+      } else {
+        await deletePaymentCompany(deleteTarget.id, tenant);
+        await getPaymentCollectionsByYear(year);
+      }
+      await syncFinancialData();
+      setDeleteTarget(null);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
-    setDeleteTarget(null);
   };
 
   const toggleMenu = (id) => {
@@ -259,6 +303,12 @@ export const useFinancialLogic = () => {
     const [year, month, day] = dateStr.split("-");
     return `${day}.${month}.${year}`;
   };
+
+  const isLoading =
+    customersLoading ||
+    collectionsLoading ||
+    paymentsLoading ||
+    commonDataLoading;
 
   return {
     state: {
@@ -273,6 +323,7 @@ export const useFinancialLogic = () => {
       customers,
       year,
       menuRef,
+      isLoading,
     },
     handlers: {
       setType,
