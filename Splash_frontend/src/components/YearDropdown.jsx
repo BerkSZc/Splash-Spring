@@ -52,7 +52,7 @@ export default function YearDropdown() {
         <div className="absolute right-0 mt-2 w-28 bg-white rounded-lg shadow-lg border z-[9999]">
           {(Array.isArray(years) ? years : []).map((y) => (
             <button
-              key={y || 0}
+              key={y}
               onClick={() => {
                 changeYear(y);
                 setOpen(false);

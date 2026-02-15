@@ -116,7 +116,7 @@ export default function MaterialSearchSelect({
 
             {(Array.isArray(filtered) ? filtered : []).map((m) => (
               <div
-                key={m?.id || 0}
+                key={m?.id}
                 onClick={() => {
                   onChange(m.id);
                   setOpen(false);

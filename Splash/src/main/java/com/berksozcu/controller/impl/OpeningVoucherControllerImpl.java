@@ -22,17 +22,22 @@ public class OpeningVoucherControllerImpl implements IOpeningVoucherController {
 
 
     @PostMapping("/transfer-all")
+    @Override
     public String transferAll(@RequestParam int targetYear, @RequestParam String schemaName) {
         openingVoucherService.transferAllCustomers(targetYear, schemaName);
         return "Transfer tamamlandı";
     }
 
     @GetMapping("/get-all-by-year")
-    public List<OpeningVoucher> getOpeningVoucherByCustomerAndYear(@RequestParam LocalDate date) {
-       return openingVoucherService.getAllOpeningVoucherByCustomer(date);
+    @Override
+    public List<OpeningVoucher> getOpeningVoucherByCustomerAndYear(@RequestParam LocalDate date, @RequestParam String schemaName) {
+       return openingVoucherService.getAllOpeningVoucherByCustomer(date, schemaName);
     }
+
     @GetMapping("/get-by-year")
-    public OpeningVoucher getOpeningVoucherByCustomerAndYear(@RequestParam Long customerId, @RequestParam LocalDate date) {
-       return openingVoucherService.getOpeningVoucherByCustomer(customerId, date);
+    @Override
+    public OpeningVoucher getOpeningVoucherByCustomerAndYear(@RequestParam Long customerId, @RequestParam LocalDate date,
+                                                             @RequestParam String schemaName) {
+       return openingVoucherService.getOpeningVoucherByCustomer(customerId, date, schemaName);
     }
 }

@@ -1,6 +1,7 @@
 import { useHomeLogic } from "./hooks/useHomeLogic.js";
 import QuickLinkCard from "./components/QuickLinkCard.jsx";
 import StatCard from "./components/StatCard";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export function HomePage() {
   const { state } = useHomeLogic();
@@ -17,6 +18,12 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-7xl mx-auto space-y-12">
         {/* ÜST BAŞLIK */}
         <header className="flex justify-between items-end border-b border-gray-800 pb-8">

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useVoucher } from "../../../../backend/store/useVoucher";
+import { useTenant } from "../../../context/TenantContext";
+import { useYear } from "../../../context/YearContext";
 
 export default function InvoicePrintPreview({
   printItem,
@@ -8,6 +10,8 @@ export default function InvoicePrintPreview({
 }) {
   const { getOpeningVoucherByYear } = useVoucher();
   const [voucher, setVoucher] = useState(null);
+  const { tenant } = useTenant();
+  const { year } = useYear();
 
   useEffect(() => {
     let ignore = false;
@@ -21,6 +25,7 @@ export default function InvoicePrintPreview({
       const data = await getOpeningVoucherByYear(
         printItem.customer.id,
         dateString,
+        tenant,
       );
       if (!ignore) {
         setVoucher(data);
@@ -30,7 +35,7 @@ export default function InvoicePrintPreview({
     return () => {
       ignore = true;
     };
-  }, [printItem?.id]);
+  }, [printItem?.id, tenant, year]);
 
   if (!printItem) return null;
 

@@ -4,22 +4,25 @@ import { axiosInstance } from "../lib/axios";
 
 export const usePayroll = create((set) => ({
   payrolls: [],
+  loading: false,
 
-  getPayrollByYear: async (year) => {
+  getPayrollByYear: async (year, schemaName) => {
+    set({ loading: true, payrolls: [] });
     try {
-      set({ payrolls: [] });
       const res = await axiosInstance.get(`/payroll/find-year`, {
-        params: { year },
+        params: { year, schemaName },
       });
       set({ payrolls: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getPayrollByYear: " + backendErr);
+      set({ payrolls: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   addCheque: async (id, newPayroll, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.post(`payroll/add/${id}`, newPayroll, {
         headers: {
@@ -31,14 +34,14 @@ export const usePayroll = create((set) => ({
       });
       toast.success("Bordro başarıyla eklendi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   editCheque: async (id, newPayroll, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.put(`/payroll/edit/${id}`, newPayroll, {
         headers: {
@@ -50,13 +53,13 @@ export const usePayroll = create((set) => ({
       });
       toast.success("Bordro değiştirildi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   deleteCheque: async (id, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.delete(`/payroll/delete/${id}`, {
         params: {
@@ -65,10 +68,9 @@ export const usePayroll = create((set) => ({
       });
       toast.success("Bordro başarıyla silindi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

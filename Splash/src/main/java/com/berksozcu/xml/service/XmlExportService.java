@@ -38,6 +38,7 @@ import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -48,6 +49,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,26 +91,26 @@ public class XmlExportService {
         for (PurchaseInvoice inv : purchaseInvoices) {
             InvoiceXml invXml = new InvoiceXml();
             invXml.setCOMPANY_ID(inv.getCompany().getId());
-            invXml.setDATE(inv.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-            invXml.setDOC_NUMBER(inv.getFileNo());
-            invXml.setARP_CODE(inv.getCustomer().getCode());
-            invXml.setTOTAL_VAT(inv.getKdvToplam());
-            invXml.setTOTAL_NET(inv.getTotalPrice());
+            invXml.setDATE(Objects.requireNonNullElse(inv.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            invXml.setDOC_NUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
+            invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
+            invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()));
+            invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()));
             TransactionsXml txsXml = new TransactionsXml();
             List<TransactionXml> txList = new ArrayList<>();
 
             for (PurchaseInvoiceItem item : inv.getItems()) {
                 TransactionXml tx = new TransactionXml();
                 tx.setTYPE(0);
-                tx.setMASTER_CODE(item.getMaterial().getCode());
-                tx.setQUANTITY(item.getQuantity());
-                tx.setPRICE(item.getUnitPrice());
-                tx.setVAT_RATE(item.getKdv());
-                tx.setVAT_AMOUNT(item.getKdvTutar());
+                tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
+                tx.setQUANTITY(safeGet(item.getQuantity()));
+                tx.setPRICE(safeGet(item.getUnitPrice()));
+                tx.setVAT_RATE(safeGet(item.getKdv()));
+                tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
 
-                BigDecimal lineTotal = item.getUnitPrice().multiply(item.getQuantity());
+                BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
                 tx.setTOTAL_NET(lineTotal.setScale(2, RoundingMode.HALF_UP));
-                tx.setTOTAL(lineTotal.add(item.getKdvTutar()).setScale(2, RoundingMode.HALF_UP));
+                tx.setTOTAL(lineTotal.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP));
 
                 txList.add(tx);
             }
@@ -142,11 +144,11 @@ public class XmlExportService {
 
             invXml.setTYPE(8);
             invXml.setCOMPANY_ID(inv.getCompany().getId());
-            invXml.setDATE(inv.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-            invXml.setTOTAL_NET(inv.getTotalPrice().setScale(2, RoundingMode.HALF_UP));
-            invXml.setTOTAL_VAT(inv.getKdvToplam().setScale(2, RoundingMode.HALF_UP));
-            invXml.setNUMBER(inv.getFileNo());
-            invXml.setARP_CODE(inv.getCustomer().getCode());
+            invXml.setDATE(Objects.requireNonNullElse(inv.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
+            invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()).setScale(2, RoundingMode.HALF_UP));
+            invXml.setNUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
+            invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
 
             TransactionsXml txsXml = new TransactionsXml();
             List<TransactionXml> txList = new ArrayList<>();
@@ -154,15 +156,15 @@ public class XmlExportService {
             for (SalesInvoiceItem item : inv.getItems()) {
                 TransactionXml tx = new TransactionXml();
                 tx.setTYPE(0);
-                tx.setMASTER_CODE(item.getMaterial().getCode());
-                tx.setQUANTITY(item.getQuantity());
-                tx.setPRICE(item.getUnitPrice());
-                tx.setVAT_RATE(item.getKdv());
-                tx.setVAT_AMOUNT(item.getKdvTutar());
+                tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
+                tx.setQUANTITY(safeGet(item.getQuantity()));
+                tx.setPRICE(safeGet(item.getUnitPrice()));
+                tx.setVAT_RATE(safeGet(item.getKdv()));
+                tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
 
-                BigDecimal lineTotal = item.getUnitPrice().multiply(item.getQuantity());
+                BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
                 tx.setTOTAL_NET(lineTotal.setScale(2, RoundingMode.HALF_UP));
-                tx.setTOTAL(lineTotal.add(item.getKdvTutar()).setScale(2, RoundingMode.HALF_UP));
+                tx.setTOTAL(lineTotal.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP));
 
                 txList.add(tx);
             }
@@ -193,11 +195,11 @@ public class XmlExportService {
         for (Material m : materials) {
             MaterialXml mXml = new MaterialXml();
 
-            mXml.setCODE(m.getCode());
-            mXml.setNAME(m.getComment());
+            mXml.setCODE(m.getCode().trim().toUpperCase());
+            mXml.setNAME(Objects.requireNonNullElse(m.getComment(), ""));
             mXml.setUNITSET_CODE("ADET");
-            mXml.setPURCHASE_PRICE(m.getPurchasePrice().setScale(2, RoundingMode.HALF_UP).toString());
-            mXml.setSALES_PRICE(m.getSalesPrice().setScale(2, RoundingMode.HALF_UP).toString());
+            mXml.setPURCHASE_PRICE(safeGet(m.getPurchasePrice()).setScale(2, RoundingMode.HALF_UP).toString());
+            mXml.setSALES_PRICE(safeGet(m.getSalesPrice()).setScale(2, RoundingMode.HALF_UP).toString());
 
             materialXmlList.add(mXml);
         }
@@ -223,12 +225,12 @@ public class XmlExportService {
         for (Customer c : customers) {
             CustomerXml cXml = new CustomerXml();
 
-            cXml.setCODE(c.getCode());
-            cXml.setCITY(c.getLocal());
-            cXml.setDISTRICT(c.getDistrict());
-            cXml.setTITLE(c.getName());
-            cXml.setTAX_ID(c.getVdNo());
-            cXml.setADDRESS1(c.getAddress());
+            cXml.setCODE(c.getCode().trim().toUpperCase());
+            cXml.setCITY(Objects.requireNonNullElse(c.getLocal(), ""));
+            cXml.setDISTRICT(Objects.requireNonNullElse(c.getDistrict(), ""));
+            cXml.setTITLE(Objects.requireNonNullElse(c.getName(), ""));
+            cXml.setTAX_ID(Objects.requireNonNullElse(c.getVdNo(), ""));
+            cXml.setADDRESS1(Objects.requireNonNullElse(c.getAddress(), ""));
             cXml.setRECORD_STATUS(c.isArchived() ? 1 : 0);
 
             customerXmlList.add(cXml);
@@ -260,17 +262,17 @@ public class XmlExportService {
             CollectionXml cXml = new CollectionXml();
             cXml.setTYPE(11);
             cXml.setCOMPANY_ID(rc.getCompany().getId());
-            cXml.setDATE(rc.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-            cXml.setAMOUNT(rc.getPrice().setScale(2, RoundingMode.HALF_UP).toString());
-            cXml.setDESCRIPTION(rc.getComment());
+            cXml.setDATE(Objects.requireNonNullElse(rc.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            cXml.setAMOUNT(safeGet(rc.getPrice()).setScale(2, RoundingMode.HALF_UP).toString());
+            cXml.setDESCRIPTION(Objects.requireNonNullElse(rc.getComment(), ""));
             cXml.setSIGN(1);
-            cXml.setNUMBER(rc.getFileNo());
+            cXml.setNUMBER(Objects.requireNonNullElse(rc.getFileNo(), ""));
             cXml.setSD_CODE("1");
 
 
             AttachmentArp attachmentArp = new AttachmentArp();
             TransactionField tf = new TransactionField();
-            tf.setArpCode(rc.getCustomer().getCode());
+            tf.setArpCode(rc.getCustomer().getCode().trim().toUpperCase());
             attachmentArp.setTransaction(tf);
             cXml.setAttachmentArp(attachmentArp);
             collectionXmlList.add(cXml);
@@ -280,15 +282,15 @@ public class XmlExportService {
             cXml.setTYPE(12);
             cXml.setSD_CODE("2");
             cXml.setCOMPANY_ID(py.getCompany().getId());
-            cXml.setDATE(py.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-            cXml.setAMOUNT(py.getPrice().setScale(2, RoundingMode.HALF_UP).toString());
-            cXml.setDESCRIPTION(py.getComment());
-            cXml.setNUMBER(py.getFileNo());
+            cXml.setDATE(Objects.requireNonNullElse(py.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            cXml.setAMOUNT(safeGet(py.getPrice()).setScale(2, RoundingMode.HALF_UP).toString());
+            cXml.setDESCRIPTION(Objects.requireNonNullElse(py.getComment(), ""));
+            cXml.setNUMBER(Objects.requireNonNullElse(py.getFileNo(), ""));
             cXml.setSIGN(0);
 
             AttachmentArp attachmentArp = new AttachmentArp();
             TransactionField tf = new TransactionField();
-            tf.setArpCode(py.getCustomer().getCode());
+            tf.setArpCode(py.getCustomer().getCode().trim().toUpperCase());
             attachmentArp.setTransaction(tf);
             cXml.setAttachmentArp(attachmentArp);
 
@@ -326,17 +328,17 @@ public class XmlExportService {
 
             rollXml.setType(first.getPayrollModel() == PayrollModel.INPUT ? 1 : 3);
             rollXml.setCOMPANY_ID(first.getCompany().getId());
-            rollXml.setMasterCode(first.getCustomer().getCode());
-            rollXml.setDate(first.getTransactionDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            rollXml.setMasterCode(first.getCustomer().getCode().trim().toUpperCase());
+            rollXml.setDate(Objects.requireNonNullElse(first.getTransactionDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
 
             PayrollTransactionsXml transactionsXml = new PayrollTransactionsXml();
             List<PayrollTxXml> payrollTxXmls = new ArrayList<>();
             for(Payroll payroll : customerPayrolls) {
                 PayrollTxXml ptxXml = new PayrollTxXml();
-                ptxXml.setNumber(payroll.getFileNo());
-                ptxXml.setDueDate(payroll.getExpiredDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-                ptxXml.setDate(payroll.getTransactionDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-                ptxXml.setAmount(payroll.getAmount().setScale(2, RoundingMode.HALF_UP).toString());
+                ptxXml.setNumber(Objects.requireNonNullElse(payroll.getFileNo(), ""));
+                ptxXml.setDueDate(Objects.requireNonNullElse(payroll.getExpiredDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                ptxXml.setDate(Objects.requireNonNullElse(payroll.getTransactionDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                ptxXml.setAmount(safeGet(payroll.getAmount()).setScale(2, RoundingMode.HALF_UP).toString());
                 payrollTxXmls.add(ptxXml);
             }
             transactionsXml.setList(payrollTxXmls);
@@ -373,11 +375,11 @@ public class XmlExportService {
 
             for(OpeningVoucher op : voucherList) {
                 ArpTransactionXml tx = new ArpTransactionXml();
-                tx.setARP_CODE(op.getCustomer().getCode());
-                tx.setCUSTOMER_NAME(op.getCustomerName());
+                tx.setARP_CODE(op.getCustomer().getCode().trim().toUpperCase());
+                tx.setCUSTOMER_NAME(Objects.requireNonNullElse(op.getCustomerName(), ""));
                 tx.setDESCRIPTION("Veri Dışarı Aktarımı");
-                tx.setCREDIT(op.getYearlyCredit().setScale(2, RoundingMode.HALF_UP).toString());
-                tx.setDEBIT(op.getYearlyDebit().setScale(2, RoundingMode.HALF_UP).toString());
+                tx.setCREDIT(safeGet(op.getYearlyCredit()).setScale(2, RoundingMode.HALF_UP).toString());
+                tx.setDEBIT(safeGet(op.getYearlyDebit()).setScale(2, RoundingMode.HALF_UP).toString());
                 vXml.setCompany_id(op.getCompany().getId());
 
                 txList.add(tx);
@@ -396,5 +398,9 @@ public class XmlExportService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         marshaller.marshal(rootXml, baos);
         return baos.toByteArray();
+    }
+
+    private BigDecimal safeGet(BigDecimal value) {
+        return value != null ? value :  BigDecimal.ZERO;
     }
 }

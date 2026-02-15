@@ -4,15 +4,22 @@ import { useState, useRef, useEffect } from "react";
 import { useVoucher } from "../../backend/store/useVoucher.js";
 import { useClient } from "../../backend/store/useClient.js";
 import { useYear } from "../context/YearContext";
+import { useTenant } from "../context/TenantContext.jsx";
+import toast from "react-hot-toast";
 
 export default function CustomerSearchSelect({ customers, value, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef(null);
 
-  const { vouchers, getAllOpeningVoucherByYear } = useVoucher();
-  const { getAllCustomers } = useClient();
+  const {
+    vouchers,
+    getAllOpeningVoucherByYear,
+    loading: vouchersLoading,
+  } = useVoucher();
+  const { getAllCustomers, loading: customersLoading } = useClient();
   const { year } = useYear();
+  const { tenant } = useTenant();
 
   // Seçili müşteriyi bul
   const selectedCustomer = (Array.isArray(customers) ? customers : []).find(
@@ -40,45 +47,64 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
   useEffect(() => {
     let ignore = false;
     const fetchAndSyncData = async () => {
-      await getAllCustomers();
-
-      if (ignore) return;
-
-      if (year) {
-        const dateString = `${year}-01-01`;
-        await getAllOpeningVoucherByYear(dateString);
+      try {
+        await getAllCustomers();
+        if (year) {
+          const dateString = `${year}-01-01`;
+          await getAllOpeningVoucherByYear(dateString, tenant);
+        }
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
       }
     };
     fetchAndSyncData();
     return () => {
       ignore = true;
     };
-  }, [year, getAllCustomers, getAllOpeningVoucherByYear]);
+  }, [year, tenant]);
+
+  const isLoading = customersLoading || vouchersLoading;
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus-within:border-blue-500 cursor-pointer flex justify-between items-center"
+        onClick={() => !isLoading && setIsOpen(!isOpen)}
+        className={`w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus-within:border-blue-500 cursor-pointer flex justify-between items-center ${
+          isLoading
+            ? "opacity-70 cursor-not-allowed"
+            : "cursor-pointer focus-within:border-blue-500"
+        }`}
       >
-        <span className={selectedCustomer ? "text-white" : "text-gray-500"}>
-          {selectedCustomer ? selectedCustomer.name : "Müşteri / Firma Ara..."}
-        </span>
-        <svg
-          className={`w-5 h-5 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        <div className="flex items-center gap-3">
+          {isLoading && (
+            <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+          )}
+          <span className={selectedCustomer ? "text-white" : "text-gray-500"}>
+            {isLoading
+              ? "Müşteriler Yükleniyor..."
+              : selectedCustomer
+                ? selectedCustomer.name
+                : "Müşteri / Firma Ara..."}
+          </span>
+        </div>
+        {!isLoading && (
+          <svg
+            className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        )}
       </div>
 
       {isOpen && (
@@ -104,7 +130,7 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
                 const balanceDisplay = Number(myVoucher?.finalBalance ?? 0);
                 return (
                   <div
-                    key={c?.id || ""}
+                    key={c?.id}
                     onClick={() => {
                       onChange(c?.id);
                       setIsOpen(false);

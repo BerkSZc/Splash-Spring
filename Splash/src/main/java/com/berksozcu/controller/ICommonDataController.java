@@ -9,7 +9,8 @@ import java.util.Map;
 
 public interface ICommonDataController {
      BigDecimal convertToTry(@RequestParam(required = false) String code,
-                                   @RequestParam(required = false) BigDecimal amount);
+                                   @RequestParam(required = false) BigDecimal amount,
+                             @RequestParam LocalDate date);
      Map<String, BigDecimal> getTodayRates(
             @RequestParam("currencyDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate currencyDate
     );

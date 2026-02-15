@@ -12,12 +12,12 @@ export const useTransferLogic = () => {
     addCompany,
     getAllCompanies,
     companies,
-    isLoading,
     addYearToCompany,
     getAllYearByCompanyId,
     deleteYear,
+    loading: companiesLoading,
   } = useCompany();
-  const { transferAllBalances } = useVoucher();
+  const { transferAllBalances, loading: vouchersLoading } = useVoucher();
 
   const [newYear, setNewYear] = useState("");
   const [shouldTransfer, setShouldTransfer] = useState(false);
@@ -33,28 +33,47 @@ export const useTransferLogic = () => {
   });
 
   useEffect(() => {
-    getAllCompanies();
-  }, [getAllCompanies]);
+    let ignore = false;
+    const fetchData = async () => {
+      try {
+        await getAllCompanies();
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
+    };
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
     const fetchYears = async () => {
       const selectedCompany = companies?.find((c) => c.schemaName === tenant);
-
-      if (selectedCompany?.id) {
-        const data = await getAllYearByCompanyId(selectedCompany.id);
-        if (!ignore) {
-          setYears((Array.isArray(data) ? data : []).map((y) => y.yearValue));
+      try {
+        if (selectedCompany?.id) {
+          const data = await getAllYearByCompanyId(selectedCompany.id);
+          if (!ignore) {
+            setYears((Array.isArray(data) ? data : []).map((y) => y.yearValue));
+          }
+        } else {
+          setYears();
         }
-      } else {
-        setYears();
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
       }
     };
     fetchYears();
     return () => {
       ignore = true;
     };
-  }, [tenant, companies, getAllYearByCompanyId, setYears]);
+  }, [tenant, companies?.length]);
 
   const handleAddYearClick = async () => {
     if (!newYear.trim()) return toast.error("Lütfen yıl girişi yapın!");
@@ -72,21 +91,22 @@ export const useTransferLogic = () => {
     const selectedCompany = companies?.find((c) => c.schemaName === tenant);
     if (!selectedCompany) return toast.error("Lütfen Bir şirket seçin");
 
-    if (Number(year) + 1 !== Number(newYear)) {
-      await addYearToCompany(selectedCompany.id, Number(newYear));
-      await addYear(Number(newYear));
-      setNewYear("");
-      toast.success("Mali yıl eklendi");
-      return;
-    }
     try {
+      if (Number(year) + 1 !== Number(newYear)) {
+        await addYearToCompany(selectedCompany.id, Number(newYear));
+        await addYear(Number(newYear));
+        setNewYear("");
+        toast.success("Mali yıl eklendi");
+        return;
+      }
       await transferAllBalances(Number(newYear), tenant);
       await addYearToCompany(selectedCompany.id, Number(newYear));
       await addYear(Number(newYear));
       setNewYear("");
     } catch (error) {
-      toast.error("İşlem sırasında hata oluştu");
-      console.error(error);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -101,7 +121,9 @@ export const useTransferLogic = () => {
       handleCloseDelete();
       toast.success(`${targetYear} mali yılı ve ilişkili tüm veriler silindi`);
     } catch (error) {
-      toast.error("Hata: " + error?.response?.data?.exception?.message);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -116,9 +138,11 @@ export const useTransferLogic = () => {
     try {
       await addCompany({ ...newCompData, sourceSchema: source });
       setNewCompData({ id: "", name: "", desc: "" });
-      getAllCompanies();
+      await getAllCompanies();
     } catch (error) {
-      toast.error("Şirket oluşturulamadı: " + error.response.message);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -127,13 +151,14 @@ export const useTransferLogic = () => {
     setConfirmDeleteCheck(false);
   };
 
+  const isLoading = companiesLoading || vouchersLoading;
+
   return {
     state: {
       year,
       years,
       tenant,
       companies,
-      isLoading,
       newYear,
       newCompData,
       shouldTransfer,
@@ -141,6 +166,7 @@ export const useTransferLogic = () => {
       confirmCheck,
       deleteTarget,
       confirmDeleteCheck,
+      isLoading,
     },
     handlers: {
       changeYear,

@@ -4,6 +4,7 @@ import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice";
 import { useMaterial } from "../../../../backend/store/useMaterial";
 import { useClient } from "../../../../backend/store/useClient";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
+import { useVoucher } from "../../../../backend/store/useVoucher.js";
 import { useYear } from "../../../context/YearContext";
 import { useTenant } from "../../../context/TenantContext";
 import { generateInvoiceHTML } from "../../../utils/printHelpers.js";
@@ -15,16 +16,19 @@ export const useInvoicePageLogic = () => {
     editPurchaseInvoice,
     deletePurchaseInvoice,
     getPurchaseInvoiceByYear,
+    loading: purchaseLoading,
   } = usePurchaseInvoice();
   const {
     sales,
     editSalesInvoice,
     deleteSalesInvoice,
     getSalesInvoicesByYear,
+    loading: salesLoading,
   } = useSalesInvoice();
-  const { materials, getMaterials } = useMaterial();
-  const { customers, getAllCustomers } = useClient();
-  const { convertCurrency } = useCommonData();
+  const { materials, getMaterials, loading: materialLoading } = useMaterial();
+  const { customers, getAllCustomers, loading: customerLoading } = useClient();
+  const { convertCurrency, loading: commonDataLoading } = useCommonData();
+  const { getAllOpeningVoucherByYear } = useVoucher();
   const { year } = useYear();
   const { tenant } = useTenant();
 
@@ -65,12 +69,18 @@ export const useInvoicePageLogic = () => {
 
     const fetchData = async () => {
       if (!year) return;
-      await Promise.all([getMaterials(), getAllCustomers()]);
-      if (ignore) return;
+      try {
+        await Promise.all([getMaterials(), getAllCustomers()]);
+        if (ignore) return;
 
-      invoiceType === "purchase"
-        ? await getPurchaseInvoiceByYear(year)
-        : await getSalesInvoicesByYear(year);
+        invoiceType === "purchase"
+          ? await getPurchaseInvoiceByYear(year)
+          : await getSalesInvoicesByYear(year);
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
     };
     fetchData();
     return () => {
@@ -103,6 +113,19 @@ export const useInvoicePageLogic = () => {
       printWindow.document.write(html);
       printWindow.document.close();
       setPrintItem(null);
+    }
+  };
+
+  const syncFinancialData = async () => {
+    try {
+      await Promise.all([
+        getAllCustomers(),
+        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
+      ]);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -171,6 +194,8 @@ export const useInvoicePageLogic = () => {
     const selectedMaterial = materials.find((m) => m.id === Number(materialId));
     if (!selectedMaterial) return;
 
+    const invoiceDate = form.date;
+
     let finalPrice = 0;
 
     const basePrice =
@@ -183,11 +208,21 @@ export const useInvoicePageLogic = () => {
         ? selectedMaterial.salesCurrency || "TRY"
         : selectedMaterial.purchaseCurrency || "TRY";
 
-    if (currency !== "TRY" && basePrice > 0) {
-      const calculatedPrice = await convertCurrency(basePrice, currency);
-      finalPrice = calculatedPrice || basePrice;
-    } else {
-      finalPrice = basePrice;
+    try {
+      if (currency !== "TRY" && basePrice > 0) {
+        const calculatedPrice = await convertCurrency(
+          basePrice,
+          currency,
+          invoiceDate,
+        );
+        finalPrice = calculatedPrice || basePrice;
+      } else {
+        finalPrice = basePrice;
+      }
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
 
     setForm((prev) => {
@@ -296,24 +331,40 @@ export const useInvoicePageLogic = () => {
       return;
     }
 
-    invoiceType === "purchase"
-      ? await editPurchaseInvoice(editingInvoice.id, payload, tenant)
-      : await editSalesInvoice(editingInvoice.id, payload, tenant);
-    invoiceType === "purchase"
-      ? getPurchaseInvoiceByYear(year)
-      : getSalesInvoicesByYear(year);
-    setEditingInvoice(null);
-    setForm(null);
+    try {
+      if (invoiceType === "purchase") {
+        await editPurchaseInvoice(editingInvoice.id, payload, tenant);
+        await getPurchaseInvoiceByYear(year);
+      } else {
+        await editSalesInvoice(editingInvoice.id, payload, tenant);
+        await getSalesInvoicesByYear(year);
+      }
+      await syncFinancialData();
+      setEditingInvoice(null);
+      setForm(null);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
   };
 
   const confirmDelete = async () => {
-    invoiceType === "purchase"
-      ? await deletePurchaseInvoice(deleteTarget.id, tenant)
-      : await deleteSalesInvoice(deleteTarget.id, tenant);
-    invoiceType === "purchase"
-      ? getPurchaseInvoiceByYear(year)
-      : getSalesInvoicesByYear(year);
-    setDeleteTarget(null);
+    try {
+      if (invoiceType === "purchase") {
+        await deletePurchaseInvoice(deleteTarget.id, tenant);
+        await getPurchaseInvoiceByYear(year);
+      } else {
+        await deleteSalesInvoice(deleteTarget.id, tenant);
+        await getSalesInvoicesByYear(year);
+      }
+      await syncFinancialData();
+      setDeleteTarget(null);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    }
   };
 
   const roundHalfUp = (num) => {
@@ -426,6 +477,12 @@ export const useInvoicePageLogic = () => {
     return `${d}.${m}.${y}`;
   };
 
+  const isLoading =
+    (invoiceType === "purchase" ? purchaseLoading : salesLoading) ||
+    materialLoading ||
+    customerLoading ||
+    commonDataLoading;
+
   return {
     state: {
       invoiceType,
@@ -443,6 +500,7 @@ export const useInvoicePageLogic = () => {
       materials,
       customers,
       formatDateToTR,
+      isLoading,
     },
     handlers: {
       toggleMenu,

@@ -1,6 +1,7 @@
 import { useInvoiceLogic } from "./hooks/useInvoiceLogic.js";
 import CustomerSearchSelect from "../../components/CustomerSearchSelect";
 import InvoiceItemsTable from "./components/InvoiceItemsTable";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 export default function InvoiceForm() {
   const { state, handlers } = useInvoiceLogic();
@@ -12,6 +13,12 @@ export default function InvoiceForm() {
   const actualMaterials = state?.materials || [];
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-6xl mx-auto space-y-8 text-left">
         {/* BAŞLIK VE MOD SEÇİMİ */}
         <div className="flex justify-between items-center bg-gray-900/40 p-6 rounded-[2rem] border border-gray-800 backdrop-blur-sm">

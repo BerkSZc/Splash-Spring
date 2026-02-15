@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 
 @Service
@@ -38,9 +39,6 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
     @Autowired
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
-
-    @Autowired
-    private ICommonDataService currencyRateService;
 
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
@@ -69,17 +67,11 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, start, company));
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(salesInvoice.getTotalPrice());
-        }
 
         salesInvoice.setCustomer(customer);
 
-        BigDecimal usdRate = currencyRateService.getRateOrDefault("USD", salesInvoice.getDate());
-        BigDecimal eurRate = currencyRateService.getRateOrDefault("EUR", salesInvoice.getDate());
-
-        salesInvoice.setEurSellingRate(eurRate);
-        salesInvoice.setUsdSellingRate(usdRate);
+        salesInvoice.setEurSellingRate(safeGet(salesInvoice.getEurSellingRate()));
+        salesInvoice.setUsdSellingRate(safeGet(salesInvoice.getUsdSellingRate()));
         salesInvoice.setCompany(company);
 
         BigDecimal totalPrice = BigDecimal.ZERO;
@@ -93,14 +85,14 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             item.setSalesInvoice(salesInvoice);
 
             // Malzemenin bulunduğu satırın kdv siz fiyatı
-            BigDecimal lineTotal = item.getUnitPrice()
-                    .multiply(item.getQuantity())
+            BigDecimal lineTotal = safeGet(item.getUnitPrice())
+                    .multiply(safeGet(item.getQuantity()))
                     .setScale(2, RoundingMode.HALF_UP);
 
-            BigDecimal kdv = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+            BigDecimal kdv = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
 
             BigDecimal kdvTutarHesaplama = kdv
-                    .multiply(item.getUnitPrice()).multiply(item.getQuantity())
+                    .multiply(safeGet(item.getUnitPrice())).multiply(safeGet(item.getQuantity()))
                     .setScale(2, RoundingMode.HALF_UP);
 
             item.setKdvTutar(kdvTutarHesaplama);
@@ -114,8 +106,8 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         salesInvoice.setKdvToplam(kdvToplam);
         salesInvoice.setTotalPrice(totalPrice);
 
-        voucher.setFinalBalance(voucher.getFinalBalance().add(totalPrice));
-        voucher.setDebit(voucher.getDebit().add(totalPrice));
+        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(totalPrice));
+        voucher.setDebit(safeGet(voucher.getDebit()).add(totalPrice));
 
         openingVoucherRepository.save(voucher);
         salesInvoiceRepository.save(salesInvoice);
@@ -123,7 +115,6 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         for (SalesInvoiceItem item : salesInvoice.getItems()) {
             savePriceHistory(item, salesInvoice, customer);
         }
-
         return salesInvoice;
     }
 
@@ -131,7 +122,6 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     public List<SalesInvoice> getAllSalesInvoice() {
         return salesInvoiceRepository.findAll();
     }
-
 
     @Override
     @Transactional
@@ -155,18 +145,14 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         }
 
         Customer oldCustomer = oldInvoice.getCustomer();
-
         Customer newCustomer = salesInvoice.getCustomer();
 
         OpeningVoucher oldVoucher =
                 openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
                         .orElseGet(() -> getDefaultVoucher(newCustomer, start, company));
 
-
-        BigDecimal oldVoucherFinalBalance = oldVoucher.getFinalBalance() != null ? oldVoucher.getFinalBalance() : BigDecimal.ZERO;
-        oldVoucher.setFinalBalance(oldVoucherFinalBalance.subtract(oldInvoice.getTotalPrice()));
-        oldVoucher.setDebit(oldVoucher.getDebit().subtract(oldInvoice.getTotalPrice()));
-
+        oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(safeGet(oldInvoice.getTotalPrice())));
+        oldVoucher.setDebit(safeGet(oldVoucher.getDebit()).subtract(safeGet(oldInvoice.getTotalPrice())));
 
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, start, company));
@@ -175,10 +161,10 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(oldItem.getMaterial().getId(), oldInvoice.getId());
         }
 
-        oldInvoice.setDate(salesInvoice.getDate());
-        oldInvoice.setFileNo(salesInvoice.getFileNo());
-        oldInvoice.setEurSellingRate(salesInvoice.getEurSellingRate());
-        oldInvoice.setUsdSellingRate(salesInvoice.getUsdSellingRate());
+        oldInvoice.setDate(Objects.requireNonNullElse(salesInvoice.getDate(), LocalDate.now()));
+        oldInvoice.setFileNo(Objects.requireNonNullElse(salesInvoice.getFileNo(), ""));
+        oldInvoice.setEurSellingRate(safeGet(salesInvoice.getEurSellingRate()));
+        oldInvoice.setUsdSellingRate(safeGet(salesInvoice.getUsdSellingRate()));
         oldInvoice.setCustomer(newCustomer);
 
         List<SalesInvoiceItem> oldItems = oldInvoice.getItems();
@@ -192,7 +178,6 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             Material material = materialRepository.findById(newItem.getMaterial().getId())
                     .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
-
             if (newItem.getId() == null) {
                 newItem.setMaterial(material);
                 newItem.setSalesInvoice(oldInvoice);
@@ -204,9 +189,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                         .orElseThrow();
 
                 oldItem.setMaterial(material);
-                oldItem.setQuantity(newItem.getQuantity());
-                oldItem.setUnitPrice(newItem.getUnitPrice());
-                oldItem.setKdv(newItem.getKdv());
+                oldItem.setQuantity(safeGet(newItem.getQuantity()));
+                oldItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
+                oldItem.setKdv(safeGet(newItem.getKdv()));
             }
         }
 
@@ -215,11 +200,11 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         for (SalesInvoiceItem item : oldItems) {
             //KDV HESAPLAMA
-            BigDecimal kdvOran = item.getKdv().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+            BigDecimal kdvOran = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
             //Malzemenin bulunduğu satırın kdv tutarı
-            BigDecimal kdvTutar = item.getUnitPrice().multiply(item.getQuantity()).multiply(kdvOran);
+            BigDecimal kdvTutar = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity())).multiply(kdvOran);
             //Malzemenin bulunduğu satırın Kdv siz fiyatı
-            BigDecimal lineTotal = item.getUnitPrice().multiply(item.getQuantity());
+            BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
 
             item.setKdvTutar(kdvTutar);
             item.setLineTotal(lineTotal);
@@ -231,14 +216,13 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal finalBalance = newVoucher.getFinalBalance() != null ? newVoucher.getFinalBalance() : BigDecimal.ZERO;
-
         oldInvoice.setKdvToplam(kdvToplam);
         oldInvoice.setTotalPrice(total);
 
         // 5- Yeni toplamı müşterinin bakiyesine ekle
-        newVoucher.setFinalBalance(finalBalance.add(total));
-        newVoucher.setDebit(newVoucher.getDebit().add(total));
+        newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).add(total));
+        newVoucher.setDebit(safeGet(newVoucher.getDebit()).add(total));
+
         openingVoucherRepository.save(newVoucher);
         openingVoucherRepository.save(oldVoucher);
         return salesInvoiceRepository.save(oldInvoice);
@@ -263,16 +247,12 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, start, company));
 
-        if (voucher.getFinalBalance() == null) {
-            voucher.setFinalBalance(BigDecimal.ZERO);
-        }
-
         for (SalesInvoiceItem salesInvoiceItem : salesInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(salesInvoiceItem.getMaterial().getId(), id);
         }
 
-        voucher.setFinalBalance(voucher.getFinalBalance().subtract(salesInvoice.getTotalPrice()));
-        voucher.setDebit(voucher.getDebit().subtract(salesInvoice.getTotalPrice()));
+        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(salesInvoice.getTotalPrice())));
+        voucher.setDebit(safeGet(voucher.getDebit()).subtract(safeGet(salesInvoice.getTotalPrice())));
 
         openingVoucherRepository.save(voucher);
         salesInvoiceRepository.deleteById(id);
@@ -288,12 +268,12 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer) {
         MaterialPriceHistory saveHistory = new MaterialPriceHistory();
         saveHistory.setMaterial(item.getMaterial());
-        saveHistory.setInvoiceId(invoice.getId());
+        saveHistory.setInvoiceId(Objects.requireNonNullElse(invoice.getId(), 999L));
         saveHistory.setInvoiceType(InvoiceType.SALES);
-        saveHistory.setPrice(item.getUnitPrice());
-        saveHistory.setQuantity(item.getQuantity());
-        saveHistory.setDate(invoice.getDate());
-        saveHistory.setCustomerName(customer.getName());
+        saveHistory.setPrice(safeGet(item.getUnitPrice()));
+        saveHistory.setQuantity(safeGet(item.getQuantity()));
+        saveHistory.setDate(Objects.requireNonNullElse(invoice.getDate(), LocalDate.now()));
+        saveHistory.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
         saveHistory.setCustomer(customer);
         materialPriceHistoryRepository.save(saveHistory);
     }
@@ -301,7 +281,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     private OpeningVoucher getDefaultVoucher(Customer customer, LocalDate start, Company company) {
         OpeningVoucher newVoucher = new OpeningVoucher();
         newVoucher.setCustomer(customer);
-        newVoucher.setDate(start);
+        newVoucher.setDate(Objects.requireNonNullElse(start,  LocalDate.now()));
         newVoucher.setDebit(BigDecimal.ZERO);
         newVoucher.setCredit(BigDecimal.ZERO);
         newVoucher.setYearlyCredit(BigDecimal.ZERO);
@@ -310,8 +290,12 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         newVoucher.setFileNo("001");
         newVoucher.setDescription("Eklendi");
         newVoucher.setCompany(company);
-        newVoucher.setCustomerName(customer.getName());
+        newVoucher.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
         return newVoucher;
+    }
+
+    private BigDecimal safeGet(BigDecimal value) {
+        return value !=  null ? value : BigDecimal.ZERO;
     }
 }
 

@@ -7,15 +7,32 @@ import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
+import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
 export const useInvoiceLogic = () => {
-  const { materials, getMaterials } = useMaterial();
-  const { customers } = useClient();
-  const { addSalesInvoice, getSalesInvoicesByYear } = useSalesInvoice();
-  const { addPurchaseInvoice, getPurchaseInvoiceByYear } = usePurchaseInvoice();
-  const { convertCurrency, getDailyRates, getFileNo } = useCommonData();
+  const { materials, getMaterials, loading: materialLoading } = useMaterial();
+  const { customers, getAllCustomers, loading: customersLoading } = useClient();
+  const {
+    addSalesInvoice,
+    getSalesInvoicesByYear,
+    loading: salesLoading,
+  } = useSalesInvoice();
+  const {
+    addPurchaseInvoice,
+    getPurchaseInvoiceByYear,
+    loading: purchaseLoading,
+  } = usePurchaseInvoice();
+  const {
+    convertCurrency,
+    getDailyRates,
+    getFileNo,
+    loading: commonDataLoading,
+  } = useCommonData();
+  const { getAllOpeningVoucherByYear } = useVoucher();
   const { year } = useYear();
   const { tenant } = useTenant();
+
+  const [refreshCouter, setRefreshCounter] = useState(0);
 
   const [mode, setMode] = useState(() => {
     return localStorage.getItem("invoice_mode") || "sales";
@@ -26,8 +43,23 @@ export const useInvoiceLogic = () => {
   }, [mode]);
 
   useEffect(() => {
-    if (!materials || materials?.length === 0) getMaterials();
-  }, [getMaterials, materials]);
+    let ignore = false;
+    const fetchData = async () => {
+      if (!tenant) return;
+      try {
+        await getMaterials();
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
+    };
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, [tenant]);
 
   const initalItem = {
     materialId: "",
@@ -72,7 +104,7 @@ export const useInvoiceLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year]);
+  }, [year, tenant]);
 
   const [salesForm, setSalesForm] = useState(() => getInitialFormState(year));
   const [purchaseForm, setPurchaseForm] = useState(() =>
@@ -105,36 +137,34 @@ export const useInvoiceLogic = () => {
       const currentForm = mode === "sales" ? salesForm : purchaseForm;
       const date = currentForm.date;
       if (!date) return;
+      try {
+        const [rates, nextNo] = await Promise.all([
+          getDailyRates(date),
+          getFileNo(date, mode.toUpperCase()),
+        ]);
+        const setter = mode === "sales" ? setSalesForm : setPurchaseForm;
 
-      const [rates, nextNo] = await Promise.all([
-        getDailyRates(date),
-        getFileNo(date, mode.toUpperCase()),
-      ]);
-      if (ignore) return;
-      const setter = mode === "sales" ? setSalesForm : setPurchaseForm;
-
-      setter((prev) => ({
-        ...prev,
-        fileNo: nextNo || prev.fileNo,
-        usdSellingRate: rates?.USD || prev.usdSellingRate || "",
-        eurSellingRate: rates?.EUR || prev.eurSellingRate || "",
-        items: rates
-          ? calculateItemsWithRates(prev.items, rates, materials, mode)
-          : prev.items,
-      }));
+        setter((prev) => ({
+          ...prev,
+          fileNo: nextNo || "",
+          usdSellingRate: rates?.USD || prev.usdSellingRate || "",
+          eurSellingRate: rates?.EUR || prev.eurSellingRate || "",
+          items: rates
+            ? calculateItemsWithRates(prev.items, rates, materials, mode)
+            : prev.items,
+        }));
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
     };
     fetchData();
     return () => {
       ignore = true;
     };
-  }, [
-    mode,
-    salesForm.date,
-    purchaseForm.date,
-    materials,
-    salesForm.fileNo,
-    purchaseForm.fileNo,
-  ]);
+  }, [mode, tenant, salesForm.date, purchaseForm.date, refreshCouter]);
 
   const salesCalculation = useMemo(() => {
     const total = salesForm.items.reduce(
@@ -181,11 +211,22 @@ export const useInvoiceLogic = () => {
 
     let finalPrice = 0;
 
-    if (currency !== "TRY") {
-      const calculatedPrice = await convertCurrency(basePrice, currency);
-      finalPrice = calculatedPrice || basePrice;
-    } else {
-      finalPrice = basePrice;
+    const invoiceDate = currentForm.date;
+    try {
+      if (currency !== "TRY") {
+        const calculatedPrice = await convertCurrency(
+          basePrice,
+          currency,
+          invoiceDate,
+        );
+        finalPrice = calculatedPrice || basePrice;
+      } else {
+        finalPrice = basePrice;
+      }
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
 
     const setter = isSales ? setSalesForm : setPurchaseForm;
@@ -325,11 +366,13 @@ export const useInvoiceLogic = () => {
     }
 
     const payload = {
-      date: currentForm.date,
-      currencyDate: currentForm.date,
-      fileNo: currentForm.fileNo,
-      kdvToplam: currentCalc.kdv,
-      totalPrice: currentCalc.total,
+      date: currentForm.date || "",
+      currencyDate: currentForm.date || "",
+      fileNo: currentForm.fileNo || "",
+      kdvToplam: Number(currentCalc.kdv) || 0,
+      totalPrice: Number(currentCalc.total) || 0,
+      eurSellingRate: Number(currentForm.eurSellingRate) || 0,
+      usdSellingRate: Number(currentForm.usdSellingRate) || 0,
       ...(isSales ? { customer: { id: Number(currentForm.customerId) } } : {}),
       items: (Array.isArray(currentForm.items) ? currentForm.items : []).map(
         (i) => {
@@ -360,16 +403,33 @@ export const useInvoiceLogic = () => {
         await getPurchaseInvoiceByYear(year);
       }
       resetForm();
+
+      setRefreshCounter((prev) => prev + 1);
+
+      await Promise.all([
+        getAllCustomers(),
+        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
+      ]);
     } catch (error) {
-      console.error(error);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
   const currentForm = mode === "sales" ? salesForm : purchaseForm;
   const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
 
+  const isLoading =
+    materialLoading ||
+    customersLoading ||
+    purchaseLoading ||
+    salesLoading ||
+    commonDataLoading;
+
   return {
     state: {
+      isLoading,
       mode,
       salesForm,
       purchaseForm,

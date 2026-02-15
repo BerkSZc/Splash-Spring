@@ -2,12 +2,19 @@ import { useTransferLogic } from "./hooks/useTransferLogic";
 import { CompanyCard } from "./components/CompanyCard";
 import { YearManager } from "./components/YearManager";
 import { CompanyForm } from "./components/CompanyForm";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 
 const CompanyPage = () => {
   const { state, handlers } = useTransferLogic();
 
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
+      {state.isLoading && (
+        <LoadingScreen
+          message="İŞLEM YAPILIYOR"
+          subMessage="Veritabanı senkronize ediliyor, lütfen bekleyiniz..."
+        />
+      )}
       <div className="max-w-6xl mx-auto space-y-12">
         {/* BAŞLIK */}
         <div className="text-center space-y-4">
@@ -32,11 +39,6 @@ const CompanyPage = () => {
             <h3 className="text-xl font-semibold flex items-center gap-3">
               <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
               Aktif Şirketler{" "}
-              {state.isLoading && (
-                <span className="text-sm text-gray-500 animate-pulse">
-                  (Yükleniyor...)
-                </span>
-              )}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {(Array.isArray(state.companies) ? state.companies : [])?.map(

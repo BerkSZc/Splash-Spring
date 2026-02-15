@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useTenant } from "../context/TenantContext";
 import { useCompany } from "../../backend/store/useCompany";
+import toast from "react-hot-toast";
 
 const CompanyDropDown = () => {
   const { tenant, changeTenant } = useTenant();
-  const { companies, getAllCompanies } = useCompany();
+  const {
+    companies,
+    getAllCompanies,
+    loading: companiesLoading,
+  } = useCompany();
 
   const [open, setOpen] = useState(false);
 
@@ -16,10 +21,27 @@ const CompanyDropDown = () => {
     )?.name || tenant;
 
   useEffect(() => {
-    if (companies?.length === 0) {
-      getAllCompanies();
-    }
+    let ignore = false;
+    const fetchData = async () => {
+      try {
+        if (companies?.length === 0) {
+          await getAllCompanies();
+        }
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
+    };
 
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, [companies?.length]);
+
+  useEffect(() => {
     const handleOutsideClick = (event) => {
       if (
         open &&
@@ -36,10 +58,13 @@ const CompanyDropDown = () => {
     };
   }, [open]);
 
+  const isLoading = companiesLoading;
+
   return (
     <div className="relative" ref={dropDownRef}>
       {/* BUTON */}
       <button
+        disabled={isLoading}
         onClick={() => setOpen(!open)}
         className="
         top-2 right-2
@@ -52,9 +77,13 @@ const CompanyDropDown = () => {
           leading-none
         "
       >
-        <span className="text-xs">🏢</span>
+        {isLoading ? (
+          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        ) : (
+          <span className="text-xs">🏢</span>
+        )}
         <span className="max-w-[100px]">
-          {currentCompanyName.toUpperCase()}
+          {isLoading ? "YÜKLENİYOR..." : currentCompanyName.toUpperCase()}
         </span>
         <span className="text-[10px] opacity-70">▼</span>
       </button>
@@ -66,14 +95,19 @@ const CompanyDropDown = () => {
             Şirket Seçimi
           </div>
           <div className="max-h-60 overflow-y-auto custom-scrollbar">
-            {(Array.isArray(companies) ? companies : []).map((c) => (
-              <button
-                key={c.id || 0}
-                onClick={() => {
-                  changeTenant(c?.schemaName);
-                  setOpen(false);
-                }}
-                className={`
+            {isLoading ? (
+              <div className="p-4 text-center text-xs text-gray-400 italic">
+                Şirketler getiriliyor...
+              </div>
+            ) : (
+              (Array.isArray(companies) ? companies : []).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    changeTenant(c?.schemaName);
+                    setOpen(false);
+                  }}
+                  className={`
                   w-full text-left px-4 py-3 text-sm transition-colors
                   flex items-center justify-between
                   ${
@@ -82,18 +116,19 @@ const CompanyDropDown = () => {
                       : "text-gray-700 hover:bg-gray-100"
                   }
                 `}
-              >
-                <div className="flex flex-col">
-                  <span>{c?.name || ""}</span>
-                  <span className="text-[10px] text-gray-400 font-mono">
-                    {c?.schemaName || ""}
-                  </span>
-                </div>
-                {c.schemaName === tenant && (
-                  <span className="text-indigo-600 font-bold">✓</span>
-                )}
-              </button>
-            ))}
+                >
+                  <div className="flex flex-col">
+                    <span>{c?.name || ""}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {c?.schemaName || ""}
+                    </span>
+                  </div>
+                  {c.schemaName === tenant && (
+                    <span className="text-indigo-600 font-bold">✓</span>
+                  )}
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}

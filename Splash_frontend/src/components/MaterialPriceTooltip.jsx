@@ -22,6 +22,7 @@ export default function MaterialPriceTooltip({
     getHistoryByYear,
     getHistoryByCustomerAndYear,
     getHistoryByCustomerAndAllYear,
+    loading: materialPriceLoading,
   } = useMaterialPriceHistory();
   const [selectedType, setSelectedType] = useState("PURCHASE");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -46,17 +47,23 @@ export default function MaterialPriceTooltip({
     };
   }, []);
 
-  const performSearch = (type, mode) => {
+  const performSearch = async (type, mode) => {
     if (!materialId || !mode) return;
 
-    if (mode === "YEARLY") {
-      getHistoryByYear(materialId, type, year);
-    } else if (mode === "ALL") {
-      getHistoryByAllYear(materialId, type);
-    } else if (mode === "CUSTOMER-YEARLY") {
-      getHistoryByCustomerAndYear(customerId, materialId, type, year);
-    } else if (mode === "CUSTOMER-ALL") {
-      getHistoryByCustomerAndAllYear(customerId, materialId, type);
+    try {
+      if (mode === "YEARLY") {
+        await getHistoryByYear(materialId, type, year);
+      } else if (mode === "ALL") {
+        await getHistoryByAllYear(materialId, type);
+      } else if (mode === "CUSTOMER-YEARLY") {
+        await getHistoryByCustomerAndYear(customerId, materialId, type, year);
+      } else if (mode === "CUSTOMER-ALL") {
+        await getHistoryByCustomerAndAllYear(customerId, materialId, type);
+      }
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -111,24 +118,30 @@ export default function MaterialPriceTooltip({
     return `${day}.${month}.${year}`;
   };
 
+  const isLoading = materialPriceLoading;
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          if (!disabled) setShowMenu(!showMenu);
+          if (!disabled && !isLoading) setShowMenu(!showMenu);
         }}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         className={`p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-all border border-gray-700 flex items-center justify-center ${
-          disabled
+          disabled || isLoading
             ? "opacity-30 cursor-not-allowed"
             : "hover:text-blue-400 active:scale-95"
         }`}
       >
-        <span className="font-black tracking-widest text-lg leading-none mb-1">
-          ...
-        </span>
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+        ) : (
+          <span className="font-black tracking-widest text-lg leading-none mb-1">
+            ...
+          </span>
+        )}
       </button>
 
       {showMenu &&
@@ -241,7 +254,17 @@ export default function MaterialPriceTooltip({
 
             {/* Fiyat geçmişi kartı */}
             <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 mb-8 min-h-[160px] flex flex-col justify-center relative overflow-hidden group">
-              {currentItem ? (
+              {isLoading ? (
+                // ZIRH: Veri çekilirken kartın içinde dönen bir loader ve bilgi mesajı
+                <div className="text-center space-y-3 animate-pulse">
+                  <div className="flex justify-center">
+                    <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                  </div>
+                  <p className="text-gray-500 text-[10px] uppercase tracking-widest font-bold">
+                    Geçmiş Veriler Sorgulanıyor...
+                  </p>
+                </div>
+              ) : currentItem ? (
                 <>
                   <div className="space-y-4 relative z-10">
                     <div className="flex justify-between items-end">

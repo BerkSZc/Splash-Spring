@@ -24,7 +24,7 @@ public class MaterialServiceImpl implements IMaterialService {
     @Override
     public Material addMaterial(Material newMaterial) {
 
-        String code = newMaterial.getCode() != null ? newMaterial.getCode().trim() : "";
+        String code = newMaterial.getCode() != null ? newMaterial.getCode().trim().toUpperCase() : "";
         if (materialRepository.existsByCode(code)) {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
         }
@@ -50,7 +50,7 @@ public class MaterialServiceImpl implements IMaterialService {
                 .orElseThrow(() ->
                         new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
-        String code = updateMaterial.getCode() != null ? updateMaterial.getCode().trim() : "";
+        String code = updateMaterial.getCode() != null ? updateMaterial.getCode().trim().toUpperCase() : "";
 
         if (materialRepository.existsByCode(code)
                 && !updateMaterial.getCode().equals(existingMaterial.getCode())) {

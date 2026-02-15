@@ -66,7 +66,7 @@ export default function InvoiceEditModal({
                   $
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   value={form?.usdSellingRate || ""}
                   onChange={(e) =>
                     onRateChange("usdSellingRate", e.target.value)
@@ -85,7 +85,7 @@ export default function InvoiceEditModal({
                   €
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   value={form?.eurSellingRate || ""}
                   onChange={(e) =>
                     onRateChange("eurSellingRate", e.target.value)

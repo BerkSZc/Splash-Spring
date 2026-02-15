@@ -1,19 +1,40 @@
 import { useEffect, useState, useRef } from "react";
 import { useMaterial } from "../../../../backend/store/useMaterial.js";
+import toast from "react-hot-toast";
+import { useTenant } from "../../../context/TenantContext.jsx";
 
 export const useMaterialLogic = () => {
   const formRef = useRef(null);
-  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ code: "", comment: "", unit: "KG" });
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
 
-  const { addMaterial, materials, getMaterials, updateMaterials } =
-    useMaterial();
+  const {
+    addMaterial,
+    materials,
+    getMaterials,
+    updateMaterials,
+    loading: materialsLoading,
+  } = useMaterial();
+  const { tenant } = useTenant();
 
   useEffect(() => {
-    getMaterials();
-  }, [getMaterials]);
+    let ignore = false;
+    const fetchData = async () => {
+      try {
+        await getMaterials();
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
+      }
+    };
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, [tenant]);
 
   const initialForm = {
     code: "",
@@ -32,9 +53,7 @@ export const useMaterialLogic = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
 
-    setLoading(true);
     try {
       if (editId) {
         await updateMaterials(editId, form);
@@ -45,9 +64,9 @@ export const useMaterialLogic = () => {
       setForm(initialForm);
       await getMaterials();
     } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
     }
   };
 
@@ -76,8 +95,10 @@ export const useMaterialLogic = () => {
     setForm(initialForm);
   };
 
+  const isLoading = materialsLoading;
+
   return {
-    state: { form, editId, search, filteredMaterials },
+    state: { form, editId, search, filteredMaterials, isLoading },
     refs: { formRef },
     handlers: {
       handleChange,

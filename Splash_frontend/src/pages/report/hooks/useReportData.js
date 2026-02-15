@@ -6,21 +6,27 @@ import { useTenant } from "../../../context/TenantContext.jsx";
 export const useReportData = () => {
   const { year } = useYear();
   const { tenant } = useTenant();
-  const { reports, getFullReport } = useReport();
+  const { reports, getFullReport, loading: reportsLoading } = useReport();
 
   useEffect(() => {
     let ignore = false;
     const fetchData = async () => {
-      if (tenant) {
-        await getFullReport(year, tenant);
+      try {
+        if (tenant) {
+          await getFullReport(year, tenant);
+        }
+        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+        toast.error(backendErr);
       }
-      if (ignore) return;
     };
     fetchData();
     return () => {
       ignore = true;
     };
-  }, [year, tenant, getFullReport]);
+  }, [year, tenant]);
 
   const processedData = useMemo(() => {
     const summaryList = Array.isArray(reports?.kdvAnalysis)
@@ -48,5 +54,7 @@ export const useReportData = () => {
     };
   }, [reports]);
 
-  return { data: processedData, year };
+  const isLoading = reportsLoading;
+
+  return { data: processedData, year, isLoading };
 };

@@ -8,6 +8,7 @@ export default function InvoiceTable({
   menuRef,
   year,
   formatDateToTR,
+  isLoading,
 }) {
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden backdrop-blur-sm shadow-2xl">
@@ -109,7 +110,9 @@ export default function InvoiceTable({
                   colSpan="5"
                   className="p-20 text-center text-gray-600 italic"
                 >
-                  {year || ""} yılına ait kayıt bulunamadı.
+                  {isLoading
+                    ? "Veriler çekiliyor..."
+                    : `${year || ""} yılına ait kayıt bulunamadı.`}
                 </td>
               </tr>
             )}

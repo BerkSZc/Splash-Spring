@@ -4,8 +4,10 @@ import toast from "react-hot-toast";
 
 export const useReceivedCollection = create((set) => ({
   collections: [],
+  loading: false,
 
   addCollection: async (id, receivedCollection, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.post(`/receive/add/${id}`, receivedCollection, {
         headers: {
@@ -15,25 +17,26 @@ export const useReceivedCollection = create((set) => ({
       });
       toast.success("Alınan tahsilat eklendi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   getCollections: async () => {
+    set({ loading: true, collections: [] });
     try {
       const res = await axiosInstance.get("/receive/find-all");
       set({ collections: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getCollections: " + backendErr);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
   editCollection: async (id, receivedCollection, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.put(`/receive/edit/${id}`, receivedCollection, {
         headers: {
@@ -43,35 +46,34 @@ export const useReceivedCollection = create((set) => ({
       });
       toast.success("Tahsilat değiştrildi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   deleteReceivedCollection: async (id, schemaName) => {
+    set({ loading: true });
     try {
       await axiosInstance.delete(`/receive/delete/${id}`, {
         params: { schemaName },
       });
       toast.success("Tahsilat başarıyla silindi");
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   getReceivedCollectionsByYear: async (year) => {
+    set({ loading: true, collections: [] });
     try {
-      set({ collections: [] });
       const res = await axiosInstance.get(`/receive/find-year/${year}`);
       set({ collections: res.data });
     } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error("Error at getReceivedCollectionsByYear: " + backendErr);
       set({ collections: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 }));

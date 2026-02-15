@@ -54,7 +54,7 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setLocal(Objects.requireNonNullElse(newCustomer.getLocal(), ""));
         customer.setDistrict(Objects.requireNonNullElse(newCustomer.getDistrict(), ""));
         customer.setVdNo(Objects.requireNonNullElse(newCustomer.getVdNo(), ""));
-        customer.setCode(Objects.requireNonNullElse(newCustomer.getCode(), ""));
+        customer.setCode(Objects.requireNonNullElse(newCustomer.getCode().trim().toUpperCase(), ""));
         customer.setArchived(false);
         Customer savedCustomer = customerRepository.save(customer);
 
@@ -98,7 +98,7 @@ public class CustomerServiceImpl implements ICustomerService {
         oldCustomer.setDistrict(Objects.requireNonNullElse(updateCustomer.getDistrict(), ""));
         oldCustomer.setVdNo(Objects.requireNonNullElse(updateCustomer.getVdNo(), ""));
         oldCustomer.setCountry(Objects.requireNonNullElse(updateCustomer.getCountry(), ""));
-        oldCustomer.setCode(Objects.requireNonNullElse(updateCustomer.getCode(), ""));
+        oldCustomer.setCode(Objects.requireNonNullElse(updateCustomer.getCode().trim().toUpperCase(), ""));
 
         LocalDate start = LocalDate.of(currentYear, 1, 1);
         LocalDate end = LocalDate.of(currentYear, 12, 31);
