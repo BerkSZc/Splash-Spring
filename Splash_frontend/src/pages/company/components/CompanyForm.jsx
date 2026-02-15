@@ -5,7 +5,7 @@ export const CompanyForm = ({ newCompData, setNewCompData, onCreate }) => (
     </h3>
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <input
-        placeholder="Şirket Kodu (logo_2)"
+        placeholder="Şirket Kodu"
         value={newCompData.id}
         onChange={(e) =>
           setNewCompData({

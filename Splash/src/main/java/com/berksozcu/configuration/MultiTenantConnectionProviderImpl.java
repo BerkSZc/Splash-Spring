@@ -22,7 +22,6 @@ public class MultiTenantConnectionProviderImpl extends AbstractMultiTenantConnec
 
     @Override
     protected ConnectionProvider getAnyConnectionProvider() {
-        // "logo" veya varsayılan şemayı döndürür
         return new ConnectionProviderImpl(dataSource);
     }
 
@@ -35,7 +34,7 @@ public class MultiTenantConnectionProviderImpl extends AbstractMultiTenantConnec
     public Connection getConnection(Object tenantIdentifier) throws SQLException {
         Connection connection = dataSource.getConnection();
         try (Statement statement = connection.createStatement()) {
-            String schema = "logo";
+            String schema = "splash";
 
             if (tenantIdentifier != null) {
                 boolean exists = connection.getMetaData().getSchemas(null, tenantIdentifier.toString()).next();
@@ -55,7 +54,7 @@ public class MultiTenantConnectionProviderImpl extends AbstractMultiTenantConnec
     public void releaseConnection(Object tenantIdentifier, Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Bağlantı havuza dönmeden önce şemayı sıfırla
-            statement.execute("SET search_path TO logo");
+            statement.execute("SET search_path TO splash");
         }
         connection.close();
     }

@@ -27,6 +27,7 @@ public enum MessageType {
     BORDRO_MEVCUT(1014, "Bordo işlemi seri no mevcut"),
     SIRKET_YETKISIZ(1020, "Bu faturayı düzenlemeye yetkiniz yok"),
     MALI_YIL_MEVCUT(1014, "Şirket mali yılı mevcut"),
+    SIRKET_OLUSTURULMADI(1022, "Şirket oluşturulamadı"),
     SIRKET_HATA(1013, "Şirket kodu veya adı boş olamaz"),
     SIFRE_HATA(1008, "Şifre en az 8 karakter olmalı"),
     ODEME_BULUNAMADI(1005, "Ödeme bulunamadı"),
