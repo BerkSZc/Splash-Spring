@@ -29,8 +29,8 @@ public class MaterialServiceImpl implements IMaterialService {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
         }
 
-        newMaterial.setCode(code);
-        newMaterial.setComment(Objects.requireNonNullElse(newMaterial.getComment(), ""));
+        newMaterial.setCode(code.toUpperCase());
+        newMaterial.setComment(Objects.requireNonNullElse(newMaterial.getComment(), "").toUpperCase());
         newMaterial.setUnit(Objects.requireNonNullElse(newMaterial.getUnit(), MaterialUnit.KG));
         newMaterial.setPurchasePrice(safePrice(newMaterial.getPurchasePrice()));
         newMaterial.setSalesPrice(safePrice(newMaterial.getSalesPrice()));
@@ -56,8 +56,8 @@ public class MaterialServiceImpl implements IMaterialService {
                 && !updateMaterial.getCode().equals(existingMaterial.getCode())) {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
         }
-        existingMaterial.setCode(code);
-        existingMaterial.setComment(Objects.requireNonNullElse(updateMaterial.getComment(), ""));
+        existingMaterial.setCode(code.toUpperCase());
+        existingMaterial.setComment(Objects.requireNonNullElse(updateMaterial.getComment(), "").toUpperCase());
         existingMaterial.setUnit(Objects.requireNonNullElse(updateMaterial.getUnit(), MaterialUnit.ADET));
         existingMaterial.setPurchaseCurrency(Objects.requireNonNullElse(updateMaterial.getPurchaseCurrency(), Currency.TRY));
         existingMaterial.setSalesCurrency(Objects.requireNonNullElse(updateMaterial.getSalesCurrency(), Currency.TRY));

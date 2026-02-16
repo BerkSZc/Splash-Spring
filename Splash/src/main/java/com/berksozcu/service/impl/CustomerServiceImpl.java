@@ -48,13 +48,13 @@ public class CustomerServiceImpl implements ICustomerService {
         }
 
         Customer customer = new Customer();
-        customer.setName(Objects.requireNonNullElse(newCustomer.getName(), ""));
-        customer.setAddress(Objects.requireNonNullElse(newCustomer.getAddress(), ""));
-        customer.setCountry(Objects.requireNonNullElse(newCustomer.getCountry(), ""));
-        customer.setLocal(Objects.requireNonNullElse(newCustomer.getLocal(), ""));
-        customer.setDistrict(Objects.requireNonNullElse(newCustomer.getDistrict(), ""));
+        customer.setName(Objects.requireNonNullElse(newCustomer.getName(), "").toUpperCase());
+        customer.setAddress(Objects.requireNonNullElse(newCustomer.getAddress(), "").toUpperCase());
+        customer.setCountry(Objects.requireNonNullElse(newCustomer.getCountry(), "").toUpperCase());
+        customer.setLocal(Objects.requireNonNullElse(newCustomer.getLocal(), "").toUpperCase());
+        customer.setDistrict(Objects.requireNonNullElse(newCustomer.getDistrict(), "").toUpperCase());
         customer.setVdNo(Objects.requireNonNullElse(newCustomer.getVdNo(), ""));
-        customer.setCode(Objects.requireNonNullElse(newCustomer.getCode().trim().toUpperCase(), ""));
+        customer.setCode(Objects.requireNonNullElse(newCustomer.getCode(), "").trim().toUpperCase());
         customer.setArchived(false);
         Customer savedCustomer = customerRepository.save(customer);
 
@@ -92,13 +92,13 @@ public class CustomerServiceImpl implements ICustomerService {
             throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
         }
 
-        oldCustomer.setName(Objects.requireNonNullElse(updateCustomer.getName(), ""));
-        oldCustomer.setAddress(Objects.requireNonNullElse(updateCustomer.getAddress(), ""));
-        oldCustomer.setLocal(Objects.requireNonNullElse(updateCustomer.getLocal(), ""));
-        oldCustomer.setDistrict(Objects.requireNonNullElse(updateCustomer.getDistrict(), ""));
+        oldCustomer.setName(Objects.requireNonNullElse(updateCustomer.getName(), "").toUpperCase());
+        oldCustomer.setAddress(Objects.requireNonNullElse(updateCustomer.getAddress(), "").toUpperCase());
+        oldCustomer.setLocal(Objects.requireNonNullElse(updateCustomer.getLocal(), "").toUpperCase());
+        oldCustomer.setDistrict(Objects.requireNonNullElse(updateCustomer.getDistrict(), "").toUpperCase());
         oldCustomer.setVdNo(Objects.requireNonNullElse(updateCustomer.getVdNo(), ""));
-        oldCustomer.setCountry(Objects.requireNonNullElse(updateCustomer.getCountry(), ""));
-        oldCustomer.setCode(Objects.requireNonNullElse(updateCustomer.getCode().trim().toUpperCase(), ""));
+        oldCustomer.setCountry(Objects.requireNonNullElse(updateCustomer.getCountry(), "").toUpperCase());
+        oldCustomer.setCode(Objects.requireNonNullElse(updateCustomer.getCode(), "").trim().toUpperCase());
 
         LocalDate start = LocalDate.of(currentYear, 1, 1);
         LocalDate end = LocalDate.of(currentYear, 12, 31);

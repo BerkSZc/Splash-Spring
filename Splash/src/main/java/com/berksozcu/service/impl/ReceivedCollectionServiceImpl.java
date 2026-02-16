@@ -63,9 +63,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         receivedCollection.setComment(Objects.requireNonNullElse(receivedCollection.getComment(), ""));
         receivedCollection.setDate(Objects.requireNonNullElse(receivedCollection.getDate(), LocalDate.now()));
         receivedCollection.setPrice(safeGet(receivedCollection.getPrice()));
-        receivedCollection.setFileNo(Objects.requireNonNullElse(receivedCollection.getFileNo(), ""));
+        receivedCollection.setFileNo(Objects.requireNonNullElse(receivedCollection.getFileNo(), "").toUpperCase());
         receivedCollection.setCustomer(customer);
-        receivedCollection.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
+        receivedCollection.setCustomerName(Objects.requireNonNullElse(customer.getName(), "").toUpperCase());
         receivedCollection.setCompany(company);
 
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(receivedCollection.getPrice())));
@@ -120,9 +120,9 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         oldCollection.setPrice(safeGet(receivedCollection.getPrice()));
         oldCollection.setComment(Objects.requireNonNullElse(receivedCollection.getComment(), ""));
         oldCollection.setCustomer(newCustomer);
-        oldCollection.setFileNo(Objects.requireNonNullElse(receivedCollection.getFileNo(), ""));
+        oldCollection.setFileNo(Objects.requireNonNullElse(receivedCollection.getFileNo(), "").toUpperCase());
         oldCollection.setCompany(company);
-        oldCollection.setCustomerName(Objects.requireNonNullElse(receivedCollection.getCustomerName(), ""));
+        oldCollection.setCustomerName(Objects.requireNonNullElse(receivedCollection.getCustomerName(), "").toUpperCase());
 
         openingVoucherRepository.save(newVoucher);
         openingVoucherRepository.save(oldVoucher);

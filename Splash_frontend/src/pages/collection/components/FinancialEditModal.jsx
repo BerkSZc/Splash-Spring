@@ -85,7 +85,7 @@ export default function FinancialEditModal({
               onChange={(e) =>
                 setEditForm({ ...editForm, fileNo: e.target.value })
               }
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition resize-none"
+              className="w-full uppercase bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition resize-none"
             ></input>
           </div>
         </div>

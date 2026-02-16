@@ -66,7 +66,7 @@ export default function PayrollForm({
               placeholder="Örn: ABC-123"
               value={form.fileNo}
               onChange={(e) => setForm({ ...form, fileNo: e.target.value })}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              className="w-full uppercase bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition"
             />
           </div>
         </div>

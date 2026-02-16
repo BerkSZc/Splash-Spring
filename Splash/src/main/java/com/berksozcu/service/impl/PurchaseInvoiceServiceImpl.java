@@ -70,7 +70,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         newPurchaseInvoice.setUsdSellingRate(safeGet(newPurchaseInvoice.getUsdSellingRate()));
         newPurchaseInvoice.setEurSellingRate(safeGet(newPurchaseInvoice.getEurSellingRate()));
         newPurchaseInvoice.setDate(Objects.requireNonNullElse(newPurchaseInvoice.getDate(), LocalDate.now()));
-        newPurchaseInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), ""));
+        newPurchaseInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), "").toUpperCase());
 
         //Fatura toplam fiyatı
         BigDecimal totalPrice = BigDecimal.ZERO;
@@ -180,7 +180,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldInvoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP)));
 
         oldInvoice.setDate(Objects.requireNonNullElse(newPurchaseInvoice.getDate(), LocalDate.now()));
-        oldInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), ""));
+        oldInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), "").toUpperCase());
         oldInvoice.setEurSellingRate(safeGet(newPurchaseInvoice.getEurSellingRate()));
         oldInvoice.setUsdSellingRate(safeGet(newPurchaseInvoice.getUsdSellingRate()));
         oldInvoice.setCustomer(newCustomer);

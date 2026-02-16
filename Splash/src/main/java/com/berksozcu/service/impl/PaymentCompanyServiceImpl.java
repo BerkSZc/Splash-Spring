@@ -60,11 +60,11 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
         paymentCompany.setCustomer(customer);
-        paymentCompany.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
+        paymentCompany.setCustomerName(Objects.requireNonNullElse(customer.getName(), "").toUpperCase());
         paymentCompany.setDate(Objects.requireNonNullElse(paymentCompany.getDate(),  LocalDate.now()));
         paymentCompany.setComment(Objects.requireNonNullElse(paymentCompany.getComment(), ""));
         paymentCompany.setPrice(safeGet(paymentCompany.getPrice()));
-        paymentCompany.setFileNo(Objects.requireNonNullElse(paymentCompany.getFileNo(), ""));
+        paymentCompany.setFileNo(Objects.requireNonNullElse(paymentCompany.getFileNo(), "").toUpperCase());
         paymentCompany.setCompany(company);
 
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(paymentCompany.getPrice()));
@@ -113,9 +113,9 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         oldPayment.setComment(Objects.requireNonNullElse(paymentCompany.getComment(), ""));
         oldPayment.setPrice(safeGet(paymentCompany.getPrice()));
         oldPayment.setCustomer(newCustomer);
-        oldPayment.setFileNo(Objects.requireNonNullElse(paymentCompany.getFileNo(), ""));
+        oldPayment.setFileNo(Objects.requireNonNullElse(paymentCompany.getFileNo(), "").toUpperCase());
         oldPayment.setCompany(company);
-        oldPayment.setCustomerName(Objects.requireNonNullElse(paymentCompany.getCustomerName(), ""));
+        oldPayment.setCustomerName(Objects.requireNonNullElse(paymentCompany.getCustomerName(), "").toUpperCase());
 
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
                         .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));

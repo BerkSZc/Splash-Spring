@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import pkg from "electron-updater";
 const { autoUpdater } = pkg;
+import http from "http";
 
 import { dialog } from "electron";
 
@@ -17,7 +18,6 @@ autoUpdater.autoInstallOnAppQuit = true;
 const SPRING_PORT = 8080;
 const START_URL = `http://localhost:${SPRING_PORT}`;
 
-// 1. Tema Ayarını En Üstte Yapın
 nativeTheme.themeSource = "dark";
 
 const getAssetPath = (assetName) => {
@@ -48,7 +48,6 @@ function createWindow() {
     mainWindow.focus();
   });
 
-  // Hata durumunda yeniden deneme (Backend geç kalırsa)
   mainWindow.webContents.on("did-fail-load", () => {
     setTimeout(() => mainWindow.loadURL(START_URL), 2000);
   });
@@ -56,6 +55,10 @@ function createWindow() {
   mainWindow.on("unresponsive", () => {
     console.log("Uygulama yanıt vermiyor, yeniden yükleniyor...");
     mainWindow.reload();
+  });
+
+  mainWindow.on("close", () => {
+    killSpring();
   });
 
   mainWindow.webContents.on("render-process-gone", (_, details) => {
@@ -73,7 +76,6 @@ function createWindow() {
   });
 }
 
-// 3. Güncelleme Kontrolü (Global Scope)
 function checkUpdates() {
   if (app.isPackaged) {
     autoUpdater.checkForUpdatesAndNotify();
@@ -113,11 +115,11 @@ autoUpdater.on("update-downloaded", () => {
       message: "Güncelleme indirildi. Uygulama şimdi kapanıp güncellenecek.",
     })
     .then(() => {
-      killSpring(); // Spring Boot sürecini kapatmak çok önemli!
+      killSpring();
       setImmediate(() => autoUpdater.quitAndInstall());
     });
 });
-// 4. Backend Başlatma
+
 function startBackend() {
   const jarPath = getAssetPath("backend.jar");
 
@@ -128,7 +130,7 @@ function startBackend() {
 
   springBootProcess = spawn("java", ["-jar", jarPath], {
     cwd: app.isPackaged ? process.resourcesPath : app.getAppPath(),
-    shell: true,
+    stdio: "pipe",
   });
 
   springBootProcess.on("error", (err) => {
@@ -150,20 +152,6 @@ function startBackend() {
     }
   }, 30000);
 
-  springBootProcess.stdout.on("data", (data) => {
-    const dataString = data.toString();
-    console.log(`[Spring Boot]: ${dataString.trim()}`);
-
-    if (
-      !isSpringReady &&
-      (dataString.includes("Tomcat started on port") ||
-        dataString.includes("Started LogoApplication"))
-    ) {
-      isSpringReady = true;
-      createWindow();
-    }
-  });
-
   springBootProcess.stderr.on("data", (data) => {
     fs.appendFileSync(
       path.join(app.getPath("userData"), "spring-error.log"),
@@ -172,9 +160,26 @@ function startBackend() {
   });
 }
 
-// 5. Uygulama Yaşam Döngüsü (Tek bir whenReady yeterli)
+function waitForBackend(retries = 30) {
+  const req = http.get(START_URL, () => {
+    if (!isSpringReady) {
+      isSpringReady = true;
+      if (!mainWindow) createWindow();
+    }
+  });
+
+  req.on("error", () => {
+    if (retries > 0) {
+      setTimeout(() => waitForBackend(retries - 1), 1000);
+    } else {
+      dialog.showErrorBox("Backend Hatası", "Sunucu başlatılamadı (8080).");
+    }
+  });
+}
+
 app.whenReady().then(() => {
   startBackend();
+  waitForBackend();
   checkUpdates();
 
   app.on("activate", () => {
@@ -189,20 +194,40 @@ app.on("window-all-closed", () => {
 });
 
 function killSpring() {
-  if (!springBootProcess) return;
-  if (process.platform === "win32") {
-    spawn("taskkill", ["/PID", springBootProcess.pid, "/T", "/F"], {
-      shell: true,
-    });
-  } else {
-    try {
-      process.kill(-springBootProcess.pid);
-    } catch (e) {
-      springBootProcess.kill("SIGKILL");
+  if (!springBootProcess || springBootProcess.killed) return;
+
+  try {
+    if (process.platform === "win32") {
+      spawn("taskkill", ["/PID", springBootProcess.pid, "/T", "/F"]);
+    } else {
+      springBootProcess.kill("SIGTERM");
+      setTimeout(() => {
+        if (!springBootProcess.killed) {
+          springBootProcess.kill("SIGKILL");
+        }
+      }, 3000);
     }
+  } catch (e) {
+    console.error("Spring kill hatası:", e);
   }
+
+  springBootProcess = null;
 }
 
 app.on("before-quit", () => {
+  killSpring();
+});
+
+process.on("SIGINT", () => {
+  killSpring();
+  app.quit();
+});
+
+process.on("SIGTERM", () => {
+  killSpring();
+  app.quit();
+});
+
+process.on("exit", () => {
   killSpring();
 });

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 
@@ -39,7 +41,7 @@ public class Material {
 
     //Para birimi
     @Column(name = "purchase_currency")
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private Currency purchaseCurrency = Currency.TRY;
 
     @Column(name = "sales_price", precision = 18, scale = 2 )
@@ -47,6 +49,6 @@ public class Material {
 
     //Para birimi
     @Column(name = "sales_currency")
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private Currency salesCurrency= Currency.TRY;
 }

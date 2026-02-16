@@ -5,6 +5,7 @@ import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
+import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.material_price_history.InvoiceType;
@@ -21,8 +22,7 @@ import com.berksozcu.xml.entites.collections.CollectionXml;
 import com.berksozcu.xml.entites.collections.CollectionsXml;
 import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
-import com.berksozcu.xml.entites.materials.ItemsXml;
-import com.berksozcu.xml.entites.materials.MaterialXml;
+import com.berksozcu.xml.entites.materials.*;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVoucherXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVouchersXml;
@@ -309,34 +309,21 @@ public class XmlImportService {
 
     @Transactional
     public void importMaterials(MultipartFile file) throws Exception {
-        JAXBContext context = JAXBContext.newInstance(ItemsXml.class);
+        JAXBContext context = JAXBContext.newInstance(ItemsXml.class, PurchasePriceXmlList.class, SalesPriceXmlList.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        ItemsXml itemsXml = (ItemsXml) unmarshaller.unmarshal(file.getInputStream());
+        Object unmarshalledObject = unmarshaller.unmarshal(file.getInputStream());
 
-        Set<String> existingMaterials = materialRepository.findAll()
-                .stream().map(Material::getCode).collect(Collectors.toSet());
-
-        for (MaterialXml m : itemsXml.getItems()) {
-            if (m.getCODE() == null || m.getCODE().isBlank()) continue;
-
-            String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "") ;
-
-            if (existingMaterials.contains(code)) {
-                System.out.println("Malzeme Kodu mevcut atlandı: " + code);
-                continue;
-            }
-
-            Material material = new Material();
-            material.setCode(code);
-            material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
-            material.setUnit(MaterialUnit.ADET);
-            material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
-            material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
-            materialRepository.save(material);
-
-            existingMaterials.add(code);
+        if(unmarshalledObject instanceof ItemsXml itemsXml) {
+            processMaterialCards(itemsXml);
         }
+        else if(unmarshalledObject instanceof PurchasePriceXmlList purchasePriceXmlList) {
+            processPrices(purchasePriceXmlList, true);
+        }
+        else if(unmarshalledObject instanceof SalesPriceXmlList salesPriceXmlList) {
+            processPrices(salesPriceXmlList, false);
+        }
+
     }
 
     @Transactional
@@ -358,7 +345,7 @@ public class XmlImportService {
             customer.setCode(code);
             customer.setName(Objects.requireNonNullElse(c.getTITLE(), ""));
             customer.setCountry("TÜRKİYE");
-            customer.setLocal(Objects.requireNonNullElse(c.getTITLE(), ""));
+            customer.setLocal(Objects.requireNonNullElse(c.getCITY(), ""));
             customer.setDistrict(Objects.requireNonNullElse(c.getDISTRICT(), ""));
             customer.setAddress(Objects.requireNonNullElse(c.getADDRESS1(), ""));
             customer.setArchived(c.getRECORD_STATUS() != null && c.getRECORD_STATUS() == 1);
@@ -631,6 +618,61 @@ public class XmlImportService {
             openingBalance.setDescription("Veri Ekleme Devir İşlemi");
 
             openingBalanceRepository.save(openingBalance);
+        }
+    }
+
+    private void processMaterialCards(ItemsXml itemsXml) {
+        Set<String> existingMaterials = materialRepository.findAll()
+                .stream().map(Material::getCode).collect(Collectors.toSet());
+
+        for (MaterialXml m : itemsXml.getItems()) {
+            if (m.getCODE() == null || m.getCODE().isBlank()) continue;
+
+            String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "") ;
+
+            if (existingMaterials.contains(code)) {
+                System.out.println("Malzeme Kodu mevcut atlandı: " + code);
+                continue;
+            }
+
+            Material material = new Material();
+            material.setCode(code);
+            material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
+            material.setUnit(MaterialUnit.ADET);
+            material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+            material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+            materialRepository.save(material);
+
+            existingMaterials.add(code);
+        }
+    }
+
+    private void processPrices(Object priceList, boolean isPurchase) {
+        List<PriceRecordXml> records;
+
+        if (priceList instanceof PurchasePriceXmlList pList) {
+            records = pList.getRecords();
+        } else if (priceList instanceof SalesPriceXmlList sList) {
+            records = sList.getRecords();
+        } else {
+            return;
+        }
+        for(PriceRecordXml r : records) {
+            String code = Objects.requireNonNullElse(r.getCode().trim().toUpperCase(), "");
+            materialRepository.findByCode(code).ifPresent(
+                    material -> {
+                        BigDecimal price = safeGet(parseBigDecimal(r.getPrice()));
+                        if(isPurchase) {
+                            material.setPurchasePrice(price);
+                            material.setPurchaseCurrency(Currency.EUR);
+                        }
+                        else {
+                            material.setSalesPrice(price);
+                            material.setSalesCurrency(Currency.EUR);
+                        }
+                        materialRepository.save(material);
+                    }
+            );
         }
     }
 

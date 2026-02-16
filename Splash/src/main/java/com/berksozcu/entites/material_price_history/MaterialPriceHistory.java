@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,9 +26,9 @@ public class MaterialPriceHistory {
     @JoinColumn(name = "material_id")
     private Material material;
 
-    @Enumerated(EnumType.STRING)
     //Fatura tipi
     @Column(name = "invoice_type")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private InvoiceType invoiceType;
 
     @Column(name = "invoice_id")

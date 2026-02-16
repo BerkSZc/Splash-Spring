@@ -8,10 +8,10 @@ DROP TYPE IF EXISTS public.invoice_status CASCADE;
 CREATE TYPE public.invoice_status AS ENUM ('PURCHASE', 'SALES', 'UNKNOWN');
 
 DROP TYPE IF EXISTS public.payroll_model_enum CASCADE;
-CREATE TYPE public.payroll_model_enum AS ENUM ('INPUT', 'OUTPUT');
+CREATE TYPE public.payroll_model_enum AS ENUM ('INPUT', 'OUTPUT', 'UNKNOWN');
 
 DROP TYPE IF EXISTS public.payroll_type_enum CASCADE;
-CREATE TYPE public.payroll_type_enum AS ENUM ('CHEQUE', 'BOND');
+CREATE TYPE public.payroll_type_enum AS ENUM ('CHEQUE', 'BOND', 'UNKNOWN');
 
 CREATE CAST (varchar AS public.currency_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.unit_status) WITH INOUT AS IMPLICIT;

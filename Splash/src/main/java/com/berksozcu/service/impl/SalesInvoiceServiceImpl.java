@@ -73,6 +73,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         salesInvoice.setEurSellingRate(safeGet(salesInvoice.getEurSellingRate()));
         salesInvoice.setUsdSellingRate(safeGet(salesInvoice.getUsdSellingRate()));
         salesInvoice.setCompany(company);
+        salesInvoice.setFileNo(Objects.requireNonNullElse(salesInvoice.getFileNo(), "").toUpperCase());
 
         BigDecimal totalPrice = BigDecimal.ZERO;
         BigDecimal kdvToplam = BigDecimal.ZERO;
@@ -162,7 +163,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         }
 
         oldInvoice.setDate(Objects.requireNonNullElse(salesInvoice.getDate(), LocalDate.now()));
-        oldInvoice.setFileNo(Objects.requireNonNullElse(salesInvoice.getFileNo(), ""));
+        oldInvoice.setFileNo(Objects.requireNonNullElse(salesInvoice.getFileNo(), "").toUpperCase());
         oldInvoice.setEurSellingRate(safeGet(salesInvoice.getEurSellingRate()));
         oldInvoice.setUsdSellingRate(safeGet(salesInvoice.getUsdSellingRate()));
         oldInvoice.setCustomer(newCustomer);

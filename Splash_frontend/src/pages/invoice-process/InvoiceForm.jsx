@@ -85,7 +85,7 @@ export default function InvoiceForm() {
                         fileNo: e.target.value,
                       })
                 }
-                className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition-all"
+                className="w-full uppercase bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition-all"
               />
             </div>
             <div className="space-y-2 text-left">

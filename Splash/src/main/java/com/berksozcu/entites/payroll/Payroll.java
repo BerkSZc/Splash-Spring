@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,12 +35,12 @@ public class Payroll {
     private LocalDate expiredDate;
 
     //Çek veya senetin giriş mi çıkış mı olduğunun göstergesi
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "payroll_model")
     private PayrollModel payrollModel;
 
     //Çek mi Senet mi olduğunun göstergesi
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "payroll_type")
     private PayrollType payrollType;
 

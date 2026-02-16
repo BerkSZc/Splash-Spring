@@ -61,13 +61,13 @@ public class PayrollServiceImpl implements IPayrollService {
 
         newPayroll.setCustomer(customer);
         newPayroll.setAmount(safeGet(newPayroll.getAmount()));
-        newPayroll.setFileNo(Objects.requireNonNullElse(newPayroll.getFileNo(), ""));
+        newPayroll.setFileNo(Objects.requireNonNullElse(newPayroll.getFileNo(), "").toUpperCase());
         newPayroll.setExpiredDate(Objects.requireNonNullElse(newPayroll.getExpiredDate(), LocalDate.now()));
         newPayroll.setTransactionDate(Objects.requireNonNullElse(newPayroll.getTransactionDate(), LocalDate.now()));
         newPayroll.setPayrollModel(Objects.requireNonNullElse(newPayroll.getPayrollModel(), PayrollModel.INPUT));
         newPayroll.setPayrollType(Objects.requireNonNullElse(newPayroll.getPayrollType(), PayrollType.CHEQUE));
-        newPayroll.setBankName(Objects.requireNonNullElse(newPayroll.getBankName(), ""));
-        newPayroll.setBankBranch(Objects.requireNonNullElse(newPayroll.getBankBranch(), ""));
+        newPayroll.setBankName(Objects.requireNonNullElse(newPayroll.getBankName(), "").toUpperCase());
+        newPayroll.setBankBranch(Objects.requireNonNullElse(newPayroll.getBankBranch(), "").toUpperCase());
         newPayroll.setCompany(company);
 
         updateBalance(newPayroll, voucher);
@@ -115,8 +115,16 @@ public class PayrollServiceImpl implements IPayrollService {
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
                         .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
-        BeanUtils.copyProperties(editPayroll, oldPayroll);
         oldPayroll.setCompany(company);
+        oldPayroll.setPayrollType(Objects.requireNonNullElse(editPayroll.getPayrollType(), PayrollType.UNKNOWN));
+        oldPayroll.setBankName(Objects.requireNonNullElse(editPayroll.getBankName(), "").toUpperCase());
+        oldPayroll.setPayrollModel(Objects.requireNonNullElse(editPayroll.getPayrollModel(), PayrollModel.UNKNOWN));
+        oldPayroll.setAmount(safeGet(editPayroll.getAmount()));
+        oldPayroll.setCustomer(newCustomer);
+        oldPayroll.setFileNo(Objects.requireNonNullElse(editPayroll.getFileNo(), "").toUpperCase());
+        oldPayroll.setTransactionDate(Objects.requireNonNullElse(editPayroll.getTransactionDate(), LocalDate.now()));
+        oldPayroll.setExpiredDate(Objects.requireNonNullElse(editPayroll.getExpiredDate(), LocalDate.now()));
+        oldPayroll.setBankBranch(Objects.requireNonNullElse(editPayroll.getBankBranch(), "").toUpperCase());
 
         updateBalance(editPayroll, newVoucher);
 

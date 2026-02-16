@@ -70,7 +70,7 @@ export default function FinancialForm({
             placeholder="001"
             value={addForm?.fileNo || ""}
             onChange={(e) => setAddForm({ ...addForm, fileNo: e.target.value })}
-            className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition"
+            className="w-full uppercase bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition"
           />
         </div>
         <div className="space-y-2">

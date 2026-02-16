@@ -43,7 +43,7 @@ export default function InvoiceEditModal({
               type="text"
               value={form?.fileNo || ""}
               onChange={(e) => setForm({ ...form, fileNo: e.target.value })}
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-3 text-white outline-none"
+              className="w-full uppercase bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-3 text-white outline-none"
             />
           </div>
           <div className="space-y-2">

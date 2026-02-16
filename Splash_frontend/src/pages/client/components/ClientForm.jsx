@@ -99,7 +99,7 @@ export default function ClientForm({
             value={form.address || ""}
             onChange={handleChange}
             required
-            className="w-full bg-gray-900/60 border-2 border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none"
+            className="w-full bg-gray-900/60 border-2 uppercase border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-all outline-none"
           />
         </div>
 
