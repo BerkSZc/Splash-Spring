@@ -109,6 +109,7 @@ export default function InvoiceForm() {
 
           {/* TABLO VE DÖVİZ KURLARI */}
           <InvoiceItemsTable
+            formatNumber={state.formatNumber}
             mode={mode}
             items={Array.isArray(actualForm.items) ? actualForm.items : []}
             materials={actualMaterials}

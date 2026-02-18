@@ -97,6 +97,10 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                     .setScale(2, RoundingMode.HALF_UP);
 
             item.setKdvTutar(kdvTutarHesaplama);
+            item.setQuantity(safeGet(item.getQuantity()));
+            item.setUnitPrice(safeGet(item.getUnitPrice()));
+            item.setKdv(safeGet(item.getKdv()));
+
             kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
 
             item.setLineTotal(lineTotal);

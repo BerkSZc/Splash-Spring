@@ -64,15 +64,15 @@ export default function Navbar() {
               Çek-Senet İşlemleri
             </Link>
 
-            <Link
-              className="hover:text-gray-300 whitespace-nowrap"
-              to={"/ekleme"}
-            >
-              Veri İşlemleri{" "}
+            <Link className="hover:text-gray-300" to={"/musteriler"}>
+              Cari Hesaplar
             </Link>
 
-            <Link className="hover:text-gray-300" to={"/musteriler"}>
-              Müşteriler
+            <Link
+              className="hover:text-gray-300 whitespace-nowrap"
+              to="/raporlar"
+            >
+              Raporlar
             </Link>
 
             {!isAuthenticated && (
@@ -113,16 +113,14 @@ export default function Navbar() {
                   >
                     Şirket Seçim
                   </Link>
-
-                  {/* DARK MODE TOGGLE */}
                   <Link
                     onClick={() => {
                       setSettingsOpen(false);
                     }}
-                    to="/raporlar"
                     className="block px-4 py-2 hover:bg-gray-600 dark:hover:bg-gray-700"
+                    to={"/ekleme"}
                   >
-                    Raporlar
+                    Veri İşlemleri{" "}
                   </Link>
 
                   {isAuthenticated && (

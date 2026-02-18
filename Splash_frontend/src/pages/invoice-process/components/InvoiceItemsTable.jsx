@@ -11,6 +11,7 @@ export default function InvoiceItemsTable({
   onRemoveItem,
   currencyRates,
   onRateChange,
+  formatNumber,
 }) {
   return (
     <div className="space-y-6">
@@ -60,13 +61,20 @@ export default function InvoiceItemsTable({
             Fatura Kalemleri
           </h3>
         </div>
-        <div className="overflow-x-auto p-4">
+        <div
+          className="overflow-x-auto p-4"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+            }
+          }}
+        >
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>
               <tr className="text-gray-500 text-xs uppercase tracking-widest">
                 <th className="px-4 py-2">Malzeme</th>
-                <th className="px-4 py-2">Birim Fiyat</th>
                 <th className="px-4 py-2">Miktar</th>
+                <th className="px-4 py-2">Birim Fiyat</th>
                 <th className="px-4 py-2">KDV %</th>
                 <th className="px-4 py-2 text-right">KDV Tutarı</th>
                 <th className="px-4 py-2 text-right">Satır Toplamı</th>
@@ -80,18 +88,50 @@ export default function InvoiceItemsTable({
                     <MaterialSearchSelect
                       materials={materials}
                       value={item?.materialId}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
                       onChange={(id) => onItemChange(mode, i, "materialId", id)}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="text"
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={formatNumber(item?.quantity) || ""}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onAddItem(mode);
+                        }
+                      }}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.,]/g, "");
+                        onItemChange(mode, i, "quantity", val);
+                      }}
                     />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <input
-                        type="number"
+                        type="text"
                         className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        value={item?.unitPrice || ""}
-                        onChange={(e) =>
-                          onItemChange(mode, i, "unitPrice", e.target.value)
-                        }
+                        value={formatNumber(item?.unitPrice) || ""}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onAddItem(mode);
+                          }
+                        }}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          onItemChange(mode, i, "unitPrice", val);
+                        }}
                       />
                       <MaterialPriceTooltip
                         materialId={item?.materialId}
@@ -104,21 +144,19 @@ export default function InvoiceItemsTable({
                       />
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      value={item?.quantity || ""}
-                      onChange={(e) =>
-                        onItemChange(mode, i, "quantity", e.target.value)
-                      }
-                    />
-                  </td>
+
                   <td className="px-4 py-3">
                     <input
                       type="number"
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={item?.kdv || ""}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onAddItem(mode);
+                        }
+                      }}
                       onChange={(e) =>
                         onItemChange(mode, i, "kdv", e.target.value)
                       }
@@ -136,14 +174,29 @@ export default function InvoiceItemsTable({
                     })}{" "}
                     ₺
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">
-                    {(
-                      Number(item?.unitPrice) * Number(item?.quantity) || 0
-                    ).toLocaleString("tr-TR", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    ₺
+                  <td className="px-4 py-3 text-right">
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        step="0.01"
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-right font-mono font-bold text-blue-400 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        value={formatNumber(item?.lineTotal) || ""}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onAddItem(mode);
+                          }
+                        }}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          onItemChange(mode, i, "lineTotal", val);
+                        }}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none group-focus-within:hidden">
+                        ₺
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 rounded-r-xl">
                     <button

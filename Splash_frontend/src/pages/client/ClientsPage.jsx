@@ -5,11 +5,11 @@ import StatementModal from "./components/StatementModal";
 import ArchiveConfirmModal from "./components/ArchiveConfirmModal";
 import ContextMenu from "./components/ContextMenu";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
+import ClientEditModal from "./components/ClientEditModal.jsx";
 
 export default function ClientsPage() {
-  const { state, handlers, refs } = useClientLogic();
+  const { state, handlers } = useClientLogic();
 
-  // Seçili olan müşterilerin listesi (Arşiv aksiyonu için)
   const selectedList = (
     Array.isArray(state.filteredCustomers) ? state.filteredCustomers : []
   ).filter((c) =>
@@ -76,14 +76,14 @@ export default function ClientsPage() {
         </div>
 
         {/* 2. BÖLÜM: KAYIT VE GÜNCELLEME FORMU */}
-        <ClientForm
-          form={state.form || {}}
-          editClient={state.editClient}
-          handleChange={handlers.handleChange}
-          handleSubmit={handlers.handleSubmit}
-          handleCancelEdit={handlers.handleCancelEdit}
-          formRef={refs.formRef}
-        />
+        {!state.editClient && (
+          <ClientForm
+            form={state.form || {}}
+            formatNumber={state.formatNumber}
+            handleChange={handlers.handleChange}
+            handleSubmit={handlers.handleSubmit}
+          />
+        )}
 
         {/* 3. BÖLÜM: MÜŞTERİ LİSTESİ (TABLO) */}
         <div className="space-y-6">
@@ -118,6 +118,16 @@ export default function ClientsPage() {
           />
         </div>
       </div>
+
+      {state.editClient && (
+        <ClientEditModal
+          form={state.form}
+          setForm={handlers.setForm}
+          onCancel={handlers.handleCancelEdit}
+          onSave={handlers.handleSubmit}
+          formatNumber={state.formatNumber}
+        />
+      )}
 
       {/* 4. BÖLÜM: MODALLAR VE KONTROLLER */}
       {state.showArchiveModal && (

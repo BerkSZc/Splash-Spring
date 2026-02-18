@@ -15,10 +15,11 @@ export default function InvoiceEditModal({
   customers,
   onCancel,
   onSave,
+  formatNumber,
 }) {
   return (
     <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
-      <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[3rem] w-full max-w-[1000px] max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[1300px] min-h-[80vh] max-h-[95vh] overflow-y-auto shadow-2xl relative">
         <h2 className="text-3xl font-extrabold mb-8 text-white flex items-center gap-3">
           <span className="p-2 bg-blue-600 rounded-xl text-xl">📝</span>Faturayı
           Güncelle
@@ -101,10 +102,10 @@ export default function InvoiceEditModal({
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>
               <tr className="text-gray-500 text-xs uppercase tracking-widest">
-                <th className="px-4 py-2">Malzeme</th>
-                <th className="p-5 text-center">Birim Fiyat</th>
-                <th className="p-5">Miktar</th>
-                <th className="p-5">KDV %</th>
+                <th className="px-4 py-2 w-[30%]">Malzeme</th>
+                <th className="px-4 py-2 w-[13%]">Miktar</th>
+                <th className="px-4 py-2 w-[15%] text-center">Birim Fiyat</th>
+                <th className="px-4 py-2 w-[10%] text-center">KDV %</th>
                 <th className="px-4 py-2 text-right">KDV Tutarı</th>
                 <th className="px-4 py-2 text-right">Satır Toplamı</th>
                 <th className="px-4 py-2 w-10"></th>
@@ -113,22 +114,59 @@ export default function InvoiceEditModal({
             <tbody>
               {(Array.isArray(form.items) ? form.items : []).map((item, i) => (
                 <tr key={i} className="bg-gray-800/50">
-                  <td className="px-4 py-3 rounded-l-xl w-1/3">
+                  <td className="px-4 py-3 rounded-l-xl w-45">
                     <MaterialSearchSelect
                       materials={materials}
                       value={item?.materialId || ""}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
                       onChange={(id) => {
                         onItemChange(i, "materialId", id);
                       }}
                     />
                   </td>
                   <td className="px-4 py-3">
+                    <input
+                      type="text"
+                      name="quantity"
+                      value={formatNumber(item?.quantity) || ""}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addItem();
+                        }
+                      }}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.,]/g, "");
+                        onItemChange(i, "quantity", val);
+                      }}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2"
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-2 min-w-[140px]">
                       <input
-                        type="number"
+                        type="text"
                         name="unitPrice"
-                        value={item?.unitPrice || 0}
-                        onChange={(e) => onItemChange(i, e)}
+                        value={formatNumber(item?.unitPrice) || ""}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            addItem();
+                          }
+                        }}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+
+                          onItemChange(i, "unitPrice", val);
+                        }}
                         className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none"
                       />
                       <MaterialPriceTooltip
@@ -139,20 +177,19 @@ export default function InvoiceEditModal({
                       />
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      name="quantity"
-                      value={item?.quantity || 0}
-                      onChange={(e) => onItemChange(i, e)}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2"
-                    />
-                  </td>
+
                   <td className="px-4 py-3">
                     <input
                       type="number"
                       name="kdv"
-                      value={item?.kdv || 0}
+                      value={item?.kdv || ""}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addItem();
+                        }
+                      }}
                       onChange={(e) => onItemChange(i, e)}
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2"
                     />
@@ -164,12 +201,30 @@ export default function InvoiceEditModal({
                     })}{" "}
                     ₺
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">
-                    {(Number(item?.lineTotal) || 0).toLocaleString("tr-TR", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    ₺
+                  <td className="px-4 py-3 text-right font-mono font-bold text-blue-400 w-48">
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        step="0.01"
+                        value={formatNumber(item?.lineTotal) || ""}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            addItem();
+                          }
+                        }}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          onItemChange(i, "lineTotal", val);
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        className="w-full  bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-right font-mono font-bold text-blue-400 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none group-focus-within:hidden">
+                        ₺
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 rounded-r-xl text-center">
                     {form.items.length > 1 && (
@@ -241,6 +296,7 @@ export default function InvoiceEditModal({
             İptal
           </button>
           <button
+            type="button"
             onClick={onSave}
             className="flex-1 py-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-500 shadow-xl transition shadow-blue-600/20"
           >

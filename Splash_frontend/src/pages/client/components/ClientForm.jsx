@@ -1,10 +1,8 @@
 export default function ClientForm({
   form,
-  editClient,
   handleChange,
   handleSubmit,
-  handleCancelEdit,
-  formRef,
+  formatNumber,
 }) {
   const formFields = [
     {
@@ -26,7 +24,8 @@ export default function ClientForm({
     {
       key: "yearlyDebit",
       label: "Borç (Yıllık Devir)",
-      type: "number",
+      type: "text",
+      isMoney: true,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/5",
       borderColor: "focus:border-emerald-500",
@@ -34,7 +33,8 @@ export default function ClientForm({
     {
       key: "yearlyCredit",
       label: "Alacak (Yıllık Devir)",
-      type: "number",
+      type: "text",
+      isMoney: true,
       color: "text-red-400",
       bgColor: "bg-red-500/5",
       borderColor: "focus:border-red-400",
@@ -42,8 +42,9 @@ export default function ClientForm({
     {
       key: "finalBalance",
       label: "Yıllık Net Bakiye (Otomatik)",
-      type: "number",
+      type: "text",
       disabled: true,
+      isMoney: true,
     },
     { key: "country", label: "Ülke", type: "text" },
     { key: "local", label: "İl", type: "text" },
@@ -52,19 +53,9 @@ export default function ClientForm({
 
   return (
     <div
-      className={`p-8 bg-gray-900/20 border rounded-[2.5rem] transition-all duration-500 ${editClient ? "border-blue-500/40 bg-blue-500/5" : "border-gray-800"}`}
+      className={`p-8 bg-gray-900/20 border border-gray-800 rounded-[2.5rem] transition-all duration-500 "border-gray-800"`}
     >
-      <h3
-        className={`text-xl font-bold mb-8 flex items-center gap-3 ${editClient ? "text-blue-400" : "text-emerald-400"}`}
-      >
-        <span
-          className={`w-2 h-7 rounded-full ${editClient ? "bg-blue-500" : "bg-emerald-500"}`}
-        ></span>
-        {editClient ? "Müşteri Bilgilerini Güncelle" : "Yeni Müşteri Tanımla"}
-      </h3>
-
       <form
-        ref={formRef}
         onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-4 gap-6"
       >
@@ -78,8 +69,19 @@ export default function ClientForm({
             <input
               type={field.type}
               name={field.key}
-              value={form[field.key] ?? (field.type === "number" ? 0 : "")}
-              onChange={handleChange}
+              value={
+                field.isMoney
+                  ? formatNumber(form[field.key])
+                  : form[field.key] || ""
+              }
+              onChange={(e) => {
+                if (field.isMoney) {
+                  const val = e.target.value.replace(/[^0-9.,]/g, "");
+                  handleChange({ target: { name: field.key, value: val } });
+                } else {
+                  handleChange;
+                }
+              }}
               disabled={field.disabled}
               className={`w-full border-2 rounded-xl px-4 py-3 uppercase text-white transition-all outline-none 
                 ${field.bgColor || "bg-gray-900/60"} 
@@ -104,20 +106,11 @@ export default function ClientForm({
         </div>
 
         <div className="md:col-span-4 flex justify-end gap-4 pt-4 mt-2 border-t border-gray-800/50">
-          {editClient && (
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="px-8 py-3 text-gray-400 font-bold rounded-xl hover:bg-gray-800 transition-all"
-            >
-              İptal
-            </button>
-          )}
           <button
             type="submit"
-            className={`px-10 py-3 text-white font-bold rounded-xl transition-all active:scale-95 shadow-lg ${editClient ? "bg-blue-600 hover:bg-blue-500" : "bg-emerald-600 hover:bg-emerald-500"}`}
+            className={`px-10 py-3 text-white font-bold rounded-xl transition-all active:scale-95 shadow-lg bg-emerald-600 hover:bg-emerald-500`}
           >
-            {editClient ? "Güncelle" : "Sisteme Kaydet"}
+            Sisteme Kaydet
           </button>
         </div>
       </form>

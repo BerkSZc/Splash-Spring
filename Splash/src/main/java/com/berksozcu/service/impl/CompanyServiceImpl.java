@@ -77,7 +77,7 @@ public class CompanyServiceImpl implements ICompanyService {
         String finalSource = checkSchemaExists(sourceSchema) ? sourceSchema : "splash";
 
         //Kopyalanacak Tablolar
-        String[] allTables = {"customer", "material", "app_user", "currency_rate",
+        String[] allTables = {"customer", "material", "app_user",
                 "purchase_invoice", "purchase_invoice_item", "sales_invoice", "sales_invoice_item",
                 "material_price_history", "received_collection",
                 "payment_company", "payroll", "opening_voucher"};

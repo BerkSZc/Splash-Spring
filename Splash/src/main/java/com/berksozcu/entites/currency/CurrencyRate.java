@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "currency_rate")
+@Table(name = "currency_rate", schema = "splash")
 @Setter
 @Getter
 @NoArgsConstructor

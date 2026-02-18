@@ -108,6 +108,10 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 item.setKdvTutar(kdvTutarHesaplama);
                 item.setLineTotal(lineTotal);
 
+                item.setQuantity(safeGet(item.getQuantity()));
+                item.setUnitPrice(safeGet(item.getUnitPrice()));
+                item.setKdv(safeGet(item.getKdv()));
+
                 kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
                 totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
             }

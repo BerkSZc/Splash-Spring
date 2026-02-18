@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
@@ -49,7 +49,6 @@ export const useClientLogic = () => {
   const { year } = useYear();
   const { tenant } = useTenant();
 
-  const formRef = useRef(null);
   const [archiveAction, setArchiveAction] = useState("archive");
   const [contextMenu, setContextMenu] = useState(null);
   const [editClient, setEditClient] = useState(null);
@@ -177,18 +176,21 @@ export const useClientLogic = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!form.name || !form.code) {
       toast.error("Müşteri ismi ve Müşteri kodunu ekleyin!");
       return;
     }
 
+    const cleanDebit = parseNumber(form.yearlyDebit);
+    const cleanCredit = parseNumber(form.yearlyCredit);
+
     const customerPayload = {
       name: form.name || "",
       address: form.address || "",
       country: form.country || "",
-      yearlyDebit: Number(form.yearlyDebit || 0),
-      yearlyCredit: Number(form.yearlyCredit || 0),
+      yearlyDebit: Number(cleanDebit || 0),
+      yearlyCredit: Number(cleanCredit || 0),
       local: form.local || "",
       district: form.district || "",
       vdNo: form.vdNo || "",
@@ -245,7 +247,6 @@ export const useClientLogic = () => {
       vdNo: customer.vdNo || "",
       code: customer.code || "",
     });
-    formRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -307,6 +308,30 @@ export const useClientLogic = () => {
         .filter((c) => (showArchived ? c.archived : !c.archived))
     : [];
 
+  const formatNumber = (val) => {
+    if (val === null || val === undefined || val === "") return "";
+
+    let stringVal = val.toString();
+
+    if (typeof val !== "number" && stringVal.includes(",")) {
+      stringVal = stringVal.replace(/\./g, "");
+    } else if (typeof val === "number") {
+      stringVal = stringVal.replace(",", "");
+    } else {
+      stringVal = stringVal.replace(/\./g, "");
+    }
+
+    let parts = stringVal.replace(",", ".").split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return parts.length > 1 ? `${parts[0]},${parts[1].slice(0, 2)}` : parts[0];
+  };
+
+  const parseNumber = (val) => {
+    if (typeof val !== "string") return val;
+    return val.replace(/\./g, "").replace(",", ".");
+  };
+
   const isLoading =
     customerLoading ||
     purchaseLoading ||
@@ -318,6 +343,7 @@ export const useClientLogic = () => {
 
   return {
     state: {
+      formatNumber,
       customers,
       form,
       search,
@@ -336,7 +362,6 @@ export const useClientLogic = () => {
       vouchers,
       isLoading,
     },
-    refs: { formRef },
     handlers: {
       handleChange,
       handleSubmit,

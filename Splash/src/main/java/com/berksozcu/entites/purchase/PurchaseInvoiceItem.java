@@ -30,14 +30,14 @@ public class PurchaseInvoiceItem {
     @JoinColumn(name = "material_id")
     private Material material;
 
-    @Column(name = "unit_price", precision = 18, scale = 2)
+    @Column(name = "unit_price", precision = 18, scale = 4)
     private BigDecimal unitPrice;
 
     @Column(name = "quantity", precision = 18, scale = 2)
     private BigDecimal quantity;
 
     //Kdv Oranı bkz %20
-    @Column(precision = 5, scale = 2)
+    @Column(precision = 18, scale = 2)
     private BigDecimal kdv;
 
     //Malzemenin bulunduğu satırın kdv'si

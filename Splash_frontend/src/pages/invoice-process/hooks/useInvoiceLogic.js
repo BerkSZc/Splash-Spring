@@ -241,17 +241,55 @@ export const useInvoiceLogic = () => {
     });
   };
 
+  const roundHalfUp = (num) => {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  };
+
+  const calculateRow = (price, qty, kdvRate) => {
+    const p = Number(price) || 0;
+    const q = Number(qty) || 0;
+    const k = Number(kdvRate) || 0;
+
+    const lineTotal = roundHalfUp(p * q);
+
+    const kdvTutar = roundHalfUp((lineTotal * k) / 100);
+
+    return { lineTotal: lineTotal.toFixed(2), kdvTutar: kdvTutar.toFixed(2) };
+  };
+
   const handleItemChange = (formType, index, field, value) => {
+    const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
+
+    const parsedValue = parseNumber(value);
+
     if (field === "materialId") {
-      handleMaterialSelect(formType, index, value);
-    } else {
-      const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
-      setter((prev) => {
-        const newItems = [...prev.items];
-        newItems[index] = { ...newItems[index], [field]: value };
-        return { ...prev, items: newItems };
-      });
+      handleMaterialSelect(formType, index, parsedValue);
+      return;
     }
+    setter((prev) => {
+      const newItems = [...prev.items];
+      const currentItem = { ...newItems[index], [field]: parsedValue };
+
+      if (field === "lineTotal") {
+        const qty = Number(currentItem.quantity) || 1;
+        const newTotal = Number(parsedValue) || 0;
+        currentItem.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(6);
+      } else if (field === "quantity" || field === "unitPrice") {
+        const qty = Number(currentItem.quantity) || 0;
+        const up = Number(currentItem.unitPrice) || 0;
+
+        currentItem.lineTotal = (qty * up).toFixed(2);
+      }
+      const { kdvTutar } = calculateRow(
+        Number(currentItem.unitPrice) || 0,
+        Number(currentItem.quantity) || 0,
+        Number(currentItem.kdv) || 0,
+      );
+      currentItem.kdvTutar = kdvTutar;
+
+      newItems[index] = currentItem;
+      return { ...prev, items: newItems };
+    });
   };
 
   // Döviz kurlarını güncelleyen yardımcı fonksiyon
@@ -420,6 +458,18 @@ export const useInvoiceLogic = () => {
   const currentForm = mode === "sales" ? salesForm : purchaseForm;
   const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
 
+  const formatNumber = (val) => {
+    if (!val && val !== 0) return "";
+    let parts = val.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return parts.join(",");
+  };
+
+  const parseNumber = (val) => {
+    if (typeof val !== "string") return val;
+    return val.replace(/\./g, "").replace(",", ".");
+  };
+
   const isLoading =
     materialLoading ||
     customersLoading ||
@@ -429,6 +479,7 @@ export const useInvoiceLogic = () => {
 
   return {
     state: {
+      formatNumber,
       isLoading,
       mode,
       salesForm,

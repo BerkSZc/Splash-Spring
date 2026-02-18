@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
@@ -23,7 +23,6 @@ export const usePayrollLogic = () => {
 
   const { getFileNo, loading: commonDataLoading } = useCommonData();
 
-  const formRef = useRef(null);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState("");
@@ -226,11 +225,18 @@ export const usePayrollLogic = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const selectedYear = new Date(form.transactionDate).getFullYear();
 
     if (selectedYear !== Number(year)) {
       toast.error("İşlem tarihi mali yıl içinde olmalıdır!");
+      return;
+    }
+
+    const cleanAmount = parseNumber(form.amount);
+
+    if (!cleanAmount || cleanAmount <= 0) {
+      toast.error("Geçerli bir tutar giriniz");
       return;
     }
 
@@ -246,6 +252,7 @@ export const usePayrollLogic = () => {
     const payload = {
       ...form,
       id: editing?.id,
+      amount: Number(cleanAmount),
       customer: {
         id: Number(form.customerId),
       },
@@ -281,7 +288,20 @@ export const usePayrollLogic = () => {
       bankBranch: item.bankBranch || "",
       comment: item.comment || "",
     });
-    formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const closeEdit = () => {
+    setEditing(null);
+    setForm({
+      transactionDate: getInitialDate(year),
+      expiredDate: new Date().toISOString().slice(0, 10),
+      customerId: "",
+      amount: "",
+      fileNo: "",
+      bankName: "",
+      bankBranch: "",
+      comment: "",
+    });
   };
 
   const openDeleteModel = (item) => {
@@ -309,10 +329,24 @@ export const usePayrollLogic = () => {
     return `${day}.${month}.${year}`;
   };
 
+  const formatNumber = (val) => {
+    if (!val && val !== 0) return "";
+    let stringVal = val.toString().replace(/\./g, "");
+    let parts = stringVal.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return parts.join(",");
+  };
+
+  const parseNumber = (val) => {
+    if (typeof val !== "string") return val;
+    return val.replace(/\./g, "").replace(",", ".");
+  };
+
   const isLoading = customersLoading || payrollsLoading || commonDataLoading;
 
   return {
     state: {
+      formatNumber,
       isLoading,
       type,
       editing,
@@ -326,7 +360,6 @@ export const usePayrollLogic = () => {
       year,
       payrollType,
     },
-    refs: { formRef },
     handlers: {
       setType,
       setSearch,
@@ -337,6 +370,7 @@ export const usePayrollLogic = () => {
       openDeleteModel,
       handleEditClick,
       confirmDelete,
+      closeEdit,
       formatDate,
     },
   };

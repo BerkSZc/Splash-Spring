@@ -50,19 +50,19 @@ export default function PayrollTable({
                 className="hover:bg-blue-500/5 transition-all group"
               >
                 <td className="p-6 text-gray-400 font-mono text-sm">
-                  {formatDate(item.transactionDate)}
+                  {formatDate(item?.transactionDate) || ""}
                 </td>
                 <td className="p-6">
                   <span className="bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full text-sm font-bold font-mono">
-                    {formatDate(item.expiredDate)}
+                    {formatDate(item?.expiredDate) || ""}
                   </span>
                 </td>
                 <td className="p-6">
                   <div className="font-bold text-white text-base">
-                    {item.customer?.name}
+                    {item.customer?.name || ""}
                   </div>
                   <div className="text-[10px] text-gray-500 uppercase font-bold mt-1">
-                    Cari ID: #{item.customer?.id}
+                    Cari ID: #{item.customer?.id || ""}
                   </div>
                 </td>
                 <td className="p-6">
@@ -73,14 +73,14 @@ export default function PayrollTable({
                   <div className="text-gray-500 text-xs mt-1 ml-3.5 italic">
                     {item.bankBranch || "Şube Belirtilmemiş"} —{" "}
                     <span className="text-gray-400 font-mono">
-                      {item.fileNo}
+                      {item?.fileNo || ""}
                     </span>
                   </div>
                 </td>
                 <td className="p-6 text-right">
                   <p className="text-white font-black font-mono text-lg">
                     ₺{" "}
-                    {Number(item.amount).toLocaleString("tr-TR", {
+                    {(Number(item.amount) || "").toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                     })}
                   </p>

@@ -2,9 +2,10 @@ import { usePayrollLogic } from "./hooks/usePayrollLogic";
 import PayrollForm from "./components/PayrollForm";
 import PayrollTable from "./components/PayrollTable";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
+import PayrollEditModal from "./components/PayrollEditModal.jsx";
 
 export default function PayrollPage() {
-  const { state, handlers, refs } = usePayrollLogic();
+  const { state, handlers } = usePayrollLogic();
   const {
     type,
     editing,
@@ -19,10 +20,7 @@ export default function PayrollPage() {
   } = state;
 
   return (
-    <div
-      className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 font-sans"
-      ref={refs.formRef}
-    >
+    <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12 font-sans">
       {state.isLoading && (
         <LoadingScreen
           message="İŞLEM YAPILIYOR"
@@ -80,15 +78,16 @@ export default function PayrollPage() {
           </div>
         </div>
 
-        <PayrollForm
-          form={form}
-          setForm={handlers.setForm}
-          currentTheme={currentTheme}
-          editing={editing}
-          onSubmit={handlers.handleSubmit}
-          onReset={handlers.resetForm}
-          customers={customers}
-        />
+        {!editing && (
+          <PayrollForm
+            form={form}
+            setForm={handlers.setForm}
+            currentTheme={currentTheme}
+            onSubmit={handlers.handleSubmit}
+            customers={customers}
+            formatNumber={state.formatNumber}
+          />
+        )}
 
         <PayrollTable
           filteredList={filteredList}
@@ -99,6 +98,18 @@ export default function PayrollPage() {
           onDelete={handlers.openDeleteModel}
           formatDate={handlers.formatDate}
         />
+
+        {editing && (
+          <PayrollEditModal
+            form={form}
+            setForm={handlers.setForm}
+            currentTheme={currentTheme}
+            customers={customers}
+            onCancel={handlers.closeEdit}
+            onSave={handlers.handleSubmit}
+            formatNumber={state.formatNumber}
+          />
+        )}
 
         {state.deleteTarget && (
           <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[110] backdrop-blur-md">

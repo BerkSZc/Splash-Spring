@@ -12,9 +12,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackages = {"com.berksozcu"})
 @ComponentScan(basePackages = {"com.berksozcu"})
 @ConfigurationPropertiesScan(basePackages = {"com.berksozcu"})
-public class LogoApplication {
+public class SplashApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(LogoApplication.class, args);
+        SpringApplication.run(SplashApplication.class, args);
     }
 }

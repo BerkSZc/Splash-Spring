@@ -241,33 +241,42 @@ export const useInvoicePageLogic = () => {
     });
   };
 
-  const handleItemChange = (index, e) => {
+  const handleItemChange = (index, e, manualValue) => {
     if (!editingInvoice || !form) return;
 
-    const { name, value, type } = e.target;
+    const isManual = typeof e === "string";
+    const name = isManual ? e : e.target ? e.target.name : "";
+    let rawValue = isManual ? manualValue : e.target ? e.target.value : e;
+
+    const value = parseNumber(rawValue);
 
     if (name === "materialId") {
       handleMaterialSelect(index, value);
+      return;
     } else {
       setForm((prev) => {
         const newItems = [...prev.items];
+        const item = { ...newItems[index], [name]: value };
 
-        const finalValue =
-          type === "number" ? (value === "" ? 0 : value) : value;
+        if (name === "lineTotal") {
+          const qty = Number(item.quantity) || 1;
+          const newTotal = Number(value) || 0;
+          item.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(6);
+        } else if (name === "quantity" || name === "unitPrice") {
+          const qty = Number(item.quantity) || 0;
+          const up = Number(item.unitPrice) || 0;
+          item.lineTotal = (qty * up).toFixed(2);
+        }
 
-        const updatedItem = { ...newItems[index], [name]: finalValue };
-
-        const { lineTotal, kdvTutar } = calculateRow(
-          Number(updatedItem.unitPrice) || 0,
-          Number(updatedItem.quantity) || 0,
-          Number(updatedItem.kdv) || 0,
+        const { kdvTutar } = calculateRow(
+          Number(item.unitPrice) || 0,
+          Number(item.quantity) || 0,
+          Number(item.kdv) || 0,
         );
 
-        newItems[index] = {
-          ...updatedItem,
-          lineTotal: lineTotal,
-          kdvTutar: kdvTutar,
-        };
+        item.kdvTutar = kdvTutar;
+        newItems[index] = item;
+
         return { ...prev, items: newItems };
       });
     }
@@ -380,7 +389,7 @@ export const useInvoicePageLogic = () => {
 
     const kdvTutar = roundHalfUp((lineTotal * k) / 100);
 
-    return { lineTotal, kdvTutar };
+    return { lineTotal: lineTotal.toFixed(2), kdvTutar: kdvTutar.toFixed(2) };
   };
 
   const modalTotals = useMemo(() => {
@@ -450,21 +459,23 @@ export const useInvoicePageLogic = () => {
   const toggleMenu = (id) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
+  const sortedAndFilteredInvoices = useMemo(() => {
+    const baseData = invoiceType === "purchase" ? purchase : sales;
+    const dataArray = Array.isArray(baseData) ? baseData : [];
 
-  const filteredInvoices = (
-    Array.isArray(invoiceType === "purchase" ? purchase : sales)
-      ? invoiceType === "purchase"
-        ? purchase
-        : sales
-      : []
-  ).filter((inv) => {
-    const term = searchTerm.toLocaleLowerCase("tr-TR");
-    return (
-      inv.fileNo?.toString().toLocaleLowerCase("tr-TR").includes(term) ||
-      inv.customer?.name?.toLocaleLowerCase("tr-TR").includes(term) ||
-      inv.date?.toLocaleLowerCase("tr-TR").includes(term)
-    );
-  });
+    const filtered = dataArray.filter((inv) => {
+      const term = searchTerm.toLocaleLowerCase("tr-TR");
+      return (
+        inv.fileNo?.toString().toLocaleLowerCase("tr-TR").includes(term) ||
+        inv.customer?.name?.toLocaleLowerCase("tr-TR").includes(term) ||
+        inv.date?.toLocaleLowerCase("tr-TR").includes(term)
+      );
+    });
+
+    return [...filtered].sort((a, b) => {
+      return new Date(b.date) - new Date(a.date);
+    });
+  }, [purchase, sales, invoiceType, searchTerm]);
 
   const formatDateToTR = (dateString) => {
     if (
@@ -477,6 +488,18 @@ export const useInvoicePageLogic = () => {
     return `${d}.${m}.${y}`;
   };
 
+  const formatNumber = (val) => {
+    if (!val && val !== 0) return "";
+    let parts = val.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return parts.join(",");
+  };
+
+  const parseNumber = (val) => {
+    if (typeof val !== "string") return val;
+    return val.replace(/\./g, "").replace(",", ".");
+  };
+
   const isLoading =
     (invoiceType === "purchase" ? purchaseLoading : salesLoading) ||
     materialLoading ||
@@ -485,6 +508,7 @@ export const useInvoicePageLogic = () => {
 
   return {
     state: {
+      formatNumber,
       invoiceType,
       editingInvoice,
       deleteTarget,
@@ -495,7 +519,7 @@ export const useInvoicePageLogic = () => {
       form,
       totals,
       modalTotals,
-      filteredInvoices,
+      filteredInvoices: sortedAndFilteredInvoices,
       year,
       materials,
       customers,
