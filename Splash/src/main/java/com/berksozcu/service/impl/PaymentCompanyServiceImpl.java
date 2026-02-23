@@ -53,15 +53,17 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
 
-        LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
+        LocalDate paymentDate = Objects.requireNonNullElse(paymentCompany.getDate(), LocalDate.now());
+
+        LocalDate start = LocalDate.of(paymentDate.getYear(), 1, 1);
+        LocalDate end = LocalDate.of(paymentDate.getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
         paymentCompany.setCustomer(customer);
         paymentCompany.setCustomerName(Objects.requireNonNullElse(customer.getName(), "").toUpperCase());
-        paymentCompany.setDate(Objects.requireNonNullElse(paymentCompany.getDate(),  LocalDate.now()));
+        paymentCompany.setDate(paymentDate);
         paymentCompany.setComment(Objects.requireNonNullElse(paymentCompany.getComment(), ""));
         paymentCompany.setPrice(safeGet(paymentCompany.getPrice()));
         paymentCompany.setFileNo(Objects.requireNonNullElse(paymentCompany.getFileNo(), "").toUpperCase());
@@ -100,8 +102,10 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
-        LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
+        LocalDate date = Objects.requireNonNullElse(paymentCompany.getDate(), LocalDate.now());
+
+        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
+        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
 
         OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
                 .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
@@ -109,7 +113,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(oldPayment.getPrice()));
         oldVoucher.setDebit(safeGet(oldVoucher.getDebit()).subtract(oldPayment.getPrice()));
 
-        oldPayment.setDate(Objects.requireNonNullElse(paymentCompany.getDate(), LocalDate.now()));
+        oldPayment.setDate(date);
         oldPayment.setComment(Objects.requireNonNullElse(paymentCompany.getComment(), ""));
         oldPayment.setPrice(safeGet(paymentCompany.getPrice()));
         oldPayment.setCustomer(newCustomer);
@@ -175,7 +179,7 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         voucher.setCustomerName(Objects.requireNonNullElse(newCustomer.getName(), ""));
         voucher.setDescription("Eklendi");
         voucher.setFileNo("001");
-      return   openingVoucherRepository.save(voucher);
+      return openingVoucherRepository.save(voucher);
     }
 
     private BigDecimal safeGet(BigDecimal value) {
