@@ -108,10 +108,36 @@ export default function PayrollEditModal({
               <div className="relative group">
                 <input
                   type="text"
-                  value={formatNumber(form?.amount) || ""}
+                  value={form?.amount || ""}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9.,]/g, "");
-                    setForm({ ...form, amount: val });
+                    const raw = e.target.value;
+
+                    // Sadece rakam ve virgüle izin ver (bir tane virgül)
+                    const cleaned = raw.replace(/[^0-9,]/g, "");
+
+                    // Birden fazla virgülü engelle
+                    const parts = cleaned.split(",");
+                    const intPart = parts[0].replace(/[^0-9]/g, "");
+                    const decPart =
+                      parts.length > 1
+                        ? parts[1].replace(/[^0-9]/g, "").slice(0, 2)
+                        : null;
+
+                    if (!intPart && decPart === null) {
+                      setForm({ ...form, amount: "" });
+                      return;
+                    }
+
+                    // Binlik nokta ekle
+                    const formattedInt = Number(intPart || 0).toLocaleString(
+                      "tr-TR",
+                    );
+                    const formatted =
+                      decPart !== null
+                        ? `${formattedInt},${decPart}`
+                        : formattedInt;
+
+                    setForm({ ...form, amount: formatted });
                   }}
                   onFocus={(e) => e.target.select()}
                   className="w-full bg-gray-900 border-2 border-gray-700 rounded-2xl px-5 py-3 text-right text-emerald-400 outline-none focus:border-emerald-500 transition-all font-mono font-bold text-lg"

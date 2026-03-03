@@ -31,7 +31,7 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     @Query(value = "DELETE FROM PurchaseInvoice p WHERE p.company.id = :companyId AND p.date BETWEEN :start AND :end")
     void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
 
-    @Query("SELECT new com.berksozcu.dto.report.DtoMonthlyKdv(" +
+    @Query("SELECT new com.berksozcu.dto.report.kdv.DtoMonthlyKdv(" +
             "MONTH(pi.date), YEAR(pi.date), SUM(pi.totalPrice - pi.kdvToplam), SUM(pi.kdvToplam), SUM(pi.totalPrice)) " +
             "FROM PurchaseInvoice pi " +
             "WHERE YEAR(pi.date) = :year AND pi.company.id = :companyId " +

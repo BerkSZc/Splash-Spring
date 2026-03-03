@@ -6,6 +6,8 @@ export default function PayrollTable({
   onEdit,
   onDelete,
   formatDate,
+  sortOrder,
+  setSortOrder,
 }) {
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden backdrop-blur-sm shadow-xl">
@@ -18,19 +20,51 @@ export default function PayrollTable({
           </span>
           {currentTheme.label} Geçmişi
         </h3>
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-            🔍
-          </span>
-          <input
-            type="text"
-            placeholder="Müşteri, banka veya no ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-gray-800/50 border border-gray-700 rounded-2xl pl-11 pr-4 py-2 text-sm outline-none focus:border-blue-500 w-full sm:w-80 transition"
-          />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="appearance-none bg-gray-800/50 border border-gray-700 text-gray-300 text-sm rounded-2xl pl-4 pr-10 py-2 outline-none focus:border-blue-500 transition cursor-pointer ring-0 focus:ring-0"
+            >
+              <option className="bg-gray-900" value="desc">
+                🗓️ En Yeni
+              </option>
+              <option className="bg-gray-900" value="asc">
+                🗓️ En Eski
+              </option>
+            </select>
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <svg
+                className="w-4 h-4 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="relative flex-1 sm:flex-initial">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Müşteri, banka veya no ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-gray-800/50 border border-gray-700 rounded-2xl pl-11 pr-4 py-2 text-sm outline-none focus:border-blue-500 w-full sm:w-80 transition"
+            />
+          </div>
         </div>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>

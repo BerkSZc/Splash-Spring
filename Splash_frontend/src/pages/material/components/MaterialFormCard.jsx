@@ -86,10 +86,31 @@ export const MaterialFormCard = ({
           </h4>
           <div className="flex gap-2">
             <input
-              type="number"
+              type="text"
               name="purchasePrice"
-              value={form?.purchasePrice ?? 0}
-              onChange={onChange}
+              value={form?.purchasePrice || ""}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const cleaned = raw.replace(/[^0-9,]/g, "");
+                const parts = cleaned.split(",");
+                const intPart = parts[0].replace(/[^0-9]/g, "");
+                const decPart =
+                  parts.length > 1
+                    ? parts[1].replace(/[^0-9]/g, "").slice(0, 2)
+                    : null;
+                if (!intPart && decPart === null) {
+                  onChange({ target: { name: "purchasePrice", value: "" } });
+                  return;
+                }
+                const formatted =
+                  decPart !== null
+                    ? `${Number(intPart || 0).toLocaleString("tr-TR")},${decPart}`
+                    : Number(intPart || 0).toLocaleString("tr-TR");
+                onChange({
+                  target: { name: "purchasePrice", value: formatted },
+                });
+              }}
+              onFocus={(e) => e.target.select()}
               className="w-2/3 bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
               placeholder="0.00"
             />
@@ -113,10 +134,29 @@ export const MaterialFormCard = ({
           </h4>
           <div className="flex gap-2">
             <input
-              type="number"
+              type="text"
               name="salesPrice"
-              value={form?.salesPrice ?? 0}
-              onChange={onChange}
+              value={form?.salesPrice || ""}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const cleaned = raw.replace(/[^0-9,]/g, "");
+                const parts = cleaned.split(",");
+                const intPart = parts[0].replace(/[^0-9]/g, "");
+                const decPart =
+                  parts.length > 1
+                    ? parts[1].replace(/[^0-9]/g, "").slice(0, 2)
+                    : null;
+                if (!intPart && decPart === null) {
+                  onChange({ target: { name: "salesPrice", value: "" } });
+                  return;
+                }
+                const formatted =
+                  decPart !== null
+                    ? `${Number(intPart || 0).toLocaleString("tr-TR")},${decPart}`
+                    : Number(intPart || 0).toLocaleString("tr-TR");
+                onChange({ target: { name: "salesPrice", value: formatted } });
+              }}
+              onFocus={(e) => e.target.select()}
               className="w-2/3 bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none"
               placeholder="0.00"
             />

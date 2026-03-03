@@ -2,12 +2,40 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useYear } from "../context/YearContext";
+import { useCompany } from "../../backend/store/useCompany";
+import { useTenant } from "../context/TenantContext";
+import toast from "react-hot-toast";
 
 export default function YearDropdown() {
-  const { year, years, changeYear } = useYear();
+  const { year, years, changeYear, setYears } = useYear();
   const [open, setOpen] = useState(false);
-
+  const { getAllYearByCompanyId, companies } = useCompany();
   const dropDownRef = useRef(null);
+  const { tenant } = useTenant();
+
+  useEffect(() => {
+    const fetchYears = async () => {
+      const selectedCompany = (Array.isArray(companies) ? companies : [])?.find(
+        (c) => c?.schemaName === tenant,
+      );
+      if (selectedCompany?.id) {
+        try {
+          const data = await getAllYearByCompanyId(selectedCompany.id);
+          const yearList = (Array.isArray(data) ? data : []).map(
+            (y) => y.yearValue,
+          );
+          setYears(yearList);
+        } catch (error) {
+          const backendErr =
+            error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+          toast.error(backendErr);
+        }
+      }
+    };
+    if (tenant) {
+      fetchYears();
+    }
+  }, [tenant, companies]);
 
   useEffect(() => {
     //Tıklanan yerin ref içinde olup olmadığını kontrol eder

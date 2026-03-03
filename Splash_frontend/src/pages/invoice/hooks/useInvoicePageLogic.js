@@ -39,6 +39,7 @@ export const useInvoicePageLogic = () => {
   const menuRef = useRef(null);
   const [printItem, setPrintItem] = useState(null);
   const [form, setForm] = useState(null);
+  const [sortOrder, setSortOrder] = useState("desc");
   const [totals, setTotals] = useState({
     kdvToplam: 0,
     totalPrice: 0,
@@ -420,8 +421,8 @@ export const useInvoicePageLogic = () => {
           unitPrice: "",
           quantity: "",
           kdv: 20,
-          kdvTutar: 0,
-          lineTotal: 0,
+          kdvTutar: "",
+          lineTotal: "",
         },
       ],
     }));
@@ -473,9 +474,12 @@ export const useInvoicePageLogic = () => {
     });
 
     return [...filtered].sort((a, b) => {
-      return new Date(b.date) - new Date(a.date);
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [purchase, sales, invoiceType, searchTerm]);
+  }, [purchase, sales, invoiceType, searchTerm, sortOrder]);
 
   const formatDateToTR = (dateString) => {
     if (
@@ -489,7 +493,8 @@ export const useInvoicePageLogic = () => {
   };
 
   const formatNumber = (val) => {
-    if (!val && val !== 0) return "";
+    if (val === undefined || val === null || val === "" || Number(val) === 0)
+      return "";
     let parts = val.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     return parts.join(",");
@@ -525,9 +530,11 @@ export const useInvoicePageLogic = () => {
       customers,
       formatDateToTR,
       isLoading,
+      sortOrder,
     },
     handlers: {
       toggleMenu,
+      setSortOrder,
       setEditingInvoice,
       setInvoiceType,
       setSearchTerm,

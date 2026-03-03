@@ -79,7 +79,7 @@ export default function ClientForm({
                   const val = e.target.value.replace(/[^0-9.,]/g, "");
                   handleChange({ target: { name: field.key, value: val } });
                 } else {
-                  handleChange;
+                  handleChange(e);
                 }
               }}
               disabled={field.disabled}

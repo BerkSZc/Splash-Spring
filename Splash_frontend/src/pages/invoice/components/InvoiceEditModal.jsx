@@ -164,7 +164,6 @@ export default function InvoiceEditModal({
                         }}
                         onChange={(e) => {
                           const val = e.target.value.replace(/[^0-9.,]/g, "");
-
                           onItemChange(i, "unitPrice", val);
                         }}
                         className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none"

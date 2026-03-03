@@ -26,6 +26,7 @@ export const usePayrollLogic = () => {
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [type, setType] = useState(() => {
     return localStorage.getItem("payroll_type") || "cheque_in";
   });
@@ -66,10 +67,11 @@ export const usePayrollLogic = () => {
     bankBranch: "",
     comment: "",
   });
-  const payrollType = type === "cheque_in" || "cheque_out" ? "ÇEK" : "SENET";
+  const payrollType =
+    type === "cheque_in" || type === "cheque_out" ? "ÇEK" : "SENET";
 
   useEffect(() => {
-    if (deleteTarget) {
+    if (deleteTarget || editing) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -78,7 +80,7 @@ export const usePayrollLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [deleteTarget]);
+  }, [deleteTarget, editing]);
 
   const currentTheme = useMemo(() => {
     switch (type) {
@@ -124,7 +126,7 @@ export const usePayrollLogic = () => {
     const isCheque = type.includes("cheque");
     const isInput = type.includes("_in");
     const searchLower = search.toLowerCase();
-    return (payrolls || []).filter((item) => {
+    const list = (payrolls || []).filter((item) => {
       const typeMatch = isCheque
         ? item.payrollType === "CHEQUE"
         : item.payrollType === "BOND";
@@ -140,7 +142,13 @@ export const usePayrollLogic = () => {
           item.bankName?.toLowerCase().includes(searchLower))
       );
     });
-  }, [payrolls, type, search]);
+
+    return [...list].sort((a, b) => {
+      const dateA = new Date(a.transactionDate);
+      const dateB = new Date(b.transactionDate);
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  }, [payrolls, type, search, sortOrder]);
 
   const totalAmount = useMemo(
     () => filteredList.reduce((sum, item) => sum + Number(item.amount || 0), 0),
@@ -282,7 +290,7 @@ export const usePayrollLogic = () => {
       transactionDate: item.transactionDate,
       expiredDate: item.expiredDate,
       customerId: item.customer?.id || "",
-      amount: item.amount || "",
+      amount: item.amount ? formatNumber(item.amount) : "",
       fileNo: item.fileNo || "",
       bankName: item.bankName || "",
       bankBranch: item.bankBranch || "",
@@ -331,10 +339,17 @@ export const usePayrollLogic = () => {
 
   const formatNumber = (val) => {
     if (!val && val !== 0) return "";
-    let stringVal = val.toString().replace(/\./g, "");
-    let parts = stringVal.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return parts.join(",");
+
+    // Önce parseNumber ile temiz sayıya çevir
+    const cleaned = typeof val === "string" ? parseNumber(val) : val;
+    const num = parseFloat(cleaned);
+
+    if (isNaN(num)) return "";
+
+    return num.toLocaleString("tr-TR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   const parseNumber = (val) => {
@@ -359,9 +374,11 @@ export const usePayrollLogic = () => {
       customers,
       year,
       payrollType,
+      sortOrder,
     },
     handlers: {
       setType,
+      setSortOrder,
       setSearch,
       setForm,
       handleSubmit,

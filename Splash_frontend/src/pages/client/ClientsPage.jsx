@@ -38,41 +38,6 @@ export default function ClientsPage() {
               Portföyünüzü ve bakiye durumlarını kontrol edin.
             </p>
           </div>
-
-          <div className="flex items-center gap-3 w-full md:w-auto relative">
-            <div className="relative w-full md:w-80">
-              <input
-                type="text"
-                placeholder="Müşteri ara..."
-                value={state?.search || ""}
-                onChange={(e) => handlers.setSearch(e.target.value)}
-                className="pl-11 pr-4 py-3 bg-gray-900/40 border-2 border-gray-800 rounded-2xl w-full text-white focus:border-blue-500 transition-all outline-none"
-              />
-              <svg
-                className="w-5 h-5 text-gray-500 absolute left-4 top-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <button
-              onClick={() => handlers.setShowArchived(!state.showArchived)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap ${
-                state.showArchived
-                  ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20"
-                  : "bg-indigo-600/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/20"
-              }`}
-            >
-              {state.showArchived ? "Aktif Listeye Dön" : "Arşivdekiler"}
-            </button>
-          </div>
         </div>
 
         {/* 2. BÖLÜM: KAYIT VE GÜNCELLEME FORMU */}
@@ -84,6 +49,40 @@ export default function ClientsPage() {
             handleSubmit={handlers.handleSubmit}
           />
         )}
+        <div className="flex justify-end items-center gap-3">
+          <div className="relative w-full md:w-80">
+            <input
+              type="text"
+              placeholder="Müşteri ara..."
+              value={state?.search || ""}
+              onChange={(e) => handlers.setSearch(e.target.value)}
+              className="pl-11 pr-4 py-3 bg-gray-900/40 border-2 border-gray-800 rounded-2xl w-full text-white focus:border-blue-500 transition-all outline-none"
+            />
+            <svg
+              className="w-5 h-5 text-gray-500 absolute left-4 top-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <button
+            onClick={() => handlers.setShowArchived(!state.showArchived)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap ${
+              state.showArchived
+                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20"
+                : "bg-indigo-600/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/20"
+            }`}
+          >
+            {state.showArchived ? "Aktif Listeye Dön" : "Arşivdekiler"}
+          </button>
+        </div>
 
         {/* 3. BÖLÜM: MÜŞTERİ LİSTESİ (TABLO) */}
         <div className="space-y-6">

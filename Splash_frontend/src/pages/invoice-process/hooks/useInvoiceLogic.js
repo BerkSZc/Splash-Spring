@@ -459,7 +459,8 @@ export const useInvoiceLogic = () => {
   const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
 
   const formatNumber = (val) => {
-    if (!val && val !== 0) return "";
+    if (val === undefined || val === null || val === "" || Number(val) === 0)
+      return "";
     let parts = val.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     return parts.join(",");

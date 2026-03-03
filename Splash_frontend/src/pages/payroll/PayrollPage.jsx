@@ -85,7 +85,6 @@ export default function PayrollPage() {
             currentTheme={currentTheme}
             onSubmit={handlers.handleSubmit}
             customers={customers}
-            formatNumber={state.formatNumber}
           />
         )}
 
@@ -93,6 +92,8 @@ export default function PayrollPage() {
           filteredList={filteredList}
           currentTheme={currentTheme}
           search={search}
+          sortOder={state.sortOrder}
+          setSortOrder={handlers.setSortOrder}
           setSearch={handlers.setSearch}
           onEdit={handlers.handleEditClick}
           onDelete={handlers.openDeleteModel}

@@ -26,14 +26,26 @@ export default function InvoicePage() {
               {state?.year || ""} Mali Yılı - Kayıtlı Faturalar
             </p>
           </div>
-          <select
-            value={state?.invoiceType || ""}
-            onChange={(e) => handlers.setInvoiceType(e.target.value)}
-            className="bg-gray-900 border-2 border-gray-800 text-white rounded-2xl px-6 py-3 font-bold cursor-pointer focus:border-blue-500 transition-all outline-none"
-          >
-            <option value="purchase">🛒 Satın Alma Faturaları</option>
-            <option value="sales">💰 Satış Faturaları</option>
-          </select>
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* SIRALAMA SEÇİMİ */}
+            <select
+              value={state.sortOrder}
+              onChange={(e) => handlers.setSortOrder(e.target.value)}
+              className="bg-gray-900/40 border-2 border-gray-800 text-gray-300 text-sm rounded-2xl px-4 py-3 outline-none focus:border-blue-500 transition-all cursor-pointer hover:bg-gray-800/60"
+            >
+              <option value="desc">🗓️ En Yeni</option>
+              <option value="asc">🗓️ En Eski</option>
+            </select>
+
+            <select
+              value={state?.invoiceType || ""}
+              onChange={(e) => handlers.setInvoiceType(e.target.value)}
+              className="bg-gray-900 border-2 border-gray-800 text-white rounded-2xl px-6 py-3 font-bold cursor-pointer focus:border-blue-500 transition-all outline-none"
+            >
+              <option value="purchase">🛒 Satın Alma Faturaları</option>
+              <option value="sales">💰 Satış Faturaları</option>
+            </select>
+          </div>
         </div>
 
         {/* ARAMA */}
