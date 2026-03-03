@@ -64,13 +64,30 @@ export default function CollectionPage() {
               <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
               İşlem Geçmişi
             </h3>
-            <input
-              type="text"
-              placeholder="Listede ara..."
-              value={search || ""}
-              onChange={(e) => handlers.setSearch(e.target.value)}
-              className="bg-gray-900 border-2 border-gray-800 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none"
-            />
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="relative flex-1 md:flex-initial">
+                <input
+                  type="text"
+                  placeholder="Listede ara..."
+                  value={search || ""}
+                  onChange={(e) => handlers.setSearch(e.target.value)}
+                  className="w-full bg-gray-900 border-2 border-gray-800 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+
+              <select
+                value={state.sortOrder}
+                onChange={(e) => handlers.setSortOrder(e.target.value)}
+                className="bg-gray-900 border-2 border-gray-800 text-gray-300 text-sm rounded-xl px-3 py-2 outline-none focus:border-blue-500 transition-all cursor-pointer hover:bg-gray-800"
+              >
+                <option className="bg-gray-900" value="desc">
+                  🗓️ En Yeni
+                </option>
+                <option className="bg-gray-900" value="asc">
+                  🗓️ En Eski
+                </option>
+              </select>
+            </div>
           </div>
 
           <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
@@ -128,7 +145,7 @@ export default function CollectionPage() {
                             ₺{" "}
                             {(Number(item.price) || 0).toLocaleString("tr-TR", {
                               minimumFractionDigits: 2,
-                              maximumSignificantDigits: 2,
+                              maximumFractionDigits: 2,
                             })}
                           </span>
                         </td>

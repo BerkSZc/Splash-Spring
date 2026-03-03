@@ -64,9 +64,9 @@ export const useClientLogic = () => {
 
   const [form, setForm] = useState({
     name: "",
-    balance: 0,
-    yearlyDebit: 0,
-    yearlyCredit: 0,
+    balance: "",
+    yearlyDebit: "",
+    yearlyCredit: "",
     address: "",
     country: "",
     local: "",

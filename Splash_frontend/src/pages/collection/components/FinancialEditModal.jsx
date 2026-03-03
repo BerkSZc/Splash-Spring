@@ -42,11 +42,33 @@ export default function FinancialEditModal({
               </label>
               <input
                 required
-                type="number"
-                value={Number(editForm?.price) || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, price: e.target.value })
-                }
+                type="text"
+                value={editForm?.price || ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const cleaned = raw.replace(/[^0-9,]/g, "");
+                  const parts = cleaned.split(",");
+                  const intPart = parts[0].replace(/[^0-9]/g, "");
+                  const decPart =
+                    parts.length > 1
+                      ? parts[1].replace(/[^0-9]/g, "").slice(0, 2)
+                      : null;
+
+                  if (!intPart && decPart === null) {
+                    setEditForm({ ...editForm, price: "" });
+                    return;
+                  }
+
+                  const formattedInt = Number(intPart || 0).toLocaleString(
+                    "tr-TR",
+                  );
+                  const formatted =
+                    decPart !== null
+                      ? `${formattedInt},${decPart}`
+                      : formattedInt;
+                  setEditForm({ ...editForm, price: formatted });
+                }}
+                onFocus={(e) => e.target.select()}
                 className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition font-mono"
               />
             </div>

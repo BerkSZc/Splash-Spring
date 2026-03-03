@@ -37,6 +37,7 @@ export const useFinancialLogic = () => {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [sortOrder, setSortOrder] = useState("desc");
   const menuRef = useRef(null);
   const [type, setType] = useState(() => {
     return localStorage.getItem("collection_type") || "payment";
@@ -53,6 +54,18 @@ export const useFinancialLogic = () => {
       ? new Date().toISOString().slice(0, 10)
       : `${selectedYear}-01-01`;
   };
+
+  useEffect(() => {
+    if (editing || deleteTarget) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [editing, deleteTarget]);
 
   const syncFinancialData = async () => {
     try {
@@ -154,8 +167,8 @@ export const useFinancialLogic = () => {
 
   const shownList = type === "received" ? collections : payments;
 
-  const filteredList = (Array.isArray(shownList) ? shownList : []).filter(
-    (item) => {
+  const filteredList = (Array.isArray(shownList) ? shownList : [])
+    .filter((item) => {
       const text = search.toLowerCase();
       return (
         item.customer?.name?.toLowerCase().includes(text) ||
@@ -163,8 +176,13 @@ export const useFinancialLogic = () => {
         item.date?.toLowerCase().includes(text) ||
         String(item?.price || "0").includes(text)
       );
-    },
-  );
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -183,7 +201,7 @@ export const useFinancialLogic = () => {
     const customerId = Number(addForm.customerId);
     const selectedCustomer = customers.find((c) => Number(c.id) === customerId);
 
-    const price = Number(addForm.price);
+    const price = Number(parseNumber(addForm.price));
     const payload = {
       date: addForm.date,
       comment: addForm.comment || "",
@@ -230,7 +248,7 @@ export const useFinancialLogic = () => {
     setEditForm({
       date: item.date || "",
       customerId: item?.customer?.id || "",
-      price: Number(item?.price) || 0,
+      price: formatNumber(item?.price) || "",
       comment: item.comment || "",
       fileNo: item.fileNo || "",
     });
@@ -239,9 +257,11 @@ export const useFinancialLogic = () => {
   const handleSave = async (e) => {
     e.preventDefault();
 
+    const cleanPrice = parseFloat(parseNumber(editForm.price));
+
     const customerId = Number(editForm.customerId);
     const selectedCustomer = customers.find((c) => Number(c.id) === customerId);
-    const price = Number(editForm.price);
+    const price = cleanPrice;
     const payload = {
       id: editing.id,
       date: editForm.date || "",
@@ -304,6 +324,22 @@ export const useFinancialLogic = () => {
     return `${day}.${month}.${year}`;
   };
 
+  const formatNumber = (val) => {
+    if (!val && val !== 0) return "";
+    const cleaned = typeof val === "string" ? parseNumber(val) : val;
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return "";
+    return num.toLocaleString("tr-TR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const parseNumber = (val) => {
+    if (!val) return "";
+    return val.toString().replace(/\./g, "").replace(",", ".");
+  };
+
   const isLoading =
     customersLoading ||
     collectionsLoading ||
@@ -312,7 +348,10 @@ export const useFinancialLogic = () => {
 
   return {
     state: {
+      formatNumber,
+      parseNumber,
       type,
+      sortOrder,
       editing,
       search,
       deleteTarget,
@@ -328,6 +367,7 @@ export const useFinancialLogic = () => {
     handlers: {
       setType,
       setSearch,
+      setSortOrder,
       setDeleteTarget,
       setOpenMenuId,
       setAddForm,

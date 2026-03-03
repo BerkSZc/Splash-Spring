@@ -53,10 +53,30 @@ export default function FinancialForm({
           </label>
           <input
             required
-            type="number"
+            type="text"
             placeholder="0.00"
-            value={Number(addForm?.price) || ""}
-            onChange={(e) => setAddForm({ ...addForm, price: e.target.value })}
+            value={addForm?.price || ""}
+            onChange={(e) => {
+              const raw = e.target.value;
+              const cleaned = raw.replace(/[^0-9,]/g, "");
+              const parts = cleaned.split(",");
+              const intPart = parts[0].replace(/[^0-9]/g, "");
+              const decPart =
+                parts.length > 1
+                  ? parts[1].replace(/[^0-9]/g, "").slice(0, 2)
+                  : null;
+
+              if (!intPart && decPart === null) {
+                setAddForm({ ...addForm, price: "" });
+                return;
+              }
+
+              const formattedInt = Number(intPart || 0).toLocaleString("tr-TR");
+              const formatted =
+                decPart !== null ? `${formattedInt},${decPart}` : formattedInt;
+              setAddForm({ ...addForm, price: formatted });
+            }}
+            onFocus={(e) => e.target.select()}
             className="w-full bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition"
           />
         </div>

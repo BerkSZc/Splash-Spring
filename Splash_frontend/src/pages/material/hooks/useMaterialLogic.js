@@ -55,11 +55,16 @@ export const useMaterialLogic = () => {
     e.preventDefault();
 
     try {
+      const payload = {
+        ...form,
+        purchasePrice: Number(parseNumber(String(form.purchasePrice))) || 0,
+        salesPrice: Number(parseNumber(String(form.salesPrice))) || 0,
+      };
       if (editId) {
-        await updateMaterials(editId, form);
+        await updateMaterials(editId, payload);
         setEditId(null);
       } else {
-        await addMaterial(form);
+        await addMaterial(payload);
       }
       setForm(initialForm);
       await getMaterials();
@@ -76,9 +81,9 @@ export const useMaterialLogic = () => {
       code: item.code || "",
       comment: item.comment || "",
       unit: item.unit || "KG",
-      purchasePrice: item.purchasePrice || "",
+      purchasePrice: item.purchasePrice ? formatNumber(item.purchasePrice) : "",
       purchaseCurrency: item.purchaseCurrency || "TRY",
-      salesPrice: item.salesPrice || "",
+      salesPrice: item.salesPrice ? formatNumber(item.salesPrice) : "",
       salesCurrency: item.salesCurrency || "TRY",
     });
     formRef.current.scrollIntoView({ behavior: "smooth" });
@@ -95,10 +100,26 @@ export const useMaterialLogic = () => {
     setForm(initialForm);
   };
 
+  const formatNumber = (val) => {
+    if (!val && val !== 0) return "";
+    const cleaned = typeof val === "string" ? parseNumber(val) : val;
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return "";
+    return num.toLocaleString("tr-TR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const parseNumber = (val) => {
+    if (typeof val !== "string") return val;
+    return val.replace(/\./g, "").replace(",", ".");
+  };
+
   const isLoading = materialsLoading;
 
   return {
-    state: { form, editId, search, filteredMaterials, isLoading },
+    state: { form, editId, search, filteredMaterials, isLoading, formatNumber },
     refs: { formRef },
     handlers: {
       handleChange,

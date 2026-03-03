@@ -24,4 +24,18 @@ export const useReport = create((set) => ({
       set({ loading: false });
     }
   },
+  getBalanceReport: async (start, end, schemaName) => {
+    set({ loading: true, reports: [] });
+    try {
+      const res = await axiosInstance.get("/report/get-balance-status", {
+        params: { start, end, schemaName },
+      });
+      set({ reports: res.data });
+    } catch (error) {
+      set({ reports: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
 }));

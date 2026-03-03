@@ -6,7 +6,6 @@ export default function PayrollForm({
   currentTheme,
   onSubmit,
   customers,
-  formatNumber,
 }) {
   return (
     <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem] shadow-2xl">
@@ -110,11 +109,32 @@ export default function PayrollForm({
             <input
               required
               type="text"
-              value={formatNumber(form.amount) || ""}
+              value={form?.amount || ""}
               onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9.,]/g, "");
-                setForm({ ...form, amount: val });
+                const raw = e.target.value;
+                const cleaned = raw.replace(/[^0-9,]/g, "");
+                const parts = cleaned.split(",");
+                const intPart = parts[0].replace(/[^0-9]/g, "");
+                const decPart =
+                  parts.length > 1
+                    ? parts[1].replace(/[^0-9]/g, "").slice(0, 2)
+                    : null;
+
+                if (!intPart && decPart === null) {
+                  setForm({ ...form, amount: "" });
+                  return;
+                }
+
+                const formattedInt = Number(intPart || 0).toLocaleString(
+                  "tr-TR",
+                );
+                const formatted =
+                  decPart !== null
+                    ? `${formattedInt},${decPart}`
+                    : formattedInt;
+                setForm({ ...form, amount: formatted });
               }}
+              onFocus={(e) => e.target.select()}
               className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500/20 outline-none font-mono font-bold transition"
             />
           </div>
