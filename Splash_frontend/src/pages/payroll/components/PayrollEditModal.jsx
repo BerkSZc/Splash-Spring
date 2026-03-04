@@ -7,7 +7,6 @@ export default function PayrollEditModal({
   customers,
   onCancel,
   onSave,
-  formatNumber,
 }) {
   return (
     <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">

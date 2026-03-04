@@ -3,6 +3,7 @@ export default function ClientForm({
   handleChange,
   handleSubmit,
   formatNumber,
+  onCancel,
 }) {
   const formFields = [
     {
@@ -107,8 +108,16 @@ export default function ClientForm({
 
         <div className="md:col-span-4 flex justify-end gap-4 pt-4 mt-2 border-t border-gray-800/50">
           <button
+            type="button"
+            onClick={onCancel}
+            className="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold rounded-xl transition-all border border-gray-700 active:scale-95"
+          >
+            Vazgeç
+          </button>
+
+          <button
             type="submit"
-            className={`px-10 py-3 text-white font-bold rounded-xl transition-all active:scale-95 shadow-lg bg-emerald-600 hover:bg-emerald-500`}
+            className="px-10 py-3 text-white font-bold rounded-xl transition-all active:scale-95 shadow-lg bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20"
           >
             Sisteme Kaydet
           </button>

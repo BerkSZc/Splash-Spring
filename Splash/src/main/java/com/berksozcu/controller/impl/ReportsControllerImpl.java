@@ -1,7 +1,6 @@
 package com.berksozcu.controller.impl;
 
 import com.berksozcu.controller.IReportsController;
-import com.berksozcu.dto.report.balance.DtoBalanceReport;
 import com.berksozcu.dto.report.DtoFullReport;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.service.IReportsService;

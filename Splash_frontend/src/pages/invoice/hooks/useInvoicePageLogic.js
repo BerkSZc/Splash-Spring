@@ -493,8 +493,7 @@ export const useInvoicePageLogic = () => {
   };
 
   const formatNumber = (val) => {
-    if (val === undefined || val === null || val === "" || Number(val) === 0)
-      return "";
+    if (val === undefined || val === null || val === "") return "";
     let parts = val.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     return parts.join(",");

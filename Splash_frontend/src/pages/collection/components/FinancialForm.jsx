@@ -6,6 +6,7 @@ export default function FinancialForm({
   setAddForm,
   handleAdd,
   customers,
+  onCancel,
 }) {
   return (
     <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem]">
@@ -116,6 +117,13 @@ export default function FinancialForm({
               }`}
             >
               Ekle
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-xl font-bold transition-all border border-gray-700"
+            >
+              Vazgeç
             </button>
           </div>
         </div>

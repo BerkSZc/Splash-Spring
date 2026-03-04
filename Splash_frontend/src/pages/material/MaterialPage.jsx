@@ -2,6 +2,7 @@ import { useMaterialLogic } from "./hooks/useMaterialLogic.js";
 import { MaterialCard } from "./components/MaterialCard";
 import { MaterialFormCard } from "./components/MaterialFormCard";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
+import MaterialEditModal from "./components/MaterialEditModal.jsx";
 
 export default function MaterialForm() {
   const { state, refs, handlers } = useMaterialLogic();
@@ -16,24 +17,48 @@ export default function MaterialForm() {
       )}
       <div className="max-w-4xl mx-auto space-y-12">
         {/* BAŞLIK */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">
-            Malzeme Yönetimi
-          </h1>
-          <p className="text-gray-400">
-            Sistemdeki ürün ve hammadde tanımlarını yönetin.
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="space-y-1 text-center md:text-left">
+            <h1 className="text-4xl font-extrabold text-white tracking-tight">
+              Malzeme Yönetimi
+            </h1>
+            <p className="text-gray-400">
+              Sistemdeki ürün ve hammadde tanımlarını yönetin.
+            </p>
+          </div>
+
+          {!state.isOpen && (
+            <button
+              onClick={() => handlers.setIsOpen(true)}
+              className="flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs transition-all duration-300 active:scale-95 shadow-2xl bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-500 animate-in fade-in zoom-in duration-300"
+            >
+              <span className="text-lg">+</span> YENİ MALZEME EKLE
+            </button>
+          )}
         </div>
 
+        <hr className="border-gray-800/50" />
+
         {/* FORM KARTI (Parçalanmış Bileşen) */}
-        <MaterialFormCard
-          formRef={refs.formRef}
-          editId={state?.editId}
-          form={state?.form || []}
-          onChange={handlers.handleChange}
-          onSubmit={handlers.handleSubmit}
-          onCancel={handlers.handleCancel}
-        />
+        {state.isOpen && !state.editId && (
+          <MaterialFormCard
+            formRef={refs.formRef}
+            editId={state?.editId}
+            form={state?.form || []}
+            onChange={handlers.handleChange}
+            onSubmit={handlers.handleSubmit}
+            onCancel={handlers.handleCancel}
+          />
+        )}
+
+        {state.isOpen && state.editId && (
+          <MaterialEditModal
+            form={state.form}
+            onChange={handlers.handleChange}
+            onSave={handlers.handleSubmit}
+            onCancel={handlers.handleCancel}
+          />
+        )}
 
         {/* LİSTE ALANI */}
         <div className="space-y-6">

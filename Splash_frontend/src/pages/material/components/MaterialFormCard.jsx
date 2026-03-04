@@ -185,15 +185,14 @@ export const MaterialFormCard = ({
         >
           {editId ? "Güncelle" : "Sisteme Kaydet"}
         </button>
-        {editId && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full md:w-48 py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition-all active:scale-95 border border-gray-700"
-          >
-            Vazgeç
-          </button>
-        )}
+
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full md:w-48 py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition-all active:scale-95 border border-gray-700"
+        >
+          Vazgeç
+        </button>
       </div>
     </form>
   </div>

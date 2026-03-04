@@ -17,6 +17,7 @@ export default function PayrollPage() {
     customers,
     year,
     payrollType,
+    isOpen,
   } = state;
 
   return (
@@ -42,50 +43,67 @@ export default function PayrollPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-gray-900/60 p-2 rounded-2xl border border-gray-800">
-            <div className="px-4 py-2">
-              <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">
-                Filtrelenen Toplam
-              </p>
-              <p
-                className={`text-xl font-mono font-bold ${currentTheme.color}`}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 bg-gray-900/60 p-2 rounded-2xl border border-gray-800">
+              <div className="px-4 py-2">
+                <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">
+                  Filtrelenen Toplam
+                </p>
+                <p
+                  className={`text-xl font-mono font-bold ${currentTheme.color}`}
+                >
+                  ₺{" "}
+                  {totalAmount.toLocaleString("tr-TR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+              <div className="h-10 w-[1px] bg-gray-800"></div>
+              <select
+                value={type}
+                onChange={(e) => handlers.setType(e.target.value)}
+                className="bg-transparent text-white rounded-xl px-4 py-2 outline-none font-bold cursor-pointer"
               >
-                ₺{" "}
-                {totalAmount.toLocaleString("tr-TR", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
+                <option className="bg-gray-900" value="cheque_in">
+                  ⬇️ Çek Girişi
+                </option>
+                <option className="bg-gray-900" value="cheque_out">
+                  ⬆️ Çek Çıkışı
+                </option>
+                <option className="bg-gray-900" value="bond_in">
+                  📝 Senet Girişi
+                </option>
+                <option className="bg-gray-900" value="bond_out">
+                  📤 Senet Çıkışı
+                </option>
+              </select>
             </div>
-            <div className="h-10 w-[1px] bg-gray-800"></div>
-            <select
-              value={type}
-              onChange={(e) => handlers.setType(e.target.value)}
-              className="bg-transparent text-white rounded-xl px-4 py-2 outline-none font-bold cursor-pointer"
-            >
-              <option className="bg-gray-900" value="cheque_in">
-                ⬇️ Çek Girişi
-              </option>
-              <option className="bg-gray-900" value="cheque_out">
-                ⬆️ Çek Çıkışı
-              </option>
-              <option className="bg-gray-900" value="bond_in">
-                📝 Senet Girişi
-              </option>
-              <option className="bg-gray-900" value="bond_out">
-                📤 Senet Çıkışı
-              </option>
-            </select>
+            {!state.isOpen && (
+              <button
+                onClick={() => handlers.setIsOpen(!isOpen)}
+                className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs transition-all duration-300 active:scale-95 shadow-2xl ${
+                  isOpen
+                    ? "bg-gray-800 text-gray-400 border border-gray-700"
+                    : `${currentTheme.bg} text-white shadow-${currentTheme.bg.split("-")[1]}-600/20`
+                }`}
+              >
+                <span className="text-m">+</span> YENİ BORDRO
+              </button>
+            )}
           </div>
         </div>
 
-        {!editing && (
-          <PayrollForm
-            form={form}
-            setForm={handlers.setForm}
-            currentTheme={currentTheme}
-            onSubmit={handlers.handleSubmit}
-            customers={customers}
-          />
+        {isOpen && !editing && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+            <PayrollForm
+              form={form}
+              setForm={handlers.setForm}
+              currentTheme={currentTheme}
+              onSubmit={handlers.handleSubmit}
+              customers={customers}
+              onCancel={() => handlers.setIsOpen(false)}
+            />
+          </div>
         )}
 
         <PayrollTable
@@ -108,7 +126,6 @@ export default function PayrollPage() {
             customers={customers}
             onCancel={handlers.closeEdit}
             onSave={handlers.handleSubmit}
-            formatNumber={state.formatNumber}
           />
         )}
 
