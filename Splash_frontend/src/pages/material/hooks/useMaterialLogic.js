@@ -17,6 +17,18 @@ export const useMaterialLogic = () => {
     loading: materialsLoading,
   } = useMaterial();
   const { tenant } = useTenant();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (editId) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [editId]);
 
   useEffect(() => {
     let ignore = false;
@@ -67,6 +79,7 @@ export const useMaterialLogic = () => {
         await addMaterial(payload);
       }
       setForm(initialForm);
+      setIsOpen(false);
       await getMaterials();
     } catch (error) {
       const backendErr =
@@ -77,6 +90,7 @@ export const useMaterialLogic = () => {
 
   const handleEdit = (item) => {
     setEditId(item.id);
+    setIsOpen(true);
     setForm({
       code: item.code || "",
       comment: item.comment || "",
@@ -86,18 +100,24 @@ export const useMaterialLogic = () => {
       salesPrice: item.salesPrice ? formatNumber(item.salesPrice) : "",
       salesCurrency: item.salesCurrency || "TRY",
     });
-    formRef.current.scrollIntoView({ behavior: "smooth" });
+    setIsOpen(true);
   };
 
   const filteredMaterials = (Array.isArray(materials) ? materials : []).filter(
-    (item) =>
-      (item?.code || "").toLowerCase().includes(search.toLowerCase()) ||
-      (item?.comment || "").toLowerCase().includes(search.toLowerCase()),
+    (item) => {
+      const searchTerm = search.toLocaleLowerCase("tr-TR");
+
+      return (
+        (item?.code || "").toLocaleLowerCase("tr-TR").includes(searchTerm) ||
+        (item?.comment || "").toLocaleLowerCase("tr-TR").includes(searchTerm)
+      );
+    },
   );
 
   const handleCancel = () => {
     setEditId(null);
     setForm(initialForm);
+    setIsOpen(false);
   };
 
   const formatNumber = (val) => {
@@ -119,7 +139,15 @@ export const useMaterialLogic = () => {
   const isLoading = materialsLoading;
 
   return {
-    state: { form, editId, search, filteredMaterials, isLoading, formatNumber },
+    state: {
+      form,
+      editId,
+      search,
+      filteredMaterials,
+      isLoading,
+      formatNumber,
+      isOpen,
+    },
     refs: { formRef },
     handlers: {
       handleChange,
@@ -127,6 +155,7 @@ export const useMaterialLogic = () => {
       handleEdit,
       setSearch,
       handleCancel,
+      setIsOpen,
     },
   };
 };

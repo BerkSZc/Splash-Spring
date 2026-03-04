@@ -27,6 +27,7 @@ export const usePayrollLogic = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState(() => {
     return localStorage.getItem("payroll_type") || "cheque_in";
   });
@@ -276,6 +277,7 @@ export const usePayrollLogic = () => {
       }
 
       await syncFinancialData();
+      setIsOpen(false);
       resetForm();
     } catch (error) {
       const backendErr =
@@ -375,6 +377,7 @@ export const usePayrollLogic = () => {
       year,
       payrollType,
       sortOrder,
+      isOpen,
     },
     handlers: {
       setType,
@@ -389,6 +392,7 @@ export const usePayrollLogic = () => {
       confirmDelete,
       closeEdit,
       formatDate,
+      setIsOpen,
     },
   };
 };

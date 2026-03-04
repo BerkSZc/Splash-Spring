@@ -58,6 +58,7 @@ export const useClientLogic = () => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [statementData, setStatementData] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedCustomerForStatement, setSelectedCustomerForStatement] =
     useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -122,6 +123,18 @@ export const useClientLogic = () => {
     tenant,
     vouchers,
   ]);
+
+  useEffect(() => {
+    if (editClient || showPrintModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [editClient, showPrintModal]);
 
   useEffect(() => {
     const handleCloseModal = (event) => {
@@ -218,6 +231,7 @@ export const useClientLogic = () => {
         vdNo: "",
         code: "",
       });
+      setIsOpen(false);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -361,6 +375,7 @@ export const useClientLogic = () => {
       year,
       vouchers,
       isLoading,
+      isOpen,
     },
     handlers: {
       handleChange,
@@ -379,6 +394,7 @@ export const useClientLogic = () => {
       setArchiveAction,
       setForm,
       setShowPrintModal,
+      setIsOpen,
     },
   };
 };

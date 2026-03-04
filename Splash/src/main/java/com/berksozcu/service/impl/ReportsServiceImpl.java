@@ -1,6 +1,5 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.dto.report.balance.DtoBalanceReport;
 import com.berksozcu.dto.report.DtoFullReport;
 import com.berksozcu.dto.report.DtoMonthlyKdv;
 import com.berksozcu.entites.company.Company;

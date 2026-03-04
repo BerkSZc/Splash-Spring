@@ -38,15 +38,38 @@ export default function ClientsPage() {
               Portföyünüzü ve bakiye durumlarını kontrol edin.
             </p>
           </div>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <button
+              onClick={() => handlers.setShowArchived(!state.showArchived)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap ${
+                state.showArchived
+                  ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20"
+                  : "bg-indigo-600/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/20"
+              }`}
+            >
+              {state.showArchived ? "Aktif Listeye Dön" : "Arşivdekiler"}
+            </button>
+
+            {/* YENİ MÜŞTERİ EKLE BUTONU */}
+            {!state.isOpen && (
+              <button
+                onClick={() => handlers.setIsOpen(true)}
+                className="flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs transition-all duration-300 active:scale-95 shadow-2xl bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-500 animate-in fade-in zoom-in duration-300"
+              >
+                <span className="text-m">+</span> YENİ MÜŞTERİ
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 2. BÖLÜM: KAYIT VE GÜNCELLEME FORMU */}
-        {!state.editClient && (
+        {state.isOpen && !state.editClient && (
           <ClientForm
             form={state.form || {}}
             formatNumber={state.formatNumber}
             handleChange={handlers.handleChange}
             handleSubmit={handlers.handleSubmit}
+            onCancel={() => handlers.setIsOpen(false)}
           />
         )}
         <div className="flex justify-end items-center gap-3">
@@ -72,16 +95,6 @@ export default function ClientsPage() {
               />
             </svg>
           </div>
-          <button
-            onClick={() => handlers.setShowArchived(!state.showArchived)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap ${
-              state.showArchived
-                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20"
-                : "bg-indigo-600/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/20"
-            }`}
-          >
-            {state.showArchived ? "Aktif Listeye Dön" : "Arşivdekiler"}
-          </button>
         </div>
 
         {/* 3. BÖLÜM: MÜŞTERİ LİSTESİ (TABLO) */}

@@ -6,6 +6,7 @@ export default function PayrollForm({
   currentTheme,
   onSubmit,
   customers,
+  onCancel,
 }) {
   return (
     <div className="p-8 bg-gray-900/40 border border-gray-800 rounded-[2.5rem] shadow-2xl">
@@ -141,9 +142,16 @@ export default function PayrollForm({
           <div className="flex gap-3 items-end">
             <button
               type="submit"
-              className={`flex-1 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-xl ${currentTheme.bg} hover:brightness-110`}
+              className={`flex-1 py-3 rounded-xl font-bold text-white transition-all active:scale-95 shadow-xl ${currentTheme.bg} hover:brightness-110`}
             >
-              Hızlı Ekle
+              Sisteme Kaydet
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-xl font-bold transition-all border border-gray-700"
+            >
+              Vazgeç
             </button>
           </div>
         </div>

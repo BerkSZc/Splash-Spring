@@ -38,24 +38,43 @@ export default function CollectionPage() {
               {year || ""} Mali Yılı Tahsilat ve Ödeme Yönetimi
             </p>
           </div>
-          <select
-            value={type || ""}
-            onChange={(e) => handlers.setType(e.target.value)}
-            className="bg-gray-900 border-2 border-gray-800 text-white rounded-2xl px-6 py-3 outline-none focus:border-blue-500 transition-all font-bold cursor-pointer"
-          >
-            <option value="received">⬇️ Alınan Tahsilatlar</option>
-            <option value="payment">⬆️ Firmaya Ödemeler</option>
-          </select>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <select
+              value={type || ""}
+              onChange={(e) => handlers.setType(e.target.value)}
+              className="bg-gray-900 border-2 border-gray-800 text-white rounded-2xl px-6 py-3 outline-none focus:border-blue-500 transition-all font-bold cursor-pointer"
+            >
+              <option value="received">⬇️ Alınan Tahsilatlar</option>
+              <option value="payment">⬆️ Firmaya Ödemeler</option>
+            </select>
+            {!state.isOpen && (
+              <button
+                onClick={() => handlers.setIsOpen(!state.isOpen)}
+                className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs transition-all duration-300 active:scale-95 shadow-2xl ${
+                  state.isOpen
+                    ? "bg-gray-800 text-gray-400 border border-gray-700"
+                    : type === "received"
+                      ? "bg-emerald-600 text-white shadow-emerald-600/20"
+                      : "bg-blue-600 text-white shadow-blue-600/20"
+                }`}
+              >
+                <span className="text-m">+</span> YENİ İŞLEM
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Ekleme Formu */}
-        <FinancialForm
-          type={type}
-          addForm={addForm}
-          setAddForm={handlers.setAddForm}
-          handleAdd={handlers.handleAdd}
-          customers={customers}
-        />
+        {state.isOpen && (
+          <FinancialForm
+            type={type}
+            addForm={addForm}
+            setAddForm={handlers.setAddForm}
+            handleAdd={handlers.handleAdd}
+            customers={customers}
+            onCancel={() => handlers.setIsOpen(false)}
+          />
+        )}
 
         {/* Liste Tablosu */}
         <div className="space-y-6" ref={state.menuRef}>

@@ -19,11 +19,14 @@ export default function MaterialSearchSelect({
     (m) => String(m?.id) === String(value),
   );
 
-  const filtered = (Array.isArray(materials) ? materials : []).filter(
-    (m) =>
-      (m?.code || "").toLowerCase().includes(search.toLowerCase()) ||
-      (m.comment || "").toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = (Array.isArray(materials) ? materials : []).filter((m) => {
+    const searchTerm = search.toLocaleLowerCase("tr-TR");
+
+    return (
+      (m?.code || "").toLocaleLowerCase("tr-TR").includes(searchTerm) ||
+      (m?.comment || "").toLocaleLowerCase("tr-TR").includes(searchTerm)
+    );
+  });
 
   useEffect(() => {
     if (open && inputRef.current) {

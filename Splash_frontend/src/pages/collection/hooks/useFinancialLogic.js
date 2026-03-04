@@ -38,6 +38,7 @@ export const useFinancialLogic = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [sortOrder, setSortOrder] = useState("desc");
+  const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const [type, setType] = useState(() => {
     return localStorage.getItem("collection_type") || "payment";
@@ -228,6 +229,7 @@ export const useFinancialLogic = () => {
 
       await syncFinancialData();
 
+      setIsOpen(false);
       setAddForm({
         date: getInitialDate(year),
         customerId: "",
@@ -363,6 +365,7 @@ export const useFinancialLogic = () => {
       year,
       menuRef,
       isLoading,
+      isOpen,
     },
     handlers: {
       setType,
@@ -378,6 +381,7 @@ export const useFinancialLogic = () => {
       handleDelete,
       toggleMenu,
       formatDate,
+      setIsOpen,
     },
   };
 };

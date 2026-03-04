@@ -1,6 +1,5 @@
 package com.berksozcu.controller;
 
-import com.berksozcu.dto.report.balance.DtoBalanceReport;
 import com.berksozcu.dto.report.DtoFullReport;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import org.springframework.http.ResponseEntity;
