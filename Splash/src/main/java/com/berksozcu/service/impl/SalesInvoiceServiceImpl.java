@@ -4,6 +4,7 @@ import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
+import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.entites.sales.SalesInvoice;
@@ -100,6 +101,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             item.setQuantity(safeGet(item.getQuantity()));
             item.setUnitPrice(safeGet(item.getUnitPrice()));
             item.setKdv(safeGet(item.getKdv()));
+            item.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));
 
             kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
 
@@ -186,6 +188,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             if (newItem.getId() == null) {
                 newItem.setMaterial(material);
                 newItem.setSalesInvoice(oldInvoice);
+                newItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
                 oldItems.add(newItem);
             } else {
                 SalesInvoiceItem oldItem = oldItems.stream()
@@ -196,6 +199,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                 oldItem.setMaterial(material);
                 oldItem.setQuantity(safeGet(newItem.getQuantity()));
                 oldItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
+                oldItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
                 oldItem.setKdv(safeGet(newItem.getKdv()));
             }
         }

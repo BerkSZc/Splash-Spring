@@ -39,9 +39,19 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
 
   // Filtreleme (Büyük/Küçük harf duyarsız)
   const filteredCustomers = (Array.isArray(customers) ? customers : []).filter(
-    (c) =>
-      !c?.archived && // Sadece arşivlenmemiş (archived: false) olanları al
-      c?.name?.toLowerCase().includes(search?.toLowerCase()),
+    (c) => {
+      const searchTerm = search.toLocaleLowerCase("tr-TR").trim();
+
+      if (!searchTerm) return !c.archived;
+
+      const customerName = (c?.name || "").toLocaleLowerCase("tr-TR");
+      const customerCode = (c?.code || "").toLocaleLowerCase("tr-TR");
+
+      return (
+        !c?.archived &&
+        (customerName.includes(searchTerm) || customerCode.includes(searchTerm))
+      );
+    },
   );
 
   useEffect(() => {

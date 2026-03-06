@@ -1,6 +1,7 @@
 package com.berksozcu.entites.purchase;
 
 import com.berksozcu.entites.material.Material;
+import com.berksozcu.entites.material.MaterialUnit;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,10 @@ public class PurchaseInvoiceItem {
 
     @Column(name = "unit_price", precision = 18, scale = 4)
     private BigDecimal unitPrice;
+
+    @Column(name = "unit")
+    @Enumerated(EnumType.STRING)
+    private MaterialUnit unit;
 
     @Column(name = "quantity", precision = 18, scale = 2)
     private BigDecimal quantity;

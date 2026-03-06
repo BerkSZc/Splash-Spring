@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
@@ -305,22 +305,38 @@ export const useClientLogic = () => {
     }
   };
 
-  const filteredCustomers = Array.isArray(customers)
-    ? customers
-        .filter((c) => {
-          if (!c) return false;
-          if (!search) return true;
-          return (
-            (c.name || "")
-              .toLocaleLowerCase("tr-TR")
-              .includes(search.toLocaleLowerCase("tr-TR")) ||
-            (c.code || "")
-              .toLocaleLowerCase("tr-TR")
-              .includes(search.toLocaleLowerCase("tr-TR"))
-          );
-        })
-        .filter((c) => (showArchived ? c.archived : !c.archived))
-    : [];
+  const filteredCustomers = useMemo(() => {
+    const baseList = Array.isArray(customers)
+      ? customers
+          .filter((c) => {
+            if (!c) return false;
+            if (!search) return true;
+            return (
+              (c.name || "")
+                .toLocaleLowerCase("tr-TR")
+                .includes(search.toLocaleLowerCase("tr-TR")) ||
+              (c.code || "")
+                .toLocaleLowerCase("tr-TR")
+                .includes(search.toLocaleLowerCase("tr-TR"))
+            );
+          })
+          .filter((c) => (showArchived ? c.archived : !c.archived))
+      : [];
+
+    return [...baseList].sort((a, b) => {
+      const voucherA = (Array.isArray(vouchers) ? vouchers : []).find(
+        (v) => v?.customer?.id === a?.id,
+      );
+      const voucherB = (Array.isArray(vouchers) ? vouchers : []).find(
+        (v) => v?.customer?.id === b?.id,
+      );
+
+      const balanceA = Number(voucherA?.finalBalance || 0);
+      const balanceB = Number(voucherB?.finalBalance || 0);
+
+      return balanceB - balanceA;
+    });
+  }, [customers, search, showArchived, vouchers]);
 
   const formatNumber = (val) => {
     if (val === null || val === undefined || val === "") return "";

@@ -209,11 +209,11 @@ export const useInvoiceLogic = () => {
       ? selectedMaterial.salesCurrency || "TRY"
       : selectedMaterial.purchaseCurrency || "TRY";
 
-    let finalPrice = 0;
+    let finalPrice = basePrice;
 
     const invoiceDate = currentForm.date;
     try {
-      if (currency !== "TRY") {
+      if (currency !== "TRY" && basePrice > 0) {
         const calculatedPrice = await convertCurrency(
           basePrice,
           currency,
@@ -221,7 +221,7 @@ export const useInvoiceLogic = () => {
         );
         finalPrice = calculatedPrice || basePrice;
       } else {
-        finalPrice = basePrice;
+        finalPrice = basePrice === 0 ? "" : basePrice;
       }
     } catch (error) {
       const backendErr =
@@ -235,7 +235,8 @@ export const useInvoiceLogic = () => {
       newItems[index] = {
         ...newItems[index],
         materialId: materialId,
-        unitPrice: finalPrice || 0,
+        unit: selectedMaterial.unit || "ADET",
+        unitPrice: finalPrice,
       };
       return { ...prev, items: newItems };
     });
@@ -382,11 +383,22 @@ export const useInvoiceLogic = () => {
     const currentForm = isSales ? salesForm : purchaseForm;
     const currentCalc = isSales ? salesCalculation : purchaseCalculation;
 
-    const validItems = currentForm.items.filter(
-      (item) => item.materialId !== "",
-    );
+    const validItems = (
+      Array.isArray(currentForm?.items) ? currentForm.items : []
+    ).filter((item) => item.materialId !== "");
+
     if (validItems.length === 0) {
       toast.error("Faturaya en az bir malzeme seçerek eklemelisiniz!");
+      return;
+    }
+
+    const hasInvalidValue = validItems.some(
+      (item) =>
+        Number(item.quantity || 0) <= 0 || Number(item.unitPrice || 0) <= 0,
+    );
+
+    if (hasInvalidValue) {
+      toast.error("Malzemelerin miktarı veya birim fiyatı 0 olamaz!");
       return;
     }
 
@@ -418,6 +430,7 @@ export const useInvoiceLogic = () => {
           const satirKdv = (netTutar * Number(i.kdv)) / 100;
           return {
             material: { id: Number(i.materialId) },
+            unit: i.unit,
             unitPrice: Number(i.unitPrice),
             quantity: Number(i.quantity),
             kdv: Number(i.kdv),

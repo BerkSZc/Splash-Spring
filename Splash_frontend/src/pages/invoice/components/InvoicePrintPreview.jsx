@@ -166,7 +166,7 @@ export default function InvoicePrintPreview({
                       <td className="py-3 px-2 text-center font-mono text-gray-600">
                         {item?.quantity || ""}
                         <span className="text-[9px] font-bold text-gray-400 ml-1">
-                          {item?.material?.unit || ""}
+                          {item?.unit || ""}
                         </span>
                       </td>
                       <td className="py-3 px-2 text-right font-mono text-gray-600">

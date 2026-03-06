@@ -104,6 +104,7 @@ export default function InvoiceEditModal({
               <tr className="text-gray-500 text-xs uppercase tracking-widest">
                 <th className="px-4 py-2 w-[30%]">Malzeme</th>
                 <th className="px-4 py-2 w-[13%]">Miktar</th>
+                <th className="px-4 py-2 w-[10%] text-center">Birim</th>
                 <th className="px-4 py-2 w-[15%] text-center">Birim Fiyat</th>
                 <th className="px-4 py-2 w-[10%] text-center">KDV %</th>
                 <th className="px-4 py-2 text-right">KDV Tutarı</th>
@@ -148,6 +149,17 @@ export default function InvoiceEditModal({
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2"
                       onFocus={(e) => e.target.select()}
                     />
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={item?.unit || "KG"}
+                      onChange={(e) => onItemChange(i, "unit", e.target.value)}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-2 text-[11px] font-bold text-blue-400 outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      <option value="KG">kg</option>
+                      <option value="ADET">adet</option>
+                      <option value="M">m</option>
+                    </select>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 min-w-[140px]">

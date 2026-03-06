@@ -110,7 +110,7 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
                  <td class="py-3 px-2 text-center font-mono text-gray-600">
                     ${item?.quantity ?? 0} 
                     <span class="text-[9px] font-bold text-gray-400 ml-0.5">
-                      ${item?.material?.unit || ""}
+                      ${item?.unit || ""}
                     </span>
                   </td>
                   <td class="py-3 px-2 text-right font-mono text-gray-600">${Number(
