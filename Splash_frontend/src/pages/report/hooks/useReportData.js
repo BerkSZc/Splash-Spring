@@ -14,6 +14,7 @@ export const useReportData = (reportType) => {
     loading: reportsLoading,
   } = useReport();
   const [showArchived, setShowArchived] = useState(false);
+  const [sortDirection, setSortDirection] = useState("desc");
 
   useEffect(() => {
     let ignore = false;
@@ -56,7 +57,9 @@ export const useReportData = (reportType) => {
       .sort((a, b) => {
         const balanceA = Number(a?.finalBalance || 0);
         const balanceB = Number(b?.finalBalance || 0);
-        return balanceB - balanceA;
+        return sortDirection === "desc"
+          ? balanceB - balanceA
+          : balanceA - balanceB;
       });
 
     const totalPurchaseKdv = summaryList.reduce(
@@ -79,7 +82,7 @@ export const useReportData = (reportType) => {
       totalSalesKdv,
       netKdv: Number(totalSalesKdv || 0) - Number(totalPurchaseKdv || 0),
     };
-  }, [reports, showArchived]);
+  }, [reports, showArchived, sortDirection]);
 
   const isLoading = reportsLoading;
 
@@ -87,7 +90,9 @@ export const useReportData = (reportType) => {
     data: processedData,
     year,
     isLoading,
+    sortDirection,
     showArchived,
+    setSortDirection,
     setShowArchived,
   };
 };

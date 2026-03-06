@@ -73,6 +73,30 @@ export default function ClientsPage() {
           />
         )}
         <div className="flex justify-end items-center gap-3">
+          <div className="flex bg-gray-900/40 p-1 rounded-2xl border border-gray-800">
+            <button
+              onClick={() => handlers.setSortDirection("desc")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                state.sortDirection === "desc"
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
+              title="En çok borcu olandan az olana"
+            >
+              📈 Borçlu
+            </button>
+            <button
+              onClick={() => handlers.setSortDirection("asc")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                state.sortDirection === "asc"
+                  ? "bg-emerald-600 text-white shadow-lg"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
+              title="Alacaklı olandan borçluya"
+            >
+              📉 Alacaklı
+            </button>
+          </div>
           <div className="relative w-full md:w-80">
             <input
               type="text"

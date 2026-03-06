@@ -274,7 +274,7 @@ export const useInvoiceLogic = () => {
       if (field === "lineTotal") {
         const qty = Number(currentItem.quantity) || 1;
         const newTotal = Number(parsedValue) || 0;
-        currentItem.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(6);
+        currentItem.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(4);
       } else if (field === "quantity" || field === "unitPrice") {
         const qty = Number(currentItem.quantity) || 0;
         const up = Number(currentItem.unitPrice) || 0;

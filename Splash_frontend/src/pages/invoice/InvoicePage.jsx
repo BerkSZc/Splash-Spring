@@ -86,6 +86,11 @@ export default function InvoicePage() {
           year={state.year}
           formatDateToTR={state.formatDateToTR}
           isLoading={state.isLoading}
+          selectedInvoiceId={state.selectedInvoiceId}
+          contextMenu={state.contextMenu}
+          setContextMenu={handlers.setContextMenu}
+          onContextMenu={handlers.handleContextMenu}
+          onSelectInvoice={handlers.handleSelectInvoice}
         />
 
         {/* MODALLAR */}

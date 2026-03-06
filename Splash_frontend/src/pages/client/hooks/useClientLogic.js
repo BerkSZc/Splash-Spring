@@ -59,6 +59,7 @@ export const useClientLogic = () => {
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [statementData, setStatementData] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [sortDirection, setSortDirection] = useState("desc");
   const [selectedCustomerForStatement, setSelectedCustomerForStatement] =
     useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -334,9 +335,11 @@ export const useClientLogic = () => {
       const balanceA = Number(voucherA?.finalBalance || 0);
       const balanceB = Number(voucherB?.finalBalance || 0);
 
-      return balanceB - balanceA;
+      return sortDirection === "desc"
+        ? balanceB - balanceA
+        : balanceA - balanceB;
     });
-  }, [customers, search, showArchived, vouchers]);
+  }, [customers, search, showArchived, vouchers, sortDirection]);
 
   const formatNumber = (val) => {
     if (val === null || val === undefined || val === "") return "";
@@ -392,6 +395,7 @@ export const useClientLogic = () => {
       vouchers,
       isLoading,
       isOpen,
+      sortDirection,
     },
     handlers: {
       handleChange,
@@ -411,6 +415,7 @@ export const useClientLogic = () => {
       setForm,
       setShowPrintModal,
       setIsOpen,
+      setSortDirection,
     },
   };
 };

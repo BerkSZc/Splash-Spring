@@ -40,6 +40,8 @@ export const useInvoicePageLogic = () => {
   const [printItem, setPrintItem] = useState(null);
   const [form, setForm] = useState(null);
   const [sortOrder, setSortOrder] = useState("desc");
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
   const [totals, setTotals] = useState({
     kdvToplam: 0,
     totalPrice: 0,
@@ -88,6 +90,24 @@ export const useInvoicePageLogic = () => {
       ignore = true;
     };
   }, [year, invoiceType, tenant]);
+
+  useEffect(() => {
+    const handleGlobalClick = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+
+      if (contextMenu && !event.target.closest(".context-menu-container")) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleGlobalClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleGlobalClick);
+    };
+  }, [contextMenu]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -263,7 +283,7 @@ export const useInvoicePageLogic = () => {
         if (name === "lineTotal") {
           const qty = Number(item.quantity) || 1;
           const newTotal = Number(value) || 0;
-          item.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(6);
+          item.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(4);
         } else if (name === "quantity" || name === "unitPrice") {
           const qty = Number(item.quantity) || 0;
           const up = Number(item.unitPrice) || 0;
@@ -524,6 +544,34 @@ export const useInvoicePageLogic = () => {
     return val.replace(/\./g, "").replace(",", ".");
   };
 
+  const handleSelectInvoice = (id) => {
+    setSelectedInvoiceId((prev) => (prev === id ? null : id));
+  };
+
+  const handleContextMenu = (e, inv) => {
+    e.preventDefault();
+    setSelectedInvoiceId(inv?.id);
+
+    const menuWidth = 176;
+    const menuHeight = 130;
+
+    const x =
+      e.clientX + menuWidth > window.innerWidth
+        ? e.clientX - menuWidth
+        : e.clientX;
+
+    const y =
+      e.clientY + menuHeight > window.innerHeight
+        ? e.clientY - menuHeight
+        : e.clientY;
+
+    setContextMenu({
+      x: x,
+      y: y,
+      invoice: inv,
+    });
+  };
+
   const isLoading =
     (invoiceType === "purchase" ? purchaseLoading : salesLoading) ||
     materialLoading ||
@@ -550,6 +598,8 @@ export const useInvoicePageLogic = () => {
       formatDateToTR,
       isLoading,
       sortOrder,
+      selectedInvoiceId,
+      contextMenu,
     },
     handlers: {
       toggleMenu,
@@ -567,8 +617,11 @@ export const useInvoicePageLogic = () => {
       handleEdit,
       handleSave,
       handleRateChange,
+      handleContextMenu,
+      handleSelectInvoice,
       confirmDelete,
       setDeleteTarget,
+      setContextMenu,
     },
   };
 };
