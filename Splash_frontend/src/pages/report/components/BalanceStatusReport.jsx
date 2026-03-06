@@ -1,6 +1,12 @@
 import { handleReportPrint } from "../utils/ReportPrintHelper";
 
-const BalanceStatusReport = ({ items = [], showArchived, setShowArchived }) => {
+const BalanceStatusReport = ({
+  items = [],
+  showArchived,
+  setShowArchived,
+  setSortDirection,
+  sortDirection,
+}) => {
   const totals = items.reduce(
     (acc, curr) => {
       const balance = Number(curr?.finalBalance || 0);
@@ -21,6 +27,30 @@ const BalanceStatusReport = ({ items = [], showArchived, setShowArchived }) => {
           <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
           Borç/Alacak Durum Raporu
         </h3>
+        <div className="flex bg-gray-900/40 p-1 rounded-2xl border border-gray-800">
+          <button
+            onClick={() => setSortDirection("desc")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              sortDirection === "desc"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+            title="En çok borcu olandan az olana"
+          >
+            📈 Borçlu
+          </button>
+          <button
+            onClick={() => setSortDirection("asc")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              sortDirection === "asc"
+                ? "bg-emerald-600 text-white shadow-lg"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+            title="Alacaklı olandan borçluya"
+          >
+            📉 Alacaklı
+          </button>
+        </div>
         <div className="flex items-center gap-4">
           <button
             onClick={() =>

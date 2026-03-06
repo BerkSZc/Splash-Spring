@@ -8,8 +8,15 @@ import BalanceStatusReport from "./components/BalanceStatusReport.jsx";
 const ReportsPage = () => {
   const [reportType, setReportType] = useState("kdv_analysis");
   const [activeTab, setActiveTab] = useState("summary");
-  const { data, year, isLoading, showArchived, setShowArchived } =
-    useReportData(reportType);
+  const {
+    data,
+    year,
+    isLoading,
+    showArchived,
+    setShowArchived,
+    setSortDirection,
+    sortDirection,
+  } = useReportData(reportType);
 
   // Rapor türü seçim seçenekleri
   const reportOptions = [
@@ -130,6 +137,8 @@ const ReportsPage = () => {
               items={data.balanceStatus || []}
               showArchived={showArchived}
               setShowArchived={setShowArchived}
+              setSortDirection={setSortDirection}
+              sortDirection={sortDirection}
             />
           )}
         </div>

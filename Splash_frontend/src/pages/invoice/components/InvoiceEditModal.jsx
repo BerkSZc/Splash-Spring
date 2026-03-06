@@ -102,11 +102,11 @@ export default function InvoiceEditModal({
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>
               <tr className="text-gray-500 text-xs uppercase tracking-widest">
-                <th className="px-4 py-2 w-[30%]">Malzeme</th>
+                <th className="px-4 py-2 w-[25%]">Malzeme</th>
                 <th className="px-4 py-2 w-[13%]">Miktar</th>
                 <th className="px-4 py-2 w-[10%] text-center">Birim</th>
                 <th className="px-4 py-2 w-[15%] text-center">Birim Fiyat</th>
-                <th className="px-4 py-2 w-[10%] text-center">KDV %</th>
+                <th className="px-4 py-2 w-[8%] text-center">KDV %</th>
                 <th className="px-4 py-2 text-right">KDV Tutarı</th>
                 <th className="px-4 py-2 text-right">Satır Toplamı</th>
                 <th className="px-4 py-2 w-10"></th>
@@ -154,7 +154,7 @@ export default function InvoiceEditModal({
                     <select
                       value={item?.unit || "KG"}
                       onChange={(e) => onItemChange(i, "unit", e.target.value)}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-2 text-[11px] font-bold text-blue-400 outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-2 text-[14px] font-bold text-blue-400 outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="KG">kg</option>
                       <option value="ADET">adet</option>
