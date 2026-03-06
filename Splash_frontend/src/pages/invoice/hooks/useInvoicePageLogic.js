@@ -197,8 +197,6 @@ export const useInvoicePageLogic = () => {
 
     const invoiceDate = form.date;
 
-    let finalPrice = 0;
-
     const basePrice =
       invoiceType === "sales"
         ? selectedMaterial.salesPrice || 0
@@ -209,6 +207,8 @@ export const useInvoicePageLogic = () => {
         ? selectedMaterial.salesCurrency || "TRY"
         : selectedMaterial.purchaseCurrency || "TRY";
 
+    let finalPrice = basePrice;
+
     try {
       if (currency !== "TRY" && basePrice > 0) {
         const calculatedPrice = await convertCurrency(
@@ -218,7 +218,7 @@ export const useInvoicePageLogic = () => {
         );
         finalPrice = calculatedPrice || basePrice;
       } else {
-        finalPrice = basePrice;
+        finalPrice = basePrice === 0 ? "" : basePrice;
       }
     } catch (error) {
       const backendErr =
@@ -234,6 +234,7 @@ export const useInvoicePageLogic = () => {
       newItems[index] = {
         ...newItems[index],
         materialId: String(materialId),
+        unit: selectedMaterial.unit || "ADET",
         unitPrice: finalPrice,
         lineTotal,
         kdvTutar,
@@ -302,14 +303,18 @@ export const useInvoicePageLogic = () => {
       customerId: invoice.customer.id,
       usdSellingRate: invoice.usdSellingRate || "",
       eurSellingRate: invoice.eurSellingRate || "",
-      items: (Array.isArray(invoice?.items) ? invoice.items : []).map((i) => ({
-        materialId: String(i.material.id),
-        unitPrice: i.unitPrice || 0,
-        quantity: i.quantity || 0,
-        kdv: i.kdv || 0,
-        lineTotal: i.lineTotal || i.unitPrice * i.quantity || 0,
-        kdvTutar: i.kdvTutar || 0,
-      })),
+      items: (Array.isArray(invoice?.items) ? invoice.items : [])
+        .sort((a, b) => a.id - b.id)
+        .map((i) => ({
+          id: i.id,
+          materialId: String(i.material.id),
+          unit: i.unit || i.material.unit || "ADET",
+          unitPrice: i.unitPrice || 0,
+          quantity: i.quantity || 0,
+          kdv: i.kdv || 0,
+          lineTotal: i.lineTotal || i.unitPrice * i.quantity || 0,
+          kdvTutar: i.kdvTutar || 0,
+        })),
     });
   };
 
@@ -329,6 +334,7 @@ export const useInvoicePageLogic = () => {
       items: (Array.isArray(form.items) ? form.items : []).map((i) => ({
         id: i.id || null,
         material: { id: Number(i.materialId) },
+        unit: i.unit,
         unitPrice: Number(i.unitPrice),
         quantity: Number(i.quantity),
         kdv: Number(i.kdv),
@@ -338,6 +344,20 @@ export const useInvoicePageLogic = () => {
     const selectedYear = new Date(form.date).getFullYear();
     if (selectedYear !== Number(year)) {
       toast.error("Yeni tarih mali yıl içinde olmalıdır!");
+      return;
+    }
+
+    const validItems = (Array.isArray(form?.items) ? form.items : []).filter(
+      (item) => item.materialId !== "" && item.materialId !== null,
+    );
+
+    const hasInvalidValue = validItems.some(
+      (item) =>
+        Number(item.quantity || 0) <= 0 || Number(item.unitPrice || 0) <= 0,
+    );
+
+    if (hasInvalidValue) {
+      toast.error("Malzemelerin miktarı veya birim fiyatı 0 olamaz!");
       return;
     }
 

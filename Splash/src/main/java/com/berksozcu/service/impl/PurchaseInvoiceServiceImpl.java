@@ -111,6 +111,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 item.setQuantity(safeGet(item.getQuantity()));
                 item.setUnitPrice(safeGet(item.getUnitPrice()));
                 item.setKdv(safeGet(item.getKdv()));
+                item.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));
 
                 kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
                 totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
@@ -209,6 +210,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             if (newItem.getId() == null) {
                 newItem.setMaterial(material);
                 newItem.setPurchaseInvoice(oldInvoice);
+                newItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
                 oldItems.add(newItem);
             } else {
                 PurchaseInvoiceItem oldItem = oldItems.stream()
@@ -219,9 +221,9 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 oldItem.setMaterial(material);
                 oldItem.setQuantity(safeGet(newItem.getQuantity()));
                 oldItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
+                oldItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
                 oldItem.setKdv(safeGet(newItem.getKdv()));
             }
-
         }
 
         BigDecimal total = BigDecimal.ZERO;

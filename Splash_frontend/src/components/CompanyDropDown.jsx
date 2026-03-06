@@ -119,9 +119,6 @@ const CompanyDropDown = () => {
                 >
                   <div className="flex flex-col">
                     <span>{c?.name || ""}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">
-                      {c?.schemaName || ""}
-                    </span>
                   </div>
                   {c.schemaName === tenant && (
                     <span className="text-indigo-600 font-bold">✓</span>

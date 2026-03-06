@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_item (
     material_id BIGINT NOT NULL,
     unit_price DECIMAL(18,4) NOT NULL,
     quantity DECIMAL(18,2) NOT NULL,
+    unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
     line_total DECIMAL(18,2) NOT NULL,
     kdv DECIMAL(18,2) DEFAULT 20,
     kdv_tutar DECIMAL(18,2) DEFAULT 0,
@@ -133,6 +134,7 @@ CREATE TABLE IF NOT EXISTS sales_invoice_item (
     material_id BIGINT NOT NULL,
     unit_price DECIMAL(18,4) NOT NULL,
     quantity DECIMAL(18,2) NOT NULL,
+    unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
     line_total DECIMAL(18,2) NOT NULL,
     kdv DECIMAL(18,2) DEFAULT 18,
     kdv_tutar DECIMAL(18,2) DEFAULT 20,

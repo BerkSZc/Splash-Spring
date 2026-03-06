@@ -73,6 +73,7 @@ export default function InvoiceItemsTable({
             <thead>
               <tr className="text-gray-500 text-xs uppercase tracking-widest">
                 <th className="px-4 py-2">Malzeme</th>
+                <th className="px-4 py-2 text-center">Birim</th>
                 <th className="px-4 py-2">Miktar</th>
                 <th className="px-4 py-2">Birim Fiyat</th>
                 <th className="px-4 py-2">KDV %</th>
@@ -114,6 +115,19 @@ export default function InvoiceItemsTable({
                         onItemChange(mode, i, "quantity", val);
                       }}
                     />
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      className="bg-gray-900 border border-gray-700 rounded-lg px-2 py-2 text-[11px] font-bold text-blue-400 outline-none focus:border-blue-500 cursor-pointer w-24"
+                      value={item?.unit || "KG"}
+                      onChange={(e) =>
+                        onItemChange(mode, i, "unit", e.target.value)
+                      }
+                    >
+                      <option value="KG">kg</option>
+                      <option value="ADET">adet</option>
+                      <option value="M">m</option>
+                    </select>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

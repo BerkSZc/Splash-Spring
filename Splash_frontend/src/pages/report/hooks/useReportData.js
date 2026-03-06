@@ -48,10 +48,16 @@ export const useReportData = (reportType) => {
 
     const isBalanceArray = Array.isArray(reports) ? reports : [];
 
-    const filteredBalanceStatus = isBalanceArray.filter((item) => {
-      const isArchived = Boolean(item.customer?.archived);
-      return showArchived ? isArchived : !isArchived;
-    });
+    const filteredBalanceStatus = isBalanceArray
+      .filter((item) => {
+        const isArchived = Boolean(item.customer?.archived);
+        return showArchived ? isArchived : !isArchived;
+      })
+      .sort((a, b) => {
+        const balanceA = Number(a?.finalBalance || 0);
+        const balanceB = Number(b?.finalBalance || 0);
+        return balanceB - balanceA;
+      });
 
     const totalPurchaseKdv = summaryList.reduce(
       (acc, curr) => acc + (Number(curr?.purchaseKdv) || 0),
