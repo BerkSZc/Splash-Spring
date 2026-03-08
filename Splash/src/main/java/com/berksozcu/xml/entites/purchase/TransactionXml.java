@@ -1,5 +1,6 @@
 package com.berksozcu.xml.entites.purchase;
 
+import com.berksozcu.entites.material.MaterialUnit;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -28,6 +29,12 @@ public class TransactionXml {
 
     @XmlElement(name = "TOTAL")
     private BigDecimal TOTAL;
+
+    @XmlElement(name = "UNIT_CODE")
+    private MaterialUnit UNIT_CODE;
+
+    @XmlElement(name = "COMPANY_ID")
+    private Long COMPANY_ID;
 
     @XmlElement(name = "TOTAL_NET")
     private BigDecimal TOTAL_NET;

@@ -1,5 +1,7 @@
 package com.berksozcu.repository;
 
+import com.berksozcu.entites.company.Company;
+import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface PurchaseInvoiceItemRepository extends JpaRepository<PurchaseInvoiceItem, Long> {
@@ -19,4 +22,7 @@ public interface PurchaseInvoiceItemRepository extends JpaRepository<PurchaseInv
     void deleteByCompanyIdAndDateBetween(@Param("companyId") Long companyId,
                                          @Param("start")LocalDate start,
                                          @Param("end") LocalDate end);
+
+    boolean existsByMaterialIdAndCompany(Long materialId, Company company);
+
 }

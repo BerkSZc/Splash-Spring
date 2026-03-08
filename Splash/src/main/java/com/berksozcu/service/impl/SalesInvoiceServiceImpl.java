@@ -99,6 +99,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
             item.setKdvTutar(kdvTutarHesaplama);
             item.setQuantity(safeGet(item.getQuantity()));
+            item.setCompany(company);
             item.setUnitPrice(safeGet(item.getUnitPrice()));
             item.setKdv(safeGet(item.getKdv()));
             item.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));

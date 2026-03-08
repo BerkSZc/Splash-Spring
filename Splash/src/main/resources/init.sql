@@ -32,22 +32,7 @@ CREATE TABLE IF NOT EXISTS customer (
 );
 
 -- ---------------------------
--- 2. MALZEME TABLOSU
--- ---------------------------
-
-  CREATE TABLE IF NOT EXISTS material (
-      id BIGSERIAL PRIMARY KEY ,
-      code VARCHAR(50) NOT NULL,
-      comment VARCHAR(255),
-      unit public.unit_status NOT NULL,
-      purchase_price DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
-      sales_price DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
-      purchase_currency public.currency_status NOT NULL DEFAULT 'TRY',
-      sales_currency public.currency_status NOT NULL DEFAULT 'TRY'
-  );
-
--- ---------------------------
--- 3. ŞİRKET TABLOSU
+-- 1. ŞİRKET TABLOSU
 -- ---------------------------
 CREATE TABLE IF NOT EXISTS company (
 id BIGSERIAL PRIMARY KEY,
@@ -56,11 +41,32 @@ schema_name VARCHAR(255),
 description VARCHAR(255)
 );
 
+-- ---------------------------
+-- 2. MALZEME TABLOSU
+-- ---------------------------
+
+  CREATE TABLE IF NOT EXISTS material (
+      id BIGSERIAL PRIMARY KEY ,
+      code VARCHAR(50) NOT NULL,
+      comment VARCHAR(255),
+      unit public.unit_status NOT NULL,
+      company_id BIGINT NOT NULL,
+      purchase_price DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
+      sales_price DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
+      purchase_currency public.currency_status NOT NULL DEFAULT 'TRY',
+      sales_currency public.currency_status NOT NULL DEFAULT 'TRY',
+      archived BOOLEAN NOT NULL DEFAULT FALSE,
+      FOREIGN KEY (company_id) REFERENCES company(id)
+  );
+
+
 -- 4. Kullanıcı Tablosu
 CREATE TABLE IF NOT EXISTS app_user(
 id BIGSERIAL PRIMARY KEY,
 username VARCHAR(255) NOT NULL,
-password VARCHAR(255) NOT NULL
+password VARCHAR(255) NOT NULL,
+company_id BIGINT NOT NULL,
+FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- ---------------------------
@@ -98,6 +104,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_item (
     id BIGSERIAL PRIMARY KEY ,
     purchase_invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
+    company_id BIGINT NOT NULL,
     unit_price DECIMAL(18,4) NOT NULL,
     quantity DECIMAL(18,2) NOT NULL,
     unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
@@ -105,7 +112,8 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_item (
     kdv DECIMAL(18,2) DEFAULT 20,
     kdv_tutar DECIMAL(18,2) DEFAULT 0,
     FOREIGN KEY (purchase_invoice_id) REFERENCES purchase_invoice(id) ON DELETE CASCADE,
-    FOREIGN KEY (material_id) REFERENCES material(id)
+    FOREIGN KEY (material_id) REFERENCES material(id),
+    FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- ---------------------------
@@ -132,6 +140,7 @@ CREATE TABLE IF NOT EXISTS sales_invoice_item (
     id BIGSERIAL PRIMARY KEY ,
     sales_invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
+    company_id BIGINT NOT NULL,
     unit_price DECIMAL(18,4) NOT NULL,
     quantity DECIMAL(18,2) NOT NULL,
     unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
@@ -139,7 +148,8 @@ CREATE TABLE IF NOT EXISTS sales_invoice_item (
     kdv DECIMAL(18,2) DEFAULT 18,
     kdv_tutar DECIMAL(18,2) DEFAULT 20,
     FOREIGN KEY (sales_invoice_id) REFERENCES sales_invoice(id) ON DELETE CASCADE,
-    FOREIGN KEY (material_id) REFERENCES material(id)
+    FOREIGN KEY (material_id) REFERENCES material(id),
+    FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- ---------------------------

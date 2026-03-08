@@ -1,5 +1,6 @@
 package com.berksozcu.entites.sales;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -29,6 +30,10 @@ public class SalesInvoiceItem {
     @ManyToOne
     @JoinColumn(name = "material_id")
     private Material material;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @Column(name = "unit_price", precision = 18, scale = 4)
     private BigDecimal unitPrice;

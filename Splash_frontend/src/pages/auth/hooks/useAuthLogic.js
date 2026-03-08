@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useAuthentication } from "../../../../backend/store/useAuthentication.js";
+import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
 
 export const useAuthLogic = () => {
   const { login, signUp, loading } = useAuthentication();
+  const { tenant } = useTenant();
 
-  const [mode, setMode] = useState("login"); // "login" or "signup"
+  const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -18,9 +20,9 @@ export const useAuthLogic = () => {
     }
     try {
       if (mode === "login") {
-        await login({ username, password });
+        await login({ username, password }, tenant);
       } else {
-        await signUp({ username, password });
+        await signUp({ username, password }, tenant);
       }
     } catch (error) {
       const backendErr =

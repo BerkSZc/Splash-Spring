@@ -35,4 +35,6 @@ public interface MaterialPriceHistoryRepository extends JpaRepository<MaterialPr
    );
 
     void deleteByMaterialIdAndInvoiceId(Long material, Long invoiceId);
+
+    void deleteByMaterialId(Long materialId);
 }

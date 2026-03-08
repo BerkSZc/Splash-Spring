@@ -8,10 +8,12 @@ export const useAuthentication = create((set) => ({
   loading: false,
   authChecked: false,
 
-  login: async (user) => {
+  login: async (user, schemaName) => {
     try {
       set({ loading: true });
-      const response = await axiosInstance.post("/auth/login", user);
+      const response = await axiosInstance.post("/auth/login", user, {
+        params: { schemaName },
+      });
       const token = response.data.data.token;
 
       localStorage.setItem("token", token);
@@ -30,10 +32,12 @@ export const useAuthentication = create((set) => ({
     }
   },
 
-  signUp: async (user) => {
+  signUp: async (user, schemaName) => {
     try {
       set({ loading: true });
-      const response = await axiosInstance.post("/auth/save", user);
+      const response = await axiosInstance.post("/auth/save", user, {
+        params: { schemaName },
+      });
       const token = response.data.data.token;
 
       localStorage.setItem("token", token);

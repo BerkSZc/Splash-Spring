@@ -2,7 +2,7 @@ import { useClientLogic } from "./hooks/useClientLogic.js";
 import ClientForm from "./components/ClientForm";
 import ClientTable from "./components/ClientTable";
 import StatementModal from "./components/StatementModal";
-import ArchiveConfirmModal from "./components/ArchiveConfirmModal";
+import ArchiveConfirmModal from "../../components/ArchiveConfirmModal.jsx";
 import ContextMenu from "./components/ContextMenu";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import ClientEditModal from "./components/ClientEditModal.jsx";
@@ -30,14 +30,6 @@ export default function ClientsPage() {
       <div className="max-w-7xl mx-auto space-y-10">
         {/* 1. BÖLÜM: ÜST BAŞLIK VE ARAMA */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-extrabold text-white tracking-tight">
-              Müşteri Yönetimi
-            </h1>
-            <p className="text-gray-400 text-lg">
-              Portföyünüzü ve bakiye durumlarını kontrol edin.
-            </p>
-          </div>
           <div className="flex items-center gap-4 w-full md:w-auto">
             <button
               onClick={() => handlers.setShowArchived(!state.showArchived)}
@@ -123,20 +115,44 @@ export default function ClientsPage() {
 
         {/* 3. BÖLÜM: MÜŞTERİ LİSTESİ (TABLO) */}
         <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <h3 className="text-xl font-semibold flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+              {state.showArchived ? "Arşiv Müşteriler" : "Aktif Müşteriler"}
+            </h3>
+
+            <button
+              onClick={() => {
+                handlers.setSelectionMode(!state.selectionMode);
+                handlers.setSelectedCustomers([]);
+              }}
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                state.selectionMode
+                  ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                  : "bg-gray-800 text-gray-400 border-gray-700"
+              }`}
+            >
+              {state.selectionMode
+                ? `${state.selectedCustomers.length} Seçili`
+                : "Birden fazla seç"}
+            </button>
+          </div>
           <ClientTable
             customers={state.filteredCustomers}
             selectedCustomers={state.selectedCustomers}
-            openMenuId={state.openMenuId}
-            onCheckboxChange={(id) =>
-              handlers.setSelectedCustomers((prev) =>
-                prev.includes(id)
-                  ? prev.filter((x) => x !== id)
-                  : [...prev, id],
-              )
-            }
-            onToggleMenu={(id) =>
-              handlers.setOpenMenuId(state.openMenuId === id ? null : id)
-            }
+            onCheckboxChange={(id) => {
+              if (state.selectionMode) {
+                handlers.setSelectedCustomers((prev) =>
+                  prev.includes(id)
+                    ? prev.filter((x) => x !== id)
+                    : [...prev, id],
+                );
+              } else {
+                handlers.setSelectedCustomers((prev) =>
+                  prev.includes(id) ? [] : [id],
+                );
+              }
+            }}
             onContextMenu={(e, c) => {
               e.preventDefault();
               handlers.setContextMenu({
@@ -147,9 +163,6 @@ export default function ClientsPage() {
               if (!state.selectedCustomers.includes(c.id))
                 handlers.setSelectedCustomers([c.id]);
             }}
-            onEdit={handlers.handleEdit}
-            onOpenStatement={handlers.handleOpenStatement}
-            onArchiveToggle={handlers.handleArchiveToggle}
             vouchers={state.vouchers}
           />
         </div>
@@ -169,10 +182,12 @@ export default function ClientsPage() {
       {state.showArchiveModal && (
         <ArchiveConfirmModal
           isOpen={state.showArchiveModal}
-          count={state.selectedCustomers.length}
           action={state.archiveAction}
           onCancel={() => handlers.setShowArchiveModal(false)}
-          onConfirm={handlers.handleArchiveModalSubmit}
+          onConfirm={() =>
+            handlers.handleArchiveModalSubmit(state.pendingArchiveIds)
+          }
+          count={state.pendingArchiveIds.length}
         />
       )}
 
@@ -183,16 +198,26 @@ export default function ClientsPage() {
           isAllArchived={
             selectedList.length > 0 && selectedList.every((c) => c.archived)
           }
+          selectionMode={state.selectionMode}
+          showArchived={state.showArchived}
           onClose={() => handlers.setContextMenu(null)}
           onEdit={(c) => {
             handlers.handleEdit(c);
             handlers.setContextMenu(null);
           }}
           onArchiveClick={() => {
+            const ids = state.selectionMode
+              ? state.selectedCustomers
+              : [state.contextMenu.customer.id];
+            handlers.setPendingArchiveIds(ids);
             handlers.setArchiveAction(
-              selectedList.every((c) => c.archived) ? "unarchive" : "archive",
+              state.showArchived ? "unarchive" : "archive",
             );
             handlers.setShowArchiveModal(true);
+            handlers.setContextMenu(null);
+          }}
+          onOpenStatement={(c) => {
+            handlers.handleOpenStatement(c);
             handlers.setContextMenu(null);
           }}
         />

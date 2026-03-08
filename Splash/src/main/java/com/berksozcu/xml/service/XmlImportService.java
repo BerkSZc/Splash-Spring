@@ -119,7 +119,7 @@ public class XmlImportService {
 
             PurchaseInvoice invoice = new PurchaseInvoice();
             LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-            // Tarih Logo formatı: 01.01.2025
+
             invoice.setDate(date);
 
             Company company = getCompany(schemaName);
@@ -182,7 +182,8 @@ public class XmlImportService {
                     PurchaseInvoiceItem item = new PurchaseInvoiceItem();
                     item.setPurchaseInvoice(invoice);
                     item.setMaterial(material);
-
+                    item.setUnit(Objects.requireNonNullElse(tx.getUNIT_CODE(), MaterialUnit.ADET));
+                    item.setCompany(company);
                     item.setQuantity(safeGet(tx.getQUANTITY()).setScale(2, RoundingMode.HALF_UP));
                     item.setUnitPrice(safeGet(tx.getPRICE()).setScale(2, RoundingMode.HALF_UP));
                     item.setKdv(safeGet(tx.getVAT_RATE()).setScale(2, RoundingMode.HALF_UP));
@@ -290,6 +291,8 @@ public class XmlImportService {
                 item.setQuantity(safeGet(tx.getQUANTITY()));
                 item.setUnitPrice(safeGet(tx.getPRICE()));
                 item.setKdv(safeGet(tx.getVAT_RATE()));
+                item.setUnit(Objects.requireNonNullElse(tx.getUNIT_CODE(), MaterialUnit.ADET));
+                item.setCompany(getCompany(schemaName));
                 item.setKdvTutar(safeGet(tx.getVAT_AMOUNT()));
                 item.setLineTotal(safeGet(tx.getTOTAL_NET()));
 
@@ -308,19 +311,17 @@ public class XmlImportService {
     }
 
     @Transactional
-    public void importMaterials(MultipartFile file) throws Exception {
+    public void importMaterials(MultipartFile file, String schemaName) throws Exception {
         JAXBContext context = JAXBContext.newInstance(ItemsXml.class, PurchasePriceXmlList.class, SalesPriceXmlList.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
         Object unmarshalledObject = unmarshaller.unmarshal(file.getInputStream());
 
-        if(unmarshalledObject instanceof ItemsXml itemsXml) {
-            processMaterialCards(itemsXml);
-        }
-        else if(unmarshalledObject instanceof PurchasePriceXmlList purchasePriceXmlList) {
+        if (unmarshalledObject instanceof ItemsXml itemsXml) {
+            processMaterialCards(itemsXml, schemaName);
+        } else if (unmarshalledObject instanceof PurchasePriceXmlList purchasePriceXmlList) {
             processPrices(purchasePriceXmlList, true);
-        }
-        else if(unmarshalledObject instanceof SalesPriceXmlList salesPriceXmlList) {
+        } else if (unmarshalledObject instanceof SalesPriceXmlList salesPriceXmlList) {
             processPrices(salesPriceXmlList, false);
         }
 
@@ -621,14 +622,14 @@ public class XmlImportService {
         }
     }
 
-    private void processMaterialCards(ItemsXml itemsXml) {
+    private void processMaterialCards(ItemsXml itemsXml, String schemaName) {
         Set<String> existingMaterials = materialRepository.findAll()
                 .stream().map(Material::getCode).collect(Collectors.toSet());
 
         for (MaterialXml m : itemsXml.getItems()) {
             if (m.getCODE() == null || m.getCODE().isBlank()) continue;
 
-            String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "") ;
+            String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "");
 
             if (existingMaterials.contains(code)) {
                 System.out.println("Malzeme Kodu mevcut atlandı: " + code);
@@ -638,7 +639,19 @@ public class XmlImportService {
             Material material = new Material();
             material.setCode(code);
             material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
-            material.setUnit(MaterialUnit.ADET);
+
+            String unitCode = m.getUNITSET_CODE();
+            if (unitCode != null) {
+                try {
+                    material.setUnit(MaterialUnit.valueOf(m.getUNITSET_CODE()));
+
+                } catch (IllegalArgumentException e) {
+                    material.setUnit(MaterialUnit.ADET);
+                }
+
+            }
+            material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
+            material.setCompany(getCompany(schemaName));
             material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
             material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
             materialRepository.save(material);
@@ -657,16 +670,15 @@ public class XmlImportService {
         } else {
             return;
         }
-        for(PriceRecordXml r : records) {
+        for (PriceRecordXml r : records) {
             String code = Objects.requireNonNullElse(r.getCode().trim().toUpperCase(), "");
             materialRepository.findByCode(code).ifPresent(
                     material -> {
                         BigDecimal price = safeGet(parseBigDecimal(r.getPrice()));
-                        if(isPurchase) {
+                        if (isPurchase) {
                             material.setPurchasePrice(price);
                             material.setPurchaseCurrency(Currency.EUR);
-                        }
-                        else {
+                        } else {
                             material.setSalesPrice(price);
                             material.setSalesCurrency(Currency.EUR);
                         }

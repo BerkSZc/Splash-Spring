@@ -30,7 +30,7 @@ public class CompanyControllerImpl {
         }
 
         if(sourceSchema == null || sourceSchema.isEmpty()) {
-            sourceSchema = "logo";
+            sourceSchema = "splash";
         }
 
         try {

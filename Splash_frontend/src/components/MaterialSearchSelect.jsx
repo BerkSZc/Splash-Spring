@@ -1,6 +1,6 @@
 //Fatura oluşturma sayfası için malzeme seçme alanı
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 export default function MaterialSearchSelect({
@@ -19,15 +19,18 @@ export default function MaterialSearchSelect({
     (m) => String(m?.id) === String(value),
   );
 
-  const filtered = (Array.isArray(materials) ? materials : []).filter((m) => {
-    const searchTerm = search.toLocaleLowerCase("tr-TR");
+  const filtered = useMemo(() => {
+    return (Array.isArray(materials) ? materials : [])
+      .filter((m) => !m.archived)
+      .filter((m) => {
+        const searchTerm = search.toLocaleLowerCase("tr-TR");
 
-    return (
-      (m?.code || "").toLocaleLowerCase("tr-TR").includes(searchTerm) ||
-      (m?.comment || "").toLocaleLowerCase("tr-TR").includes(searchTerm)
-    );
-  });
-
+        return (
+          (m?.code || "").toLocaleLowerCase("tr-TR").includes(searchTerm) ||
+          (m?.comment || "").toLocaleLowerCase("tr-TR").includes(searchTerm)
+        );
+      });
+  }, [materials, search]);
   useEffect(() => {
     if (open && inputRef.current) {
       const updatePos = () => {
@@ -48,7 +51,6 @@ export default function MaterialSearchSelect({
     }
   }, [open]);
 
-  // 2. Dışarı Tıklayınca Kapatma (Click Outside)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (

@@ -7,6 +7,7 @@ import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.j
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import { useCompany } from "../../../../backend/store/useCompany.js";
+import toast from "react-hot-toast";
 
 export const useHomeLogic = () => {
   const {

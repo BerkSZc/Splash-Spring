@@ -5,9 +5,13 @@ import com.berksozcu.entites.material.Material;
 import java.util.List;
 
 public interface IMaterialController{
-    public Material addMaterial (Material newMaterial);
+     Material addMaterial (Material newMaterial, String schemaName);
 
-    public List<Material> getAllMaterials();
+     List<Material> getAllMaterials();
 
-    public void updateMaterial(Long id, Material updateMaterial);
+     void updateMaterial(Long id, Material updateMaterial, String schemaName);
+
+     void deleteMaterial(Long id, String schemaName);
+
+     void archiveMaterial (List<Long> ids, boolean archived, String schemaName);
 }

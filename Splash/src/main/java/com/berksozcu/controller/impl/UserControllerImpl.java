@@ -23,14 +23,14 @@ public class UserControllerImpl implements IUserController {
 
     @Override
     @PostMapping("/save")
-    public RootEntity<UserResponse> signUp( @RequestBody User user){
-        return ok(authenticationService.signUp(user));
+    public RootEntity<UserResponse> signUp( @RequestBody User user, @RequestParam String schemaName){
+        return ok(authenticationService.signUp(user, schemaName));
     }
 
     @Override
     @PostMapping("/login")
-    public RootEntity<UserResponse> login( @RequestBody User user){
-        return ok(authenticationService.login(user));
+    public RootEntity<UserResponse> login( @RequestBody User user, @RequestParam String schemaName){
+        return ok(authenticationService.login(user, schemaName));
     }
 
 

@@ -40,7 +40,7 @@
 //        EventQueue.invokeLater(() -> {
 //            try {
 //                Webview wv = new Webview(true);
-//                wv.setTitle("Logo Uygulamam");
+//                wv.setTitle("App");
 //                wv.setSize(1280, 800);
 //                wv.loadURL(START_URL);
 //                wv.run();

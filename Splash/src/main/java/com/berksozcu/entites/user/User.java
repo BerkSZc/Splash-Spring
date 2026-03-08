@@ -1,5 +1,6 @@
 package com.berksozcu.entites.user;
 
+import com.berksozcu.entites.company.Company;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +16,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "app_user")
+@Table(name = "app_user", schema = "splash")
 @Builder
 public class User implements UserDetails {
     @Id
@@ -25,6 +26,10 @@ public class User implements UserDetails {
     private String username;
 
     private String password;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

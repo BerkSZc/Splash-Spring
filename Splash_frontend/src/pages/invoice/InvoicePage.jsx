@@ -77,9 +77,6 @@ export default function InvoicePage() {
           invoices={
             Array.isArray(state.filteredInvoices) ? state?.filteredInvoices : []
           }
-          openMenuId={state.openMenuId}
-          menuRef={state.menuRef}
-          onToggleMenu={(id) => handlers.toggleMenu(id)}
           onEdit={handlers.handleEdit}
           onDelete={handlers.setDeleteTarget}
           onPrint={handlers.setPrintItem}
@@ -100,7 +97,6 @@ export default function InvoicePage() {
             formatNumber={state.formatNumber}
             onItemChange={handlers.handleItemChange}
             setForm={handlers.setForm}
-            totals={state.totals}
             invoiceType={state.invoiceType}
             materials={state.materials}
             customers={state.customers}

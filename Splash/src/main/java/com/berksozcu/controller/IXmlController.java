@@ -11,7 +11,8 @@ public interface IXmlController {
 
      ResponseEntity<?> importSalesInvoices(@RequestParam("file") MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file,
+                                             @RequestParam String schemaName);
 
      ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file);
 

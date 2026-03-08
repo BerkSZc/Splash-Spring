@@ -42,11 +42,6 @@ export const useInvoicePageLogic = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
-  const [totals, setTotals] = useState({
-    kdvToplam: 0,
-    totalPrice: 0,
-    grandTotal: 0,
-  });
   const [invoiceType, setInvoiceType] = useState(() => {
     return localStorage.getItem("invoice_type") || "sales";
   });
@@ -100,6 +95,10 @@ export const useInvoicePageLogic = () => {
       if (contextMenu && !event.target.closest(".context-menu-container")) {
         setContextMenu(null);
       }
+
+      if (!event.target.closest(".invoice-row")) {
+        setSelectedInvoiceId(null);
+      }
     };
 
     document.addEventListener("mousedown", handleGlobalClick);
@@ -108,22 +107,6 @@ export const useInvoicePageLogic = () => {
       document.removeEventListener("mousedown", handleGlobalClick);
     };
   }, [contextMenu]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
-      }
-    };
-
-    if (openMenuId) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openMenuId]);
 
   const executePrint = async (inv, voucher) => {
     if (!inv) return;
@@ -307,16 +290,6 @@ export const useInvoicePageLogic = () => {
   const handleEdit = (invoice) => {
     setEditingInvoice(invoice);
 
-    const totalPrice =
-      Number(invoice.totalPrice) - Number(invoice.kdvToplam) || 0;
-    const kdvToplam = Number(invoice.kdvToplam) || 0;
-
-    setTotals({
-      totalPrice: Number(totalPrice.toFixed(2)),
-      kdvToplam: Number(kdvToplam.toFixed(2)),
-      grandTotal: Number(invoice.totalPrice).toFixed(2) || 0,
-    });
-
     setForm({
       date: invoice.date || "",
       fileNo: invoice.fileNo || "",
@@ -400,6 +373,7 @@ export const useInvoicePageLogic = () => {
   };
 
   const confirmDelete = async () => {
+    setDeleteTarget(null);
     try {
       if (invoiceType === "purchase") {
         await deletePurchaseInvoice(deleteTarget.id, tenant);
@@ -409,7 +383,7 @@ export const useInvoicePageLogic = () => {
         await getSalesInvoicesByYear(year);
       }
       await syncFinancialData();
-      setDeleteTarget(null);
+      setSelectedInvoiceId(null);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -589,7 +563,6 @@ export const useInvoicePageLogic = () => {
       menuRef,
       printItem,
       form,
-      totals,
       modalTotals,
       filteredInvoices: sortedAndFilteredInvoices,
       year,

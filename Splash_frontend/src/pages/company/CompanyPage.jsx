@@ -31,6 +31,7 @@ const CompanyPage = () => {
           newCompData={state.newCompData}
           setNewCompData={handlers.setNewCompData}
           onCreate={handlers.handleCreateCompany}
+          isAuthenticated={state.isAuthenticated}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">

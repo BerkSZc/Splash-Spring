@@ -28,6 +28,8 @@ export const usePayrollLogic = () => {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
   const [type, setType] = useState(() => {
     return localStorage.getItem("payroll_type") || "cheque_in";
   });
@@ -35,6 +37,20 @@ export const usePayrollLogic = () => {
   useEffect(() => {
     localStorage.setItem("payroll_type", type);
   }, [type]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (event.button === 2) return;
+      if (!event.target.closest(".payroll-row")) setSelectedId(null);
+      if (contextMenu && !event.target.closest(".context-menu-container"))
+        setContextMenu(null);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [contextMenu]);
 
   const getInitialDate = (selectedYear) => {
     const currentActualYear = new Date().getFullYear();
@@ -220,7 +236,6 @@ export const usePayrollLogic = () => {
       bankBranch: "",
       comment: "",
     });
-    setEditing(null);
     try {
       const nextNo = await getFileNo(getInitialDate(year), type.toUpperCase());
       if (nextNo) {
@@ -276,9 +291,10 @@ export const usePayrollLogic = () => {
         await addCheque(form.customerId, payload, tenant);
       }
 
-      await syncFinancialData();
+      setEditing(null);
       setIsOpen(false);
       resetForm();
+      await syncFinancialData();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -378,6 +394,8 @@ export const usePayrollLogic = () => {
       payrollType,
       sortOrder,
       isOpen,
+      selectedId,
+      contextMenu,
     },
     handlers: {
       setType,
@@ -393,6 +411,8 @@ export const usePayrollLogic = () => {
       closeEdit,
       formatDate,
       setIsOpen,
+      setSelectedId,
+      setContextMenu,
     },
   };
 };

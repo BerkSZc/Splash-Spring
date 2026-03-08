@@ -4,6 +4,7 @@ import { useTenant } from "../../../context/TenantContext.jsx";
 import { useCompany } from "../../../../backend/store/useCompany.js";
 import toast from "react-hot-toast";
 import { useVoucher } from "../../../../backend/store/useVoucher.js";
+import { useAuthentication } from "../../../../backend/store/useAuthentication.js";
 
 export const useTransferLogic = () => {
   const { year, years, changeYear, addYear, setYears, removeYear } = useYear();
@@ -18,6 +19,7 @@ export const useTransferLogic = () => {
     loading: companiesLoading,
   } = useCompany();
   const { transferAllBalances, loading: vouchersLoading } = useVoucher();
+  const { isAuthenticated } = useAuthentication();
 
   const [newYear, setNewYear] = useState("");
   const [shouldTransfer, setShouldTransfer] = useState(false);
@@ -133,7 +135,7 @@ export const useTransferLogic = () => {
 
     const currentTenant = localStorage.getItem("tenant");
     const source =
-      currentTenant && currentTenant !== "undefined" ? currentTenant : "logo";
+      currentTenant && currentTenant !== "undefined" ? currentTenant : "splash";
 
     try {
       await addCompany({ ...newCompData, sourceSchema: source });
@@ -167,6 +169,7 @@ export const useTransferLogic = () => {
       deleteTarget,
       confirmDeleteCheck,
       isLoading,
+      isAuthenticated,
     },
     handlers: {
       changeYear,
