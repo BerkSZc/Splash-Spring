@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
@@ -36,10 +36,10 @@ export const useFinancialLogic = () => {
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [openMenuId, setOpenMenuId] = useState(null);
   const [sortOrder, setSortOrder] = useState("desc");
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
   const [type, setType] = useState(() => {
     return localStorage.getItem("collection_type") || "payment";
   });
@@ -93,18 +93,22 @@ export const useFinancialLogic = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
+      if (event.button === 2) return;
+
+      if (!event.target.closest(".financial-row")) {
+        setSelectedId(null);
+      }
+
+      if (contextMenu && !event.target.closest(".context-menu-container")) {
+        setContextMenu(null);
       }
     };
-    if (openMenuId) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [openMenuId]);
+  }, [contextMenu]);
 
   useEffect(() => {
     setAddForm((prev) => ({ ...prev, date: getInitialDate(year) }));
@@ -185,6 +189,10 @@ export const useFinancialLogic = () => {
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
 
+  const handleSelectRow = (id) => {
+    setSelectedId((prev) => (prev === id ? null : id));
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
 
@@ -245,6 +253,10 @@ export const useFinancialLogic = () => {
   };
 
   const handleEdit = (item) => {
+    if (!item) {
+      setEditing(null);
+      return;
+    }
     setEditing(item);
 
     setEditForm({
@@ -283,13 +295,16 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await editCollection(payload.id, payload, tenant);
+        setEditing(null);
+
         await getReceivedCollectionsByYear(year);
       } else {
         await editPayment(payload.id, payload, tenant);
+        setEditing(null);
+
         await getPaymentCollectionsByYear(year);
       }
       await syncFinancialData();
-      setEditing(null);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -302,22 +317,21 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await deleteReceivedCollection(deleteTarget.id, tenant);
+        setDeleteTarget(null);
+
         await getReceivedCollectionsByYear(year);
       } else {
         await deletePaymentCompany(deleteTarget.id, tenant);
+        setDeleteTarget(null);
+
         await getPaymentCollectionsByYear(year);
       }
       await syncFinancialData();
-      setDeleteTarget(null);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
       toast.error(backendErr);
     }
-  };
-
-  const toggleMenu = (id) => {
-    setOpenMenuId(openMenuId === id ? null : id);
   };
 
   const formatDate = (dateStr) => {
@@ -357,31 +371,32 @@ export const useFinancialLogic = () => {
       editing,
       search,
       deleteTarget,
-      openMenuId,
       addForm,
       editForm,
       filteredList,
       customers,
       year,
-      menuRef,
       isLoading,
       isOpen,
+      selectedId,
+      contextMenu,
     },
     handlers: {
       setType,
       setSearch,
       setSortOrder,
       setDeleteTarget,
-      setOpenMenuId,
       setAddForm,
       setEditForm,
       handleAdd,
       handleEdit,
       handleSave,
       handleDelete,
-      toggleMenu,
       formatDate,
       setIsOpen,
+      setSelectedId,
+      handleSelectRow,
+      setContextMenu,
     },
   };
 };

@@ -3,8 +3,10 @@ import { MaterialCard } from "./components/MaterialCard";
 import { MaterialFormCard } from "./components/MaterialFormCard";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import MaterialEditModal from "./components/MaterialEditModal.jsx";
+import { MaterialContextMenu } from "./components/MaterialContextMenu.jsx";
+import ArchiveConfirmModal from "../../components/ArchiveConfirmModal.jsx";
 
-export default function MaterialForm() {
+export default function MaterialPage() {
   const { state, refs, handlers } = useMaterialLogic();
 
   return (
@@ -63,11 +65,41 @@ export default function MaterialForm() {
         {/* LİSTE ALANI */}
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
-              Kayıtlı Malzemeler
-            </h3>
+            <div className="flex items-center gap-4">
+              <h3 className="text-xl font-semibold flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                {state.showArchived
+                  ? "Arşivlenmiş Malzemeler"
+                  : "Kayıtlı Malzemeler"}
+              </h3>
 
+              <button
+                onClick={() => handlers.setShowArchived(!state.showArchived)}
+                className={`px-6 py-3 rounded-2xl font-bold transition-all ${
+                  state.showArchived
+                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/30"
+                    : "bg-indigo-600/10 text-indigo-400 border border-indigo-500/30"
+                }`}
+              >
+                {state.showArchived ? "Aktif Liste" : "Arşiv"}
+              </button>
+
+              <button
+                onClick={() => {
+                  handlers.setSelectionMode(!state.selectionMode);
+                  handlers.setSelectedIds([]);
+                }}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                  state.selectionMode
+                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                    : "bg-gray-800 text-gray-400 border-gray-700"
+                }`}
+              >
+                {state.selectionMode
+                  ? `${state.selectedIds.length} Seçili`
+                  : "Birden fazla seç"}
+              </button>
+            </div>
             {/* ARAMA ÇUBUĞU */}
             <div className="relative">
               <input
@@ -109,13 +141,57 @@ export default function MaterialForm() {
                 <MaterialCard
                   key={item.id}
                   item={item || []}
-                  onEdit={handlers.handleEdit}
+                  deleteConfirmId={state.deleteConfirmId}
+                  selectionMode={state.selectionMode}
+                  selectedIds={state.selectedIds}
+                  setDeleteConfirmId={handlers.setDeleteConfirmId}
+                  onDelete={handlers.handleDelete}
+                  confirmOpen={state.confirmOpen}
+                  menuItemId={state.menuItemId}
+                  setConfirmOpen={handlers.setConfirmOpen}
+                  setMenuItemId={handlers.setMenuItemId}
+                  onContextMenu={handlers.handleContextMenu}
+                  toggleSelectId={handlers.toggleSelectId}
                 />
               ))
             )}
           </div>
         </div>
       </div>
+      {state.contextMenu && (
+        <MaterialContextMenu
+          contextMenu={state.contextMenu}
+          selectionMode={state.selectionMode}
+          showArchived={state.showArchived}
+          onEdit={handlers.handleEdit}
+          onClose={() => handlers.setContextMenu(null)}
+          setMenuItemId={handlers.setMenuItemId}
+          setConfirmOpen={handlers.setConfirmOpen}
+          setDeleteConfirmId={handlers.setDeleteConfirmId}
+          setArchiveAction={handlers.setArchiveAction}
+          setArchiveConfirmOpen={handlers.setArchiveConfirmOpen}
+        />
+      )}
+
+      {state.archiveConfirmOpen && (
+        <ArchiveConfirmModal
+          isOpen={state.archiveConfirmOpen}
+          entityName="malzeme"
+          action={state.archiveAction}
+          onCancel={() => {
+            handlers.setArchiveConfirmOpen(false);
+            handlers.setMenuItemId(null);
+            handlers.setSelectionMode(false);
+            handlers.setSelectedIds([]);
+          }}
+          onConfirm={
+            state.selectionMode
+              ? handlers.handleBulkArchive
+              : handlers.handleArchive
+          }
+          count={state.selectionMode ? state.selectedIds.length : 1}
+        />
+      )}
     </div>
   );
 }

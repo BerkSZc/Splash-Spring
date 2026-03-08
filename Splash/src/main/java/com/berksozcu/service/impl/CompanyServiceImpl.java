@@ -77,12 +77,12 @@ public class CompanyServiceImpl implements ICompanyService {
         String finalSource = checkSchemaExists(sourceSchema) ? sourceSchema : "splash";
 
         //Kopyalanacak Tablolar
-        String[] allTables = {"customer", "material", "app_user",
+        String[] allTables = {"customer", "material",
                 "purchase_invoice", "purchase_invoice_item", "sales_invoice", "sales_invoice_item",
                 "material_price_history", "received_collection",
                 "payment_company", "payroll", "opening_voucher"};
 
-        List<String> tablesWithData = List.of("app_user");
+        List<String> tablesWithData = List.of();
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
@@ -184,11 +184,11 @@ public class CompanyServiceImpl implements ICompanyService {
                         ClassPathResource resource = new ClassPathResource("init.sql");
                         ScriptUtils.executeSqlScript(connection, resource);
 
-                        stmt.execute(String.format(
-                                "INSERT INTO %s.company (name, schema_name, description) VALUES ('Ana Şirket', 'splash', 'Varsayılan')",
-                                defaultSchema));
-
-                        System.out.println(">>> Varsayılan şema (splash) ve tablolar kuruldu.");
+//                        stmt.execute(String.format(
+//                                "INSERT INTO %s.company (name, schema_name, description) VALUES ('Ana Şirket', 'splash', 'Varsayılan')",
+//                                defaultSchema));
+//
+//                        System.out.println(">>> Varsayılan şema (splash) ve tablolar kuruldu.");
                     }
                 }
             }

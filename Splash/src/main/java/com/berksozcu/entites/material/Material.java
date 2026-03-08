@@ -1,5 +1,6 @@
 package com.berksozcu.entites.material;
 
+import com.berksozcu.entites.company.Company;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -32,6 +33,10 @@ public class Material {
     //Açıklama
     private String comment;
 
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @Enumerated(EnumType.STRING)
     //Birim
     private MaterialUnit unit;
@@ -51,4 +56,7 @@ public class Material {
     @Column(name = "sales_currency")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private Currency salesCurrency= Currency.TRY;
+
+    @Column(nullable = false)
+    private boolean archived = false;
 }

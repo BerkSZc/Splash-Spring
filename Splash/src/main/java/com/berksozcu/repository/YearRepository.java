@@ -17,6 +17,8 @@ public interface YearRepository extends JpaRepository<Year, Long> {
 
     boolean existsByYearValueAndCompanyId(Integer yearValue, Long companyId);
 
+    boolean existsByCompanyId(Long companyId);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Year y WHERE y.yearValue = :yearValue AND y.company.id = :companyId")

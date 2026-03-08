@@ -10,7 +10,7 @@
       ports:
         - '5432:5432'
       networks:
-        - logo_network
+        - splash_network
 
       volumes:
         - postgres_data:/var/lib/postgresql/data
@@ -25,11 +25,11 @@
       build:
         context: .
         dockerfile: Dockerfile
-      container_name: spring_logo_app
+      container_name: spring_splash_app
       ports:
         - '8080:8080'
       networks:
-       - logo_network
+       - splash_network
       depends_on:
          postgres:
           condition: service_healthy
@@ -40,11 +40,11 @@
         JWT_SECRET: ${JWT_SECRET}
         SPRING_JPA_HIBERNATE_DDL_AUTO: update
         SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-        SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: logo
+        SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: splash
 
 
   networks:
-    logo_network:
+    splash_network:
       driver: bridge
 
 

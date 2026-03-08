@@ -10,9 +10,9 @@
 
 	</parent>
 	<groupId>com.berksozcu</groupId>
-	<artifactId>Logo</artifactId>
+	<artifactId>Splash</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Logo</name>
+	<name>Splash</name>
 	<description>Muhasebe Programı basit</description>
 	<url/>
 	<licenses>

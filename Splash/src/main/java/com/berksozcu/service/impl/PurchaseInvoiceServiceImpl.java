@@ -111,6 +111,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 item.setQuantity(safeGet(item.getQuantity()));
                 item.setUnitPrice(safeGet(item.getUnitPrice()));
                 item.setKdv(safeGet(item.getKdv()));
+                item.setCompany(company);
                 item.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));
 
                 kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);

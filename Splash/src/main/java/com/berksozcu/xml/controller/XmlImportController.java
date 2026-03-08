@@ -43,9 +43,10 @@ public class XmlImportController implements IXmlController {
 
     @Override
     @PostMapping("/materials")
-    public ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file,
+                                             @RequestParam String schemaName) {
         try {
-            importService.importMaterials(file);
+            importService.importMaterials(file, schemaName);
             return ResponseEntity.ok("XML başarıyla aktarıldı!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Hata: " + e.getMessage());

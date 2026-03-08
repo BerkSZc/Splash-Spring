@@ -3,11 +3,12 @@ export default function PayrollTable({
   currentTheme,
   search,
   setSearch,
-  onEdit,
-  onDelete,
   formatDate,
   sortOrder,
   setSortOrder,
+  selectedId,
+  onSelectRow,
+  onContextMenu,
 }) {
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-hidden backdrop-blur-sm shadow-xl">
@@ -70,21 +71,42 @@ export default function PayrollTable({
           <thead>
             <tr className="bg-gray-800/30 text-gray-500 text-[10px] uppercase font-bold tracking-[0.2em]">
               <th className="p-6">İşlem Tarihi</th>
+              <th className="p-6 text-center w-16">Seç</th>
               <th className="p-6">Vade Tarihi</th>
               <th className="p-6">Müşteri / Cari</th>
               <th className="p-6">Evrak Detayı</th>
               <th className="p-6 text-right">Tutar</th>
-              <th className="p-6 text-center w-32">Aksiyon</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800/50">
             {(Array.isArray(filteredList) ? filteredList : []).map((item) => (
               <tr
                 key={item.id}
-                className="hover:bg-blue-500/5 transition-all group"
+                onClick={() => onSelectRow(item.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  onSelectRow(item.id);
+                  onContextMenu({ x: e.clientX, y: e.clientY, item });
+                }}
+                className={`payroll-row transition-all cursor-pointer ${
+                  selectedId === item.id
+                    ? "bg-blue-500/20 border-l-4 border-blue-500"
+                    : "hover:bg-blue-500/5"
+                }`}
               >
                 <td className="p-6 text-gray-400 font-mono text-sm">
                   {formatDate(item?.transactionDate) || ""}
+                </td>
+                <td
+                  className="p-6 text-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedId === item.id}
+                    onChange={() => onSelectRow(item.id)}
+                    className="w-5 h-5 accent-blue-500 cursor-pointer"
+                  />
                 </td>
                 <td className="p-6">
                   <span className="bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full text-sm font-bold font-mono">
@@ -113,27 +135,11 @@ export default function PayrollTable({
                 </td>
                 <td className="p-6 text-right">
                   <p className="text-white font-black font-mono text-lg">
-                    ₺{" "}
                     {(Number(item.amount) || "").toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
-                    })}
+                    })}{" "}
+                    ₺
                   </p>
-                </td>
-                <td className="p-6 text-center">
-                  <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => onEdit(item)}
-                      className="p-2.5 bg-gray-800 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-all shadow-lg border border-gray-700"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => onDelete(item)}
-                      className="p-2.5 bg-gray-800 hover:bg-red-500/20 text-red-500 rounded-xl transition-all shadow-lg border border-gray-700"
-                    >
-                      🗑️
-                    </button>
-                  </div>
                 </td>
               </tr>
             ))}

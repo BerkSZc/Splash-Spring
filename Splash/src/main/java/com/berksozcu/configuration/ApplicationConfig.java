@@ -1,9 +1,12 @@
 package com.berksozcu.configuration;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
+import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.repository.UserRepository;
+import com.berksozcu.tenant.TenantContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +23,22 @@ public class ApplicationConfig {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByUsername(username)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.KULLANICI_BULUNAMADI)));
-    }
+        return username -> {
 
+            String schemaName = TenantContext.getCurrentTenant();
+            Company company = companyRepository.findBySchemaName(schemaName);
+
+            return userRepository.findByUsernameAndCompany(username, company)
+                    .orElseThrow(() -> new BaseException(
+                            new ErrorMessage(MessageType.KULLANICI_BULUNAMADI)
+                    ));
+        };
+    }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

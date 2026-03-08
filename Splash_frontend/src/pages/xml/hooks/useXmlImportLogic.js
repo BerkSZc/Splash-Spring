@@ -98,7 +98,7 @@ export const useXmlImportLogic = () => {
 
     try {
       if (type === "invoice") await importPurchaseInvoice(file, tenant);
-      else if (type === "materials") await importMaterials(file);
+      else if (type === "materials") await importMaterials(file, tenant);
       else if (type === "customers") await importCustomers(file);
       else if (type === "collections") await importCollections(file, tenant);
       else if (type === "sales") await importSalesInvoice(file, tenant);

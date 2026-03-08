@@ -4,6 +4,7 @@ export default function ArchiveConfirmModal({
   action,
   onCancel,
   onConfirm,
+  entityName = "müşteri",
 }) {
   if (!isOpen) return null;
   return (
@@ -14,7 +15,7 @@ export default function ArchiveConfirmModal({
         </div>
         <h3 className="text-xl font-bold text-white mb-2">Emin misiniz?</h3>
         <p className="text-gray-400 mb-8">
-          <strong>{count}</strong> müşteri{" "}
+          <strong>{count}</strong> {entityName}{" "}
           {action === "archive" ? "arşivlenecek." : "arşivden çıkarılacak."}
         </p>
         <div className="flex gap-3">

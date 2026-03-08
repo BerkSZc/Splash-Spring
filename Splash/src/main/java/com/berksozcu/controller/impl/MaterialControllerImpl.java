@@ -17,8 +17,8 @@ public class MaterialControllerImpl implements IMaterialController {
 
     @Override
     @PostMapping("/add-material")
-    public Material addMaterial(@RequestBody Material newMaterial) {
-        return materialService.addMaterial(newMaterial);
+    public Material addMaterial(@RequestBody Material newMaterial, @RequestParam String schemaName) {
+        return materialService.addMaterial(newMaterial, schemaName);
     }
 
     @Override
@@ -29,9 +29,21 @@ public class MaterialControllerImpl implements IMaterialController {
 
     @Override
     @PutMapping("/update-material/{id}")
-    public void updateMaterial(@PathVariable(name = "id") Long id, @RequestBody Material updateMaterial) {
-        materialService.updateMaterial(id, updateMaterial);
+    public void updateMaterial(@PathVariable(name = "id") Long id, @RequestBody Material updateMaterial,
+                               @RequestParam String schemaName) {
+        materialService.updateMaterial(id, updateMaterial, schemaName);
     }
 
+    @Override
+    @DeleteMapping("/delete-material/{id}")
+    public void deleteMaterial(@PathVariable(name = "id") Long id, @RequestParam String schemaName) {
+        materialService.deleteMaterial(id, schemaName);
+    }
 
+    @Override
+    @PostMapping("/archive-material")
+    public void archiveMaterial(@RequestBody List<Long> ids, @RequestParam boolean archived,
+    @RequestParam String schemaName) {
+        materialService.archiveMaterial(ids, archived, schemaName);
+    }
 }

@@ -3,11 +3,6 @@ export default function ClientRow({
   isSelected,
   onCheckboxChange,
   onContextMenu,
-  isOpen,
-  onToggleMenu,
-  onEdit,
-  onOpenStatement,
-  onArchiveToggle,
   vouchers = [],
 }) {
   const myVoucher = (Array.isArray(vouchers) ? vouchers : []).find(
@@ -17,9 +12,9 @@ export default function ClientRow({
     <tr
       onContextMenu={(e) => onContextMenu(e, customer)}
       onClick={() => onCheckboxChange(customer.id)}
-      className={`group transition-all ${
-        customer.archived
-          ? "opacity-40 grayscale bg-gray-950"
+      className={`client-row group transition-all cursor-pointer ${
+        isSelected
+          ? "bg-blue-500/20 border-l-4 border-blue-500"
           : "hover:bg-blue-500/5"
       }`}
     >
@@ -69,51 +64,11 @@ export default function ClientRow({
               : "text-emerald-400"
           }`}
         >
-          ₺{" "}
           {(Number(myVoucher?.finalBalance) || 0).toLocaleString("tr-TR", {
             minimumFractionDigits: 2,
-          })}
+          })}{" "}
+          ₺
         </span>
-      </td>
-      <td className="p-5 text-center relative action-menu-container">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleMenu(customer.id);
-          }}
-          className="p-2 hover:bg-gray-800 rounded-lg text-gray-500 transition-all"
-        >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-          </svg>
-        </button>
-        {isOpen && (
-          <div className="absolute right-full top-0 mr-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-48 z-[100] overflow-hidden backdrop-blur-xl">
-            {!customer.archived && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(customer);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-800 text-sm text-gray-300"
-              >
-                Düzenle
-              </button>
-            )}
-            <button
-              onClick={() => onOpenStatement(customer)}
-              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-800 text-sm text-gray-300 border-t border-gray-800"
-            >
-              📊 Hesap Ekstresi
-            </button>
-            <button
-              onClick={() => onArchiveToggle(customer)}
-              className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-800 text-sm text-orange-400 border-t border-gray-800"
-            >
-              {customer?.archived ? "Arşivden Çıkar" : "Arşivle"}
-            </button>
-          </div>
-        )}
       </td>
     </tr>
   );

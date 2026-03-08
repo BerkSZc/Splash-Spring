@@ -5,11 +5,6 @@ export default function ClientTable({
   selectedCustomers,
   onCheckboxChange,
   onContextMenu,
-  openMenuId,
-  onToggleMenu,
-  onEdit,
-  onOpenStatement,
-  onArchiveToggle,
   vouchers,
 }) {
   return (
@@ -28,9 +23,6 @@ export default function ClientTable({
               <th className="p-5 text-xs font-bold uppercase tracking-widest text-right">
                 Bakiye
               </th>
-              <th className="p-5 text-xs font-bold uppercase tracking-widest text-center">
-                İşlem
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800/50">
@@ -41,11 +33,6 @@ export default function ClientTable({
                 isSelected={selectedCustomers.includes(customer.id)}
                 onCheckboxChange={onCheckboxChange}
                 onContextMenu={onContextMenu}
-                isOpen={openMenuId === customer.id}
-                onToggleMenu={onToggleMenu}
-                onEdit={onEdit}
-                onOpenStatement={onOpenStatement}
-                onArchiveToggle={onArchiveToggle}
                 vouchers={vouchers}
               />
             ))}

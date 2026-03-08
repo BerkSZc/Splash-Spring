@@ -5,6 +5,7 @@ import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
+import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
@@ -105,6 +106,8 @@ public class XmlExportService {
                 tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
                 tx.setQUANTITY(safeGet(item.getQuantity()));
                 tx.setPRICE(safeGet(item.getUnitPrice()));
+                tx.setUNIT_CODE(Objects.requireNonNullElse(item.getUnit(), MaterialUnit.ADET));
+                tx.setCOMPANY_ID(item.getCompany().getId());
                 tx.setVAT_RATE(safeGet(item.getKdv()));
                 tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
 
@@ -159,6 +162,8 @@ public class XmlExportService {
                 tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
                 tx.setQUANTITY(safeGet(item.getQuantity()));
                 tx.setPRICE(safeGet(item.getUnitPrice()));
+                tx.setUNIT_CODE(Objects.requireNonNullElse(item.getUnit(), MaterialUnit.ADET));
+                tx.setCOMPANY_ID(item.getCompany().getId());
                 tx.setVAT_RATE(safeGet(item.getKdv()));
                 tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
 
@@ -197,7 +202,17 @@ public class XmlExportService {
 
             mXml.setCODE(m.getCode().trim().toUpperCase());
             mXml.setNAME(Objects.requireNonNullElse(m.getComment(), ""));
-            mXml.setUNITSET_CODE("ADET");
+            MaterialUnit unitCode = m.getUnit();
+
+            if(unitCode != null) {
+                try {
+            mXml.setUNITSET_CODE(String.valueOf(m.getUnit()));
+                } catch (IllegalArgumentException e) {
+                    mXml.setUNITSET_CODE("ADET");
+                }
+            }
+            mXml.setCOMPANY_CODE(m.getCompany().getId());
+            mXml.setARCHIVED(m.isArchived());
             mXml.setPURCHASE_PRICE(safeGet(m.getPurchasePrice()).setScale(2, RoundingMode.HALF_UP).toString());
             mXml.setSALES_PRICE(safeGet(m.getSalesPrice()).setScale(2, RoundingMode.HALF_UP).toString());
 

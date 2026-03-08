@@ -45,7 +45,7 @@ export const useImportXml = create((set) => ({
     }
   },
 
-  importMaterials: async (file) => {
+  importMaterials: async (file, schemaName) => {
     set({ loading: true });
     try {
       const formData = new FormData();
@@ -54,6 +54,7 @@ export const useImportXml = create((set) => ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { schemaName },
       });
       toast.success("Aktarma Başarıyla Tamamlandı");
     } catch (error) {

@@ -54,7 +54,6 @@ export const useClientLogic = () => {
   const [editClient, setEditClient] = useState(null);
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [statementData, setStatementData] = useState([]);
@@ -63,6 +62,8 @@ export const useClientLogic = () => {
   const [selectedCustomerForStatement, setSelectedCustomerForStatement] =
     useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [pendingArchiveIds, setPendingArchiveIds] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -95,6 +96,12 @@ export const useClientLogic = () => {
       ignore = true;
     };
   }, [year, tenant]);
+
+  useEffect(() => {
+    setSelectedCustomers([]);
+    setSelectionMode(false);
+    setContextMenu(null);
+  }, [showArchived]);
 
   useEffect(() => {
     if (selectedCustomerForStatement && year) {
@@ -139,19 +146,16 @@ export const useClientLogic = () => {
 
   useEffect(() => {
     const handleCloseModal = (event) => {
-      if (openMenuId && !event.target.closest(".action-menu-container")) {
-        setOpenMenuId(null);
+      if (!event.target.closest(".client-row")) {
+        if (!selectionMode) setSelectedCustomers([]);
+      }
+      if (contextMenu && !event.target.closest(".context-menu-container")) {
+        setContextMenu(null);
       }
     };
     document.addEventListener("mousedown", handleCloseModal);
     return () => document.removeEventListener("mousedown", handleCloseModal);
-  }, [openMenuId]);
-
-  useEffect(() => {
-    setSelectedCustomers([]);
-    setContextMenu(null);
-    setOpenMenuId(null);
-  }, [showArchived]);
+  }, [contextMenu, selectionMode]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -159,8 +163,6 @@ export const useClientLogic = () => {
   };
 
   const handleOpenStatement = async (customer) => {
-    setOpenMenuId(null);
-
     const customerVoucher = (Array.isArray(vouchers) ? vouchers : []).find(
       (v) => v?.customer?.id === customer?.id,
     );
@@ -247,8 +249,6 @@ export const useClientLogic = () => {
       (v) => String(v?.customer?.id) === String(customer?.id),
     );
 
-    setOpenMenuId(null);
-
     setEditClient(customer);
     setForm({
       name: customer.name || "",
@@ -284,7 +284,6 @@ export const useClientLogic = () => {
   const handleArchiveToggle = async (customer) => {
     try {
       await setArchived(customer.id, !customer.archived);
-      setOpenMenuId(null);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -292,13 +291,14 @@ export const useClientLogic = () => {
     }
   };
 
-  const handleArchiveModalSubmit = async () => {
+  const handleArchiveModalSubmit = async (ids) => {
     const archivedValue = archiveAction === "archive";
     try {
-      await setArchived(selectedCustomers, archivedValue);
+      await setArchived(ids, archivedValue);
       setSelectedCustomers([]);
+      setPendingArchiveIds([]);
       setShowArchiveModal(false);
-      setOpenMenuId(null);
+      setSelectionMode(false);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -381,7 +381,6 @@ export const useClientLogic = () => {
       form,
       search,
       showArchived,
-      openMenuId,
       selectedCustomers,
       showArchiveModal,
       editClient,
@@ -396,6 +395,8 @@ export const useClientLogic = () => {
       isLoading,
       isOpen,
       sortDirection,
+      selectionMode,
+      pendingArchiveIds,
     },
     handlers: {
       handleChange,
@@ -407,7 +408,6 @@ export const useClientLogic = () => {
       handleArchiveModalSubmit,
       setSearch,
       setShowArchived,
-      setOpenMenuId,
       setSelectedCustomers,
       setShowArchiveModal,
       setContextMenu,
@@ -416,6 +416,8 @@ export const useClientLogic = () => {
       setShowPrintModal,
       setIsOpen,
       setSortDirection,
+      setSelectionMode,
+      setPendingArchiveIds,
     },
   };
 };
