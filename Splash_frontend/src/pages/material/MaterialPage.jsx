@@ -74,7 +74,7 @@ export default function MaterialPage() {
               </h3>
 
               <button
-                onClick={() => handlers.setShowArchived(!state.showArchived)}
+                onClick={() => handlers.handleShowArchived(!state.showArchived)}
                 className={`px-6 py-3 rounded-2xl font-bold transition-all ${
                   state.showArchived
                     ? "bg-amber-500/10 text-amber-500 border border-amber-500/30"
@@ -107,7 +107,7 @@ export default function MaterialPage() {
                 placeholder="Malzeme ara..."
                 className="bg-gray-900 border-2 border-gray-800 rounded-xl px-4 py-2 pl-10 text-sm focus:border-blue-500 outline-none transition-all w-64"
                 value={state.search}
-                onChange={(e) => handlers.setSearch(e.target.value)}
+                onChange={(e) => handlers.handleSearch(e.target.value)}
               />
               <svg
                 className="w-4 h-4 text-gray-500 absolute left-3 top-3"
@@ -165,6 +165,7 @@ export default function MaterialPage() {
           showArchived={state.showArchived}
           onEdit={handlers.handleEdit}
           onClose={() => handlers.setContextMenu(null)}
+          setArchiveTargetId={handlers.setArchiveTargetId}
           setMenuItemId={handlers.setMenuItemId}
           setConfirmOpen={handlers.setConfirmOpen}
           setDeleteConfirmId={handlers.setDeleteConfirmId}
@@ -191,6 +192,27 @@ export default function MaterialPage() {
           }
           count={state.selectionMode ? state.selectedIds.length : 1}
         />
+      )}
+      {state.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-3 pt-4">
+          <button
+            onClick={() => handlers.setPage((p) => p - 1)}
+            disabled={state.page === 0}
+            className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 font-bold disabled:opacity-30 hover:bg-gray-700 transition-all"
+          >
+            ← Önceki
+          </button>
+          <span className="text-gray-400 text-sm">
+            {state.page + 1} / {state.totalPages}
+          </span>
+          <button
+            onClick={() => handlers.setPage((p) => p + 1)}
+            disabled={state.page >= state.totalPages - 1}
+            className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 font-bold disabled:opacity-30 hover:bg-gray-700 transition-all"
+          >
+            Sonraki →
+          </button>
+        </div>
       )}
     </div>
   );

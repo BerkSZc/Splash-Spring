@@ -47,7 +47,7 @@ export const useInvoiceLogic = () => {
     const fetchData = async () => {
       if (!tenant) return;
       try {
-        await getMaterials();
+        await getMaterials(0, 999, "", false, tenant);
         if (ignore) return;
       } catch (error) {
         const backendErr =

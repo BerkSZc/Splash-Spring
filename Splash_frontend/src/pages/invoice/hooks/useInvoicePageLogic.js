@@ -68,7 +68,10 @@ export const useInvoicePageLogic = () => {
     const fetchData = async () => {
       if (!year) return;
       try {
-        await Promise.all([getMaterials(), getAllCustomers()]);
+        await Promise.all([
+          getMaterials(0, 999, "", false, tenant),
+          getAllCustomers(),
+        ]);
         if (ignore) return;
 
         invoiceType === "purchase"

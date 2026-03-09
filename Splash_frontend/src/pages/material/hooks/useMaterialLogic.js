@@ -8,6 +8,8 @@ export const useMaterialLogic = () => {
     addMaterial,
     materials,
     getMaterials,
+    totalPages,
+    currentPage,
     updateMaterials,
     loading: materialsLoading,
     deleteMaterial,
@@ -29,6 +31,19 @@ export const useMaterialLogic = () => {
   const [archiveAction, setArchiveAction] = useState("archive");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [archiveTargetId, setArchiveTargetId] = useState(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [search]);
 
   useEffect(() => {
     const handleGlobalClick = (e) => {
@@ -66,7 +81,13 @@ export const useMaterialLogic = () => {
     let ignore = false;
     const fetchData = async () => {
       try {
-        await getMaterials();
+        await getMaterials(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          showArchived,
+          tenant,
+        );
         if (ignore) return;
       } catch (error) {
         const backendErr =
@@ -78,7 +99,7 @@ export const useMaterialLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [tenant]);
+  }, [tenant, page, showArchived, debouncedSearch]);
 
   const initialForm = {
     code: "",
@@ -121,7 +142,7 @@ export const useMaterialLogic = () => {
         setForm(initialForm);
       }
 
-      await getMaterials();
+      await getMaterials(page, PAGE_SIZE, search, showArchived, tenant);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -144,17 +165,8 @@ export const useMaterialLogic = () => {
   };
 
   const filteredMaterials = useMemo(() => {
-    return (Array.isArray(materials) ? materials : [])
-      .filter((item) => (showArchived ? item.archived : !item.archived))
-      .filter((item) => {
-        const searchTerm = search.toLocaleLowerCase("tr-TR");
-
-        return (
-          (item?.code || "").toLocaleLowerCase("tr-TR").includes(searchTerm) ||
-          (item?.comment || "").toLocaleLowerCase("tr-TR").includes(searchTerm)
-        );
-      });
-  }, [materials, showArchived, search]);
+    return Array.isArray(materials) ? materials : [];
+  }, [materials]);
 
   const handleBulkArchive = async () => {
     const archivedValue = archiveAction === "archive";
@@ -172,17 +184,24 @@ export const useMaterialLogic = () => {
 
   const handleArchive = async () => {
     const archivedValue = archiveAction === "archive";
-    setArchiveConfirmOpen(null);
-    setMenuItemId(null);
+    setArchiveConfirmOpen(false);
     try {
-      await setArchived(menuItemId, archivedValue, tenant);
-      setArchiveConfirmOpen(false);
-      setMenuItemId(null);
+      await setArchived([archiveTargetId], archivedValue, tenant);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
       toast.error(backendErr);
     }
+  };
+
+  const handleSearch = (val) => {
+    setSearch(val);
+    setPage(0);
+  };
+
+  const handleShowArchived = (val) => {
+    setShowArchived(val);
+    setPage(0);
   };
 
   const handleCancel = () => {
@@ -253,13 +272,16 @@ export const useMaterialLogic = () => {
       archiveAction,
       selectionMode,
       selectedIds,
+      archiveTargetId,
+      page,
+      totalPages,
+      currentPage,
     },
     refs: { formRef },
     handlers: {
       handleChange,
       handleSubmit,
       handleEdit,
-      setSearch,
       handleCancel,
       setIsOpen,
       handleDelete,
@@ -268,7 +290,7 @@ export const useMaterialLogic = () => {
       setContextMenu,
       handleContextMenu,
       setDeleteConfirmId,
-      setShowArchived,
+      handleShowArchived,
       setArchiveAction,
       setArchiveConfirmOpen,
       handleArchive,
@@ -276,6 +298,9 @@ export const useMaterialLogic = () => {
       setSelectionMode,
       toggleSelectId,
       handleBulkArchive,
+      setArchiveTargetId,
+      setPage,
+      handleSearch,
     },
   };
 };

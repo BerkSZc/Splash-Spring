@@ -24,7 +24,9 @@ export default function InvoiceForm() {
         <div className="flex justify-between items-center bg-gray-900/40 p-6 rounded-[2rem] border border-gray-800 backdrop-blur-sm">
           <div className="text-left">
             <h1 className="text-3xl font-extrabold text-white tracking-tight">
-              Fatura Oluştur
+              {mode === "sales"
+                ? "Satış Faturası Oluştur"
+                : "Satın Alma Faturası Oluştur"}
             </h1>
             <p className="text-gray-400 mt-1">
               {mode === "sales" ? "Müşteriye Satış" : "Firmadan Satın Alma"}

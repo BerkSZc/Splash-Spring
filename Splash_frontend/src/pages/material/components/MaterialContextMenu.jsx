@@ -6,6 +6,7 @@ export const MaterialContextMenu = ({
   setConfirmOpen,
   setDeleteConfirmId,
   setArchiveAction,
+  setArchiveTargetId,
   setArchiveConfirmOpen,
   selectionMode,
   showArchived,
@@ -63,8 +64,8 @@ export const MaterialContextMenu = ({
                 setArchiveAction(
                   contextMenu.item.archived ? "unarchive" : "archive",
                 );
+                setArchiveTargetId(contextMenu.item.id);
                 setArchiveConfirmOpen(true);
-                setMenuItemId(contextMenu.item.id);
                 onClose();
               }}
               className="w-full text-left px-4 py-3 hover:bg-amber-600/20 text-amber-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"

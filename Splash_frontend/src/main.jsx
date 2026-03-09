@@ -10,6 +10,7 @@ import { TenantProvider } from "./context/TenantContext.jsx";
 import { YearProvider } from "./context/YearContext.jsx";
 import DisableContextMenu from "./context/DisableContextMenu.jsx";
 import GlobalErrorBoundary from "./components/GlobalErrorBoundary.jsx";
+import Sidebar from "./components/Sidebar.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -18,7 +19,7 @@ createRoot(document.getElementById("root")).render(
         <DisableContextMenu>
           <YearProvider>
             <TokenWatcher />
-            <Navbar />
+            <Sidebar />
             <GlobalErrorBoundary>
               <App />
             </GlobalErrorBoundary>

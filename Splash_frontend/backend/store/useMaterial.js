@@ -4,6 +4,9 @@ import toast from "react-hot-toast";
 
 export const useMaterial = create((set, get) => ({
   materials: [],
+  totalPages: 0,
+  currentPage: 0,
+  lastArchivedFilter: false,
   loading: false,
 
   addMaterial: async (material, schemaName) => {
@@ -13,18 +16,31 @@ export const useMaterial = create((set, get) => ({
         params: { schemaName },
       });
       toast.success("Malzeme eklendi");
-      await get().getMaterials();
+      const { lastArchivedFilter } = get();
+      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
     } catch (error) {
       throw error;
     } finally {
       set({ loading: false });
     }
   },
-  getMaterials: async () => {
-    set({ loading: true, materials: [] });
+  getMaterials: async (
+    page = 0,
+    size = 20,
+    search = "",
+    archived = false,
+    schemaName,
+  ) => {
+    set({ loading: true, lastArchivedFilter: archived });
     try {
-      const res = await axiosInstance.get("/material/list");
-      set({ materials: res.data });
+      const res = await axiosInstance.get(`/material/list`, {
+        params: { page, size, search, archived, schemaName },
+      });
+      set({
+        materials: res.data.content,
+        totalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
     } catch (error) {
       set({ materials: [] });
       throw error;
@@ -47,7 +63,8 @@ export const useMaterial = create((set, get) => ({
         },
       );
       toast.success("Malzeme bilgileri değiştirildi.");
-      await get().getMaterials();
+      const { lastArchivedFilter } = get();
+      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
     } catch (error) {
       throw error;
     } finally {
@@ -62,7 +79,8 @@ export const useMaterial = create((set, get) => ({
         params: { schemaName },
       });
       toast.success("Malzeme Silindi.");
-      await get().getMaterials();
+      const { lastArchivedFilter } = get();
+      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
     } catch (error) {
       throw error;
     } finally {
@@ -88,7 +106,8 @@ export const useMaterial = create((set, get) => ({
           ? `${idList.length} malzeme arşivlendi`
           : `${idList.length} malzeme arşivden çıkartıldı`,
       );
-      await get().getMaterials();
+      const { lastArchivedFilter } = get();
+      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
     } catch (error) {
       throw error;
     } finally {

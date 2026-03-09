@@ -113,7 +113,7 @@ public class PaymentCompanyServiceImplTest {
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company"));
 
-        assertEquals("Hata Kodu: 1019 İşlem no mevcut", exception.getMessage());
+        assertEquals("Hata Kodu: 1029 İşlem no mevcut", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
     }
 
@@ -185,7 +185,7 @@ public class PaymentCompanyServiceImplTest {
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.editPaymentCompany(1L, request, "company")
         );
-        assertEquals("Hata Kodu: 1019 İşlem no mevcut" ,exception.getMessage());
+        assertEquals("Hata Kodu: 1029 İşlem no mevcut" ,exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
     }
 
