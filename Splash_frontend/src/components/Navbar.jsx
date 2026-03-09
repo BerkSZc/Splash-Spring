@@ -4,6 +4,8 @@ import { useAuthentication } from "../../backend/store/useAuthentication";
 import YearDropdown from "./YearDropdown.jsx";
 import CompanyDropDown from "./CompanyDropDown.jsx";
 
+// KALDIRILCAK
+
 export default function Navbar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 

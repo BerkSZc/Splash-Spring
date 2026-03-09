@@ -27,7 +27,7 @@ function App() {
   }
 
   return (
-    <>
+    <div className="pt-14">
       <Routes>
         <Route path="/devir" element={<CompanyPage />} />
 
@@ -92,7 +92,7 @@ function App() {
           }
         />
       </Routes>
-    </>
+    </div>
   );
 }
 

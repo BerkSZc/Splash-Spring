@@ -4,8 +4,6 @@ import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
-import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
-import com.berksozcu.entites.sales.SalesInvoiceItem;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -13,6 +11,10 @@ import com.berksozcu.repository.*;
 import com.berksozcu.service.IMaterialService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -59,8 +61,13 @@ public class MaterialServiceImpl implements IMaterialService {
     }
 
     @Override
-    public List<Material> getAllMaterials() {
-        return materialRepository.findAll();
+    public Page<Material> getAllMaterials(int page, int size, String search, Boolean archived, String schemName) {
+        Company company = companyRepository.findBySchemaName(schemName);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("code").ascending());
+
+        boolean isArchived = archived != null && archived;
+
+        return materialRepository.findByCompanyAndArchivedWithSearch(company, isArchived, search, pageable);
     }
 
     @Override

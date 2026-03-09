@@ -1,113 +1,199 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuthentication } from "../../backend/store/useAuthentication";
+import YearDropdown from "./YearDropdown.jsx";
+import CompanyDropDown from "./CompanyDropDown.jsx";
 
-const Sidebar = () => {
-  const [isExpanded, setIsExpanded] = useState(true);
+const NAV_ITEMS = [
+  { label: "Malzemeler", to: "/malzeme-ekle", icon: "📦" },
+  { label: "Kasa İşlemleri", to: "/tahsilatlar", icon: "💰" },
+  { label: "Fatura İşlemleri", to: "/faturalar-islemleri", icon: "📋" },
+  { label: "Faturalar", to: "/faturalar", icon: "🧾" },
+  { label: "Çek-Senet", to: "/payroll", icon: "🏦" },
+  { label: "Cari Hesaplar", to: "/musteriler", icon: "👥" },
+  { label: "Raporlar", to: "/raporlar", icon: "📊" },
+];
+
+const BOTTOM_ITEMS = [
+  { label: "Şirket Seçim", to: "/devir", icon: "🏢" },
+  { label: "Veri İşlemleri", to: "/ekleme", icon: "⚙️" },
+];
+
+export default function Sidebar() {
+  const [open, setOpen] = useState(false);
+  const { logout, isAuthenticated } = useAuthentication();
   const location = useLocation();
+  const sidebarRef = useRef(null);
+  const hamburgerRef = useRef(null);
 
-  const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: "📊", path: "/" },
-    { id: "reports", label: "Finansal Raporlar", icon: "📈", path: "/reports" },
-    { id: "payroll", label: "Çek / Senet", icon: "📜", path: "/payroll" },
-    {
-      id: "customers",
-      label: "Cari Yönetimi",
-      icon: "👥",
-      path: "/musteriler",
-    },
-    { id: "settings", label: "Ayarlar", icon: "⚙️", path: "/ayarlar" },
-  ];
+  useEffect(() => {
+    const handle = (e) => {
+      if (
+        open &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target) &&
+        !hamburgerRef.current?.contains(e.target)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  const isActive = (to) => location.pathname === to;
 
   return (
-    <aside
-      className={`fixed left-0 top-0 h-screen bg-[#0f172a]/90 backdrop-blur-xl border-r border-gray-800 transition-all duration-500 ease-in-out z-50 shadow-2xl ${
-        isExpanded ? "w-72" : "w-24"
-      }`}
-    >
-      {/* Genişletme/Daraltma Butonu */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute -right-4 top-12 bg-blue-600 hover:bg-blue-500 w-8 h-8 rounded-full flex items-center justify-center text-white border-4 border-[#0a0f1a] transition-all shadow-lg active:scale-90"
-      >
-        {isExpanded ? "◀" : "▶"}
-      </button>
-
-      {/* Logo Alanı */}
-      <div className="p-8 mb-6 flex items-center gap-4 overflow-hidden">
-        <div className="min-w-[48px] h-[48px] bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-          <span className="text-2xl font-black text-white">S</span>
-        </div>
-        <div
-          className={`transition-opacity duration-300 ${isExpanded ? "opacity-100" : "opacity-0"}`}
+    <>
+      {/* ── TOP BAR ── */}
+      <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-[#0a0f1a]/90 backdrop-blur-xl border-b border-white/5 flex items-center px-4 gap-4">
+        <button
+          ref={hamburgerRef}
+          onClick={() => setOpen((p) => !p)}
+          className="w-9 h-9 flex flex-col justify-center items-center gap-[5px] group"
+          aria-label="Menüyü aç/kapat"
         >
-          <h1 className="font-black text-xl tracking-tighter text-white">
-            SOZCU
-          </h1>
-          <p className="text-[10px] text-blue-400 font-bold tracking-widest uppercase">
-            Finans
-          </p>
-        </div>
-      </div>
+          <span
+            className={`block h-[2px] bg-gray-400 transition-all duration-300 origin-center group-hover:bg-white ${
+              open ? "w-5 rotate-45 translate-y-[7px]" : "w-5"
+            }`}
+          />
+          <span
+            className={`block h-[2px] bg-gray-400 transition-all duration-300 group-hover:bg-white ${
+              open ? "w-0 opacity-0" : "w-4"
+            }`}
+          />
+          <span
+            className={`block h-[2px] bg-gray-400 transition-all duration-300 origin-center group-hover:bg-white ${
+              open ? "w-5 -rotate-45 -translate-y-[7px]" : "w-5"
+            }`}
+          />
+        </button>
 
-      {/* Menü Listesi */}
-      <nav className="px-4 space-y-3">
-        {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
+        <Link
+          to="/home"
+          className="text-white font-black tracking-[0.15em] text-sm uppercase select-none"
+        >
+          SPLASH
+        </Link>
+
+        <div className="flex-1" />
+
+        {isAuthenticated && (
+          <div className="flex items-center gap-2">
+            <CompanyDropDown />
+            <YearDropdown />
+          </div>
+        )}
+      </header>
+
+      <div
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+          open
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      <aside
+        ref={sidebarRef}
+        className={`fixed top-0 left-0 h-full z-50 w-72 bg-[#080d17] border-r border-white/5 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="h-14 flex items-center px-5 border-b border-white/5 shrink-0">
+          <span className="text-white font-black tracking-[0.15em] text-sm uppercase">
+            SPLASH
+          </span>
+          <button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => setOpen(false)}
+            className="ml-auto w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors text-lg"
+          >
+            ✕
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600 px-3 pb-2 pt-1">
+            Ana Menü
+          </p>
+          {NAV_ITEMS.map(({ label, to, icon }) => (
             <Link
-              key={item.id}
-              to={item.path}
-              className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30"
-                  : "text-gray-500 hover:bg-gray-800/50 hover:text-gray-300"
+              key={to}
+              to={to}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 group ${
+                isActive(to)
+                  ? "bg-blue-600/20 text-blue-400 border border-blue-500/20"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <span
-                className={`text-2xl transition-transform duration-300 ${!isExpanded && "group-hover:scale-125"}`}
-              >
-                {item.icon}
-              </span>
-
-              <span
-                className={`text-sm font-black whitespace-nowrap transition-all duration-300 ${
-                  isExpanded
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 -translate-x-10 pointer-events-none"
-                }`}
-              >
-                {item.label}
-              </span>
-
-              {/* Kapalıyken üzerine gelince çıkan ipucu (Tooltip) */}
-              {!isExpanded && (
-                <div className="absolute left-full ml-6 px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-xl whitespace-nowrap z-[100]">
-                  {item.label}
-                </div>
+              <span className="text-base w-5 text-center">{icon}</span>
+              {label}
+              {isActive(to) && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />
               )}
             </Link>
-          );
-        })}
-      </nav>
+          ))}
 
-      {/* Alt Profil Alanı */}
-      <div className="absolute bottom-8 left-0 w-full px-4">
-        <div
-          className={`flex items-center gap-3 p-3 bg-gray-900/50 rounded-2xl border border-gray-800 overflow-hidden ${!isExpanded && "justify-center"}`}
-        >
-          <div className="w-10 h-10 rounded-xl bg-gray-700 flex-shrink-0 border border-gray-600"></div>
-          {isExpanded && (
-            <div className="overflow-hidden">
-              <p className="text-xs font-bold text-white truncate text-ellipsis">
-                Berk Sözcü
-              </p>
-              <p className="text-[10px] text-gray-500">Yönetici</p>
-            </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600 px-3 pb-2 pt-5">
+            Diğer
+          </p>
+          {BOTTOM_ITEMS.map(({ label, to, icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 ${
+                isActive(to)
+                  ? "bg-blue-600/20 text-blue-400 border border-blue-500/20"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <span className="text-base w-5 text-center">{icon}</span>
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-3 border-t border-white/5 shrink-0">
+          {isAuthenticated ? (
+            <button
+              onClick={() => {
+                logout();
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
+            >
+              <span className="text-base w-5 text-center">🚪</span>
+              Çıkış Yap
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+            >
+              <span className="text-base w-5 text-center">🔐</span>
+              Giriş Yap
+            </Link>
           )}
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
-};
-
-export default Sidebar;
+}
