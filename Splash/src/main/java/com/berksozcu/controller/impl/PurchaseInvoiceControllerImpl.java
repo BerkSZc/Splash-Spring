@@ -4,6 +4,7 @@ import com.berksozcu.controller.IPurchaseInvoiceController;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.service.IPurchaseInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,13 +20,13 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
     @Override
     @PostMapping("/add/{id}")
     public PurchaseInvoice addPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice
-    , @RequestParam String schemaName) {
+            , @RequestParam String schemaName) {
         return purchaseInvoice.addPurchaseInvoice(id, newPurchaseInvoice, schemaName);
     }
 
     @Override
     @GetMapping("/all-invoice/{id}")
-    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(@PathVariable(name = "id") Long id){
+    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(@PathVariable(name = "id") Long id) {
         return purchaseInvoice.findAllPurchaseInvoiceByCustomerId(id);
     }
 
@@ -45,13 +46,17 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
     @Override
     @DeleteMapping("/delete/{id}")
     public void deletePurchaseInvoice(@PathVariable(name = "id") Long id
-    , @RequestParam String schemaName) {
-         purchaseInvoice.deletePurchaseInvoice(id, schemaName);
+            , @RequestParam String schemaName) {
+        purchaseInvoice.deletePurchaseInvoice(id, schemaName);
     }
 
     @Override
-    @GetMapping("/find-year/{year}")
-    public List<PurchaseInvoice> getPurchaseInvoiceByYear(@PathVariable int year) {
-        return purchaseInvoice.getPurchaseInvoiceByDateBetween(year);
+    @GetMapping("/find-by-year")
+    public Page<PurchaseInvoice> getPurchaseInvoiceByYear(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "20") int size,
+                                                          @RequestParam int year,
+                                                          @RequestParam String schemaName
+    ) {
+        return purchaseInvoice.getPurchaseInvoiceByDateBetween(page, size, year, schemaName);
     }
 }

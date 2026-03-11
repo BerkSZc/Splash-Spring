@@ -444,14 +444,14 @@ export const useInvoiceLogic = () => {
     try {
       if (isSales) {
         await addSalesInvoice(Number(currentForm.customerId), payload, tenant);
-        await getSalesInvoicesByYear(year);
+        await getSalesInvoicesByYear(0, 999, year, tenant);
       } else {
         await addPurchaseInvoice(
           Number(currentForm.customerId),
           payload,
           tenant,
         );
-        await getPurchaseInvoiceByYear(year);
+        await getPurchaseInvoiceByYear(0, 999, year, tenant);
       }
       resetForm();
 

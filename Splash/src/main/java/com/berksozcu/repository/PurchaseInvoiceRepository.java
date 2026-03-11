@@ -1,7 +1,10 @@
 package com.berksozcu.repository;
 
 import com.berksozcu.dto.report.DtoMonthlyKdv;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +17,7 @@ import java.util.List;
 
 @Repository
 public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice, Long> {
-//    @Query(value = "SELECT * FROM PurchaseInvoiceRepository WHERE id=?",nativeQuery = true)
+    //    @Query(value = "SELECT * FROM PurchaseInvoiceRepository WHERE id=?",nativeQuery = true)
     List<PurchaseInvoice> findAllByCustomerId(Long id);
 
     List<PurchaseInvoice> findByDateBetween(LocalDate start, LocalDate end);
@@ -38,4 +41,9 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
             "GROUP BY MONTH(pi.date), YEAR(pi.date) " +
             "ORDER BY MONTH(pi.date)")
     List<DtoMonthlyKdv> getMonthlyPurchases(@Param("year") int year, @Param("companyId") Long companyId);
+
+
+    Page<PurchaseInvoice> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end,
+                                                      Pageable pageable);
+
 }

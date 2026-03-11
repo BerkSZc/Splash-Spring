@@ -4,6 +4,7 @@ import com.berksozcu.controller.IPayrollController;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.service.IPayrollService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +17,12 @@ public class PayrollControllerImpl implements IPayrollController {
     private IPayrollService payrollService;
 
     @Override
-    @GetMapping("/find-year")
-    public List<Payroll> getPayrollsByYear(@RequestParam(name = "year") int year) {
-        return payrollService.getPayrollsByYear(year);
+    @GetMapping("/find-by-year")
+    public Page<Payroll> getPayrollsByYear(@RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "20") int size,
+                                           @RequestParam int year,
+                                           @RequestParam String schemaName) {
+        return payrollService.getPayrollsByYear(page, size, year, schemaName);
     }
 
     @Override
@@ -31,7 +35,7 @@ public class PayrollControllerImpl implements IPayrollController {
     @Override
     @PutMapping("/edit/{id}")
     public Payroll editPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll
-    , String schemaName) {
+            , String schemaName) {
         return payrollService.editPayroll(id, newPayroll, schemaName);
     }
 

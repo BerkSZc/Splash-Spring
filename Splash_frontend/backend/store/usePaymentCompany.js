@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 
 export const usePaymentCompany = create((set) => ({
   payments: [],
+  paymentTotalPages: 0,
+  currentPage: 0,
   loading: false,
 
   addPayment: async (id, paymentCompany, schemaName) => {
@@ -64,11 +66,22 @@ export const usePaymentCompany = create((set) => ({
       set({ loading: false });
     }
   },
-  getPaymentCollectionsByYear: async (year) => {
+  getPaymentCollectionsByYear: async (
+    page = 0,
+    size = 20,
+    year,
+    schemaName,
+  ) => {
     set({ loading: true, payments: [] });
     try {
-      const res = await axiosInstance.get(`/payment/find-year/${year}`);
-      set({ payments: res.data });
+      const res = await axiosInstance.get(`/payment/find-by-year`, {
+        params: { page, size, year, schemaName },
+      });
+      set({
+        payments: res.data.content,
+        paymentTotalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
     } catch (error) {
       set({ sales: [] });
       throw error;

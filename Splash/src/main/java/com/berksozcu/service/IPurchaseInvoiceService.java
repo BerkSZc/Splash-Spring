@@ -1,15 +1,21 @@
 package com.berksozcu.service;
 
 import com.berksozcu.entites.purchase.PurchaseInvoice;
+import org.springframework.data.domain.Page;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface IPurchaseInvoiceService {
-    public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
-    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id);
-    public List<PurchaseInvoice> getAllPurchaseInvoice();
-    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
-    public void deletePurchaseInvoice(Long id, String schemaName);
-    public List<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int year);
+    PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
+
+    List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id);
+
+    List<PurchaseInvoice> getAllPurchaseInvoice();
+
+    PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
+
+    void deletePurchaseInvoice(Long id, String schemaName);
+
+    Page<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int page, int size,
+                                                          int year, String schemaName);
 }

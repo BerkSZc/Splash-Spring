@@ -1,17 +1,22 @@
 package com.berksozcu.controller;
 
 import com.berksozcu.entites.purchase.PurchaseInvoice;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface IPurchaseInvoiceController {
-    public PurchaseInvoice addPurchaseInvoice( Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
-    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(@PathVariable(name = "id") Long id);
-    public List<PurchaseInvoice> getAllPurchaseInvoice();
-    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id
-            , @RequestBody PurchaseInvoice newPurchaseInvoice, String schemaName);
-    public void deletePurchaseInvoice(@PathVariable(name = "id") Long id, String schemaName);
-    public List<PurchaseInvoice> getPurchaseInvoiceByYear(@PathVariable int year);
+    PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName);
+
+    List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id);
+
+    List<PurchaseInvoice> getAllPurchaseInvoice();
+
+    PurchaseInvoice editPurchaseInvoice(Long id
+            , PurchaseInvoice newPurchaseInvoice, String schemaName);
+
+    void deletePurchaseInvoice(Long id, String schemaName);
+
+    Page<PurchaseInvoice> getPurchaseInvoiceByYear(int page, int size, int year,
+                                                   String schemaName);
 }

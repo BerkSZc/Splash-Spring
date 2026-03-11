@@ -18,12 +18,17 @@ import com.berksozcu.service.ICommonDataService;
 import com.berksozcu.service.IPurchaseInvoiceService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -294,10 +299,15 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     }
 
     @Override
-    public List<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int year) {
+    public Page<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int page, int size, int year,
+                                                                 String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return purchaseInvoiceRepository.findByDateBetween(start, end);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        return purchaseInvoiceRepository.findByCompanyAndDateBetween(company, start, end, pageable);
     }
 
     private void saveHistoryPrice(PurchaseInvoiceItem item, PurchaseInvoice invoice, Customer customer) {

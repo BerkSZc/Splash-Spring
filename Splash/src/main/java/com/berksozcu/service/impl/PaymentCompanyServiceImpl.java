@@ -14,6 +14,10 @@ import com.berksozcu.repository.PaymentCompanyRepository;
 import com.berksozcu.service.IPaymentCompanyService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -160,10 +164,15 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     }
 
     @Override
-    public List<PaymentCompany> getPaymentCollectionsByYear(int year) {
+    public Page<PaymentCompany> getPaymentCollectionsByYear(int page, int size, int year, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return paymentCompanyRepository.findByDateBetween(start, end);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        return paymentCompanyRepository.findByCompanyAndDateBetween(company, start, end, pageable);
     }
 
     private OpeningVoucher getDefaultVoucher (Company company, Customer newCustomer, LocalDate date) {

@@ -1,8 +1,8 @@
 package com.berksozcu.service;
 
 import com.berksozcu.entites.payroll.Payroll;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
 
 public interface IPayrollService {
     Payroll addPayroll(Long id, Payroll newPayroll, String schemaName);
@@ -11,5 +11,5 @@ public interface IPayrollService {
 
     void deletePayroll(Long id, String schemaName);
 
-     List<Payroll> getPayrollsByYear(int year);
+     Page<Payroll> getPayrollsByYear(int page, int size, int year, String schemaName);
 }

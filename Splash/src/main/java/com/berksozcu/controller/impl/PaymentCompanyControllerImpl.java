@@ -4,6 +4,7 @@ import com.berksozcu.controller.IPaymentCompanyController;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.service.IPaymentCompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,9 +44,12 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
     }
 
     @Override
-    @GetMapping("/find-year/{year}")
-    public List<PaymentCompany> getPaymentCollectionsByYear(@PathVariable(name = "year") int year) {
-        return paymentCompanyService.getPaymentCollectionsByYear(year);
+    @GetMapping("/find-by-year")
+    public Page<PaymentCompany> getPaymentCollectionsByYear(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "20") int size,
+                                                            @RequestParam int year,
+                                                            @RequestParam String schemaName) {
+        return paymentCompanyService.getPaymentCollectionsByYear(page, size, year, schemaName);
     }
 
 }

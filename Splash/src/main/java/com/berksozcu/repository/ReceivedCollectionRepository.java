@@ -1,7 +1,10 @@
 package com.berksozcu.repository;
 
 import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +31,7 @@ ReceivedCollectionRepository extends JpaRepository<ReceivedCollection, Long> {
     @Transactional
     @Query(value = "DELETE FROM ReceivedCollection rc WHERE rc.company.id = :companyId AND rc.date BETWEEN :start AND :end")
     void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
+
+    Page<ReceivedCollection> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end,
+                                                         Pageable pageable);
 }

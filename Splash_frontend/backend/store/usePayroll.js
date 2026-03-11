@@ -4,15 +4,21 @@ import { axiosInstance } from "../lib/axios";
 
 export const usePayroll = create((set) => ({
   payrolls: [],
+  payrollTotalPages: 0,
+  currentPage: 0,
   loading: false,
 
-  getPayrollByYear: async (year, schemaName) => {
+  getPayrollByYear: async (page = 0, size = 20, year, schemaName) => {
     set({ loading: true, payrolls: [] });
     try {
-      const res = await axiosInstance.get(`/payroll/find-year`, {
-        params: { year, schemaName },
+      const res = await axiosInstance.get(`/payroll/find-by-year`, {
+        params: { page, size, year, schemaName },
       });
-      set({ payrolls: res.data });
+      set({
+        payrolls: res.data.content,
+        payrollTotalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
     } catch (error) {
       set({ payrolls: [] });
       throw error;

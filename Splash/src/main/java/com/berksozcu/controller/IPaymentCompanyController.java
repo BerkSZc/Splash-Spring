@@ -1,16 +1,14 @@
 package com.berksozcu.controller;
 
 import com.berksozcu.entites.collections.PaymentCompany;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface IPaymentCompanyController {
      PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName);
      List<PaymentCompany> getAll();
-     PaymentCompany editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany,
-                                       String schemaName);
-     void deletePaymentCompany(@PathVariable(name = "id") Long id, String schemaName);
-     List<PaymentCompany> getPaymentCollectionsByYear(@PathVariable(name = "year") int year);
+     PaymentCompany editPaymentCompany( Long id, PaymentCompany paymentCompany, String schemaName);
+     void deletePaymentCompany(Long id, String schemaName);
+     Page<PaymentCompany> getPaymentCollectionsByYear( int page, int size, int year, String schemaName);
 }

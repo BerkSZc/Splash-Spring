@@ -14,6 +14,7 @@ export const useFinancialLogic = () => {
   const { tenant } = useTenant();
   const {
     collections,
+    collectionTotalPages,
     addCollection,
     editCollection,
     deleteReceivedCollection,
@@ -22,6 +23,7 @@ export const useFinancialLogic = () => {
   } = useReceivedCollection();
   const {
     payments,
+    paymentTotalPages,
     addPayment,
     editPayment,
     deletePaymentCompany,
@@ -40,6 +42,8 @@ export const useFinancialLogic = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
   const [type, setType] = useState(() => {
     return localStorage.getItem("collection_type") || "payment";
   });
@@ -154,8 +158,8 @@ export const useFinancialLogic = () => {
       try {
         await Promise.all([
           getAllCustomers(),
-          getReceivedCollectionsByYear(year),
-          getPaymentCollectionsByYear(year),
+          getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant),
+          getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant),
         ]);
         if (ignore) return;
       } catch (error) {
@@ -168,7 +172,7 @@ export const useFinancialLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant]);
+  }, [year, tenant, page]);
 
   const shownList = type === "received" ? collections : payments;
 
@@ -223,10 +227,10 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await addCollection(customerId, payload, tenant);
-        await getReceivedCollectionsByYear(year);
+        await getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant);
       } else {
         await addPayment(customerId, payload, tenant);
-        await getPaymentCollectionsByYear(year);
+        await getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant);
       }
       const resetDate = getInitialDate(year);
 
@@ -297,12 +301,12 @@ export const useFinancialLogic = () => {
         await editCollection(payload.id, payload, tenant);
         setEditing(null);
 
-        await getReceivedCollectionsByYear(year);
+        await getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant);
       } else {
         await editPayment(payload.id, payload, tenant);
         setEditing(null);
 
-        await getPaymentCollectionsByYear(year);
+        await getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant);
       }
       await syncFinancialData();
     } catch (error) {
@@ -319,12 +323,12 @@ export const useFinancialLogic = () => {
         await deleteReceivedCollection(deleteTarget.id, tenant);
         setDeleteTarget(null);
 
-        await getReceivedCollectionsByYear(year);
+        await getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant);
       } else {
         await deletePaymentCompany(deleteTarget.id, tenant);
         setDeleteTarget(null);
 
-        await getPaymentCollectionsByYear(year);
+        await getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant);
       }
       await syncFinancialData();
     } catch (error) {
@@ -380,6 +384,9 @@ export const useFinancialLogic = () => {
       isOpen,
       selectedId,
       contextMenu,
+      totalPages:
+        type === "received" ? collectionTotalPages : paymentTotalPages,
+      page,
     },
     handlers: {
       setType,
@@ -397,6 +404,7 @@ export const useFinancialLogic = () => {
       setSelectedId,
       handleSelectRow,
       setContextMenu,
+      setPage,
     },
   };
 };

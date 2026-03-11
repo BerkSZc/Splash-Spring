@@ -4,6 +4,7 @@ import com.berksozcu.controller.ISalesInvoiceController;
 import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.service.ISalesInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,8 +44,11 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
     }
 
     @Override
-    @GetMapping("/find-year/{year}")
-    public List<SalesInvoice> getSalesInvoiceByYear(@PathVariable(name = "year") int year) {
-        return salesInvoiceService.getSalesInvoicesByYear(year);
+    @GetMapping("/find-by-year")
+    public Page<SalesInvoice> getSalesInvoiceByYear(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "20") int size,
+                                                    @RequestParam int year,
+                                                    @RequestParam String schemaName) {
+        return salesInvoiceService.getSalesInvoicesByYear(page, size, year, schemaName);
     }
 }

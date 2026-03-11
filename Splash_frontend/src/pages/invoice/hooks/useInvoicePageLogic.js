@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 export const useInvoicePageLogic = () => {
   const {
     purchase,
+    purchaseTotalPages,
     editPurchaseInvoice,
     deletePurchaseInvoice,
     getPurchaseInvoiceByYear,
@@ -20,6 +21,7 @@ export const useInvoicePageLogic = () => {
   } = usePurchaseInvoice();
   const {
     sales,
+    salesTotalPages,
     editSalesInvoice,
     deleteSalesInvoice,
     getSalesInvoicesByYear,
@@ -42,6 +44,8 @@ export const useInvoicePageLogic = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
   const [invoiceType, setInvoiceType] = useState(() => {
     return localStorage.getItem("invoice_type") || "sales";
   });
@@ -75,8 +79,8 @@ export const useInvoicePageLogic = () => {
         if (ignore) return;
 
         invoiceType === "purchase"
-          ? await getPurchaseInvoiceByYear(year)
-          : await getSalesInvoicesByYear(year);
+          ? await getPurchaseInvoiceByYear(page, PAGE_SIZE, year, tenant)
+          : await getSalesInvoicesByYear(page, PAGE_SIZE, year, tenant);
       } catch (error) {
         const backendErr =
           error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -87,7 +91,7 @@ export const useInvoicePageLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, invoiceType, tenant]);
+  }, [year, invoiceType, tenant, page]);
 
   useEffect(() => {
     const handleGlobalClick = (event) => {
@@ -360,10 +364,10 @@ export const useInvoicePageLogic = () => {
     try {
       if (invoiceType === "purchase") {
         await editPurchaseInvoice(editingInvoice.id, payload, tenant);
-        await getPurchaseInvoiceByYear(year);
+        await getPurchaseInvoiceByYear(page, PAGE_SIZE, year, tenant);
       } else {
         await editSalesInvoice(editingInvoice.id, payload, tenant);
-        await getSalesInvoicesByYear(year);
+        await getSalesInvoicesByYear(page, PAGE_SIZE, year, tenant);
       }
       await syncFinancialData();
       setEditingInvoice(null);
@@ -380,10 +384,10 @@ export const useInvoicePageLogic = () => {
     try {
       if (invoiceType === "purchase") {
         await deletePurchaseInvoice(deleteTarget.id, tenant);
-        await getPurchaseInvoiceByYear(year);
+        await getPurchaseInvoiceByYear(page, PAGE_SIZE, year, tenant);
       } else {
         await deleteSalesInvoice(deleteTarget.id, tenant);
-        await getSalesInvoicesByYear(year);
+        await getSalesInvoicesByYear(page, PAGE_SIZE, year, tenant);
       }
       await syncFinancialData();
       setSelectedInvoiceId(null);
@@ -477,6 +481,7 @@ export const useInvoicePageLogic = () => {
   const toggleMenu = (id) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
+
   const sortedAndFilteredInvoices = useMemo(() => {
     const baseData = invoiceType === "purchase" ? purchase : sales;
     const dataArray = Array.isArray(baseData) ? baseData : [];
@@ -576,6 +581,9 @@ export const useInvoicePageLogic = () => {
       sortOrder,
       selectedInvoiceId,
       contextMenu,
+      page,
+      totalPages:
+        invoiceType === "purchase" ? purchaseTotalPages : salesTotalPages,
     },
     handlers: {
       toggleMenu,
@@ -598,6 +606,7 @@ export const useInvoicePageLogic = () => {
       confirmDelete,
       setDeleteTarget,
       setContextMenu,
+      setPage,
     },
   };
 };

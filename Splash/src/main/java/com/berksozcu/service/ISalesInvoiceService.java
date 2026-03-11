@@ -1,13 +1,14 @@
 package com.berksozcu.service;
 
 import com.berksozcu.entites.sales.SalesInvoice;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface ISalesInvoiceService {
-    public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice, String schemaName);
-    public List<SalesInvoice> getAllSalesInvoice();
-    public SalesInvoice editSalesInvoice( Long id, SalesInvoice salesInvoice, String schemaName);
-    public void deleteSalesInvoice(Long id, String schemaName);
-    public List<SalesInvoice> getSalesInvoicesByYear(int year);
+     SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice, String schemaName);
+     List<SalesInvoice> getAllSalesInvoice();
+     SalesInvoice editSalesInvoice( Long id, SalesInvoice salesInvoice, String schemaName);
+     void deleteSalesInvoice(Long id, String schemaName);
+     Page<SalesInvoice> getSalesInvoicesByYear(int page, int size, int year, String schemaName);
 }

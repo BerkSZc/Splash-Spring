@@ -1,7 +1,10 @@
 package com.berksozcu.repository;
 
 import com.berksozcu.dto.report.DtoMonthlyKdv;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.sales.SalesInvoice;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -35,4 +38,6 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long
             "GROUP BY MONTH(si.date), YEAR(si.date) " +
             "ORDER BY MONTH(si.date)")
     List<DtoMonthlyKdv> getMonthlySales(@Param("year") int year, @Param("companyId") Long companyId);
+
+    Page<SalesInvoice> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end, Pageable pageable);
 }
