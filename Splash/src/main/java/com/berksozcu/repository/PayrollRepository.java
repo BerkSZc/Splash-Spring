@@ -1,8 +1,11 @@
 package com.berksozcu.repository;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.entites.payroll.PayrollType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -33,4 +36,7 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     @Transactional
     @Query(value = "DELETE FROM Payroll pyr WHERE pyr.company.id = :companyId AND pyr.transactionDate BETWEEN :start AND :end")
     void deleteByCompanyIdAndTransactionDateBetween(Long companyId, LocalDate start, LocalDate end);
+
+    Page<Payroll> findByCompanyAndTransactionDateBetween(Company company, LocalDate start, LocalDate end,
+                                                         Pageable pageable);
 }

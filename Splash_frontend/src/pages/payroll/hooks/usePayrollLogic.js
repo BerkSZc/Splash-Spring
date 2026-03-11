@@ -14,6 +14,7 @@ export const usePayrollLogic = () => {
   const { getAllOpeningVoucherByYear } = useVoucher();
   const {
     payrolls,
+    payrollTotalPages,
     addCheque,
     editCheque,
     deleteCheque,
@@ -30,6 +31,8 @@ export const usePayrollLogic = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
   const [type, setType] = useState(() => {
     return localStorage.getItem("payroll_type") || "cheque_in";
   });
@@ -63,7 +66,7 @@ export const usePayrollLogic = () => {
   const syncFinancialData = async () => {
     try {
       await Promise.all([
-        getPayrollByYear(year, tenant),
+        getPayrollByYear(page, PAGE_SIZE, year, tenant),
         getAllCustomers(),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
@@ -204,7 +207,7 @@ export const usePayrollLogic = () => {
         if (year) {
           await Promise.all([
             getAllCustomers(),
-            getPayrollByYear(year, tenant),
+            getPayrollByYear(page, PAGE_SIZE, year, tenant),
           ]);
         }
         if (!ignore) {
@@ -223,7 +226,7 @@ export const usePayrollLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant]);
+  }, [year, tenant, page]);
 
   const resetForm = async () => {
     setForm({
@@ -338,7 +341,7 @@ export const usePayrollLogic = () => {
     try {
       if (deleteTarget) {
         await deleteCheque(deleteTarget.id, tenant);
-        await getPayrollByYear(year);
+        await getPayrollByYear(page, PAGE_SIZE, year, tenant);
         setDeleteTarget(null);
       }
       await syncFinancialData();
@@ -396,6 +399,8 @@ export const usePayrollLogic = () => {
       isOpen,
       selectedId,
       contextMenu,
+      page,
+      totalPages: payrollTotalPages,
     },
     handlers: {
       setType,
@@ -413,6 +418,7 @@ export const usePayrollLogic = () => {
       setIsOpen,
       setSelectedId,
       setContextMenu,
+      setPage,
     },
   };
 };

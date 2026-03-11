@@ -117,6 +117,27 @@ export default function CollectionPage() {
         onDelete={handlers.setDeleteTarget}
         onClose={() => handlers.setContextMenu(null)}
       />
+      {state.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-3 pt-4">
+          <button
+            onClick={() => handlers.setPage((p) => p - 1)}
+            disabled={state.page === 0}
+            className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 font-bold disabled:opacity-30 hover:bg-gray-700 transition-all"
+          >
+            ← Önceki
+          </button>
+          <span className="text-gray-400 text-sm">
+            {state.page + 1} / {state.totalPages}
+          </span>
+          <button
+            onClick={() => handlers.setPage((p) => p + 1)}
+            disabled={state.page >= state.totalPages - 1}
+            className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 font-bold disabled:opacity-30 hover:bg-gray-700 transition-all"
+          >
+            Sonraki →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

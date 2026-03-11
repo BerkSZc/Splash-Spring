@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 
 export const useReceivedCollection = create((set) => ({
   collections: [],
+  collectionTotalPages: 0,
+  currentPage: 0,
   loading: false,
 
   addCollection: async (id, receivedCollection, schemaName) => {
@@ -64,11 +66,22 @@ export const useReceivedCollection = create((set) => ({
       set({ loading: false });
     }
   },
-  getReceivedCollectionsByYear: async (year) => {
+  getReceivedCollectionsByYear: async (
+    page = 0,
+    size = 20,
+    year,
+    schemaName,
+  ) => {
     set({ loading: true, collections: [] });
     try {
-      const res = await axiosInstance.get(`/receive/find-year/${year}`);
-      set({ collections: res.data });
+      const res = await axiosInstance.get(`/receive/find-by-year`, {
+        params: { page, size, year, schemaName },
+      });
+      set({
+        collections: res.data.content,
+        collectionTotalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
     } catch (error) {
       set({ collections: [] });
       throw error;

@@ -4,7 +4,6 @@ import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Material;
-import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.entites.sales.SalesInvoice;
@@ -13,10 +12,13 @@ import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
-import com.berksozcu.service.ICommonDataService;
 import com.berksozcu.service.ISalesInvoiceService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -269,10 +271,15 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     }
 
     @Override
-    public List<SalesInvoice> getSalesInvoicesByYear(int year) {
+    public Page<SalesInvoice> getSalesInvoicesByYear(int page, int size, int year, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return salesInvoiceRepository.findByDateBetween(start, end);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        return salesInvoiceRepository.findByCompanyAndDateBetween(company, start, end, pageable);
     }
 
     private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer) {

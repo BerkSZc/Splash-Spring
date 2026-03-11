@@ -1,16 +1,14 @@
 package com.berksozcu.controller;
 
 import com.berksozcu.entites.sales.SalesInvoice;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface ISalesInvoiceController {
-    public SalesInvoice addSalesInvoice(Long id,SalesInvoice salesInvoice, String schemaName);
-    public List<SalesInvoice> getAllSalesInvoice();
-    public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice,
-                                         String schemaName);
-    public void deleteSalesInvoice(@PathVariable(name = "id") Long id, String schemaName);
-    public List<SalesInvoice> getSalesInvoiceByYear(@PathVariable(name = "year") int year);
+     SalesInvoice addSalesInvoice(Long id,SalesInvoice salesInvoice, String schemaName);
+     List<SalesInvoice> getAllSalesInvoice();
+     SalesInvoice editSalesInvoice( Long id,  SalesInvoice salesInvoice, String schemaName);
+     void deleteSalesInvoice( Long id, String schemaName);
+     Page<SalesInvoice> getSalesInvoiceByYear( int page, int size, int year, String schemaName);
 }

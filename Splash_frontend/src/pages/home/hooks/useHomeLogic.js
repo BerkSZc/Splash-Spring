@@ -48,10 +48,10 @@ export const useHomeLogic = () => {
         await Promise.all([
           getAllCompanies(),
           getAllCustomers(),
-          getReceivedCollectionsByYear(year),
-          getPaymentCollectionsByYear(year),
-          getPurchaseInvoiceByYear(year),
-          getSalesInvoicesByYear(year),
+          getReceivedCollectionsByYear(0, 999, year, tenant),
+          getPaymentCollectionsByYear(0, 999, year, tenant),
+          getPurchaseInvoiceByYear(0, 999, year, tenant),
+          getSalesInvoicesByYear(0, 999, year, tenant),
         ]);
         if (ignore) return;
       } catch (error) {

@@ -177,11 +177,11 @@ export const useClientLogic = () => {
     try {
       setSelectedCustomerForStatement(updatedCustomer);
       await Promise.allSettled([
-        getSalesInvoicesByYear(year),
-        getPurchaseInvoiceByYear(year),
-        getPaymentCollectionsByYear(year),
-        getReceivedCollectionsByYear(year),
-        getPayrollByYear(year),
+        getSalesInvoicesByYear(0, 999, year, tenant),
+        getPurchaseInvoiceByYear(0, 999, year, tenant),
+        getPaymentCollectionsByYear(0, 999, year, tenant),
+        getReceivedCollectionsByYear(0, 999, year, tenant),
+        getPayrollByYear(0, 999, year, tenant),
       ]);
       setShowPrintModal(true);
     } catch (error) {

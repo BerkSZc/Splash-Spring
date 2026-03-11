@@ -4,6 +4,8 @@ import { axiosInstance } from "../lib/axios";
 
 export const usePurchaseInvoice = create((set) => ({
   purchase: [],
+  purchaseTotalPages: 0,
+  currentPage: 0,
   loading: false,
 
   addPurchaseInvoice: async (id, newPurchaseInvoice, schemaName) => {
@@ -69,11 +71,17 @@ export const usePurchaseInvoice = create((set) => ({
       set({ loading: false });
     }
   },
-  getPurchaseInvoiceByYear: async (year) => {
+  getPurchaseInvoiceByYear: async (page = 0, size = 20, year, schemaName) => {
     set({ loading: true, purchase: [] });
     try {
-      const res = await axiosInstance.get(`/purchase/find-year/${year}`);
-      set({ purchase: res.data });
+      const res = await axiosInstance.get(`/purchase/find-by-year`, {
+        params: { page, size, year, schemaName },
+      });
+      set({
+        purchase: res.data.content,
+        purchaseTotalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
     } catch (error) {
       set({ purchase: [] });
       throw error;

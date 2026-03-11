@@ -4,6 +4,7 @@ import com.berksozcu.controller.IReceivedCollectionController;
 import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.service.IReceivedCollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,8 +44,11 @@ public class ReceivedCollectionControllerImpl implements IReceivedCollectionCont
     }
 
     @Override
-    @GetMapping("/find-year/{year}")
-    public List<ReceivedCollection> getReceivedCollectionByYear(@PathVariable(name = "year") int year) {
-        return receivedCollectionService.getReceivedCollectionsByYear(year);
+    @GetMapping("/find-by-year")
+    public Page<ReceivedCollection> getReceivedCollectionByYear(@RequestParam(defaultValue = "0") int page,
+                                                                @RequestParam(defaultValue = "20") int size,
+                                                                @RequestParam int year,
+                                                                @RequestParam String schemaName) {
+        return receivedCollectionService.getReceivedCollectionsByYear(page, size, year, schemaName);
     }
 }

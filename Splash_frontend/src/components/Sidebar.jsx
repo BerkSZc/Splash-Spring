@@ -94,12 +94,12 @@ export default function Sidebar() {
 
         <div className="flex-1" />
 
-        {isAuthenticated && (
-          <div className="flex items-center gap-2">
-            <CompanyDropDown />
-            <YearDropdown />
-          </div>
-        )}
+        {/* {!isAuthenticated && ( */}
+        <div className="flex items-center gap-2">
+          <CompanyDropDown />
+          <YearDropdown />
+        </div>
+        {/* // )} */}
       </header>
 
       <div

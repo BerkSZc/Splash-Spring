@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 
 export const useSalesInvoice = create((set) => ({
   sales: [],
+  salesTotalPages: 0,
+  currentPage: 0,
   loading: false,
 
   addSalesInvoice: async (id, newSalesInvoice, schemaName) => {
@@ -66,11 +68,17 @@ export const useSalesInvoice = create((set) => ({
     }
   },
 
-  getSalesInvoicesByYear: async (year) => {
+  getSalesInvoicesByYear: async (page = 0, size = 20, year, schemaName) => {
     set({ loading: true, sales: [] });
     try {
-      const res = await axiosInstance.get(`/sales/find-year/${year}`);
-      set({ sales: res.data });
+      const res = await axiosInstance.get(`/sales/find-by-year`, {
+        params: { page, size, year, schemaName },
+      });
+      set({
+        sales: res.data.content,
+        salesTotalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
     } catch (error) {
       set({ sales: [] });
       throw error;

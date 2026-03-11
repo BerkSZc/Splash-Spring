@@ -17,6 +17,10 @@ import com.berksozcu.service.IPayrollService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -166,10 +170,15 @@ public class PayrollServiceImpl implements IPayrollService {
     }
 
     @Override
-    public List<Payroll> getPayrollsByYear(int year) {
+    public Page<Payroll> getPayrollsByYear(int page, int size, int year, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return payrollRepository.findByTransactionDateBetween(start, end);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
+
+        return payrollRepository.findByCompanyAndTransactionDateBetween(company, start, end, pageable);
     }
 
     private void updateBalance( Payroll newPayroll, OpeningVoucher voucher) {

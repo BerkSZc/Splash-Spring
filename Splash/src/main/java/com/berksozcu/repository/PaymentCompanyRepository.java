@@ -1,8 +1,11 @@
 package com.berksozcu.repository;
 
 import com.berksozcu.entites.collections.PaymentCompany;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,4 +33,7 @@ public interface PaymentCompanyRepository extends JpaRepository<PaymentCompany, 
     void deleteByCompanyIdAndDateBetween(@Param("companyId") Long companyId,
                                          @Param("start") LocalDate start,
                                          @Param("end") LocalDate end);
+
+    Page<PaymentCompany> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end,
+                                                     Pageable pageable);
 }
