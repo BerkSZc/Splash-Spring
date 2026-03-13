@@ -1,6 +1,7 @@
 import MaterialSearchSelect from "../../../components/MaterialSearchSelect";
 import MaterialPriceTooltip from "../../../components/MaterialPriceTooltip";
 import CustomerSearchSelect from "../../../components/CustomerSearchSelect";
+import { useEffect } from "react";
 
 export default function InvoiceEditModal({
   form,
@@ -17,8 +18,18 @@ export default function InvoiceEditModal({
   onSave,
   formatNumber,
 }) {
+  useEffect(() => {
+    const handleF2Key = (e) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        onSave();
+      }
+    };
+    window.addEventListener("keydown", handleF2Key);
+    return () => window.removeEventListener("keydown", handleF2Key);
+  }, [onSave]);
   return (
-    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md ">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[1300px] min-h-[80vh] max-h-[95vh] overflow-y-auto shadow-2xl relative">
         <h2 className="text-3xl font-extrabold mb-8 text-white flex items-center gap-3">
           <span className="p-2 bg-blue-600 rounded-xl text-xl">📝</span>Faturayı
@@ -139,7 +150,9 @@ export default function InvoiceEditModal({
                         if (e.key === "Enter") {
                           e.preventDefault();
                           e.stopPropagation();
-                          addItem();
+                          if (i === form.items.length - 1) {
+                            addItem();
+                          }
                         }
                       }}
                       onChange={(e) => {
@@ -171,7 +184,9 @@ export default function InvoiceEditModal({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
-                            addItem();
+                            if (i === form.items.length - 1) {
+                              addItem();
+                            }
                           }
                         }}
                         onChange={(e) => {
@@ -198,7 +213,9 @@ export default function InvoiceEditModal({
                         if (e.key === "Enter") {
                           e.preventDefault();
                           e.stopPropagation();
-                          addItem();
+                          if (i === form.items.length - 1) {
+                            addItem();
+                          }
                         }
                       }}
                       onChange={(e) => onItemChange(i, e)}
@@ -222,7 +239,9 @@ export default function InvoiceEditModal({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
-                            addItem();
+                            if (i === form.items.length - 1) {
+                              addItem();
+                            }
                           }
                         }}
                         onChange={(e) => {

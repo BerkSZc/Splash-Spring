@@ -59,7 +59,7 @@ export default function InvoicePrintPreview({
     : printItem?.date;
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-[200] backdrop-blur-sm p-4 md:p-10 text-left">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-black/90 flex justify-center items-center z-[9999] backdrop-blur-sm md:p-10 text-left">
       <div className="bg-[#1a1f2e] border border-gray-800 w-full max-w-5xl max-h-[95vh] rounded-[2rem] flex flex-col overflow-hidden shadow-2xl">
         {/* Header - Kontrol Paneli */}
         <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">

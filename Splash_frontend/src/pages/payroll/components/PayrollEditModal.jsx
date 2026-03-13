@@ -9,7 +9,7 @@ export default function PayrollEditModal({
   onSave,
 }) {
   return (
-    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[1200px] shadow-2xl relative">
         <h2
           className={`text-3xl font-extrabold mb-10 text-white flex items-center gap-3`}

@@ -4,6 +4,7 @@ import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
+import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
 import com.berksozcu.entites.payroll.Payroll;
@@ -214,8 +215,9 @@ public class XmlExportService {
             mXml.setCOMPANY_CODE(m.getCompany().getId());
             mXml.setARCHIVED(m.isArchived());
             mXml.setPURCHASE_PRICE(safeGet(m.getPurchasePrice()).setScale(2, RoundingMode.HALF_UP).toString());
+           mXml.setPURCHASE_CURRENCY(Objects.requireNonNullElse(m.getPurchaseCurrency(), Currency.TRY));
             mXml.setSALES_PRICE(safeGet(m.getSalesPrice()).setScale(2, RoundingMode.HALF_UP).toString());
-
+           mXml.setSALES_CURRENCY(Objects.requireNonNullElse(m.getSalesCurrency(), Currency.TRY));
             materialXmlList.add(mXml);
         }
         rootXml.setItems(materialXmlList);

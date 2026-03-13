@@ -107,7 +107,9 @@ export default function InvoiceItemsTable({
                         if (e.key === "Enter") {
                           e.preventDefault();
                           e.stopPropagation();
-                          onAddItem(mode);
+                          if (i === items.length - 1) {
+                            onAddItem(mode);
+                          }
                         }
                       }}
                       onChange={(e) => {
@@ -139,7 +141,9 @@ export default function InvoiceItemsTable({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
-                            onAddItem(mode);
+                            if (i === items.length - 1) {
+                              onAddItem(mode);
+                            }
                           }
                         }}
                         onChange={(e) => {
@@ -168,7 +172,9 @@ export default function InvoiceItemsTable({
                         if (e.key === "Enter") {
                           e.preventDefault();
                           e.stopPropagation();
-                          onAddItem(mode);
+                          if (i === items.length - 1) {
+                            onAddItem(mode);
+                          }
                         }
                       }}
                       onChange={(e) =>
@@ -199,7 +205,9 @@ export default function InvoiceItemsTable({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
-                            onAddItem(mode);
+                            if (i === items.length - 1) {
+                              onAddItem(mode);
+                            }
                           }
                         }}
                         onChange={(e) => {
