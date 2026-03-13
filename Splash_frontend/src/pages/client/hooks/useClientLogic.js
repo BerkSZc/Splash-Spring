@@ -133,7 +133,7 @@ export const useClientLogic = () => {
   ]);
 
   useEffect(() => {
-    if (editClient || showPrintModal) {
+    if (editClient || showPrintModal || showArchiveModal) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -142,7 +142,7 @@ export const useClientLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [editClient, showPrintModal]);
+  }, [editClient, showPrintModal, showArchiveModal]);
 
   useEffect(() => {
     const handleCloseModal = (event) => {

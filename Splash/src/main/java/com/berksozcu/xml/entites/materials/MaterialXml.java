@@ -1,5 +1,6 @@
 package com.berksozcu.xml.entites.materials;
 
+import com.berksozcu.entites.material.Currency;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -24,8 +25,14 @@ public class MaterialXml {
     @XmlElement(name = "PURCHASE_PRICE")
     private String PURCHASE_PRICE;
 
+    @XmlElement(name = "PURCHASE_CURRENCY")
+    private Currency PURCHASE_CURRENCY;
+
     @XmlElement(name = "SALES_PRICE")
     private String SALES_PRICE;
+
+    @XmlElement(name = "SALES_CURRENCY")
+    private Currency SALES_CURRENCY;
 
     @XmlElement(name = "ARCHIVED")
     private Boolean ARCHIVED;

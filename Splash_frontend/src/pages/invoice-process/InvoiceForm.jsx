@@ -2,6 +2,7 @@ import { useInvoiceLogic } from "./hooks/useInvoiceLogic.js";
 import CustomerSearchSelect from "../../components/CustomerSearchSelect";
 import InvoiceItemsTable from "./components/InvoiceItemsTable";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
+import { useEffect } from "react";
 
 export default function InvoiceForm() {
   const { state, handlers } = useInvoiceLogic();
@@ -11,6 +12,17 @@ export default function InvoiceForm() {
   const actualCalc = state?.currentCalc || { total: 0, kdv: 0, grandTotal: 0 };
   const actualCustomers = state?.customers || [];
   const actualMaterials = state?.materials || [];
+
+  useEffect(() => {
+    const handleF2Key = (e) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        handlers.submitForm(e);
+      }
+    };
+    window.addEventListener("keydown", handleF2Key);
+    return () => window.removeEventListener("keydown", handleF2Key);
+  }, [handlers]);
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
       {state.isLoading && (

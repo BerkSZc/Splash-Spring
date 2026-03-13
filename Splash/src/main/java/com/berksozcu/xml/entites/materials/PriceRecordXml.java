@@ -1,5 +1,6 @@
 package com.berksozcu.xml.entites.materials;
 
+import com.berksozcu.entites.material.Currency;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -13,4 +14,7 @@ public class PriceRecordXml {
 
     @XmlElement(name = "PRICE")
     private String price;
+
+    @XmlElement(name = "CURRENCY")
+    private Currency currency;
 }

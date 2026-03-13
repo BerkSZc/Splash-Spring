@@ -644,7 +644,6 @@ public class XmlImportService {
             if (unitCode != null) {
                 try {
                     material.setUnit(MaterialUnit.valueOf(m.getUNITSET_CODE()));
-
                 } catch (IllegalArgumentException e) {
                     material.setUnit(MaterialUnit.ADET);
                 }
@@ -653,7 +652,9 @@ public class XmlImportService {
             material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
             material.setCompany(getCompany(schemaName));
             material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+            material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
             material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+            material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
             materialRepository.save(material);
 
             existingMaterials.add(code);
@@ -677,10 +678,10 @@ public class XmlImportService {
                         BigDecimal price = safeGet(parseBigDecimal(r.getPrice()));
                         if (isPurchase) {
                             material.setPurchasePrice(price);
-                            material.setPurchaseCurrency(Currency.EUR);
+                            material.setPurchaseCurrency(Objects.requireNonNullElse(r.getCurrency(), Currency.TRY));
                         } else {
                             material.setSalesPrice(price);
-                            material.setSalesCurrency(Currency.EUR);
+                            material.setSalesCurrency(Objects.requireNonNullElse(r.getCurrency(), Currency.TRY));
                         }
                         materialRepository.save(material);
                     }
