@@ -1,6 +1,23 @@
-📦 Stok & Fatura Yönetim Sistemi
+# 🚀 SPLASH - Matbaa ve Muhasebe Yönetim Sistemi
 
-Modern Malzeme Yönetimi, Fatura Takibi, Tahsilat ve Ödeme Kayıtları İçin Tam Entegre Çözüm
+SPLASH, matbaalar ve küçük/orta ölçekli işletmeler için geliştirilmiş, malzeme yönetimi faturalandırmaya ve şirkterler arası geçişe kadar tüm süreci uçtan uca yöneten modern bir .exe uygulamasıdır.
+
+## 🚀 Kurulum
+
+1.  **Projeyi klonlayın:**
+    ```bash
+    git clone [https://github.com/BerkSZc/Splash-Spring.git)
+    ```
+2.  **Frontend bağımlılıklarını kurun:**
+    ```bash
+    cd frontend
+    npm install
+    npm start
+    ```
+3.  **Backend'i çalıştırın:**
+    * `application.properties` dosyasındaki veritabanı ayarlarını yapın.
+    * Maven projesini build edin ve çalıştırın.
+
 
 🧭 Projenin Amacı
 
@@ -19,11 +36,10 @@ Backend
 
 Java 17
 Spring Boot
-Spring Data JPA (Hibernate)
+Spring Data JPA
 Lombok
 PostgresSQL
 RESTful API mimarisi
-
 
 Frontend
 
@@ -38,6 +54,8 @@ Satın alma faturası ekleme / düzenleme / silme
 Satış faturası ekleme / düzenleme / silme
 
 Müşteri bakiyesi ile entegre çalışan faturalama sistemi
+
+Şirketler arası kolay geçişle hızlı işlem yapılabilir.
 
 💰 Tahsilat & Ödeme Takibi
 
@@ -57,7 +75,6 @@ Son satın alma fiyatları listesi
 
 Son satış fiyatları listesi
 
-Faturaya malzeme eklerken sağ tık ile geçmiş fiyat görüntüleme
 
 👥 Müşteri Yönetimi
 
@@ -67,35 +84,6 @@ Müşteriye özel bakiye takibi
 
 Müşteriye bağlı fatura ve tahsilat geçmişleri
 
-📊 Otomasyon & İş Kuralları
-
-Fatura eklendiğinde müşteri bakiyesinin otomatik güncellenmesi
-
-Fatura silindiğinde bakiyenin geri alınması
-
-MaterialPriceHistory ile fiyatların otomatik arşivlenmesi
-
-🗂 Veritabanı Yapısı
-
-Projede aşağıdaki temel tablolar bulunmaktadır:
-
-customer
-
-material
-
-purchase_invoice
-
-sales_invoice
-
-purchase_invoice_item
-
-sales_invoice_item
-
-received_collection (Alınan Tahsilat)
-
-payment_company (Firmaya Ödeme)
-
-material_price_history (Malzeme fiyat geçmişi)
 
 🖥 Arayüz Özellikleri
 ✔ Modern ve kullanıcı dostu arayüz
@@ -113,14 +101,3 @@ Kalem eklerken toplam tutar anlık güncellenir.
 ✔ Arama ve filtreleme
 
 Fatura no, müşteri adı veya tarihe göre arama yapılabilir.
-
-🚀 Kurulum
-Backend
-cd backend
-mvn clean install
-mvn spring-boot:run
-
-Frontend
-cd frontend
-npm install
-npm run dev
