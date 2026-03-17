@@ -31,6 +31,7 @@ export const usePayrollLogic = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [viewingPayroll, setViewingPayroll] = useState(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
   const [type, setType] = useState(() => {
@@ -91,7 +92,7 @@ export const usePayrollLogic = () => {
     type === "cheque_in" || type === "cheque_out" ? "ÇEK" : "SENET";
 
   useEffect(() => {
-    if (deleteTarget || editing) {
+    if (deleteTarget || editing || viewingPayroll) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -100,7 +101,7 @@ export const usePayrollLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [deleteTarget, editing]);
+  }, [deleteTarget, editing, viewingPayroll]);
 
   const currentTheme = useMemo(() => {
     switch (type) {
@@ -319,6 +320,34 @@ export const usePayrollLogic = () => {
     });
   };
 
+  const handleView = (item) => {
+    setViewingPayroll(item);
+    setContextMenu(null);
+  };
+
+  const handleContextMenu = (e, item) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setSelectedId(item.id);
+
+    const menuWidth = 180;
+    const menuHeight = 150;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x -= menuWidth;
+    }
+
+    if (y + menuHeight > window.innerHeight) {
+      y -= menuHeight;
+    }
+
+    setContextMenu({ x, y, item });
+  };
+
   const closeEdit = () => {
     setEditing(null);
     setForm({
@@ -361,7 +390,6 @@ export const usePayrollLogic = () => {
   const formatNumber = (val) => {
     if (!val && val !== 0) return "";
 
-    // Önce parseNumber ile temiz sayıya çevir
     const cleaned = typeof val === "string" ? parseNumber(val) : val;
     const num = parseFloat(cleaned);
 
@@ -401,6 +429,7 @@ export const usePayrollLogic = () => {
       contextMenu,
       page,
       totalPages: payrollTotalPages,
+      viewingPayroll,
     },
     handlers: {
       setType,
@@ -417,8 +446,11 @@ export const usePayrollLogic = () => {
       formatDate,
       setIsOpen,
       setSelectedId,
+      handleContextMenu,
       setContextMenu,
       setPage,
+      setViewingPayroll,
+      handleView,
     },
   };
 };

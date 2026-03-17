@@ -1,10 +1,28 @@
+import { useEffect } from "react";
+
 export default function ContextMenu({
   contextMenu,
   onEdit,
   onDelete,
   onClose,
+  onSelectCollection,
+  onView,
 }) {
-  if (!contextMenu) return null; // ✅ erken return
+  useEffect(() => {
+    const handleAction = () => {
+      onClose();
+      onSelectCollection(null);
+    };
+    window.addEventListener("scroll", handleAction, { passive: true });
+    window.addEventListener("wheel", handleAction, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleAction);
+      window.removeEventListener("wheel", handleAction);
+    };
+  }, [onClose, onSelectCollection]);
+
+  if (!contextMenu) return null;
 
   return (
     <div
@@ -32,6 +50,15 @@ export default function ContextMenu({
           className="w-full text-left px-4 py-3 hover:bg-red-600/20 text-red-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
         >
           <span>🗑️</span> Sil
+        </button>
+        <button
+          onClick={() => {
+            onView(contextMenu.item);
+            onClose();
+          }}
+          className="w-full text-left px-4 py-3 hover:bg-yellow-600/20 text-yellow-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
+        >
+          <span>👁️</span> İncele
         </button>
       </div>
     </div>

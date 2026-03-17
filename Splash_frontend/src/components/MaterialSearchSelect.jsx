@@ -31,6 +31,7 @@ export default function MaterialSearchSelect({
         );
       });
   }, [materials, search]);
+
   useEffect(() => {
     if (open && inputRef.current) {
       const updatePos = () => {
@@ -88,7 +89,6 @@ export default function MaterialSearchSelect({
           setSearch(e.target.value);
           setOpen(true);
         }}
-        // Koyu Tema Sınıfları
         className="w-full bg-gray-900/60 border-2 border-gray-800 text-white rounded-xl px-4 py-2 focus:border-blue-500 focus:outline-none transition-all placeholder-gray-500"
       />
 

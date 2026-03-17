@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 export const MaterialContextMenu = ({
   contextMenu,
   onEdit,
@@ -10,7 +12,23 @@ export const MaterialContextMenu = ({
   setArchiveConfirmOpen,
   selectionMode,
   showArchived,
+  onSelectMaterial,
+  onView,
 }) => {
+  useEffect(() => {
+    const handleAction = () => {
+      onClose();
+      onSelectMaterial(null);
+    };
+    window.addEventListener("wheel", handleAction, { passive: true });
+    window.addEventListener("scroll", handleAction, { passive: true });
+
+    return () => {
+      window.removeEventListener("wheel", handleAction);
+      window.removeEventListener("scroll", handleAction);
+    };
+  }, [onClose, onSelectMaterial]);
+
   if (!contextMenu) return null;
 
   return (
@@ -72,6 +90,15 @@ export const MaterialContextMenu = ({
             >
               <span>📦</span>{" "}
               {contextMenu.item.archived ? "Arşivden Çıkar" : "Arşivle"}
+            </button>
+            <button
+              onClick={() => {
+                onView(contextMenu.item);
+                onClose();
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-blue-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
+            >
+              <span>👁️</span> İncele
             </button>
           </>
         )}

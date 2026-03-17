@@ -6,6 +6,7 @@ import ArchiveConfirmModal from "../../components/ArchiveConfirmModal.jsx";
 import ContextMenu from "./components/ContextMenu";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import ClientEditModal from "./components/ClientEditModal.jsx";
+import ClientViewModal from "./components/ClientViewModal.jsx";
 
 export default function ClientsPage() {
   const { state, handlers } = useClientLogic();
@@ -153,16 +154,7 @@ export default function ClientsPage() {
                 );
               }
             }}
-            onContextMenu={(e, c) => {
-              e.preventDefault();
-              handlers.setContextMenu({
-                x: e.clientX,
-                y: e.clientY,
-                customer: c,
-              });
-              if (!state.selectedCustomers.includes(c.id))
-                handlers.setSelectedCustomers([c.id]);
-            }}
+            onContextMenu={(e, c) => handlers.handleContextMenu(e, c)}
             vouchers={state.vouchers}
           />
         </div>
@@ -220,6 +212,8 @@ export default function ClientsPage() {
             handlers.handleOpenStatement(c);
             handlers.setContextMenu(null);
           }}
+          onSelectedCustomer={handlers.setSelectedCustomers}
+          onView={handlers.handleView}
         />
       )}
 
@@ -230,6 +224,15 @@ export default function ClientsPage() {
           selectedCustomer={state.selectedCustomerForStatement}
           statementData={state.statementData}
           year={state.year}
+        />
+      )}
+
+      {state.viewingClient && (
+        <ClientViewModal
+          customer={state.viewingClient}
+          vouchers={state.vouchers}
+          formatNumber={state.formatNumber}
+          onClose={() => handlers.setViewingClient(null)}
         />
       )}
     </div>

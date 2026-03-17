@@ -33,6 +33,7 @@ export const useMaterialLogic = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [archiveTargetId, setArchiveTargetId] = useState(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [viewingMaterial, setViewingMaterial] = useState(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
@@ -67,7 +68,7 @@ export const useMaterialLogic = () => {
   }, [showArchived]);
 
   useEffect(() => {
-    if (editId || deleteConfirmId || archiveConfirmOpen) {
+    if (editId || deleteConfirmId || archiveConfirmOpen || viewingMaterial) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -75,7 +76,7 @@ export const useMaterialLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [editId, deleteConfirmId, archiveConfirmOpen]);
+  }, [editId, deleteConfirmId, archiveConfirmOpen, viewingMaterial]);
 
   useEffect(() => {
     let ignore = false;
@@ -210,16 +211,36 @@ export const useMaterialLogic = () => {
     setIsOpen(false);
   };
 
+  const handleView = (item) => {
+    setViewingMaterial(item);
+    setMenuItemId(null);
+  };
+
   const handleContextMenu = (e, item) => {
     e.preventDefault();
     e.stopPropagation();
     if (!selectionMode) {
       setMenuItemId(item.id);
     }
+
+    const menuWidth = 220;
+    const menuHeight = 190;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x -= menuWidth;
+    }
+
+    if (y + menuHeight > window.innerHeight) {
+      y -= menuHeight;
+    }
+
     setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      item: item,
+      x,
+      y,
+      item,
     });
   };
 
@@ -276,6 +297,7 @@ export const useMaterialLogic = () => {
       page,
       totalPages,
       currentPage,
+      viewingMaterial,
     },
     refs: { formRef },
     handlers: {
@@ -301,6 +323,8 @@ export const useMaterialLogic = () => {
       setArchiveTargetId,
       setPage,
       handleSearch,
+      setViewingMaterial,
+      handleView,
     },
   };
 };

@@ -73,11 +73,7 @@ export default function FinancialTable({
                   <tr
                     key={item.id}
                     onClick={() => onSelectRow(item.id)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      onSelectRow(item.id);
-                      onContextMenu({ x: e.clientX, y: e.clientY, item });
-                    }}
+                    onContextMenu={(e) => onContextMenu(e, item)}
                     className={`financial-row transition-all cursor-pointer ${
                       selectedId === item.id
                         ? "bg-blue-500/20 border-l-4 border-blue-500"

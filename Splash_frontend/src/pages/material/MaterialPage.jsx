@@ -5,6 +5,7 @@ import LoadingScreen from "../../components/LoadingScreen.jsx";
 import MaterialEditModal from "./components/MaterialEditModal.jsx";
 import { MaterialContextMenu } from "./components/MaterialContextMenu.jsx";
 import ArchiveConfirmModal from "../../components/ArchiveConfirmModal.jsx";
+import MaterialViewModal from "./components/MaterialViewModal.jsx";
 
 export default function MaterialPage() {
   const { state, refs, handlers } = useMaterialLogic();
@@ -171,6 +172,8 @@ export default function MaterialPage() {
           setDeleteConfirmId={handlers.setDeleteConfirmId}
           setArchiveAction={handlers.setArchiveAction}
           setArchiveConfirmOpen={handlers.setArchiveConfirmOpen}
+          onSelectMaterial={handlers.setMenuItemId}
+          onView={handlers.handleView}
         />
       )}
 
@@ -193,6 +196,14 @@ export default function MaterialPage() {
           count={state.selectionMode ? state.selectedIds.length : 1}
         />
       )}
+
+      {state.viewingMaterial && (
+        <MaterialViewModal
+          item={state.viewingMaterial}
+          onClose={() => handlers.setViewingMaterial(null)}
+        />
+      )}
+
       {state.totalPages > 1 && (
         <div className="flex justify-center items-center gap-3 pt-4">
           <button

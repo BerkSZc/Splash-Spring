@@ -84,9 +84,7 @@ export default function PayrollTable({
                 key={item.id}
                 onClick={() => onSelectRow(item.id)}
                 onContextMenu={(e) => {
-                  e.preventDefault();
-                  onSelectRow(item.id);
-                  onContextMenu({ x: e.clientX, y: e.clientY, item });
+                  onContextMenu(e, item);
                 }}
                 className={`payroll-row transition-all cursor-pointer ${
                   selectedId === item.id

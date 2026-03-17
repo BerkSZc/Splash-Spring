@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 export default function ContextMenu({
   contextMenu,
   isAllArchived,
@@ -7,7 +9,26 @@ export default function ContextMenu({
   onEdit,
   onArchiveClick,
   onOpenStatement,
+  onSelectedCustomer,
+  onView,
 }) {
+  useEffect(() => {
+    const handleAction = () => {
+      onClose();
+      if (!selectionMode) {
+        onSelectedCustomer([]);
+      }
+    };
+
+    window.addEventListener("scroll", handleAction, { passive: true });
+    window.addEventListener("wheel", handleAction, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleAction);
+      window.removeEventListener("wheel", handleAction);
+    };
+  }, [onClose, onSelectedCustomer]);
+
   if (!contextMenu) return null;
 
   return (
@@ -53,6 +74,15 @@ export default function ContextMenu({
               className="w-full text-left px-4 py-3 hover:bg-amber-600/20 text-amber-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
             >
               <span>📦</span> {isAllArchived ? "Arşivden Çıkar" : "Arşivle"}
+            </button>
+            <button
+              onClick={() => {
+                onView(contextMenu.customer);
+                onClose();
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-blue-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
+            >
+              <span>👁️</span> İncele
             </button>
           </>
         )}

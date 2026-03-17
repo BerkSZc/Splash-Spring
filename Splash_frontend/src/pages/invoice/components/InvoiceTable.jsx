@@ -1,9 +1,10 @@
-import { createPortal } from "react-dom";
+import ContextMenu from "./ContextMenu";
 
 export default function InvoiceTable({
   invoices,
   onEdit,
   onDelete,
+  onView,
   onPrint,
   year,
   formatDateToTR,
@@ -94,45 +95,20 @@ export default function InvoiceTable({
           </tbody>
         </table>
       </div>
-      {contextMenu &&
-        createPortal(
-          <div
-            className="fixed bg-[#0f172a] border border-gray-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-44 z-[9999] overflow-hidden backdrop-blur-xl context-menu-container"
-            style={{
-              top: `${contextMenu.y}px`,
-              left: `${contextMenu.x}px`,
-            }}
-          >
-            <button
-              onClick={() => {
-                onEdit(contextMenu.invoice);
-                setContextMenu(null);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-blue-500/20 text-blue-400 flex items-center gap-2"
-            >
-              ✏️ Düzenle
-            </button>
-            <button
-              onClick={() => {
-                onPrint(contextMenu.invoice);
-                setContextMenu(null);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-white/10 text-white flex items-center gap-2 border-t border-gray-800"
-            >
-              🖨️ Yazdır
-            </button>
-            <button
-              onClick={() => {
-                onDelete(contextMenu.invoice);
-                setContextMenu(null);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-red-500/20 text-red-400 flex items-center gap-2 border-t border-gray-800"
-            >
-              🗑️ Sil
-            </button>
-          </div>,
-          document.body,
-        )}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          invoice={contextMenu.invoice}
+          contextMenu={contextMenu}
+          onClose={() => setContextMenu(null)}
+          onEdit={onEdit}
+          onPrint={onPrint}
+          onDelete={onDelete}
+          onView={onView}
+          onSelectInvoice={onSelectInvoice}
+        />
+      )}
     </div>
   );
 }

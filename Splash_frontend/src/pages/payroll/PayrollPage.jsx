@@ -4,6 +4,7 @@ import PayrollTable from "./components/PayrollTable";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PayrollEditModal from "./components/PayrollEditModal.jsx";
 import ContextMenu from "./components/ContextMenu.jsx";
+import PayrollViewModal from "./components/PayrollViewModal.jsx";
 
 export default function PayrollPage() {
   const { state, handlers } = usePayrollLogic();
@@ -117,7 +118,7 @@ export default function PayrollPage() {
           formatDate={handlers.formatDate}
           selectedId={state.selectedId}
           onSelectRow={handlers.setSelectedId}
-          onContextMenu={handlers.setContextMenu}
+          onContextMenu={handlers.handleContextMenu}
         />
 
         {editing && (
@@ -131,15 +132,55 @@ export default function PayrollPage() {
           />
         )}
         <ContextMenu
-          deleteTarget={state.deleteTarget}
           contextMenu={state.contextMenu}
-          payrollType={payrollType}
-          setDeleteTarget={handlers.setDeleteTarget}
-          confirmDelete={handlers.confirmDelete}
           handleEditClick={handlers.handleEditClick}
           setContextMenu={handlers.setContextMenu}
           openDeleteModel={handlers.openDeleteModel}
+          onClose={() => handlers.setContextMenu(null)}
+          onSelectedPayroll={handlers.setSelectedId}
+          onView={handlers.handleView}
         />
+
+        {state.viewingPayroll && (
+          <PayrollViewModal
+            item={state.viewingPayroll}
+            currentTheme={currentTheme}
+            onClose={() => handlers.setViewingPayroll(null)}
+            formatDate={handlers.formatDate}
+          />
+        )}
+
+        {state.deleteTarget && (
+          <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md">
+            <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[2.5rem] w-[450px] shadow-2xl text-center">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-4 text-white">
+                Faturayı Sil
+              </h2>
+              <p className="mb-8 text-gray-400">
+                <b>{state.deleteTarget.fileNo}</b> numaralı {payrollType} kalıcı
+                olarak silinecektir. Emin misiniz?
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handlers.setDeleteTarget(null)}
+                  className="flex-1 px-6 py-4 bg-gray-800 text-gray-300 font-bold rounded-2xl hover:bg-gray-700"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  onClick={handlers.confirmDelete}
+                  className="flex-1 px-6 py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-500 shadow-lg"
+                >
+                  Evet, Sil
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {state.totalPages > 1 && (
           <div className="flex justify-center items-center gap-3 pt-4">
             <button
