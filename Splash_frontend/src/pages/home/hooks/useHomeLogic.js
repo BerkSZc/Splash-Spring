@@ -7,6 +7,7 @@ import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.j
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import { useCompany } from "../../../../backend/store/useCompany.js";
+import { useVoucher } from "../../../../backend/store/useVoucher.js";
 import toast from "react-hot-toast";
 
 export const useHomeLogic = () => {
@@ -26,16 +27,16 @@ export const useHomeLogic = () => {
     loading: salesLoading,
   } = useSalesInvoice();
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
+  const { getReceivedCollectionsByYear, loading: collectionsLoading } =
+    useReceivedCollection();
+  const { getPaymentCollectionsByYear, loading: paymentsLoading } =
+    usePaymentCompany();
+
   const {
-    collections,
-    getReceivedCollectionsByYear,
-    loading: collectionsLoading,
-  } = useReceivedCollection();
-  const {
-    payments,
-    getPaymentCollectionsByYear,
-    loading: paymentsLoading,
-  } = usePaymentCompany();
+    vouchers,
+    getAllOpeningVoucherByYear,
+    loading: vouchersLoading,
+  } = useVoucher();
 
   const { year } = useYear();
   const { tenant } = useTenant();
@@ -45,6 +46,7 @@ export const useHomeLogic = () => {
     const fetchData = async () => {
       if (!year || !tenant) return;
       try {
+        const dateString = `${year}-01-01`;
         await Promise.all([
           getAllCompanies(),
           getAllCustomers(),
@@ -52,6 +54,7 @@ export const useHomeLogic = () => {
           getPaymentCollectionsByYear(0, 999, year, tenant),
           getPurchaseInvoiceByYear(0, 999, year, tenant),
           getSalesInvoicesByYear(0, 999, year, tenant),
+          getAllOpeningVoucherByYear(dateString, tenant),
         ]);
         if (ignore) return;
       } catch (error) {
@@ -68,16 +71,29 @@ export const useHomeLogic = () => {
 
   // Finansal hesaplamalar
   const financialSummary = useMemo(() => {
-    const totalCredits = (Array.isArray(collections) ? collections : []).reduce(
-      (sum, c) => sum + Number(c?.price || 0),
-      0,
+    const voucherList = Array.isArray(vouchers) ? vouchers : [];
+
+    // 1. Önce sadece aktif (arşivlenmemiş) müşterileri filtrele
+    const activeVouchers = voucherList.filter(
+      (v) => v?.customer?.archived === false,
     );
-    const totalDebts = (Array.isArray(payments) ? payments : []).reduce(
-      (sum, p) => sum + Number(p?.price || 0),
-      0,
+
+    // 2. FinalBalance üzerinden grupla
+    return activeVouchers.reduce(
+      (acc, v) => {
+        const balance = Number(v?.finalBalance || 0);
+
+        if (balance > 0) {
+          acc.totalCredits += balance;
+        } else if (balance < 0) {
+          acc.totalDebts += Math.abs(balance);
+        }
+
+        return acc;
+      },
+      { totalDebts: 0, totalCredits: 0 },
     );
-    return { totalCredits, totalDebts };
-  }, [collections, payments]);
+  }, [vouchers]);
 
   const currentCompany = (Array.isArray(companies) ? companies : []).find(
     (c) => c?.schemaName === tenant,
@@ -92,7 +108,8 @@ export const useHomeLogic = () => {
     salesLoading ||
     customersLoading ||
     collectionsLoading ||
-    paymentsLoading;
+    paymentsLoading ||
+    vouchersLoading;
 
   return {
     state: {
