@@ -3,6 +3,7 @@ import InvoiceTable from "./components/InvoiceTable";
 import InvoiceEditModal from "./components/InvoiceEditModal";
 import InvoicePrintPreview from "./components/InvoicePrintPreview";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
+import InvoiceViewModal from "./components/InvoiceViewModal.jsx";
 
 export default function InvoicePage() {
   const { state, handlers } = useInvoicePageLogic();
@@ -88,6 +89,7 @@ export default function InvoicePage() {
           setContextMenu={handlers.setContextMenu}
           onContextMenu={handlers.handleContextMenu}
           onSelectInvoice={handlers.handleSelectInvoice}
+          onView={handlers.setViewingInvoice}
         />
 
         {/* MODALLAR */}
@@ -118,6 +120,14 @@ export default function InvoicePage() {
             printItem={state.printItem}
             onCancel={() => handlers.setPrintItem(null)}
             onExecutePrint={handlers.executePrint}
+          />
+        )}
+
+        {state.viewingInvoice && (
+          <InvoiceViewModal
+            invoice={state.viewingInvoice}
+            onClose={() => handlers.setViewingInvoice(null)}
+            formatNumber={state.formatNumber}
           />
         )}
 

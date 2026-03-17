@@ -43,6 +43,7 @@ export const useFinancialLogic = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [page, setPage] = useState(0);
+  const [viewingItem, setViewingItem] = useState(null);
   const PAGE_SIZE = 20;
   const [type, setType] = useState(() => {
     return localStorage.getItem("collection_type") || "payment";
@@ -61,7 +62,7 @@ export const useFinancialLogic = () => {
   };
 
   useEffect(() => {
-    if (editing || deleteTarget) {
+    if (editing || deleteTarget || viewingItem) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -70,7 +71,7 @@ export const useFinancialLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [editing, deleteTarget]);
+  }, [editing, deleteTarget, viewingItem]);
 
   const syncFinancialData = async () => {
     try {
@@ -197,6 +198,33 @@ export const useFinancialLogic = () => {
     setSelectedId((prev) => (prev === id ? null : id));
   };
 
+  const handleContextMenu = (e, item) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setSelectedId(item.id);
+
+    const menuWidth = 180;
+    const menuHeight = 150;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x -= menuWidth;
+    }
+
+    if (y + menuHeight > window.innerHeight) {
+      y -= menuHeight;
+    }
+
+    setContextMenu({
+      x,
+      y,
+      item,
+    });
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
 
@@ -316,6 +344,11 @@ export const useFinancialLogic = () => {
     }
   };
 
+  const handleView = (item) => {
+    setViewingItem(item);
+    setContextMenu(null);
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
@@ -387,6 +420,7 @@ export const useFinancialLogic = () => {
       totalPages:
         type === "received" ? collectionTotalPages : paymentTotalPages,
       page,
+      viewingItem,
     },
     handlers: {
       setType,
@@ -403,8 +437,11 @@ export const useFinancialLogic = () => {
       setIsOpen,
       setSelectedId,
       handleSelectRow,
+      handleContextMenu,
       setContextMenu,
       setPage,
+      setViewingItem,
+      handleView,
     },
   };
 };

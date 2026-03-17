@@ -64,6 +64,7 @@ export const useClientLogic = () => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [pendingArchiveIds, setPendingArchiveIds] = useState([]);
+  const [viewingClient, setViewingClient] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -133,7 +134,7 @@ export const useClientLogic = () => {
   ]);
 
   useEffect(() => {
-    if (editClient || showPrintModal || showArchiveModal) {
+    if (editClient || showPrintModal || showArchiveModal || viewingClient) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -142,7 +143,7 @@ export const useClientLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [editClient, showPrintModal, showArchiveModal]);
+  }, [editClient, showPrintModal, showArchiveModal, viewingClient]);
 
   useEffect(() => {
     const handleCloseModal = (event) => {
@@ -242,6 +243,31 @@ export const useClientLogic = () => {
     }
   };
 
+  const handleContextMenu = (e, customer) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!selectedCustomers.includes(customer.id)) {
+      setSelectedCustomers([customer.id]);
+    }
+
+    const menuWidth = 230;
+    const menuHeight = 190;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x -= menuWidth;
+    }
+
+    if (y + menuHeight > window.innerHeight) {
+      y -= menuHeight;
+    }
+
+    setContextMenu({ x, y, customer });
+  };
+
   const handleEdit = async (customer) => {
     if (customer.archived) return;
 
@@ -291,6 +317,11 @@ export const useClientLogic = () => {
     }
   };
 
+  const handleView = (customer) => {
+    setViewingClient(customer);
+    setContextMenu(null);
+  };
+
   const handleArchiveModalSubmit = async (ids) => {
     const archivedValue = archiveAction === "archive";
     try {
@@ -332,12 +363,20 @@ export const useClientLogic = () => {
         (v) => v?.customer?.id === b?.id,
       );
 
-      const balanceA = Number(voucherA?.finalBalance || 0);
-      const balanceB = Number(voucherB?.finalBalance || 0);
+      const valA = Number(voucherA?.finalBalance || 0);
+      const valB = Number(voucherB?.finalBalance || 0);
 
-      return sortDirection === "desc"
-        ? balanceB - balanceA
-        : balanceA - balanceB;
+      if (sortDirection === "desc") {
+        if (valA >= 0 && valB < 0) return -1;
+        if (valA < 0 && valB >= 0) return 1;
+
+        return Math.abs(valB) - Math.abs(valA);
+      } else {
+        if (valA < 0 && valB >= 0) return -1;
+        if (valA >= 0 && valB < 0) return 1;
+
+        return Math.abs(valB) - Math.abs(valA);
+      }
     });
   }, [customers, search, showArchived, vouchers, sortDirection]);
 
@@ -397,6 +436,7 @@ export const useClientLogic = () => {
       sortDirection,
       selectionMode,
       pendingArchiveIds,
+      viewingClient,
     },
     handlers: {
       handleChange,
@@ -416,8 +456,11 @@ export const useClientLogic = () => {
       setShowPrintModal,
       setIsOpen,
       setSortDirection,
+      handleContextMenu,
       setSelectionMode,
       setPendingArchiveIds,
+      setViewingClient,
+      handleView,
     },
   };
 };

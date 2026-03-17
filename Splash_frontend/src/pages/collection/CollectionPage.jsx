@@ -5,6 +5,7 @@ import DeleteConfirmModal from "./components/DeleteConfirmModal";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import FinancialTable from "./components/FinancialTable.jsx";
 import ContextMenu from "./components/ContextMenu.jsx";
+import CollectionViewModal from "./components/CollectionViewModal.jsx";
 
 export default function CollectionPage() {
   const { state, handlers } = useFinancialLogic();
@@ -85,7 +86,7 @@ export default function CollectionPage() {
           search={state.search}
           sortOrder={state.sortOrder}
           onSelectRow={handlers.handleSelectRow}
-          onContextMenu={handlers.setContextMenu}
+          onContextMenu={handlers.handleContextMenu}
           formatDate={handlers.formatDate}
           setSearch={handlers.setSearch}
           setSortOrder={handlers.setSortOrder}
@@ -116,7 +117,19 @@ export default function CollectionPage() {
         onEdit={handlers.handleEdit}
         onDelete={handlers.setDeleteTarget}
         onClose={() => handlers.setContextMenu(null)}
+        onSelectCollection={handlers.setSelectedId}
+        onView={handlers.handleView}
       />
+
+      {state.viewingItem && (
+        <CollectionViewModal
+          item={state.viewingItem}
+          type={type}
+          onClose={() => handlers.setViewingItem(null)}
+          formatDate={handlers.formatDate}
+        />
+      )}
+
       {state.totalPages > 1 && (
         <div className="flex justify-center items-center gap-3 pt-4">
           <button

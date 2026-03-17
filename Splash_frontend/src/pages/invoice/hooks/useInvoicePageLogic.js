@@ -38,6 +38,7 @@ export const useInvoicePageLogic = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [viewingInvoice, setViewingInvoice] = useState(null);
   const menuRef = useRef(null);
   const [printItem, setPrintItem] = useState(null);
   const [form, setForm] = useState(null);
@@ -55,7 +56,7 @@ export const useInvoicePageLogic = () => {
   }, [invoiceType]);
 
   useEffect(() => {
-    if (printItem || deleteTarget || editingInvoice) {
+    if (printItem || deleteTarget || editingInvoice || viewingInvoice) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -64,7 +65,7 @@ export const useInvoicePageLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [printItem, deleteTarget, editingInvoice]);
+  }, [printItem, deleteTarget, editingInvoice, viewingInvoice]);
 
   useEffect(() => {
     let ignore = false;
@@ -402,6 +403,10 @@ export const useInvoicePageLogic = () => {
     return Math.round((num + Number.EPSILON) * 100) / 100;
   };
 
+  const handleView = (invoice) => {
+    setViewingInvoice(invoice);
+  };
+
   const calculateRow = (price, qty, kdvRate) => {
     const p = Number(price) || 0;
     const q = Number(qty) || 0;
@@ -532,10 +537,11 @@ export const useInvoicePageLogic = () => {
 
   const handleContextMenu = (e, inv) => {
     e.preventDefault();
+    e.stopPropagation();
     setSelectedInvoiceId(inv?.id);
 
-    const menuWidth = 176;
-    const menuHeight = 130;
+    const menuWidth = 190;
+    const menuHeight = 180;
 
     const x =
       e.clientX + menuWidth > window.innerWidth
@@ -584,6 +590,7 @@ export const useInvoicePageLogic = () => {
       page,
       totalPages:
         invoiceType === "purchase" ? purchaseTotalPages : salesTotalPages,
+      viewingInvoice,
     },
     handlers: {
       toggleMenu,
@@ -607,6 +614,8 @@ export const useInvoicePageLogic = () => {
       setDeleteTarget,
       setContextMenu,
       setPage,
+      setViewingInvoice,
+      handleView,
     },
   };
 };
