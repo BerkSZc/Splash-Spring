@@ -157,9 +157,6 @@ export default function InvoicePrintPreview({
                     <tr key={idx} className="border-b border-gray-100">
                       <td className="py-3 px-2">
                         <div className="font-semibold text-gray-900">
-                          {item?.material?.code || ""}
-                        </div>
-                        <div className="text-[10px] text-gray-400 italic">
                           {item?.material?.comment || ""}
                         </div>
                       </td>

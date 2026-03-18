@@ -101,9 +101,6 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
                 <tr>
                   <td class="py-3 px-2">
                     <div class="font-semibold text-gray-900">${
-                      item?.material?.code || ""
-                    }</div>
-                    <div class="text-[10px] text-gray-400 mt-0.5 italic">${
                       item?.material?.comment || ""
                     }</div>
                   </td>

@@ -34,6 +34,7 @@ export const useMaterialLogic = () => {
   const [archiveTargetId, setArchiveTargetId] = useState(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [viewingMaterial, setViewingMaterial] = useState(null);
+  const [historyMaterialId, setHistoryMaterialId] = useState(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
@@ -68,7 +69,13 @@ export const useMaterialLogic = () => {
   }, [showArchived]);
 
   useEffect(() => {
-    if (editId || deleteConfirmId || archiveConfirmOpen || viewingMaterial) {
+    if (
+      editId ||
+      deleteConfirmId ||
+      archiveConfirmOpen ||
+      viewingMaterial ||
+      historyMaterialId
+    ) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -76,7 +83,13 @@ export const useMaterialLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [editId, deleteConfirmId, archiveConfirmOpen, viewingMaterial]);
+  }, [
+    editId,
+    deleteConfirmId,
+    archiveConfirmOpen,
+    viewingMaterial,
+    historyMaterialId,
+  ]);
 
   useEffect(() => {
     let ignore = false;
@@ -223,8 +236,8 @@ export const useMaterialLogic = () => {
       setMenuItemId(item.id);
     }
 
-    const menuWidth = 220;
-    const menuHeight = 190;
+    const menuWidth = 280;
+    const menuHeight = 260;
 
     let x = e.clientX;
     let y = e.clientY;
@@ -242,6 +255,12 @@ export const useMaterialLogic = () => {
       y,
       item,
     });
+  };
+
+  const handleShowHistory = (item) => {
+    setHistoryMaterialId(item.id);
+    setContextMenu(null);
+    setMenuItemId(null);
   };
 
   const handleDelete = async (id) => {
@@ -273,6 +292,17 @@ export const useMaterialLogic = () => {
     return val.replace(/\./g, "").replace(",", ".");
   };
 
+  const formatDateToTR = (dateString) => {
+    if (
+      !dateString ||
+      typeof dateString !== "string" ||
+      dateString.includes(".")
+    )
+      return dateString;
+    const [y, m, d] = dateString.split("-");
+    return `${d}.${m}.${y}`;
+  };
+
   const isLoading = materialsLoading;
 
   return {
@@ -298,6 +328,7 @@ export const useMaterialLogic = () => {
       totalPages,
       currentPage,
       viewingMaterial,
+      historyMaterialId,
     },
     refs: { formRef },
     handlers: {
@@ -325,6 +356,9 @@ export const useMaterialLogic = () => {
       handleSearch,
       setViewingMaterial,
       handleView,
+      setHistoryMaterialId,
+      handleShowHistory,
+      formatDateToTR,
     },
   };
 };

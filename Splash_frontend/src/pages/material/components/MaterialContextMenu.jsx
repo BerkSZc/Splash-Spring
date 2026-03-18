@@ -14,6 +14,7 @@ export const MaterialContextMenu = ({
   showArchived,
   onSelectMaterial,
   onView,
+  onShowHistory,
 }) => {
   useEffect(() => {
     const handleAction = () => {
@@ -99,6 +100,15 @@ export const MaterialContextMenu = ({
               className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-blue-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
             >
               <span>👁️</span> İncele
+            </button>
+            <button
+              onClick={() => {
+                onShowHistory(contextMenu.item);
+                onClose();
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-green-600/20 text-green-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
+            >
+              <span>📊</span> Malzeme Hareketleri
             </button>
           </>
         )}

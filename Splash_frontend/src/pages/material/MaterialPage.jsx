@@ -6,6 +6,7 @@ import MaterialEditModal from "./components/MaterialEditModal.jsx";
 import { MaterialContextMenu } from "./components/MaterialContextMenu.jsx";
 import ArchiveConfirmModal from "../../components/ArchiveConfirmModal.jsx";
 import MaterialViewModal from "./components/MaterialViewModal.jsx";
+import MaterialHistoryModal from "./components/MaterialHistoryModal.jsx";
 
 export default function MaterialPage() {
   const { state, refs, handlers } = useMaterialLogic();
@@ -174,6 +175,7 @@ export default function MaterialPage() {
           setArchiveConfirmOpen={handlers.setArchiveConfirmOpen}
           onSelectMaterial={handlers.setMenuItemId}
           onView={handlers.handleView}
+          onShowHistory={handlers.handleShowHistory}
         />
       )}
 
@@ -201,6 +203,14 @@ export default function MaterialPage() {
         <MaterialViewModal
           item={state.viewingMaterial}
           onClose={() => handlers.setViewingMaterial(null)}
+        />
+      )}
+
+      {state.historyMaterialId && (
+        <MaterialHistoryModal
+          materialId={state.historyMaterialId}
+          onClose={() => handlers.setHistoryMaterialId(null)}
+          formatDate={handlers.formatDateToTR}
         />
       )}
 
