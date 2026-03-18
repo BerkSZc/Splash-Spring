@@ -73,12 +73,10 @@ export const useHomeLogic = () => {
   const financialSummary = useMemo(() => {
     const voucherList = Array.isArray(vouchers) ? vouchers : [];
 
-    // 1. Önce sadece aktif (arşivlenmemiş) müşterileri filtrele
     const activeVouchers = voucherList.filter(
       (v) => v?.customer?.archived === false,
     );
 
-    // 2. FinalBalance üzerinden grupla
     return activeVouchers.reduce(
       (acc, v) => {
         const balance = Number(v?.finalBalance || 0);

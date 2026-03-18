@@ -17,12 +17,18 @@ import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
 import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.entites.sales.SalesInvoiceItem;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
 import com.berksozcu.xml.entites.collections.CollectionXml;
 import com.berksozcu.xml.entites.collections.CollectionsXml;
 import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
-import com.berksozcu.xml.entites.materials.*;
+import com.berksozcu.xml.entites.materials.ItemsXml;
+import com.berksozcu.xml.entites.materials.MaterialXml;
+import com.berksozcu.xml.entites.materials.PurchasePriceXmlList;
+import com.berksozcu.xml.entites.materials.SalesPriceXmlList;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVoucherXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVouchersXml;
@@ -38,7 +44,6 @@ import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -319,10 +324,8 @@ public class XmlImportService {
 
         if (unmarshalledObject instanceof ItemsXml itemsXml) {
             processMaterialCards(itemsXml, schemaName);
-        } else if (unmarshalledObject instanceof PurchasePriceXmlList purchasePriceXmlList) {
-            processPrices(purchasePriceXmlList, true);
-        } else if (unmarshalledObject instanceof SalesPriceXmlList salesPriceXmlList) {
-            processPrices(salesPriceXmlList, false);
+        } else {
+            throw new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI));
         }
 
     }
@@ -622,70 +625,97 @@ public class XmlImportService {
         }
     }
 
+    // BU METOD KULLANILCAK!!
+    /*
+
+        private void processMaterialCards(ItemsXml itemsXml, String schemaName) {
+            Set<String> existingMaterials = materialRepository.findAll()
+                    .stream().map(Material::getCode).collect(Collectors.toSet());
+
+            for (MaterialXml m : itemsXml.getItems()) {
+                if (m.getCODE() == null || m.getCODE().isBlank()) continue;
+
+                String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "");
+
+                if (existingMaterials.contains(code)) {
+                    System.out.println("Malzeme Kodu mevcut atlandı: " + code);
+                    continue;
+                }
+
+                Material material = new Material();
+                material.setCode(code);
+                material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
+
+                String unitCode = m.getUNITSET_CODE();
+                if (unitCode != null) {
+                    try {
+                        material.setUnit(MaterialUnit.valueOf(m.getUNITSET_CODE()));
+                    } catch (IllegalArgumentException e) {
+                        material.setUnit(MaterialUnit.ADET);
+                    }
+
+                }
+                material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
+                material.setCompany(getCompany(schemaName));
+                material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+                material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
+                material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+                material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
+                materialRepository.save(material);
+
+                existingMaterials.add(code);
+            }
+        }
+        */
+
+    // SADECE MALZEM FİYATLARINI GÜNCELLEMEK İSTİYORSAN
     private void processMaterialCards(ItemsXml itemsXml, String schemaName) {
-        Set<String> existingMaterials = materialRepository.findAll()
-                .stream().map(Material::getCode).collect(Collectors.toSet());
+        Company company = getCompany(schemaName);
 
         for (MaterialXml m : itemsXml.getItems()) {
             if (m.getCODE() == null || m.getCODE().isBlank()) continue;
 
-            String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "");
+            String code = m.getCODE().trim().toUpperCase();
+            Optional<Material> existingMaterialOpt = materialRepository.findByCode(code);
 
-            if (existingMaterials.contains(code)) {
-                System.out.println("Malzeme Kodu mevcut atlandı: " + code);
-                continue;
-            }
+            if (existingMaterialOpt.isPresent()) {
+                // DURUM 1: MALZEME MEVCUT -> SADECE 4 ALANI GÜNCELLE
+                Material existing = existingMaterialOpt.get();
 
-            Material material = new Material();
-            material.setCode(code);
-            material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
+                existing.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+                existing.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
+                existing.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+                existing.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
 
-            String unitCode = m.getUNITSET_CODE();
-            if (unitCode != null) {
+                materialRepository.save(existing);
+                System.out.println("Sadece fiyatlar güncellendi: " + code);
+
+            } else {
+                // DURUM 2: MALZEME YOK -> YENİ KAYIT OLUŞTUR (TÜM ALANLAR)
+                Material newMaterial = new Material();
+                newMaterial.setCode(code);
+                newMaterial.setCompany(company);
+                newMaterial.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
+
+                // Birim Ayarı
                 try {
-                    material.setUnit(MaterialUnit.valueOf(m.getUNITSET_CODE()));
+                    newMaterial.setUnit(m.getUNITSET_CODE() != null ?
+                            MaterialUnit.valueOf(m.getUNITSET_CODE()) : MaterialUnit.ADET);
                 } catch (IllegalArgumentException e) {
-                    material.setUnit(MaterialUnit.ADET);
+                    newMaterial.setUnit(MaterialUnit.ADET);
                 }
 
+                newMaterial.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
+
+                // Fiyatlar
+                newMaterial.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+                newMaterial.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
+                newMaterial.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+                newMaterial.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
+
+                materialRepository.save(newMaterial);
+                System.out.println("Yeni malzeme kartı açıldı: " + code);
             }
-            material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
-            material.setCompany(getCompany(schemaName));
-            material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
-            material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
-            material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
-            material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
-            materialRepository.save(material);
-
-            existingMaterials.add(code);
-        }
-    }
-
-    private void processPrices(Object priceList, boolean isPurchase) {
-        List<PriceRecordXml> records;
-
-        if (priceList instanceof PurchasePriceXmlList pList) {
-            records = pList.getRecords();
-        } else if (priceList instanceof SalesPriceXmlList sList) {
-            records = sList.getRecords();
-        } else {
-            return;
-        }
-        for (PriceRecordXml r : records) {
-            String code = Objects.requireNonNullElse(r.getCode().trim().toUpperCase(), "");
-            materialRepository.findByCode(code).ifPresent(
-                    material -> {
-                        BigDecimal price = safeGet(parseBigDecimal(r.getPrice()));
-                        if (isPurchase) {
-                            material.setPurchasePrice(price);
-                            material.setPurchaseCurrency(Objects.requireNonNullElse(r.getCurrency(), Currency.TRY));
-                        } else {
-                            material.setSalesPrice(price);
-                            material.setSalesCurrency(Objects.requireNonNullElse(r.getCurrency(), Currency.TRY));
-                        }
-                        materialRepository.save(material);
-                    }
-            );
         }
     }
 

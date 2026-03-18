@@ -92,6 +92,25 @@ export default function MaterialPriceTooltip({
     }
   }, [selectedType, materialId, open]);
 
+  useEffect(() => {
+    const handleAction = () => {
+      if (open || showMenu) {
+        setOpen(false);
+        setShowMenu(false);
+      }
+    };
+    window.addEventListener("wheel", handleAction, { passive: true });
+    window.addEventListener("scroll", handleAction, {
+      passive: true,
+      capture: true,
+    });
+
+    return () => {
+      window.removeEventListener("wheel", handleAction);
+      window.removeEventListener("scroll", handleAction, { capture: true });
+    };
+  }, [open, showMenu]);
+
   const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
   const handleNext = () => {
     const list = Array.isArray(history) ? history : [];
@@ -149,7 +168,7 @@ export default function MaterialPriceTooltip({
         createPortal(
           <div
             ref={menuPopupRef}
-            className="fixed left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[10001] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
             style={{
               top: menuRef.current?.getBoundingClientRect().bottom + 8,
               left: menuRef.current?.getBoundingClientRect().left - 150,
