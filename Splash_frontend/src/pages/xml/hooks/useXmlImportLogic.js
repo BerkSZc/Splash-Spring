@@ -9,6 +9,8 @@ export const useXmlImportLogic = () => {
   const purchaseInvoiceInputRef = useRef(null);
   const salesInvoiceInputRef = useRef(null);
   const materialInputRef = useRef(null);
+  const materialPurchasePriceRef = useRef(null);
+  const materialSalesPriceRef = useRef(null);
   const customerInputRef = useRef(null);
   const collectionInputRef = useRef(null);
   const payrollInputRef = useRef(null);
@@ -21,6 +23,8 @@ export const useXmlImportLogic = () => {
   const {
     importPurchaseInvoice,
     importMaterials,
+    importMaterialsPurchasePrice,
+    importMaterialsSalesPrice,
     importCustomers,
     importCollections,
     importSalesInvoice,
@@ -33,6 +37,8 @@ export const useXmlImportLogic = () => {
     exportPurchaseInvoice,
     exportSalesInvoice,
     exportMaterials,
+    exportMaterialsPurchasePrice,
+    exportMaterialsSalesPrice,
     exportCustomers,
     exportCollections,
     exportPayrolls,
@@ -63,6 +69,8 @@ export const useXmlImportLogic = () => {
         invoice: purchaseInvoiceInputRef,
         sales: salesInvoiceInputRef,
         materials: materialInputRef,
+        materialsPurchasePrice: materialPurchasePriceRef,
+        materialsSalesPrice: materialSalesPriceRef,
         customers: customerInputRef,
         collections: collectionInputRef,
         payrolls: payrollInputRef,
@@ -74,6 +82,10 @@ export const useXmlImportLogic = () => {
         if (type === "invoice") await exportPurchaseInvoice(year);
         else if (type === "sales") await exportSalesInvoice(year);
         else if (type === "materials") await exportMaterials();
+        else if (type === "materialsPurchasePrice")
+          await exportMaterialsPurchasePrice();
+        else if (type === "materialsSalesPrice")
+          await exportMaterialsSalesPrice();
         else if (type === "customers") await exportCustomers();
         else if (type === "collections") await exportCollections(year);
         else if (type === "payrolls") await exportPayrolls(year);
@@ -99,6 +111,10 @@ export const useXmlImportLogic = () => {
     try {
       if (type === "invoice") await importPurchaseInvoice(file, tenant);
       else if (type === "materials") await importMaterials(file, tenant);
+      else if (type === "materialsPurchasePrice")
+        await importMaterialsPurchasePrice(file, tenant);
+      else if (type === "materialsSalesPrice")
+        await importMaterialsSalesPrice(file, tenant);
       else if (type === "customers") await importCustomers(file);
       else if (type === "collections") await importCollections(file, tenant);
       else if (type === "sales") await importSalesInvoice(file, tenant);
@@ -123,6 +139,8 @@ export const useXmlImportLogic = () => {
       purchaseInvoiceInputRef,
       salesInvoiceInputRef,
       materialInputRef,
+      materialPurchasePriceRef,
+      materialSalesPriceRef,
       customerInputRef,
       collectionInputRef,
       payrollInputRef,

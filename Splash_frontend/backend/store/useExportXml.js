@@ -72,6 +72,54 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
+  exportMaterialsPurchasePrice: async () => {
+    set({ loading: true });
+    try {
+      const response = await axiosInstance.get(
+        "/export/materials-purchase-price",
+        {
+          responseType: "blob",
+        },
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Malzemeler_Alış_Fiyat.xml`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success(`Malzeme Alış Fiyatları dışarıya aktarıldı`);
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  exportMaterialsSalesPrice: async () => {
+    set({ loading: true });
+    try {
+      const response = await axiosInstance.get(
+        "/export/materials-sales-price",
+        {
+          responseType: "blob",
+        },
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Malzemeler_Satış_Fiyat.xml`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success(`Malzeme Satış Fiyatları dışarıya aktarıldı`);
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
   exportCustomers: async () => {
     set({ loading: true });
     try {

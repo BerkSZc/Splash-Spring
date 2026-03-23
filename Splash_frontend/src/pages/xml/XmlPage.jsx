@@ -91,6 +91,24 @@ function XmlPage() {
           <input
             type="file"
             accept=".xml"
+            ref={refs.materialPurchasePriceRef}
+            className="hidden"
+            onChange={(e) =>
+              handlers.handleFileChange(e, "materialsPurchasePrice")
+            }
+          />
+          <input
+            type="file"
+            accept=".xml"
+            ref={refs.materialSalesPriceRef}
+            className="hidden"
+            onChange={(e) =>
+              handlers.handleFileChange(e, "materialsSalesPrice")
+            }
+          />
+          <input
+            type="file"
+            accept=".xml"
             ref={refs.customerInputRef}
             className="hidden"
             onChange={(e) => handlers.handleFileChange(e, "customers")}
@@ -157,7 +175,7 @@ function XmlPage() {
             onClick={() => handlers.handleAction("payrolls")}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <ImportButton
               label={`Malzeme XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
               icon="📦"
@@ -165,7 +183,23 @@ function XmlPage() {
               disabled={state.isLoading}
               onClick={() => handlers.handleAction("materials")}
             />
+            <ImportButton
+              label={`Malzeme Alış Fiyatları ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
+              icon="📥"
+              variant="indigo"
+              disabled={state.isLoading}
+              onClick={() => handlers.handleAction("materialsPurchasePrice")}
+            />
 
+            <ImportButton
+              label={`Malzeme Satış Fiyatları ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
+              icon="📤"
+              variant="emerald"
+              disabled={state.isLoading}
+              onClick={() => handlers.handleAction("materialsSalesPrice")}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <ImportButton
               label={`Cari XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
               icon="👥"
@@ -173,15 +207,15 @@ function XmlPage() {
               disabled={state.isLoading}
               onClick={() => handlers.handleAction("customers")}
             />
-          </div>
 
-          <ImportButton
-            label={`Kasa İşlemleri XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
-            icon="🏦"
-            variant="orange"
-            disabled={state.isLoading}
-            onClick={() => handlers.handleAction("collections")}
-          />
+            <ImportButton
+              label={`Kasa İşlemleri XML ${state.viewMode === "import" ? "İçeri Aktar" : "Dışarı Aktar"}`}
+              icon="🏦"
+              variant="orange"
+              disabled={state.isLoading}
+              onClick={() => handlers.handleAction("collections")}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -179,11 +179,11 @@ export const useFinancialLogic = () => {
 
   const filteredList = (Array.isArray(shownList) ? shownList : [])
     .filter((item) => {
-      const text = search.toLowerCase();
+      const text = search.toLocaleLowerCase("tr-TR");
       return (
-        item.customer?.name?.toLowerCase().includes(text) ||
-        item.comment?.toLowerCase().includes(text) ||
-        item.date?.toLowerCase().includes(text) ||
+        item.customer?.name?.toLocaleLowerCase("tr-TR").includes(text) ||
+        item.comment?.toLocaleLowerCase("tr-TR").includes(text) ||
+        item.date?.toLocaleLowerCase("tr-TR").includes(text) ||
         String(item?.price || "0").includes(text)
       );
     })

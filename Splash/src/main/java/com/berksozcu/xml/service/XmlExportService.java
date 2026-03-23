@@ -20,8 +20,7 @@ import com.berksozcu.xml.entites.collections.CollectionsXml;
 import com.berksozcu.xml.entites.collections.TransactionField;
 import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
-import com.berksozcu.xml.entites.materials.ItemsXml;
-import com.berksozcu.xml.entites.materials.MaterialXml;
+import com.berksozcu.xml.entites.materials.*;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionsXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVoucherXml;
@@ -222,6 +221,62 @@ public class XmlExportService {
         }
         rootXml.setItems(materialXmlList);
         JAXBContext context = JAXBContext.newInstance(ItemsXml.class);
+        Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        marshaller.marshal(rootXml, baos);
+
+        return baos.toByteArray();
+    }
+
+    @Transactional
+    public byte[] exportMaterialsPurchasePrice() throws Exception {
+        List<Material> materials = materialRepository.findAll();
+
+        PurchasePriceXmlList rootXml = new PurchasePriceXmlList();
+        List<PriceRecordXml> records = new ArrayList<>();
+
+        for (Material m : materials) {
+            PriceRecordXml record = new PriceRecordXml();
+            record.setCode(m.getCode().trim().toUpperCase());
+            record.setPrice(safeGet(m.getPurchasePrice()).setScale(2, RoundingMode.HALF_UP).toString());
+            record.setCurrency(Objects.requireNonNullElse(m.getPurchaseCurrency(), Currency.TRY));
+            records.add(record);
+        }
+
+        rootXml.setRecords(records);
+
+        JAXBContext context = JAXBContext.newInstance(PurchasePriceXmlList.class);
+        Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        marshaller.marshal(rootXml, baos);
+
+        return baos.toByteArray();
+    }
+
+    @Transactional
+    public byte[] exportMaterialsSalesPrice() throws Exception {
+        List<Material> materials = materialRepository.findAll();
+
+        SalesPriceXmlList rootXml = new SalesPriceXmlList();
+        List<PriceRecordXml> records = new ArrayList<>();
+
+        for (Material m : materials) {
+            PriceRecordXml record = new PriceRecordXml();
+            record.setCode(m.getCode().trim().toUpperCase());
+            record.setPrice(safeGet(m.getSalesPrice()).setScale(2, RoundingMode.HALF_UP).toString());
+            record.setCurrency(Objects.requireNonNullElse(m.getSalesCurrency(), Currency.TRY));
+            records.add(record);
+        }
+
+        rootXml.setRecords(records);
+
+        JAXBContext context = JAXBContext.newInstance(SalesPriceXmlList.class);
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");

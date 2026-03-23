@@ -63,6 +63,42 @@ export const useImportXml = create((set) => ({
       set({ loading: false });
     }
   },
+  importMaterialsPurchasePrice: async (file, schemaName) => {
+    set({ loading: true });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await axiosInstance.post("/import/materials-purchase-price", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        params: { schemaName },
+      });
+      toast.success("Aktarma Başarıyla Tamamlandı");
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  importMaterialsSalesPrice: async (file, schemaName) => {
+    set({ loading: true });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await axiosInstance.post("/import/materials-sales-price", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        params: { schemaName },
+      });
+      toast.success("Aktarma Başarıyla Tamamlandı");
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
   importCustomers: async (file) => {
     set({ loading: true });
     try {

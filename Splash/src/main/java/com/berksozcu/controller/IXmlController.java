@@ -1,25 +1,26 @@
 package com.berksozcu.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IXmlController {
 
-     ResponseEntity<?> importPurchaseInvoices(@RequestParam("file") MultipartFile file, String schemaName);
+     ResponseEntity<?> importPurchaseInvoices(MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importSalesInvoices(@RequestParam("file") MultipartFile file, String schemaName);
+     ResponseEntity<?> importSalesInvoices(MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importMaterials(@RequestParam("file") MultipartFile file,
-                                             @RequestParam String schemaName);
+     ResponseEntity<?> importMaterials(MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file);
+     ResponseEntity<?> importMaterialsPurchasePrice(MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importCollections(@RequestParam("file") MultipartFile file, String schemaName);
+     ResponseEntity<?> importMaterialsSalesPrice( MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importPayrolls(@RequestParam("file") MultipartFile file, String schemaName);
+     ResponseEntity<?> importCustomers(MultipartFile file);
 
-     ResponseEntity<?> importVouchers(@RequestParam("file") MultipartFile file, String schemaName);
+     ResponseEntity<?> importCollections(MultipartFile file, String schemaName);
+
+     ResponseEntity<?> importPayrolls(MultipartFile file, String schemaName);
+
+     ResponseEntity<?> importVouchers(MultipartFile file, String schemaName);
 
 }
