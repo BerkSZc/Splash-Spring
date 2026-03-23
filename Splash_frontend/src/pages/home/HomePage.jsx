@@ -11,6 +11,7 @@ export function HomePage() {
     customers = [],
     totalCredits = 0,
     totalDebts = 0,
+    netBalance = 0,
     companyDisplayName = "",
     year = new Date().getFullYear(),
     lastUpdate = "",
@@ -150,6 +151,16 @@ export function HomePage() {
                 </p>
                 <p className="text-xl font-bold text-red-400 font-mono">
                   ₺ {(Number(totalDebts) || 0).toLocaleString("tr-TR")}
+                </p>
+              </div>
+              <div className="border-t border-gray-800 pt-3">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
+                  {netBalance >= 0 ? "Toplam Kâr" : "Toplam Zarar"}
+                </p>
+                <p
+                  className={`text-xl font-bold font-mono ${netBalance >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                >
+                  ₺ {Math.abs(netBalance).toLocaleString("tr-TR")}
                 </p>
               </div>
             </div>

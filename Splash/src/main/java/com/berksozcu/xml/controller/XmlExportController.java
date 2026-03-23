@@ -58,6 +58,34 @@ public class XmlExportController extends RestBaseController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @GetMapping("/materials-purchase-price")
+    public ResponseEntity<byte[]> exportMaterialsPurchasePrice() {
+        try {
+            byte[] xmlContent = xmlExportService.exportMaterialsPurchasePrice();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/materials-sales-price")
+    public ResponseEntity<byte[]> exportMaterialsSalesPrice() {
+        try {
+            byte[] xmlContent = xmlExportService.exportMaterialsSalesPrice();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(xmlContent);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     @GetMapping("/customers")
     public ResponseEntity<byte[]> exportCustomers() {
         try {

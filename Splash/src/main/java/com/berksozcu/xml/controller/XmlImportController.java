@@ -54,6 +54,30 @@ public class XmlImportController implements IXmlController {
     }
 
     @Override
+    @PostMapping("/materials-purchase-price")
+    public ResponseEntity<?> importMaterialsPurchasePrice(@RequestParam("file") MultipartFile file,
+                                             @RequestParam String schemaName) {
+        try {
+            importService.importMaterialsPurchasePrice(file, schemaName);
+            return ResponseEntity.ok("XML başarıyla aktarıldı!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Hata: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @PostMapping("/materials-sales-price")
+    public ResponseEntity<?> importMaterialsSalesPrice(@RequestParam("file") MultipartFile file,
+                                             @RequestParam String schemaName) {
+        try {
+            importService.importMaterialsSalesPrice(file, schemaName);
+            return ResponseEntity.ok("XML başarıyla aktarıldı!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Hata: " + e.getMessage());
+        }
+    }
+
+    @Override
     @PostMapping("/customers")
     public ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file) {
         try {

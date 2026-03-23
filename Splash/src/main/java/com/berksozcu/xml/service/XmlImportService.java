@@ -17,18 +17,12 @@ import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
 import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.entites.sales.SalesInvoiceItem;
-import com.berksozcu.exception.BaseException;
-import com.berksozcu.exception.ErrorMessage;
-import com.berksozcu.exception.MessageType;
 import com.berksozcu.repository.*;
 import com.berksozcu.xml.entites.collections.CollectionXml;
 import com.berksozcu.xml.entites.collections.CollectionsXml;
 import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
-import com.berksozcu.xml.entites.materials.ItemsXml;
-import com.berksozcu.xml.entites.materials.MaterialXml;
-import com.berksozcu.xml.entites.materials.PurchasePriceXmlList;
-import com.berksozcu.xml.entites.materials.SalesPriceXmlList;
+import com.berksozcu.xml.entites.materials.*;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVoucherXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVouchersXml;
@@ -95,8 +89,10 @@ public class XmlImportService {
 
         PurchaseInvoicesXml invoicesXml = (PurchaseInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
 
+        Company company = getCompany(schemaName);
+
         Map<String, Material> materialMap =
-                materialRepository.findAll()
+                materialRepository.findAllByCompany(company)
                         .stream()
                         .collect(Collectors.toMap(
                                 m -> m.getCode().trim().toUpperCase(),
@@ -127,7 +123,6 @@ public class XmlImportService {
 
             invoice.setDate(date);
 
-            Company company = getCompany(schemaName);
 
             invoice.setFileNo(Objects.requireNonNullElse(xmlInv.getDOC_NUMBER(), ""));
             invoice.setCompany(company);
@@ -320,14 +315,97 @@ public class XmlImportService {
         JAXBContext context = JAXBContext.newInstance(ItemsXml.class, PurchasePriceXmlList.class, SalesPriceXmlList.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        Object unmarshalledObject = unmarshaller.unmarshal(file.getInputStream());
+        ItemsXml itemsXml = (ItemsXml) unmarshaller.unmarshal(file.getInputStream());
 
-        if (unmarshalledObject instanceof ItemsXml itemsXml) {
-            processMaterialCards(itemsXml, schemaName);
-        } else {
-            throw new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI));
+        Company company = getCompany(schemaName);
+
+        Set<String> existingMaterials = materialRepository.findAllByCompany(company)
+                .stream().map(Material::getCode).collect(Collectors.toSet());
+
+        for (MaterialXml m : itemsXml.getItems()) {
+            if (m.getCODE() == null || m.getCODE().isBlank()) continue;
+
+            String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "");
+
+            if (existingMaterials.contains(code)) {
+                System.out.println("Malzeme Kodu mevcut atlandı: " + code);
+                continue;
+            }
+
+            Material material = new Material();
+            material.setCode(code);
+            material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
+
+            String unitCode = m.getUNITSET_CODE();
+            if (unitCode != null) {
+                try {
+                    material.setUnit(MaterialUnit.valueOf(m.getUNITSET_CODE()));
+                } catch (IllegalArgumentException e) {
+                    material.setUnit(MaterialUnit.ADET);
+                }
+
+            }
+            material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
+            material.setCompany(company);
+            material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+            material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
+            material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+            material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
+            materialRepository.save(material);
+
+            existingMaterials.add(code);
         }
 
+    }
+
+    @Transactional
+    public void importMaterialsPurchasePrice(MultipartFile file, String schemaName) throws Exception {
+        JAXBContext context = JAXBContext.newInstance(PurchasePriceXmlList.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+
+        PurchasePriceXmlList priceList = (PurchasePriceXmlList) unmarshaller.unmarshal(file.getInputStream());
+
+        Map<String, Material> materialMap = materialRepository.findAllByCompany(getCompany(schemaName))
+                .stream()
+                .collect(Collectors.toMap(Material::getCode, m -> m));
+
+        for (PriceRecordXml r : priceList.getRecords()) {
+            if (r.getCode() == null || r.getCode().isBlank()) continue;
+
+            String code = r.getCode().trim().toUpperCase();
+            Material material = materialMap.get(code);
+            if (material == null) continue;
+
+            material.setPurchasePrice(safeGet(parseBigDecimal(r.getPrice())));
+            material.setPurchaseCurrency(Objects.requireNonNullElse(r.getCurrency(), Currency.TRY));
+            materialRepository.save(material);
+
+        }
+    }
+
+    @Transactional
+    public void importMaterialsSalesPrice(MultipartFile file, String schemaName) throws Exception {
+        JAXBContext context = JAXBContext.newInstance(SalesPriceXmlList.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+
+        SalesPriceXmlList priceList = (SalesPriceXmlList) unmarshaller.unmarshal(file.getInputStream());
+
+        Map<String, Material> materialMap = materialRepository.findAllByCompany(getCompany(schemaName))
+                .stream()
+                .collect(Collectors.toMap(Material::getCode, m -> m));
+
+        for (PriceRecordXml r : priceList.getRecords()) {
+            if (r.getCode() == null || r.getCode().isBlank()) continue;
+
+            String code = r.getCode().trim().toUpperCase();
+
+            Material material = materialMap.get(code);
+            if (material == null) continue;
+
+            material.setSalesPrice(safeGet(parseBigDecimal(r.getPrice())));
+            material.setSalesCurrency(Objects.requireNonNullElse(r.getCurrency(), Currency.TRY));
+            materialRepository.save(material);
+        }
     }
 
     @Transactional
@@ -622,100 +700,6 @@ public class XmlImportService {
             openingBalance.setDescription("Veri Ekleme Devir İşlemi");
 
             openingBalanceRepository.save(openingBalance);
-        }
-    }
-
-    // BU METOD KULLANILCAK!!
-    /*
-
-        private void processMaterialCards(ItemsXml itemsXml, String schemaName) {
-            Set<String> existingMaterials = materialRepository.findAll()
-                    .stream().map(Material::getCode).collect(Collectors.toSet());
-
-            for (MaterialXml m : itemsXml.getItems()) {
-                if (m.getCODE() == null || m.getCODE().isBlank()) continue;
-
-                String code = Objects.requireNonNullElse(m.getCODE().trim().toUpperCase(), "");
-
-                if (existingMaterials.contains(code)) {
-                    System.out.println("Malzeme Kodu mevcut atlandı: " + code);
-                    continue;
-                }
-
-                Material material = new Material();
-                material.setCode(code);
-                material.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
-
-                String unitCode = m.getUNITSET_CODE();
-                if (unitCode != null) {
-                    try {
-                        material.setUnit(MaterialUnit.valueOf(m.getUNITSET_CODE()));
-                    } catch (IllegalArgumentException e) {
-                        material.setUnit(MaterialUnit.ADET);
-                    }
-
-                }
-                material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
-                material.setCompany(getCompany(schemaName));
-                material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
-                material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
-                material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
-                material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
-                materialRepository.save(material);
-
-                existingMaterials.add(code);
-            }
-        }
-        */
-
-    // SADECE MALZEM FİYATLARINI GÜNCELLEMEK İSTİYORSAN
-    private void processMaterialCards(ItemsXml itemsXml, String schemaName) {
-        Company company = getCompany(schemaName);
-
-        for (MaterialXml m : itemsXml.getItems()) {
-            if (m.getCODE() == null || m.getCODE().isBlank()) continue;
-
-            String code = m.getCODE().trim().toUpperCase();
-            Optional<Material> existingMaterialOpt = materialRepository.findByCode(code);
-
-            if (existingMaterialOpt.isPresent()) {
-                // DURUM 1: MALZEME MEVCUT -> SADECE 4 ALANI GÜNCELLE
-                Material existing = existingMaterialOpt.get();
-
-                existing.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
-                existing.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
-                existing.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
-                existing.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
-
-                materialRepository.save(existing);
-                System.out.println("Sadece fiyatlar güncellendi: " + code);
-
-            } else {
-                // DURUM 2: MALZEME YOK -> YENİ KAYIT OLUŞTUR (TÜM ALANLAR)
-                Material newMaterial = new Material();
-                newMaterial.setCode(code);
-                newMaterial.setCompany(company);
-                newMaterial.setComment(Objects.requireNonNullElse(m.getNAME(), ""));
-
-                // Birim Ayarı
-                try {
-                    newMaterial.setUnit(m.getUNITSET_CODE() != null ?
-                            MaterialUnit.valueOf(m.getUNITSET_CODE()) : MaterialUnit.ADET);
-                } catch (IllegalArgumentException e) {
-                    newMaterial.setUnit(MaterialUnit.ADET);
-                }
-
-                newMaterial.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
-
-                // Fiyatlar
-                newMaterial.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
-                newMaterial.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
-                newMaterial.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
-                newMaterial.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
-
-                materialRepository.save(newMaterial);
-                System.out.println("Yeni malzeme kartı açıldı: " + code);
-            }
         }
     }
 

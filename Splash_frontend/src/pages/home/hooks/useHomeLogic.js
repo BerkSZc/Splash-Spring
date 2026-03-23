@@ -117,6 +117,7 @@ export const useHomeLogic = () => {
       customers: Array.isArray(customers) ? customers : [],
       totalCredits: financialSummary.totalCredits,
       totalDebts: financialSummary.totalDebts,
+      netBalance: financialSummary.totalCredits - financialSummary.totalDebts,
       companyDisplayName,
       year,
       lastUpdate: new Date().toLocaleString("tr-TR"),

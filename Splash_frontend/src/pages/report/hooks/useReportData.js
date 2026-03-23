@@ -57,9 +57,17 @@ export const useReportData = (reportType) => {
       .sort((a, b) => {
         const balanceA = Number(a?.finalBalance || 0);
         const balanceB = Number(b?.finalBalance || 0);
-        return sortDirection === "desc"
-          ? balanceB - balanceA
-          : balanceA - balanceB;
+        if (sortDirection === "desc") {
+          if (balanceA >= 0 && balanceB < 0) return -1;
+          if (balanceA < 0 && balanceB >= 0) return 1;
+
+          return Math.abs(balanceB) - Math.abs(balanceA);
+        } else {
+          if (balanceA < 0 && balanceB >= 0) return -1;
+          if (balanceA >= 0 && balanceB < 0) return 1;
+
+          return Math.abs(balanceB) - Math.abs(balanceA);
+        }
       });
 
     const totalPurchaseKdv = summaryList.reduce(

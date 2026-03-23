@@ -34,4 +34,6 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
             @Param("search") String search,
             Pageable pageable
     );
+
+    List<Material> findAllByCompany(Company company);
 }
