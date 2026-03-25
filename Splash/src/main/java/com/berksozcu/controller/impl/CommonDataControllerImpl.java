@@ -63,7 +63,9 @@ public class CommonDataControllerImpl implements ICommonDataController {
     }
 
     @GetMapping("/file-no")
-    public String getFileNo(@RequestParam LocalDate date, @RequestParam String type) {
-        return currencyRateService.generateFileNo(date, type);
+    @Override
+    public String getFileNo(@RequestParam LocalDate date, @RequestParam String type,
+                            @RequestParam String schemaName) {
+        return currencyRateService.generateFileNo(date, type, schemaName);
     }
 }

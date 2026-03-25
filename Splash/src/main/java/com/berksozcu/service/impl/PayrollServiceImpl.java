@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -46,21 +47,22 @@ public class PayrollServiceImpl implements IPayrollService {
     @Transactional
     @Override
     public Payroll addPayroll(Long id, Payroll newPayroll, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
 
-        Customer customer = customerRepository.findById(id).orElseThrow(
+        Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
-        Company company = companyRepository.findBySchemaName(schemaName);
 
-        if(payrollRepository.existsByFileNo(newPayroll.getFileNo())) {
+        if(payrollRepository.existsByFileNoAndCompany(newPayroll.getFileNo(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
         }
 
         LocalDate start = LocalDate.of(newPayroll.getTransactionDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPayroll.getTransactionDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id,
+                         company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
         newPayroll.setCustomer(customer);
@@ -82,14 +84,14 @@ public class PayrollServiceImpl implements IPayrollService {
     @Transactional
     @Override
     public Payroll editPayroll(Long id, Payroll editPayroll, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
 
-        Payroll oldPayroll = payrollRepository.findById(id).orElseThrow(
+        Payroll oldPayroll = payrollRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
 
-        Company company = companyRepository.findBySchemaName(schemaName);
 
-        if(payrollRepository.existsByFileNo(editPayroll.getFileNo())
+        if(payrollRepository.existsByFileNoAndCompany(editPayroll.getFileNo(), company)
         &&  !oldPayroll.getFileNo().equals(editPayroll.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
         }
@@ -104,7 +106,8 @@ public class PayrollServiceImpl implements IPayrollService {
         Customer oldCustomer = oldPayroll.getCustomer();
         Customer newCustomer =  editPayroll.getCustomer();
 
-        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                oldCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
 
@@ -116,7 +119,8 @@ public class PayrollServiceImpl implements IPayrollService {
             oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldPayroll.getAmount())));
         }
 
-        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                newCustomer.getId(), company, start, end)
                         .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
         oldPayroll.setCompany(company);
@@ -140,12 +144,13 @@ public class PayrollServiceImpl implements IPayrollService {
     @Transactional
     @Override
     public void deletePayroll(Long id, String schemaName) {
-        Payroll payroll = payrollRepository.findById(id).orElseThrow(
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        Payroll payroll = payrollRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
 
         Customer customer = payroll.getCustomer();
-        Company company = companyRepository.findBySchemaName(schemaName);
 
         if(!payroll.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
@@ -154,7 +159,8 @@ public class PayrollServiceImpl implements IPayrollService {
         LocalDate start = LocalDate.of(payroll.getTransactionDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(payroll.getTransactionDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
 
@@ -170,15 +176,22 @@ public class PayrollServiceImpl implements IPayrollService {
     }
 
     @Override
-    public Page<Payroll> getPayrollsByYear(int page, int size, int year, String schemaName) {
+    public Page<Payroll> getPayrollsByYear(int page, int size, String search, int year, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
 
-        return payrollRepository.findByCompanyAndTransactionDateBetween(company, start, end, pageable);
+        return payrollRepository.findByCompanyAndSearchAndTransactionDateBetween(company, searchParam, start, end, pageable);
     }
 
     private void updateBalance( Payroll newPayroll, OpeningVoucher voucher) {

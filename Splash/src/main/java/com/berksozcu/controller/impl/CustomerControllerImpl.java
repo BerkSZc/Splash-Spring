@@ -8,6 +8,7 @@ import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.service.ICustomerService;
 import com.berksozcu.service.IPurchaseInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,35 +24,35 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
     private IPurchaseInvoiceService purchaseInvoice;
 
     @Override
-    @GetMapping("/{id}")
-    public RootEntity<Customer> findCustomerById(@PathVariable(name = "id") Long id) {
-        return ok(customerService.findCustomerById(id));
-    }
-
-    @Override
     @PostMapping("/add-customer")
     public RootEntity<Customer> addCustomer(@RequestBody DtoCustomer customer,
-    @RequestParam int year, @RequestParam String schemaName) {
+                                            @RequestParam int year, @RequestParam String schemaName) {
         return
                 ok(customerService.addCustomer(customer, year, schemaName));
     }
 
     @Override
     @GetMapping("/list")
-    public RootEntity<List<Customer>> getAllCustomer(){
-        return listOk(customerService.getAllCustomer());
+    public RootEntity<Page<Customer>> getAllCustomer(
+                    @RequestParam(defaultValue = "0") int page,
+                    @RequestParam(defaultValue = "20") int size,
+                    @RequestParam(required = false) Boolean archived,
+                    @RequestParam(required = false) String search,
+                    @RequestParam String schemaName) {
+        return RootEntity.page(customerService.getAllCustomer(page, size, archived, search, schemaName));
     }
 
     @Override
     @PutMapping("/update-customer/{id}")
     public void updateCustomer(@PathVariable(name = "id") Long id, @RequestBody DtoCustomer updateCustomer,
-    @RequestParam int currentYear, @RequestParam String schemaName) {
+                               @RequestParam int currentYear, @RequestParam String schemaName) {
         customerService.updateCustomer(id, updateCustomer, currentYear, schemaName);
     }
 
     @Override
     @PostMapping("/archive")
-    public void setArchived(@RequestBody List<Long> ids, @RequestParam boolean archived) {
-        customerService.setArchived(ids, archived);
+    public void setArchived(@RequestBody List<Long> ids, @RequestParam boolean archived,
+                            @RequestParam String schemaName) {
+        customerService.setArchived(ids, archived, schemaName);
     }
 }

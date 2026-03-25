@@ -1,5 +1,6 @@
 package com.berksozcu.entites.material_price_history;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.material.Material;
 import jakarta.persistence.*;
@@ -52,5 +53,9 @@ public class MaterialPriceHistory {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
 }

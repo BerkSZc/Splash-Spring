@@ -19,9 +19,9 @@ public class XmlExportController extends RestBaseController {
     private XmlExportService xmlExportService;
 
     @GetMapping("/purchase-invoices")
-    public ResponseEntity<byte[]> exportPurchaseInvoices(@RequestParam int year) {
+    public ResponseEntity<byte[]> exportPurchaseInvoices(@RequestParam int year, @RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportPurchaseInvoices(year);
+            byte[] xmlContent = xmlExportService.exportPurchaseInvoices(year, schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -33,9 +33,9 @@ public class XmlExportController extends RestBaseController {
     }
 
     @GetMapping("/sales-invoices")
-    public ResponseEntity<byte[]> exportSalesInvoices(@RequestParam int year) {
+    public ResponseEntity<byte[]> exportSalesInvoices(@RequestParam int year, @RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportSalesInvoices(year);
+            byte[] xmlContent = xmlExportService.exportSalesInvoices(year, schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -46,9 +46,9 @@ public class XmlExportController extends RestBaseController {
         }
     }
     @GetMapping("/materials")
-    public ResponseEntity<byte[]> exportMaterials() {
+    public ResponseEntity<byte[]> exportMaterials(@RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportMaterials();
+            byte[] xmlContent = xmlExportService.exportMaterials(schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -60,9 +60,9 @@ public class XmlExportController extends RestBaseController {
     }
 
     @GetMapping("/materials-purchase-price")
-    public ResponseEntity<byte[]> exportMaterialsPurchasePrice() {
+    public ResponseEntity<byte[]> exportMaterialsPurchasePrice(@RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportMaterialsPurchasePrice();
+            byte[] xmlContent = xmlExportService.exportMaterialsPurchasePrice(schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -74,9 +74,9 @@ public class XmlExportController extends RestBaseController {
     }
 
     @GetMapping("/materials-sales-price")
-    public ResponseEntity<byte[]> exportMaterialsSalesPrice() {
+    public ResponseEntity<byte[]> exportMaterialsSalesPrice(@RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportMaterialsSalesPrice();
+            byte[] xmlContent = xmlExportService.exportMaterialsSalesPrice(schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -87,9 +87,9 @@ public class XmlExportController extends RestBaseController {
         }
     }
     @GetMapping("/customers")
-    public ResponseEntity<byte[]> exportCustomers() {
+    public ResponseEntity<byte[]> exportCustomers(@RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportCustomers();
+            byte[] xmlContent = xmlExportService.exportCustomers(schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -100,9 +100,9 @@ public class XmlExportController extends RestBaseController {
         }
     }
     @GetMapping("/collections")
-    public ResponseEntity<byte[]> exportCollections(@RequestParam int year) {
+    public ResponseEntity<byte[]> exportCollections(@RequestParam int year, @RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportCollections(year);
+            byte[] xmlContent = xmlExportService.exportCollections(year, schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -113,9 +113,9 @@ public class XmlExportController extends RestBaseController {
         }
     }
     @GetMapping("/payrolls")
-    public ResponseEntity<byte[]> exportPayrolls(@RequestParam int year) {
+    public ResponseEntity<byte[]> exportPayrolls(@RequestParam int year, @RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportPayrolls(year);
+            byte[] xmlContent = xmlExportService.exportPayrolls(year, schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
@@ -126,9 +126,9 @@ public class XmlExportController extends RestBaseController {
         }
     }
     @GetMapping("/vouchers")
-    public ResponseEntity<byte[]> exportOpeningVouchers(@RequestParam int year) {
+    public ResponseEntity<byte[]> exportOpeningVouchers(@RequestParam int year, @RequestParam String schemaName) {
         try {
-            byte[] xmlContent = xmlExportService.exportOpeningVouchers(year);
+            byte[] xmlContent = xmlExportService.exportOpeningVouchers(year, schemaName);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")

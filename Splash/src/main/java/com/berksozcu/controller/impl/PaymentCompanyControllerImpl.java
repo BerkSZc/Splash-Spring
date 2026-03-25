@@ -25,12 +25,6 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
     }
 
     @Override
-    @GetMapping("/find-all")
-    public List<PaymentCompany> getAll() {
-        return paymentCompanyService.getAll();
-    }
-
-    @Override
     @PutMapping("/edit/{id}")
     public PaymentCompany editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany,
                                              @RequestParam String schemaName) {
@@ -47,9 +41,10 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
     @GetMapping("/find-by-year")
     public Page<PaymentCompany> getPaymentCollectionsByYear(@RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "20") int size,
+                                                            @RequestParam(required = false) String search,
                                                             @RequestParam int year,
                                                             @RequestParam String schemaName) {
-        return paymentCompanyService.getPaymentCollectionsByYear(page, size, year, schemaName);
+        return paymentCompanyService.getPaymentCollectionsByYear(page, size, search, year, schemaName);
     }
 
 }

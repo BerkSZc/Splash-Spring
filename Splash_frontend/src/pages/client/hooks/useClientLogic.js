@@ -18,6 +18,7 @@ export const useClientLogic = () => {
     addCustomer,
     updateCustomer,
     setArchived,
+    customerTotalPages,
     loading: customerLoading,
   } = useClient();
   const {
@@ -65,6 +66,9 @@ export const useClientLogic = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [pendingArchiveIds, setPendingArchiveIds] = useState([]);
   const [viewingClient, setViewingClient] = useState(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -80,13 +84,21 @@ export const useClientLogic = () => {
   });
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
     let ignore = false;
     const refreshBalances = async () => {
       if (!year) return;
       const dateString = `${year}-01-01`;
 
       await Promise.all([
-        getAllCustomers(),
+        getAllCustomers(page, PAGE_SIZE, showArchived, debouncedSearch, tenant),
         getAllOpeningVoucherByYear(dateString, tenant),
       ]);
 
@@ -96,7 +108,7 @@ export const useClientLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant]);
+  }, [year, tenant, showArchived, debouncedSearch, page]);
 
   useEffect(() => {
     setSelectedCustomers([]);
@@ -178,11 +190,11 @@ export const useClientLogic = () => {
     try {
       setSelectedCustomerForStatement(updatedCustomer);
       await Promise.allSettled([
-        getSalesInvoicesByYear(0, 999, year, tenant),
-        getPurchaseInvoiceByYear(0, 999, year, tenant),
-        getPaymentCollectionsByYear(0, 999, year, tenant),
-        getReceivedCollectionsByYear(0, 999, year, tenant),
-        getPayrollByYear(0, 999, year, tenant),
+        getSalesInvoicesByYear(0, 999, "", year, tenant),
+        getPurchaseInvoiceByYear(0, 999, "", year, tenant),
+        getPaymentCollectionsByYear(0, 999, "", year, tenant),
+        getReceivedCollectionsByYear(0, 999, "", year, tenant),
+        getPayrollByYear(0, 999, "", year, tenant),
       ]);
       setShowPrintModal(true);
     } catch (error) {
@@ -309,7 +321,7 @@ export const useClientLogic = () => {
 
   const handleArchiveToggle = async (customer) => {
     try {
-      await setArchived(customer.id, !customer.archived);
+      await setArchived(customer.id, !customer.archived, tenant);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -325,7 +337,7 @@ export const useClientLogic = () => {
   const handleArchiveModalSubmit = async (ids) => {
     const archivedValue = archiveAction === "archive";
     try {
-      await setArchived(ids, archivedValue);
+      await setArchived(ids, archivedValue, tenant);
       setSelectedCustomers([]);
       setPendingArchiveIds([]);
       setShowArchiveModal(false);
@@ -338,22 +350,7 @@ export const useClientLogic = () => {
   };
 
   const filteredCustomers = useMemo(() => {
-    const baseList = Array.isArray(customers)
-      ? customers
-          .filter((c) => {
-            if (!c) return false;
-            if (!search) return true;
-            return (
-              (c.name || "")
-                .toLocaleLowerCase("tr-TR")
-                .includes(search.toLocaleLowerCase("tr-TR")) ||
-              (c.code || "")
-                .toLocaleLowerCase("tr-TR")
-                .includes(search.toLocaleLowerCase("tr-TR"))
-            );
-          })
-          .filter((c) => (showArchived ? c.archived : !c.archived))
-      : [];
+    const baseList = Array.isArray(customers) ? customers : [];
 
     return [...baseList].sort((a, b) => {
       const voucherA = (Array.isArray(vouchers) ? vouchers : []).find(
@@ -437,6 +434,8 @@ export const useClientLogic = () => {
       selectionMode,
       pendingArchiveIds,
       viewingClient,
+      customerTotalPages,
+      page,
     },
     handlers: {
       handleChange,
@@ -461,6 +460,7 @@ export const useClientLogic = () => {
       setPendingArchiveIds,
       setViewingClient,
       handleView,
+      setPage,
     },
   };
 };

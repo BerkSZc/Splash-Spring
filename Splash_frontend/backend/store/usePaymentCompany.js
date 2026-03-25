@@ -24,19 +24,6 @@ export const usePaymentCompany = create((set) => ({
       set({ loading: false });
     }
   },
-
-  getPayments: async () => {
-    set({ loading: true, payments: [] });
-    try {
-      const res = await axiosInstance.get("/payment/find-all");
-      set({ payments: res.data });
-    } catch (error) {
-      set({ payments: [] });
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
-  },
   editPayment: async (id, payment, schemaName) => {
     set({ loading: true });
     try {
@@ -69,13 +56,14 @@ export const usePaymentCompany = create((set) => ({
   getPaymentCollectionsByYear: async (
     page = 0,
     size = 20,
+    search = "",
     year,
     schemaName,
   ) => {
     set({ loading: true, payments: [] });
     try {
       const res = await axiosInstance.get(`/payment/find-by-year`, {
-        params: { page, size, year, schemaName },
+        params: { page, size, search, year, schemaName },
       });
       set({
         payments: res.data.content,

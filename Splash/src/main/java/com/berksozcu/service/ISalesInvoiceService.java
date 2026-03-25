@@ -7,8 +7,7 @@ import java.util.List;
 
 public interface ISalesInvoiceService {
      SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice, String schemaName);
-     List<SalesInvoice> getAllSalesInvoice();
      SalesInvoice editSalesInvoice( Long id, SalesInvoice salesInvoice, String schemaName);
      void deleteSalesInvoice(Long id, String schemaName);
-     Page<SalesInvoice> getSalesInvoicesByYear(int page, int size, int year, String schemaName);
+     Page<SalesInvoice> getSalesInvoicesByYear(int page, int size, String search, int year, String schemaName);
 }

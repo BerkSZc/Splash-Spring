@@ -107,7 +107,7 @@ public class PurchaseInvoiceServiceImplTest {
     @Test
     void addPurchaseInvoice_ShouldThrowException_WhenFileNoExists() {
         when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
-        when(purchaseInvoiceRepository.existsByFileNo("NO123")).thenReturn(true);
+        when(purchaseInvoiceRepository.existsByFileNoAndCompany("NO123", mockCompany)).thenReturn(true);
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, mockInvoice, "Company"));

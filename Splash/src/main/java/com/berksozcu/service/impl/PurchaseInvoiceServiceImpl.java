@@ -56,18 +56,19 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     @Override
     @Transactional
     public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
-        Customer customer = customerRepository.findById(id)
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        Customer customer = customerRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if (purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())) {
+        if (purchaseInvoiceRepository.existsByFileNoAndCompany(newPurchaseInvoice.getFileNo(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
-        Company company = companyRepository.findBySchemaName(schemaName);
 
         newPurchaseInvoice.setCompany(company);
         newPurchaseInvoice.setCustomer(customer);
@@ -85,14 +86,14 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id, company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
         if (newPurchaseInvoice.getItems() != null) {
             for (PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
 
                 Material material = materialRepository
-                        .findById(item.getMaterial().getId())
+                        .findByIdAndCompany(item.getMaterial().getId(), company)
                         .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
                 item.setMaterial(material);
@@ -137,26 +138,10 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         openingVoucherRepository.save(voucher);
 
         for (PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
-           saveHistoryPrice(item, newPurchaseInvoice, customer);
+           saveHistoryPrice(item, newPurchaseInvoice, customer, company);
         }
 
         return newPurchaseInvoice;
-    }
-
-    @Override
-    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(Long id) {
-        List<PurchaseInvoice> invoices = purchaseInvoiceRepository.findAllByCustomerId(id);
-
-        if (invoices.isEmpty()) {
-            throw new RuntimeException("Fatura bulunamadı");
-        }
-
-        return invoices;
-    }
-
-    @Override
-    public List<PurchaseInvoice> getAllPurchaseInvoice() {
-        return purchaseInvoiceRepository.findAll();
     }
 
     @Override
@@ -179,12 +164,13 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
 
-        if (purchaseInvoiceRepository.existsByFileNo(newPurchaseInvoice.getFileNo())
+        if (purchaseInvoiceRepository.existsByFileNoAndCompany(newPurchaseInvoice.getFileNo(), company)
                 && !oldInvoice.getFileNo().equals(newPurchaseInvoice.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
-        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                oldCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
         oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).add(safeGet(oldInvoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP)));
@@ -198,7 +184,8 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         oldInvoice.setCompany(company);
 
         for (PurchaseInvoiceItem item : oldInvoice.getItems()) {
-            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(item.getMaterial().getId(), oldInvoice.getId());
+            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
+                    item.getMaterial().getId(), oldInvoice.getId(), company);
         }
 
         List<PurchaseInvoiceItem> oldItems = oldInvoice.getItems();
@@ -210,7 +197,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
 
         for (PurchaseInvoiceItem newItem : newItems) {
-            Material material = materialRepository.findById(newItem.getMaterial().getId())
+            Material material = materialRepository.findByIdAndCompany(newItem.getMaterial().getId(), company)
                     .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
             if (newItem.getId() == null) {
@@ -249,14 +236,15 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            saveHistoryPrice(item, newPurchaseInvoice, newCustomer);
+            saveHistoryPrice(item, newPurchaseInvoice, newCustomer, company);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
         oldInvoice.setKdvToplam(kdvToplam);
         oldInvoice.setTotalPrice(total);
 
-        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                newCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
         newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).subtract(total));
@@ -272,7 +260,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     public void deletePurchaseInvoice(Long id, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        PurchaseInvoice purchaseInvoice = purchaseInvoiceRepository.findById(id)
+        PurchaseInvoice purchaseInvoice = purchaseInvoiceRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
         Customer customer = purchaseInvoice.getCustomer();
@@ -284,11 +272,13 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate start = LocalDate.of(purchaseInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(purchaseInvoice.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
         for (PurchaseInvoiceItem item : purchaseInvoice.getItems()) {
-            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(item.getMaterial().getId(), id);
+            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
+                    item.getMaterial().getId(), id, company);
         }
 
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(purchaseInvoice.getTotalPrice())));
@@ -299,7 +289,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     }
 
     @Override
-    public Page<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int page, int size, int year,
+    public Page<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int page, int size, String search, int year,
                                                                  String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
@@ -307,10 +297,18 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate end = LocalDate.of(year, 12, 31);
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
-        return purchaseInvoiceRepository.findByCompanyAndDateBetween(company, start, end, pageable);
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
+        return purchaseInvoiceRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
     }
 
-    private void saveHistoryPrice(PurchaseInvoiceItem item, PurchaseInvoice invoice, Customer customer) {
+    private void saveHistoryPrice(PurchaseInvoiceItem item, PurchaseInvoice invoice, Customer customer,
+                                  Company company) {
         MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
         materialPriceHistory.setMaterial(item.getMaterial());
         materialPriceHistory.setPrice(safeGet(item.getUnitPrice()));
@@ -320,6 +318,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         materialPriceHistory.setQuantity(safeGet(item.getQuantity()));
         materialPriceHistory.setCustomer(customer);
         materialPriceHistory.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
+        materialPriceHistory.setCompany(company);
         materialPriceHistoryRepository.save(materialPriceHistory);
     }
 

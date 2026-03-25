@@ -13,12 +13,17 @@ import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.service.ICustomerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -34,16 +39,12 @@ public class CustomerServiceImpl implements ICustomerService {
     private CompanyRepository companyRepository;
 
     @Override
-    public Customer findCustomerById(Long id) {
-        return customerRepository.findById(id)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-    }
-
-    @Override
     @Transactional
     public Customer addCustomer(DtoCustomer newCustomer, int year, String schemaName) {
 
-        if (customerRepository.existsByCode(newCustomer.getCode())) {
+        Company company = getCompany(schemaName);
+
+        if (customerRepository.existsByCodeAndCompany(newCustomer.getCode(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
         }
 
@@ -55,14 +56,15 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setDistrict(Objects.requireNonNullElse(newCustomer.getDistrict(), "").toUpperCase());
         customer.setVdNo(Objects.requireNonNullElse(newCustomer.getVdNo(), ""));
         customer.setCode(Objects.requireNonNullElse(newCustomer.getCode(), "").trim().toUpperCase());
+        customer.setCompany(company);
         customer.setArchived(false);
         Customer savedCustomer = customerRepository.save(customer);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(savedCustomer.getId(), start, end)
-                .orElseGet(() -> getDefaultVoucher(getCompany(schemaName), customer, start, newCustomer));
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(savedCustomer.getId(), company, start, end)
+                .orElseGet(() -> getDefaultVoucher(company, customer, start, newCustomer));
 
         voucher.setYearlyCredit(safeGet(newCustomer.getYearlyCredit()));
         voucher.setYearlyDebit(safeGet(newCustomer.getYearlyDebit()));
@@ -71,15 +73,30 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
-    public List<Customer> getAllCustomer() {
-        return customerRepository.findAll();
+    public Page<Customer> getAllCustomer(int page, int size, Boolean archived, String search, String schemaName) {
+        Company company = getCompany(schemaName);
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
+        boolean isArchived = archived != null && archived;
+
+        return customerRepository.findAllByCompanyAndArchivedAndSearch(company, isArchived, searchParam, pageable);
     }
 
     @Override
     @Transactional
     public void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear, String schemaName) {
 
-        Customer oldCustomer = customerRepository.findById(id).orElseThrow(
+        Company company = getCompany(schemaName);
+
+        Customer oldCustomer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
@@ -87,9 +104,13 @@ public class CustomerServiceImpl implements ICustomerService {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if (customerRepository.existsByCode(updateCustomer.getCode())
+        if (customerRepository.existsByCodeAndCompany(updateCustomer.getCode(), company)
                 && !updateCustomer.getCode().equals(oldCustomer.getCode())) {
             throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
+        }
+
+        if(!company.equals(oldCustomer.getCompany())) {
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
         oldCustomer.setName(Objects.requireNonNullElse(updateCustomer.getName(), "").toUpperCase());
@@ -103,8 +124,8 @@ public class CustomerServiceImpl implements ICustomerService {
         LocalDate start = LocalDate.of(currentYear, 1, 1);
         LocalDate end = LocalDate.of(currentYear, 12, 31);
 
-        OpeningVoucher openingVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
-                .orElseGet(() -> getDefaultVoucher(getCompany(schemaName), oldCustomer, start, updateCustomer));
+        OpeningVoucher openingVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id, company, start, end)
+                .orElseGet(() -> getDefaultVoucher(company, oldCustomer, start, updateCustomer));
 
 
         BigDecimal updatedCredit = safeGet(updateCustomer.getYearlyCredit());
@@ -142,8 +163,9 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional
-    public void setArchived(List<Long> ids, boolean archived) {
-        customerRepository.updateArchivedStatus(ids, archived);
+    public void setArchived(List<Long> ids, boolean archived, String schemaName) {
+        Company company = getCompany(schemaName);
+        customerRepository.updateArchivedStatus(ids, archived, company);
     }
 
     private Company getCompany(String schemaName) {

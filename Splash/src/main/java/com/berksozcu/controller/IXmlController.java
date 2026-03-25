@@ -15,7 +15,7 @@ public interface IXmlController {
 
      ResponseEntity<?> importMaterialsSalesPrice( MultipartFile file, String schemaName);
 
-     ResponseEntity<?> importCustomers(MultipartFile file);
+     ResponseEntity<?> importCustomers(MultipartFile file, String schemaName);
 
      ResponseEntity<?> importCollections(MultipartFile file, String schemaName);
 

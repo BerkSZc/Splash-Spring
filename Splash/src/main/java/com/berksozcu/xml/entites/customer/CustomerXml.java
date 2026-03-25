@@ -18,6 +18,9 @@ public class CustomerXml {
     @XmlElement(name = "ACC_RISK_TOTAL")
     private String ACC_RISK_TOTAL;
 
+    @XmlElement(name = "COMPANY_ID")
+    private Long COMPANY_ID;
+
     @XmlElement(name = "ADDRESS1")
     private String ADDRESS1;
 

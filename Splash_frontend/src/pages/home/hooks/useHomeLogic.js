@@ -49,11 +49,11 @@ export const useHomeLogic = () => {
         const dateString = `${year}-01-01`;
         await Promise.all([
           getAllCompanies(),
-          getAllCustomers(),
-          getReceivedCollectionsByYear(0, 999, year, tenant),
-          getPaymentCollectionsByYear(0, 999, year, tenant),
-          getPurchaseInvoiceByYear(0, 999, year, tenant),
-          getSalesInvoicesByYear(0, 999, year, tenant),
+          getAllCustomers(0, 999, false, "", tenant),
+          getReceivedCollectionsByYear(0, 999, "", year, tenant),
+          getPaymentCollectionsByYear(0, 999, "", year, tenant),
+          getPurchaseInvoiceByYear(0, 999, "", year, tenant),
+          getSalesInvoicesByYear(0, 999, "", year, tenant),
           getAllOpeningVoucherByYear(dateString, tenant),
         ]);
         if (ignore) return;

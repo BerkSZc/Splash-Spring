@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -65,9 +66,16 @@ public class MaterialServiceImpl implements IMaterialService {
         Company company = companyRepository.findBySchemaName(schemName);
         Pageable pageable = PageRequest.of(page, size, Sort.by("code").ascending());
 
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
         boolean isArchived = archived != null && archived;
 
-        return materialRepository.findByCompanyAndArchivedWithSearch(company, isArchived, search, pageable);
+        return materialRepository.findByCompanyAndArchivedWithSearch(company, isArchived, searchParam, pageable);
     }
 
     @Override
@@ -75,7 +83,7 @@ public class MaterialServiceImpl implements IMaterialService {
     public void updateMaterial(Long id, Material updateMaterial, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        Material existingMaterial = materialRepository.findById(id)
+        Material existingMaterial = materialRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() ->
                         new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
@@ -106,7 +114,7 @@ public class MaterialServiceImpl implements IMaterialService {
     public void deleteMaterial(Long id, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        Material material = materialRepository.findById(id)
+        Material material = materialRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
         if (!material.getCompany().getId().equals(company.getId())) {
@@ -118,9 +126,9 @@ public class MaterialServiceImpl implements IMaterialService {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KULLANIMDA));
         }
 
-        materialPriceHistoryRepository.deleteByMaterialId(material.getId());
+        materialPriceHistoryRepository.deleteByMaterialIdAndCompany(material.getId(), company);
 
-        materialRepository.deleteById(id);
+        materialRepository.deleteByIdAndCompany(id, company);
     }
 
     @Override

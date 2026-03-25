@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMaterialPriceHistory } from "../../../../backend/store/useMaterialPriceHistory.js";
 import { useYear } from "../../../context/YearContext.jsx";
+import { useTenant } from "../../../context/TenantContext.jsx";
 
 export default function MaterialHistoryModal({
   materialId,
@@ -9,12 +10,13 @@ export default function MaterialHistoryModal({
 }) {
   const { history, getHistoryByYear, loading } = useMaterialPriceHistory();
   const { year } = useYear();
+  const { tenant } = useTenant();
   const [selectedType, setSelectedType] = useState("PURCHASE");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (materialId) {
-      getHistoryByYear(materialId, selectedType, year);
+      getHistoryByYear(materialId, selectedType, tenant, year);
       setCurrentIndex(0);
     }
   }, [materialId, selectedType, year]);

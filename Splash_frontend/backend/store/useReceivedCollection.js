@@ -25,18 +25,6 @@ export const useReceivedCollection = create((set) => ({
     }
   },
 
-  getCollections: async () => {
-    set({ loading: true, collections: [] });
-    try {
-      const res = await axiosInstance.get("/receive/find-all");
-      set({ collections: res.data });
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
   editCollection: async (id, receivedCollection, schemaName) => {
     set({ loading: true });
     try {
@@ -69,13 +57,14 @@ export const useReceivedCollection = create((set) => ({
   getReceivedCollectionsByYear: async (
     page = 0,
     size = 20,
+    search = "",
     year,
     schemaName,
   ) => {
     set({ loading: true, collections: [] });
     try {
       const res = await axiosInstance.get(`/receive/find-by-year`, {
-        params: { page, size, year, schemaName },
+        params: { page, size, search, year, schemaName },
       });
       set({
         collections: res.data.content,

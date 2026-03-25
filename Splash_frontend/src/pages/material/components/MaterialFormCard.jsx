@@ -58,6 +58,7 @@ export const MaterialFormCard = ({
             <option value="KG">KG</option>
             <option value="ADET">ADET</option>
             <option value="M">METRE (M)</option>
+            <option value="LT">LT</option>
           </select>
         </div>
 

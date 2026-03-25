@@ -24,12 +24,6 @@ public class ReceivedCollectionControllerImpl implements IReceivedCollectionCont
     }
 
     @Override
-    @GetMapping("/find-all")
-    public List<ReceivedCollection> getAll() {
-        return receivedCollectionService.getAll();
-    }
-
-    @Override
     @PutMapping("/edit/{id}")
     public ReceivedCollection editReceivedCollection(@PathVariable(name ="id") Long id, @RequestBody ReceivedCollection receivedCollection,
             @RequestParam String schemaName) {
@@ -47,8 +41,9 @@ public class ReceivedCollectionControllerImpl implements IReceivedCollectionCont
     @GetMapping("/find-by-year")
     public Page<ReceivedCollection> getReceivedCollectionByYear(@RequestParam(defaultValue = "0") int page,
                                                                 @RequestParam(defaultValue = "20") int size,
+                                                                @RequestParam(required = false) String search,
                                                                 @RequestParam int year,
                                                                 @RequestParam String schemaName) {
-        return receivedCollectionService.getReceivedCollectionsByYear(page, size, year, schemaName);
+        return receivedCollectionService.getReceivedCollectionsByYear(page, size, search, year, schemaName);
     }
 }

@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 
@@ -52,23 +53,24 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     @Override
     @Transactional
     public SalesInvoice addSalesInvoice(Long id, SalesInvoice salesInvoice, String schemaName) {
-        Customer customer = customerRepository.findById(id).orElseThrow(
-                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-
         Company company = companyRepository.findBySchemaName(schemaName);
+
+        Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
+                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if (salesInvoiceRepository.existsByFileNo(salesInvoice.getFileNo())) {
+        if (salesInvoiceRepository.existsByFileNoAndCompany(salesInvoice.getFileNo(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
         LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                id, company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, start, company));
 
         salesInvoice.setCustomer(customer);
@@ -82,7 +84,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         BigDecimal kdvToplam = BigDecimal.ZERO;
 
         for (SalesInvoiceItem item : salesInvoice.getItems()) {
-            Material material = materialRepository.findById(item.getMaterial().getId()).orElseThrow(
+            Material material = materialRepository.findByIdAndCompany(item.getMaterial().getId(), company).orElseThrow(
                     () -> new BaseException(new ErrorMessage(MessageType.MALZEME_ALAN_BOS)));
 
             item.setMaterial(material);
@@ -123,14 +125,9 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         salesInvoiceRepository.save(salesInvoice);
 
         for (SalesInvoiceItem item : salesInvoice.getItems()) {
-            savePriceHistory(item, salesInvoice, customer);
+            savePriceHistory(item, salesInvoice, customer, company);
         }
         return salesInvoice;
-    }
-
-    @Override
-    public List<SalesInvoice> getAllSalesInvoice() {
-        return salesInvoiceRepository.findAll();
     }
 
     @Override
@@ -142,10 +139,10 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
 
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        SalesInvoice oldInvoice = salesInvoiceRepository.findById(id)
+        SalesInvoice oldInvoice = salesInvoiceRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
-        if (salesInvoiceRepository.existsByFileNo(salesInvoice.getFileNo())
+        if (salesInvoiceRepository.existsByFileNoAndCompany(salesInvoice.getFileNo(), company)
                 && !oldInvoice.getFileNo().equals(salesInvoice.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
@@ -158,17 +155,20 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         Customer newCustomer = salesInvoice.getCustomer();
 
         OpeningVoucher oldVoucher =
-                openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+                openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                        oldCustomer.getId(), company, start, end)
                         .orElseGet(() -> getDefaultVoucher(newCustomer, start, company));
 
         oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(safeGet(oldInvoice.getTotalPrice())));
         oldVoucher.setDebit(safeGet(oldVoucher.getDebit()).subtract(safeGet(oldInvoice.getTotalPrice())));
 
-        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                newCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, start, company));
 
         for (SalesInvoiceItem oldItem : oldInvoice.getItems()) {
-            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(oldItem.getMaterial().getId(), oldInvoice.getId());
+            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
+                    oldItem.getMaterial().getId(), oldInvoice.getId(), company);
         }
 
         oldInvoice.setDate(Objects.requireNonNullElse(salesInvoice.getDate(), LocalDate.now()));
@@ -185,7 +185,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
                         && n.getId().equals(old.getId())));
 
         for (SalesInvoiceItem newItem : newItems) {
-            Material material = materialRepository.findById(newItem.getMaterial().getId())
+            Material material = materialRepository.findByIdAndCompany(newItem.getMaterial().getId(), company)
                     .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
             if (newItem.getId() == null) {
@@ -224,7 +224,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            savePriceHistory(item, salesInvoice, newCustomer);
+            savePriceHistory(item, salesInvoice, newCustomer, company);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
@@ -243,10 +243,11 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     @Override
     @Transactional
     public void deleteSalesInvoice(Long id, String schemaName) {
-        SalesInvoice salesInvoice = salesInvoiceRepository.findById(id)
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        SalesInvoice salesInvoice = salesInvoiceRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
 
-        Company company = companyRepository.findBySchemaName(schemaName);
 
         if (!salesInvoice.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
@@ -256,11 +257,13 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, start, company));
 
         for (SalesInvoiceItem salesInvoiceItem : salesInvoice.getItems()) {
-            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceId(salesInvoiceItem.getMaterial().getId(), id);
+            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
+                    salesInvoiceItem.getMaterial().getId(), id, company);
         }
 
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(salesInvoice.getTotalPrice())));
@@ -271,18 +274,25 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
     }
 
     @Override
-    public Page<SalesInvoice> getSalesInvoicesByYear(int page, int size, int year, String schemaName) {
+    public Page<SalesInvoice> getSalesInvoicesByYear(int page, int size, String search, int year, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
-        return salesInvoiceRepository.findByCompanyAndDateBetween(company, start, end, pageable);
+        return salesInvoiceRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
     }
 
-    private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer) {
+    private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer, Company company) {
         MaterialPriceHistory saveHistory = new MaterialPriceHistory();
         saveHistory.setMaterial(item.getMaterial());
         saveHistory.setInvoiceId(Objects.requireNonNullElse(invoice.getId(), 999L));
@@ -292,6 +302,7 @@ public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
         saveHistory.setDate(Objects.requireNonNullElse(invoice.getDate(), LocalDate.now()));
         saveHistory.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
         saveHistory.setCustomer(customer);
+        saveHistory.setCompany(company);
         materialPriceHistoryRepository.save(saveHistory);
     }
 

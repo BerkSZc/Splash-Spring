@@ -27,18 +27,6 @@ export const usePurchaseInvoice = create((set) => ({
     }
   },
 
-  getAllPurchaseInvoices: async () => {
-    set({ loading: true });
-    try {
-      const res = await axiosInstance.get("/purchase/all");
-      set({ purchase: res.data });
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
   editPurchaseInvoice: async (id, purchaseInvoice, schemaName) => {
     set({ loading: true });
     try {
@@ -71,11 +59,17 @@ export const usePurchaseInvoice = create((set) => ({
       set({ loading: false });
     }
   },
-  getPurchaseInvoiceByYear: async (page = 0, size = 20, year, schemaName) => {
+  getPurchaseInvoiceByYear: async (
+    page = 0,
+    size = 20,
+    search,
+    year,
+    schemaName,
+  ) => {
     set({ loading: true, purchase: [] });
     try {
       const res = await axiosInstance.get(`/purchase/find-by-year`, {
-        params: { page, size, year, schemaName },
+        params: { page, size, search, year, schemaName },
       });
       set({
         purchase: res.data.content,

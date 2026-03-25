@@ -24,12 +24,6 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
     }
 
     @Override
-    @GetMapping("/all")
-    public List<SalesInvoice> getAllSalesInvoice() {
-        return salesInvoiceService.getAllSalesInvoice();
-    }
-
-    @Override
     @PutMapping("/update/{id}")
     public SalesInvoice editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody SalesInvoice salesInvoice,
                                          @RequestParam String schemaName) {
@@ -47,8 +41,9 @@ public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
     @GetMapping("/find-by-year")
     public Page<SalesInvoice> getSalesInvoiceByYear(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "20") int size,
+                                                    @RequestParam(required = false) String search,
                                                     @RequestParam int year,
                                                     @RequestParam String schemaName) {
-        return salesInvoiceService.getSalesInvoicesByYear(page, size, year, schemaName);
+        return salesInvoiceService.getSalesInvoicesByYear(page, size, search, year, schemaName);
     }
 }

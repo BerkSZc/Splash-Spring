@@ -48,10 +48,19 @@ export const useFinancialLogic = () => {
   const [type, setType] = useState(() => {
     return localStorage.getItem("collection_type") || "payment";
   });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
     localStorage.setItem("collection_type", type);
   }, [type]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const getInitialDate = (selectedYear) => {
     const currentActualYear = new Date().getFullYear();
@@ -76,7 +85,7 @@ export const useFinancialLogic = () => {
   const syncFinancialData = async () => {
     try {
       await Promise.all([
-        getAllCustomers(),
+        getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
     } catch (error) {
@@ -135,7 +144,7 @@ export const useFinancialLogic = () => {
 
       const mode = type === "received" ? "COLLECTION" : "PAYMENT";
       try {
-        const nextNo = await getFileNo(date, mode);
+        const nextNo = await getFileNo(date, mode, tenant);
 
         if (!ignore && nextNo && nextNo !== addForm.fileNo) {
           setAddForm((prev) => ({ ...prev, fileNo: nextNo }));
@@ -158,9 +167,21 @@ export const useFinancialLogic = () => {
       if (!year || !tenant) return;
       try {
         await Promise.all([
-          getAllCustomers(),
-          getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant),
-          getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant),
+          getAllCustomers(0, 999, false, "", tenant),
+          getReceivedCollectionsByYear(
+            page,
+            PAGE_SIZE,
+            debouncedSearch,
+            year,
+            tenant,
+          ),
+          getPaymentCollectionsByYear(
+            page,
+            PAGE_SIZE,
+            debouncedSearch,
+            year,
+            tenant,
+          ),
         ]);
         if (ignore) return;
       } catch (error) {
@@ -173,26 +194,18 @@ export const useFinancialLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant, page]);
+  }, [year, tenant, page, debouncedSearch]);
 
   const shownList = type === "received" ? collections : payments;
 
-  const filteredList = (Array.isArray(shownList) ? shownList : [])
-    .filter((item) => {
-      const text = search.toLocaleLowerCase("tr-TR");
-      return (
-        item.customer?.name?.toLocaleLowerCase("tr-TR").includes(text) ||
-        item.comment?.toLocaleLowerCase("tr-TR").includes(text) ||
-        item.date?.toLocaleLowerCase("tr-TR").includes(text) ||
-        String(item?.price || "0").includes(text)
-      );
-    })
-    .sort((a, b) => {
+  const filteredList = (Array.isArray(shownList) ? shownList : []).sort(
+    (a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
 
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    });
+    },
+  );
 
   const handleSelectRow = (id) => {
     setSelectedId((prev) => (prev === id ? null : id));
@@ -255,16 +268,29 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await addCollection(customerId, payload, tenant);
-        await getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant);
+        await getReceivedCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       } else {
         await addPayment(customerId, payload, tenant);
-        await getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant);
+        await getPaymentCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       }
       const resetDate = getInitialDate(year);
 
       const nextNo = await getFileNo(
         resetDate,
         type === "received" ? "COLLECTION" : "PAYMENT",
+        tenant,
       );
 
       await syncFinancialData();
@@ -329,12 +355,24 @@ export const useFinancialLogic = () => {
         await editCollection(payload.id, payload, tenant);
         setEditing(null);
 
-        await getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant);
+        await getReceivedCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       } else {
         await editPayment(payload.id, payload, tenant);
         setEditing(null);
 
-        await getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant);
+        await getPaymentCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       }
       await syncFinancialData();
     } catch (error) {
@@ -356,12 +394,24 @@ export const useFinancialLogic = () => {
         await deleteReceivedCollection(deleteTarget.id, tenant);
         setDeleteTarget(null);
 
-        await getReceivedCollectionsByYear(page, PAGE_SIZE, year, tenant);
+        await getReceivedCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       } else {
         await deletePaymentCompany(deleteTarget.id, tenant);
         setDeleteTarget(null);
 
-        await getPaymentCollectionsByYear(page, PAGE_SIZE, year, tenant);
+        await getPaymentCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       }
       await syncFinancialData();
     } catch (error) {

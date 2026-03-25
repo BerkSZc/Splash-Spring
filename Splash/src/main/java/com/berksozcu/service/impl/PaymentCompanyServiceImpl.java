@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -43,17 +44,17 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     @Override
     @Transactional
     public PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName) {
-        Customer customer = customerRepository.findById(id).orElseThrow(
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
-
-        Company company = companyRepository.findBySchemaName(schemaName);
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if(paymentCompanyRepository.existsByFileNo(paymentCompany.getFileNo())) {
+        if(paymentCompanyRepository.existsByFileNoAndCompany(paymentCompany.getFileNo(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
 
@@ -62,7 +63,8 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(paymentDate.getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentDate.getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
         paymentCompany.setCustomer(customer);
@@ -81,23 +83,19 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     }
 
     @Override
-    public List<PaymentCompany> getAll() {
-        return paymentCompanyRepository.findAll();
-    }
-
-    @Override
     @Transactional
     public PaymentCompany editPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName) {
 
-        PaymentCompany oldPayment = paymentCompanyRepository.findById(id)
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        PaymentCompany oldPayment = paymentCompanyRepository.findByIdAndCompany(id, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
 
         Customer newCustomer = paymentCompany.getCustomer();
         Customer oldCustomer = oldPayment.getCustomer();
 
-        Company company = companyRepository.findBySchemaName(schemaName);
 
-        if(paymentCompanyRepository.existsByFileNo(paymentCompany.getFileNo())
+        if(paymentCompanyRepository.existsByFileNoAndCompany(paymentCompany.getFileNo(), company)
         && !oldPayment.getFileNo().equals(paymentCompany.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
@@ -111,7 +109,8 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(date.getYear(), 1, 1);
         LocalDate end = LocalDate.of(date.getYear(), 12, 31);
 
-        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                oldCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
         oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(oldPayment.getPrice()));
@@ -125,7 +124,8 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         oldPayment.setCompany(company);
         oldPayment.setCustomerName(Objects.requireNonNullElse(paymentCompany.getCustomerName(), "").toUpperCase());
 
-        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                newCustomer.getId(), company, start, end)
                         .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
         BigDecimal newFinalBalance = Objects.requireNonNullElse(newVoucher.getFinalBalance(), BigDecimal.ZERO);
@@ -140,10 +140,11 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     @Override
     @Transactional
     public void deletePaymentCompany(Long id, String schemaName) {
-        PaymentCompany paymentCompany = paymentCompanyRepository.findById(id).orElseThrow(
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        PaymentCompany paymentCompany = paymentCompanyRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.ODEME_BULUNAMADI)));
 
-        Company company = companyRepository.findBySchemaName(schemaName);
         Customer customer = paymentCompany.getCustomer();
 
         if(!paymentCompany.getCompany().getId().equals(company.getId())) {
@@ -153,7 +154,8 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
         LocalDate start = LocalDate.of(paymentCompany.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(paymentCompany.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(paymentCompany.getPrice())));
@@ -164,15 +166,22 @@ public class PaymentCompanyServiceImpl implements IPaymentCompanyService {
     }
 
     @Override
-    public Page<PaymentCompany> getPaymentCollectionsByYear(int page, int size, int year, String schemaName) {
+    public Page<PaymentCompany> getPaymentCollectionsByYear(int page, int size, String search, int year, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
-        return paymentCompanyRepository.findByCompanyAndDateBetween(company, start, end, pageable);
+        return paymentCompanyRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
     }
 
     private OpeningVoucher getDefaultVoucher (Company company, Customer newCustomer, LocalDate date) {

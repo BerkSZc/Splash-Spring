@@ -1,7 +1,9 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
+import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.repository.MaterialPriceHistoryRepository;
 import com.berksozcu.service.IMaterialPriceHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,37 +18,47 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
     @Autowired
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Override
     public List<MaterialPriceHistory> getHistoryAllYear(Long materialId,
-                     InvoiceType invoiceType) {
+            String schemaName
+            ,InvoiceType invoiceType) {
+        Company company = companyRepository.findBySchemaName(schemaName);
         return materialPriceHistoryRepository.
-                findByMaterialIdAndInvoiceTypeOrderByDateDesc(materialId, invoiceType);
+                findByMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(materialId, company, invoiceType);
     }
 
     @Override
     public List<MaterialPriceHistory> getHistoryByYear(Long materialId, InvoiceType invoiceType,
+           String schemaName,
            int year) {
+        Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndDateBetweenOrderByDateDesc(materialId, invoiceType,
+        return materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
+                materialId, invoiceType, company,
                 start, end);
     }
 
     @Override
     public List<MaterialPriceHistory> getHistoryByCustomerAndYear(Long customerId, Long materialId,
-                  InvoiceType invoiceType, int year) {
+                  InvoiceType invoiceType, String schemaName, int year) {
+        Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
         return materialPriceHistoryRepository
-                .findByCustomerIdAndMaterialIdAndInvoiceTypeAndDateBetweenOrderByDateDesc(customerId,
-                        materialId, invoiceType, start, end);
+                .findByCustomerIdAndMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(customerId,
+                        materialId, invoiceType, company, start, end);
     }
 
     @Override
     public List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(Long customerId, Long materialId,
-                  InvoiceType invoiceType) {
+                  String schemaName, InvoiceType invoiceType) {
+        Company company = companyRepository.findBySchemaName(schemaName);
         return materialPriceHistoryRepository
-                .findByCustomerIdAndMaterialIdAndInvoiceTypeOrderByDateDesc(customerId,
-                        materialId, invoiceType);
+                .findByCustomerIdAndMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(customerId,
+                        materialId, company, invoiceType);
     }
 }

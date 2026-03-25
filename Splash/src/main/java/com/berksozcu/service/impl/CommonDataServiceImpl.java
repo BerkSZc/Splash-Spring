@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.currency.CurrencyRate;
 import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.entites.payroll.PayrollType;
@@ -37,7 +38,8 @@ public class CommonDataServiceImpl implements ICommonDataService {
     private ReceivedCollectionRepository receivedCollectionRepository;
     @Autowired
     private PaymentCompanyRepository paymentCompanyRepository;
-
+    @Autowired
+    private CompanyRepository companyRepository;
 
     @Scheduled(cron = "0 0 10 * * *")
     @Override
@@ -83,7 +85,8 @@ public class CommonDataServiceImpl implements ICommonDataService {
     }
 
     @Override
-    public String generateFileNo(LocalDate date, String type) {
+    public String generateFileNo(LocalDate date, String type, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(date.getYear(), 1, 1);
         LocalDate end = LocalDate.of(date.getYear(), 12, 31);
 
@@ -92,35 +95,39 @@ public class CommonDataServiceImpl implements ICommonDataService {
 
         switch (type.toUpperCase()) {
             case "PURCHASE" -> {
-                lastNo = purchaseInvoiceRepository.findMaxFileNoByYear(start, end);
+                lastNo = purchaseInvoiceRepository.findMaxFileNoByYearAndCompany(start, end, company);
                 prefix = "ALIS";
             }
             case "SALES" -> {
-                lastNo = salesInvoiceRepository.findMaxFileNoByYear(start, end);
+                lastNo = salesInvoiceRepository.findMaxFileNoByYearAndCompany(start, end, company);
                 prefix = "SOZ";
             }
             case "COLLECTION" -> {
-                lastNo = receivedCollectionRepository.findMaxFileNoByYear(start, end);
+                lastNo = receivedCollectionRepository.findMaxFileNoByYearAndCompany(start, end, company);
                 prefix = "TAH";
             }
             case "PAYMENT" -> {
-                lastNo = paymentCompanyRepository.findMaxFileNoByYear(start, end);
+                lastNo = paymentCompanyRepository.findMaxFileNoByYearAndCompany(start, end, company);
                 prefix = "ODEME";
             }
             case "CHEQUE_IN" -> {
-                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.INPUT, PayrollType.CHEQUE, "%GCEK%");
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndTypeAndCompany(start, end,
+                        PayrollModel.INPUT, PayrollType.CHEQUE, "%GCEK%", company);
                 prefix = "GCEK";
             }
             case "CHEQUE_OUT" -> {
-                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.OUTPUT, PayrollType.CHEQUE, "%CCEK%");
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndTypeAndCompany(start, end,
+                        PayrollModel.OUTPUT, PayrollType.CHEQUE, "%CCEK%", company);
                 prefix = "CCEK";
             }
             case "BOND_IN" -> {
-                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.INPUT, PayrollType.BOND, "%GSENET%");
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndTypeAndCompany(start, end,
+                        PayrollModel.INPUT, PayrollType.BOND, "%GSENET%", company);
                 prefix = "GSENET";
             }
             case "BOND_OUT" -> {
-                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndType(start, end, PayrollModel.OUTPUT, PayrollType.BOND, "%CSENET%");
+                lastNo = payrollRepository.findMaxFileNoByYearAndModelAndTypeAndCompany(start, end,
+                        PayrollModel.OUTPUT, PayrollType.BOND, "%CSENET%", company);
                 prefix = "CSENET";
             }
             default -> {

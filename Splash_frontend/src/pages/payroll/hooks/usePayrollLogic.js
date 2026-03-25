@@ -34,6 +34,7 @@ export const usePayrollLogic = () => {
   const [viewingPayroll, setViewingPayroll] = useState(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [type, setType] = useState(() => {
     return localStorage.getItem("payroll_type") || "cheque_in";
   });
@@ -41,6 +42,14 @@ export const usePayrollLogic = () => {
   useEffect(() => {
     localStorage.setItem("payroll_type", type);
   }, [type]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -67,8 +76,8 @@ export const usePayrollLogic = () => {
   const syncFinancialData = async () => {
     try {
       await Promise.all([
-        getPayrollByYear(page, PAGE_SIZE, year, tenant),
-        getAllCustomers(),
+        getPayrollByYear(page, PAGE_SIZE, debouncedSearch, year, tenant),
+        getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
     } catch (error) {
@@ -144,32 +153,14 @@ export const usePayrollLogic = () => {
   }, [type]);
 
   const filteredList = useMemo(() => {
-    const isCheque = type.includes("cheque");
-    const isInput = type.includes("_in");
-    const searchLower = search.toLowerCase();
-    const list = (payrolls || []).filter((item) => {
-      const typeMatch = isCheque
-        ? item.payrollType === "CHEQUE"
-        : item.payrollType === "BOND";
-      const modelMatch = isInput
-        ? item.payrollModel === "INPUT"
-        : item.payrollModel === "OUTPUT";
-
-      return (
-        typeMatch &&
-        modelMatch &&
-        (item.customer?.name?.toLowerCase().includes(searchLower) ||
-          item.fileNo?.toLowerCase().includes(searchLower) ||
-          item.bankName?.toLowerCase().includes(searchLower))
-      );
-    });
+    const list = payrolls || [];
 
     return [...list].sort((a, b) => {
       const dateA = new Date(a.transactionDate);
       const dateB = new Date(b.transactionDate);
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [payrolls, type, search, sortOrder]);
+  }, [payrolls, sortOrder]);
 
   const totalAmount = useMemo(
     () => filteredList.reduce((sum, item) => sum + Number(item.amount || 0), 0),
@@ -184,6 +175,7 @@ export const usePayrollLogic = () => {
           const nextNo = await getFileNo(
             form.transactionDate,
             type.toUpperCase(),
+            tenant,
           );
           if (!ignore && nextNo) {
             setForm((prev) => ({ ...prev, fileNo: nextNo }));
@@ -207,8 +199,8 @@ export const usePayrollLogic = () => {
       try {
         if (year) {
           await Promise.all([
-            getAllCustomers(),
-            getPayrollByYear(page, PAGE_SIZE, year, tenant),
+            getAllCustomers(0, 999, false, "", tenant),
+            getPayrollByYear(page, PAGE_SIZE, debouncedSearch, year, tenant),
           ]);
         }
         if (!ignore) {
@@ -227,7 +219,7 @@ export const usePayrollLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant, page]);
+  }, [year, tenant, page, debouncedSearch]);
 
   const resetForm = async () => {
     setForm({
@@ -241,7 +233,11 @@ export const usePayrollLogic = () => {
       comment: "",
     });
     try {
-      const nextNo = await getFileNo(getInitialDate(year), type.toUpperCase());
+      const nextNo = await getFileNo(
+        getInitialDate(year),
+        type.toUpperCase(),
+        tenant,
+      );
       if (nextNo) {
         setForm((prev) => ({ ...prev, fileNo: nextNo }));
       }
@@ -370,7 +366,7 @@ export const usePayrollLogic = () => {
     try {
       if (deleteTarget) {
         await deleteCheque(deleteTarget.id, tenant);
-        await getPayrollByYear(page, PAGE_SIZE, year, tenant);
+        await getPayrollByYear(page, PAGE_SIZE, debouncedSearch, year, tenant);
         setDeleteTarget(null);
       }
       await syncFinancialData();

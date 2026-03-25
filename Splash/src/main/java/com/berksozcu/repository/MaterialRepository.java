@@ -16,8 +16,6 @@ import java.util.Optional;
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
 
-    Optional<Material> findByCode(@Param("value") String code);
-
     boolean existsByCodeAndCompany(String code, Company company);
 
     @Modifying
@@ -36,4 +34,8 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     );
 
     List<Material> findAllByCompany(Company company);
+
+    Optional<Material> findByIdAndCompany(Long id, Company company);
+
+    void deleteByIdAndCompany(Long id, Company company);
 }

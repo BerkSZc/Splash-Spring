@@ -2,6 +2,7 @@ package com.berksozcu.xml.service;
 
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.entites.material.Currency;
@@ -80,11 +81,17 @@ public class XmlExportService {
     @Autowired
     private PayrollRepository payrollRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Transactional
-    public byte[] exportPurchaseInvoices(int year) throws Exception {
+    public byte[] exportPurchaseInvoices(int year, String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        List<PurchaseInvoice> purchaseInvoices = purchaseInvoiceRepository.findAllByDateBetween(start, end);
+
+        List<PurchaseInvoice> purchaseInvoices = purchaseInvoiceRepository.findAllByCompanyAndDateBetween(
+                company, start, end);
 
         PurchaseInvoicesXml rootXml = new PurchaseInvoicesXml();
         List<InvoiceXml> invoiceXmlList = new ArrayList<>();
@@ -134,10 +141,13 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportSalesInvoices(int year) throws Exception {
+    public byte[] exportSalesInvoices(int year, String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        List<SalesInvoice> salesInvoiceList = salesInvoiceRepository.findAllByDateBetween(start, end);
+        List<SalesInvoice> salesInvoiceList = salesInvoiceRepository.findAllByCompanyAndDateBetween(
+                company, start, end);
 
         SalesInvoicesXml rootXml = new SalesInvoicesXml();
         List<SalesInvoiceXml> salesInvoiceXmls = new ArrayList<>();
@@ -190,9 +200,9 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportMaterials() throws Exception {
-
-        List<Material> materials = materialRepository.findAll();
+    public byte[] exportMaterials(String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+        List<Material> materials = materialRepository.findAllByCompany(company);
 
         ItemsXml rootXml = new ItemsXml();
         List<MaterialXml> materialXmlList = new ArrayList<>();
@@ -213,10 +223,10 @@ public class XmlExportService {
             }
             mXml.setCOMPANY_CODE(m.getCompany().getId());
             mXml.setARCHIVED(m.isArchived());
-            mXml.setPURCHASE_PRICE(safeGet(m.getPurchasePrice()).setScale(2, RoundingMode.HALF_UP).toString());
-           mXml.setPURCHASE_CURRENCY(Objects.requireNonNullElse(m.getPurchaseCurrency(), Currency.TRY));
-            mXml.setSALES_PRICE(safeGet(m.getSalesPrice()).setScale(2, RoundingMode.HALF_UP).toString());
-           mXml.setSALES_CURRENCY(Objects.requireNonNullElse(m.getSalesCurrency(), Currency.TRY));
+//            mXml.setPURCHASE_PRICE(safeGet(m.getPurchasePrice()).setScale(2, RoundingMode.HALF_UP).toString());
+//           mXml.setPURCHASE_CURRENCY(Objects.requireNonNullElse(m.getPurchaseCurrency(), Currency.TRY));
+//            mXml.setSALES_PRICE(safeGet(m.getSalesPrice()).setScale(2, RoundingMode.HALF_UP).toString());
+//           mXml.setSALES_CURRENCY(Objects.requireNonNullElse(m.getSalesCurrency(), Currency.TRY));
             materialXmlList.add(mXml);
         }
         rootXml.setItems(materialXmlList);
@@ -232,8 +242,10 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportMaterialsPurchasePrice() throws Exception {
-        List<Material> materials = materialRepository.findAll();
+    public byte[] exportMaterialsPurchasePrice(String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        List<Material> materials = materialRepository.findAllByCompany(company);
 
         PurchasePriceXmlList rootXml = new PurchasePriceXmlList();
         List<PriceRecordXml> records = new ArrayList<>();
@@ -260,8 +272,10 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportMaterialsSalesPrice() throws Exception {
-        List<Material> materials = materialRepository.findAll();
+    public byte[] exportMaterialsSalesPrice(String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        List<Material> materials = materialRepository.findAllByCompany(company);
 
         SalesPriceXmlList rootXml = new SalesPriceXmlList();
         List<PriceRecordXml> records = new ArrayList<>();
@@ -288,8 +302,10 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportCustomers() throws Exception {
-        List<Customer> customers = customerRepository.findAll();
+    public byte[] exportCustomers(String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        List<Customer> customers = customerRepository.findAllByCompany(company);
 
         CustomersXml rootXml = new CustomersXml();
         List<CustomerXml> customerXmlList = new ArrayList<>();
@@ -304,6 +320,7 @@ public class XmlExportService {
             cXml.setTAX_ID(Objects.requireNonNullElse(c.getVdNo(), ""));
             cXml.setADDRESS1(Objects.requireNonNullElse(c.getAddress(), ""));
             cXml.setRECORD_STATUS(c.isArchived() ? 1 : 0);
+            cXml.setCOMPANY_ID(c.getCompany().getId());
 
             customerXmlList.add(cXml);
         }
@@ -320,12 +337,16 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportCollections(int year) throws Exception {
+    public byte[] exportCollections(int year, String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start =  LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        List<PaymentCompany> paymentCompanyList = paymentCompanyRepository.findAllByDateBetween(start, end);
-        List<ReceivedCollection> receivedCollectionList = receivedCollectionRepository.findAllByDateBetween(start, end);
+        List<PaymentCompany> paymentCompanyList = paymentCompanyRepository.findAllByCompanyAndDateBetween(
+                company, start, end);
+        List<ReceivedCollection> receivedCollectionList = receivedCollectionRepository.findAllByCompanyAndDateBetween(
+                company, start, end);
 
         CollectionsXml rootXml = new CollectionsXml();
         List<CollectionXml> collectionXmlList = new ArrayList<>();
@@ -382,10 +403,12 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportPayrolls(int year) throws Exception {
+    public byte[] exportPayrolls(int year, String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        List<Payroll> payrollList = payrollRepository.findByTransactionDateBetween(start, end);
+        List<Payroll> payrollList = payrollRepository.findByCompanyAndTransactionDateBetween(company, start, end);
 
         PayrollsXml rootXml = new PayrollsXml();
         List<PayrollRollXml> payrollsXmlList = new ArrayList<>();
@@ -430,10 +453,12 @@ public class XmlExportService {
     }
 
     @Transactional
-    public byte[] exportOpeningVouchers(int year) throws Exception {
+    public byte[] exportOpeningVouchers(int year, String schemaName) throws Exception {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        List<OpeningVoucher> voucherList = openingVoucherRepository.findAllByDateBetween(start, end);
+        List<OpeningVoucher> voucherList = openingVoucherRepository.findAllByCompanyAndDateBetween(company, start, end);
 
         ArpVouchersXml rootXml = new ArpVouchersXml();
         List<ArpVoucherXml> voucherXmlList = new ArrayList<>();

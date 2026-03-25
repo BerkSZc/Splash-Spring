@@ -20,9 +20,10 @@ public class PayrollControllerImpl implements IPayrollController {
     @GetMapping("/find-by-year")
     public Page<Payroll> getPayrollsByYear(@RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "20") int size,
+                                           @RequestParam(required = false) String search,
                                            @RequestParam int year,
                                            @RequestParam String schemaName) {
-        return payrollService.getPayrollsByYear(page, size, year, schemaName);
+        return payrollService.getPayrollsByYear(page, size, search, year, schemaName);
     }
 
     @Override

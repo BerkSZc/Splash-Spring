@@ -48,7 +48,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         // ---------- KAPANIŞ VOUCHER (31.12) ----------
         OpeningVoucher closingVoucher =
                 openingVoucherRepository
-                        .findByCustomerIdAndDate(customer.getId(), closingDate)
+                        .findByCustomerIdAndCompanyAndDate(customer.getId(), company, closingDate)
                         .orElseGet(() -> getDefaultVoucher(company, customer, closingDate));
 
         closingVoucher.setFinalBalance(safeGet(closingVoucher.getFinalBalance()).setScale(2, RoundingMode.HALF_UP));
@@ -57,7 +57,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         // ---------- AÇILIŞ VOUCHER (01.01) ----------
         OpeningVoucher openingVoucher =
                 openingVoucherRepository
-                        .findByCustomerIdAndDate(customer.getId(), openingDate)
+                        .findByCustomerIdAndCompanyAndDate(customer.getId(), company,openingDate)
                         .orElseGet(() -> getDefaultVoucher(company, customer, openingDate));
 
         openingVoucher.setFinalBalance(safeGet(closingVoucher.getFinalBalance()));
@@ -84,7 +84,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
     public List<OpeningVoucher> getAllOpeningVoucherByCustomer(LocalDate date, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        List<Customer> allCustomers = customerRepository.findAll();
+        List<Customer> allCustomers = customerRepository.findAllByCompany(company);
         List<OpeningVoucher> vouchers = new ArrayList<>();
 
         LocalDate start = LocalDate.of(date.getYear(), 1, 1);
@@ -92,7 +92,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
 
         for (Customer customer : allCustomers) {
             OpeningVoucher voucher = openingVoucherRepository
-                    .findByCustomerIdAndDateBetween(customer.getId(), start, end)
+                    .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
                     .orElseGet(() -> getDefaultVoucher(company, customer, start));
             vouchers.add(voucher);
         }
@@ -106,10 +106,10 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         LocalDate start = LocalDate.of(date.getYear(), 1, 1);
         LocalDate end = LocalDate.of(date.getYear(), 12, 31);
 
-        Customer customer = customerRepository.findById(customerId)
+        Customer customer = customerRepository.findByIdAndCompany(customerId, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
-        return openingVoucherRepository.findByCustomerIdAndDateBetween(customerId, start, end)
+        return openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(customerId, company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
     }
 
