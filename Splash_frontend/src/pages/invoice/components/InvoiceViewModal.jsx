@@ -1,4 +1,9 @@
-export default function InvoiceViewModal({ invoice, onClose, formatNumber }) {
+export default function InvoiceViewModal({
+  invoice,
+  onClose,
+  formatNumber,
+  formatDate,
+}) {
   if (!invoice) return null;
 
   const subTotal =
@@ -28,7 +33,7 @@ export default function InvoiceViewModal({ invoice, onClose, formatNumber }) {
               Tarih
             </label>
             <div className="w-full bg-gray-800/50 border-2 border-gray-700 rounded-2xl px-5 py-3 text-white font-medium">
-              {invoice?.date || ""}
+              {formatDate(invoice?.date) || ""}
             </div>
           </div>
           <div className="space-y-2">

@@ -5,12 +5,28 @@ import { axiosInstance } from "../lib/axios";
 export const useClient = create((set, get) => ({
   customers: [],
   loading: false,
+  customerTotalPages: 0,
+  currentPage: 0,
+  lastSearch: "",
+  showArchived: false,
 
-  getAllCustomers: async () => {
-    set({ loading: true, customers: [] });
+  getAllCustomers: async (
+    page = 0,
+    size = 20,
+    archived = false,
+    search = "",
+    schemaName,
+  ) => {
+    set({ loading: true, lastSearch: search, showArchived: archived });
     try {
-      const res = await axiosInstance.get("/customer/list");
-      set({ customers: res.data.data });
+      const res = await axiosInstance.get("/customer/list", {
+        params: { page, size, archived, search, schemaName },
+      });
+      set({
+        customers: res.data.data.content,
+        customerTotalPages: res.data.data.totalPages,
+        currentPage: res.data.data.number,
+      });
     } catch (error) {
       set({ customers: [] });
       throw error;
@@ -25,7 +41,10 @@ export const useClient = create((set, get) => ({
         params: { year, schemaName },
       });
       toast.success("Musteri eklendi");
-      await get().getAllCustomers();
+
+      const { lastSearch, showArchived } = get();
+
+      await get().getAllCustomers(0, 20, showArchived, lastSearch, schemaName);
     } catch (error) {
       throw error;
     } finally {
@@ -47,7 +66,16 @@ export const useClient = create((set, get) => ({
         },
       );
       toast.success("Müşteri değiştirildi");
-      await get().getAllCustomers();
+
+      const { currentPage, lastSearch, showArchived } = get();
+
+      await get().getAllCustomers(
+        currentPage,
+        20,
+        showArchived,
+        lastSearch,
+        schemaName,
+      );
     } catch (error) {
       throw error;
     } finally {
@@ -55,20 +83,29 @@ export const useClient = create((set, get) => ({
     }
   },
 
-  setArchived: async (ids, archived) => {
+  setArchived: async (ids, archived, schemaName) => {
     set({ loading: true });
     const idList = Array.isArray(ids) ? ids : [ids];
     try {
-      await axiosInstance.post(
-        `/customer/archive?archived=${archived}`,
-        idList,
-      );
+      await axiosInstance.post(`/customer/archive`, idList, {
+        params: {
+          archived,
+          schemaName,
+        },
+      });
       toast.success(
         archived
           ? `${idList.length} müşteri arşivlendi`
           : `${idList.length} müşteri arşivden çıkartıldı`,
       );
-      await get().getAllCustomers();
+      const { currentPage, lastSearch, showArchived } = get();
+      await get().getAllCustomers(
+        currentPage,
+        20,
+        showArchived,
+        lastSearch,
+        schemaName,
+      );
     } catch (error) {
       throw error;
     } finally {

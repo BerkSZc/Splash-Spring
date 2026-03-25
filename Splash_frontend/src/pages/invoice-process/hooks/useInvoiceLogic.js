@@ -140,7 +140,7 @@ export const useInvoiceLogic = () => {
       try {
         const [rates, nextNo] = await Promise.all([
           getDailyRates(date),
-          getFileNo(date, mode.toUpperCase()),
+          getFileNo(date, mode.toUpperCase(), tenant),
         ]);
         const setter = mode === "sales" ? setSalesForm : setPurchaseForm;
 
@@ -444,7 +444,7 @@ export const useInvoiceLogic = () => {
     try {
       if (isSales) {
         await addSalesInvoice(Number(currentForm.customerId), payload, tenant);
-        await getSalesInvoicesByYear(0, 999, year, tenant);
+        await getSalesInvoicesByYear(0, 999, "", year, tenant);
       } else {
         await addPurchaseInvoice(
           Number(currentForm.customerId),
@@ -458,7 +458,7 @@ export const useInvoiceLogic = () => {
       setRefreshCounter((prev) => prev + 1);
 
       await Promise.all([
-        getAllCustomers(),
+        getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
     } catch (error) {

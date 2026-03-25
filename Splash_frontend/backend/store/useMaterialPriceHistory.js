@@ -5,13 +5,13 @@ export const useMaterialPriceHistory = create((set) => ({
   history: [],
   loading: false,
 
-  getHistoryByAllYear: async (materialId, invoiceType) => {
+  getHistoryByAllYear: async (materialId, schemaName, invoiceType) => {
     set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-all-year/${materialId}`,
         {
-          params: { invoiceType },
+          params: { schemaName, invoiceType },
         },
       );
       set({ history: res.data });
@@ -23,13 +23,13 @@ export const useMaterialPriceHistory = create((set) => ({
     }
   },
 
-  getHistoryByYear: async (materialId, invoiceType, year) => {
+  getHistoryByYear: async (materialId, invoiceType, schemaName, year) => {
     set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-year/${materialId}`,
         {
-          params: { invoiceType, year },
+          params: { invoiceType, schemaName, year },
         },
       );
       set({ history: res.data });
@@ -45,6 +45,7 @@ export const useMaterialPriceHistory = create((set) => ({
     customerId,
     materialId,
     invoiceType,
+    schemaName,
     year,
   ) => {
     set({ loading: true, history: [] });
@@ -52,7 +53,7 @@ export const useMaterialPriceHistory = create((set) => ({
       const res = await axiosInstance.get(
         `/history/find-by-customer-year/${customerId}/${materialId}`,
         {
-          params: { invoiceType, year },
+          params: { invoiceType, schemaName, year },
         },
       );
       set({ history: res.data });
@@ -67,6 +68,7 @@ export const useMaterialPriceHistory = create((set) => ({
   getHistoryByCustomerAndAllYear: async (
     customerId,
     materialId,
+    schemaName,
     invoiceType,
   ) => {
     set({ loading: true, history: [] });
@@ -74,7 +76,7 @@ export const useMaterialPriceHistory = create((set) => ({
       const res = await axiosInstance.get(
         `/history/find-by-customer-all-year/${customerId}/${materialId}`,
         {
-          params: { invoiceType },
+          params: { schemaName, invoiceType },
         },
       );
       set({ history: res.data });

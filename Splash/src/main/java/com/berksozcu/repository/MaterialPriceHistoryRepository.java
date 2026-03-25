@@ -1,5 +1,6 @@
 package com.berksozcu.repository;
 
+import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,28 +14,28 @@ public interface MaterialPriceHistoryRepository extends JpaRepository<MaterialPr
 
     //Fatura tipine göre belli bir malzemenin liste şeklinde mali yıl içinde
     // fiyat geçmişine bakmak için kullanılır.
-    List<MaterialPriceHistory> findByMaterialIdAndInvoiceTypeAndDateBetweenOrderByDateDesc(
-            Long materialId, InvoiceType invoiceType, LocalDate start, LocalDate end);
+    List<MaterialPriceHistory> findByMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
+            Long materialId, InvoiceType invoiceType, Company company,LocalDate start, LocalDate end);
 
    //Fatura tipine göre belli bir malzemenin liste şeklinde tüm yıllar içinde
    // fiyat geçmişine bakmak için kullanılır.
-   List<MaterialPriceHistory> findByMaterialIdAndInvoiceTypeOrderByDateDesc(
-            Long materialId, InvoiceType invoiceType
+   List<MaterialPriceHistory> findByMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(
+            Long materialId, Company company, InvoiceType invoiceType
    );
 
     //Fatura tipine göre ve Müşteriye göre belli bir malzemenin liste şeklinde mali yıl içinde
     // fiyat geçmişine bakmak için kullanılır.
-   List<MaterialPriceHistory> findByCustomerIdAndMaterialIdAndInvoiceTypeAndDateBetweenOrderByDateDesc(
-           Long customerId, Long materialId, InvoiceType invoiceType, LocalDate start, LocalDate end
+   List<MaterialPriceHistory> findByCustomerIdAndMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
+           Long customerId, Long materialId, InvoiceType invoiceType, Company company, LocalDate start, LocalDate end
    );
 
    //Fatura tipine göre ve Müşteriye göre belli bir malzemenin liste şeklinde tüm yıllar içinde
     // fiyat geçmişine bakmak için kullanılır.
-   List<MaterialPriceHistory> findByCustomerIdAndMaterialIdAndInvoiceTypeOrderByDateDesc(
-           Long customerId, Long materialId, InvoiceType invoiceType
+   List<MaterialPriceHistory> findByCustomerIdAndMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(
+           Long customerId, Long materialId, Company company, InvoiceType invoiceType
    );
 
-    void deleteByMaterialIdAndInvoiceId(Long material, Long invoiceId);
+    void deleteByMaterialIdAndInvoiceIdAndCompany(Long material, Long invoiceId, Company company);
 
-    void deleteByMaterialId(Long materialId);
+    void deleteByMaterialIdAndCompany(Long materialId, Company company);
 }

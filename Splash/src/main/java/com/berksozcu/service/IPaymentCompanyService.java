@@ -7,8 +7,7 @@ import java.util.List;
 
 public interface IPaymentCompanyService {
      PaymentCompany addPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName);
-     List<PaymentCompany> getAll();
      PaymentCompany editPaymentCompany(Long id, PaymentCompany paymentCompany, String schemaName);
      void deletePaymentCompany(Long id, String schemaName);
-     Page<PaymentCompany> getPaymentCollectionsByYear(int page, int size, int year, String schemaName);
+     Page<PaymentCompany> getPaymentCollectionsByYear(int page, int size, String search, int year, String schemaName);
 }

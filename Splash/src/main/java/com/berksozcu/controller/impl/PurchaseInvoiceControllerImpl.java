@@ -25,18 +25,6 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
     }
 
     @Override
-    @GetMapping("/all-invoice/{id}")
-    public List<PurchaseInvoice> findAllPurchaseInvoiceByCustomerId(@PathVariable(name = "id") Long id) {
-        return purchaseInvoice.findAllPurchaseInvoiceByCustomerId(id);
-    }
-
-    @Override
-    @GetMapping("/all")
-    public List<PurchaseInvoice> getAllPurchaseInvoice() {
-        return purchaseInvoice.getAllPurchaseInvoice();
-    }
-
-    @Override
     @PutMapping("/update/{id}")
     public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice,
                                                @RequestParam String schemaName) {
@@ -54,9 +42,10 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
     @GetMapping("/find-by-year")
     public Page<PurchaseInvoice> getPurchaseInvoiceByYear(@RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "20") int size,
+                                                          @RequestParam(required = false) String search,
                                                           @RequestParam int year,
                                                           @RequestParam String schemaName
     ) {
-        return purchaseInvoice.getPurchaseInvoiceByDateBetween(page, size, year, schemaName);
+        return purchaseInvoice.getPurchaseInvoiceByDateBetween(page, size, search, year, schemaName);
     }
 }

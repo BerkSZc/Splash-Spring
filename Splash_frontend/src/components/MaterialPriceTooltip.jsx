@@ -5,6 +5,7 @@ import { useMaterialPriceHistory } from "../../backend/store/useMaterialPriceHis
 import { useYear } from "../context/YearContext.jsx";
 import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
+import { useTenant } from "../context/TenantContext.jsx";
 
 export default function MaterialPriceTooltip({
   materialId,
@@ -27,6 +28,7 @@ export default function MaterialPriceTooltip({
   const [selectedType, setSelectedType] = useState("PURCHASE");
   const [currentIndex, setCurrentIndex] = useState(0);
   const { year } = useYear();
+  const { tenant } = useTenant();
   const menuRef = useRef(null);
   const menuPopupRef = useRef(null);
 
@@ -52,13 +54,24 @@ export default function MaterialPriceTooltip({
 
     try {
       if (mode === "YEARLY") {
-        await getHistoryByYear(materialId, type, year);
+        await getHistoryByYear(materialId, type, tenant, year);
       } else if (mode === "ALL") {
-        await getHistoryByAllYear(materialId, type);
+        await getHistoryByAllYear(materialId, tenant, type);
       } else if (mode === "CUSTOMER-YEARLY") {
-        await getHistoryByCustomerAndYear(customerId, materialId, type, year);
+        await getHistoryByCustomerAndYear(
+          customerId,
+          materialId,
+          type,
+          tenant,
+          year,
+        );
       } else if (mode === "CUSTOMER-ALL") {
-        await getHistoryByCustomerAndAllYear(customerId, materialId, type);
+        await getHistoryByCustomerAndAllYear(
+          customerId,
+          materialId,
+          tenant,
+          type,
+        );
       }
     } catch (error) {
       const backendErr =

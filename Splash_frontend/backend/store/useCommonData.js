@@ -31,11 +31,11 @@ export const useCommonData = create((set) => ({
       set({ loading: false });
     }
   },
-  getFileNo: async (date, type) => {
+  getFileNo: async (date, type, schemaName) => {
     set({ loading: true });
     try {
       const res = await axiosInstance.get(`/currency/file-no`, {
-        params: { date, type },
+        params: { date, type, schemaName },
       });
       return res.data;
     } catch (error) {

@@ -79,17 +79,17 @@ export const useXmlImportLogic = () => {
       refMap[type]?.current?.click();
     } else {
       try {
-        if (type === "invoice") await exportPurchaseInvoice(year);
-        else if (type === "sales") await exportSalesInvoice(year);
-        else if (type === "materials") await exportMaterials();
+        if (type === "invoice") await exportPurchaseInvoice(year, tenant);
+        else if (type === "sales") await exportSalesInvoice(year, tenant);
+        else if (type === "materials") await exportMaterials(tenant);
         else if (type === "materialsPurchasePrice")
-          await exportMaterialsPurchasePrice();
+          await exportMaterialsPurchasePrice(tenant);
         else if (type === "materialsSalesPrice")
-          await exportMaterialsSalesPrice();
-        else if (type === "customers") await exportCustomers();
-        else if (type === "collections") await exportCollections(year);
-        else if (type === "payrolls") await exportPayrolls(year);
-        else if (type === "vouchers") await exportOpeningVouchers(year);
+          await exportMaterialsSalesPrice(tenant);
+        else if (type === "customers") await exportCustomers(tenant);
+        else if (type === "collections") await exportCollections(year, tenant);
+        else if (type === "payrolls") await exportPayrolls(year, tenant);
+        else if (type === "vouchers") await exportOpeningVouchers(year, tenant);
       } catch (error) {
         const backendErr =
           error?.response?.data?.exception?.message ||
@@ -115,7 +115,7 @@ export const useXmlImportLogic = () => {
         await importMaterialsPurchasePrice(file, tenant);
       else if (type === "materialsSalesPrice")
         await importMaterialsSalesPrice(file, tenant);
-      else if (type === "customers") await importCustomers(file);
+      else if (type === "customers") await importCustomers(file, tenant);
       else if (type === "collections") await importCollections(file, tenant);
       else if (type === "sales") await importSalesInvoice(file, tenant);
       else if (type === "payrolls") await importPayrolls(file, tenant);

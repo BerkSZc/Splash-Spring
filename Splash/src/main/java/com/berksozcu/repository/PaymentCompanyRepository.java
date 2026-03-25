@@ -15,17 +15,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PaymentCompanyRepository extends JpaRepository<PaymentCompany, Long> {
-    List<PaymentCompany> findByDateBetween(LocalDate start, LocalDate end);
 
-    List<PaymentCompany> findAllByDateBetween(LocalDate start, LocalDate end);
+    List<PaymentCompany> findAllByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end);
 
-    boolean existsByFileNo(String fileNo);
+    boolean existsByFileNoAndCompany(String fileNo, Company company);
 
-    @Query("SELECT MAX(p.fileNo) FROM PaymentCompany p WHERE p.date BETWEEN :start AND :end AND p.fileNo LIKE 'ODEME%'")
-    String findMaxFileNoByYear(@Param("start") LocalDate start, @Param("end") LocalDate end);
+    @Query("SELECT MAX(p.fileNo) FROM PaymentCompany p " +
+            "WHERE p.date BETWEEN :start AND :end " +
+            "AND p.fileNo LIKE 'ODEME%' AND " +
+            "p.company = :company ")
+    String findMaxFileNoByYearAndCompany(@Param("start") LocalDate start,
+                               @Param("end") LocalDate end,
+                               @Param("company") Company company);
 
     @Modifying
     @Transactional
@@ -34,6 +39,14 @@ public interface PaymentCompanyRepository extends JpaRepository<PaymentCompany, 
                                          @Param("start") LocalDate start,
                                          @Param("end") LocalDate end);
 
-    Page<PaymentCompany> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end,
+    @Query("SELECT p FROM PaymentCompany p WHERE p.company = :company " +
+            "AND p.date BETWEEN :start AND :end " +
+            "AND (:search IS NULL OR :search = '' " +
+            "OR LOWER(p.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<PaymentCompany> findByCompanyAndSearchAndDateBetween(Company company, String search, LocalDate start, LocalDate end,
                                                      Pageable pageable);
+    Optional<PaymentCompany> findByIdAndCompany(Long id, Company company);
+
+    List<PaymentCompany> findAllByCompany(Company company);
 }

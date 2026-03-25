@@ -14,20 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice, Long> {
     //    @Query(value = "SELECT * FROM PurchaseInvoiceRepository WHERE id=?",nativeQuery = true)
     List<PurchaseInvoice> findAllByCustomerId(Long id);
 
-    List<PurchaseInvoice> findByDateBetween(LocalDate start, LocalDate end);
+    boolean existsByFileNoAndCompany(String fileNo, Company company);
 
-    boolean existsByFileNo(String fileNo);
+    List<PurchaseInvoice> findAllByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end);
 
-    List<PurchaseInvoice> findAllByDateBetween(LocalDate start, LocalDate end);
-
-    @Query("SELECT MAX(p.fileNo) FROM PurchaseInvoice p WHERE p.date BETWEEN :start AND :end AND p.fileNo LIKE 'ALIS%'")
-    String findMaxFileNoByYear(@Param("start") LocalDate start, @Param("end") LocalDate end);
+    @Query("SELECT MAX(p.fileNo) FROM PurchaseInvoice p " +
+            "WHERE p.date BETWEEN :start AND :end AND " +
+            " p.fileNo LIKE 'ALIS%' AND " +
+            " p.company = :company ")
+    String findMaxFileNoByYearAndCompany(@Param("start") LocalDate start
+            , @Param("end") LocalDate end, @Param("company") Company company);
 
     @Modifying
     @Transactional
@@ -43,7 +46,13 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     List<DtoMonthlyKdv> getMonthlyPurchases(@Param("year") int year, @Param("companyId") Long companyId);
 
 
-    Page<PurchaseInvoice> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end,
+    @Query("SELECT p FROM PurchaseInvoice p WHERE p.company = :company " +
+            "AND p.date BETWEEN :start AND :end " +
+            "AND (:search IS NULL OR :search = '' " +
+            "OR LOWER(p.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<PurchaseInvoice> findByCompanyAndSearchAndDateBetween(Company company, String search, LocalDate start, LocalDate end,
                                                       Pageable pageable);
 
+    Optional<PurchaseInvoice> findByIdAndCompany(Long id, Company company);
 }

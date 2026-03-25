@@ -19,16 +19,17 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
     @Override
     @GetMapping("/find-by-all-year/{materialId}")
     public List<MaterialPriceHistory> getHistoryAllYear(
-            @PathVariable(name = "materialId") Long materialId, @RequestParam InvoiceType invoiceType
+            @PathVariable(name = "materialId") Long materialId, @RequestParam String schemaName,
+            @RequestParam InvoiceType invoiceType
   ) {
-        return materialPriceHistory.getHistoryAllYear(materialId, invoiceType);
+        return materialPriceHistory.getHistoryAllYear(materialId, schemaName, invoiceType);
     }
 
     @Override
     @GetMapping("/find-by-year/{materialId}")
     public List<MaterialPriceHistory> getHistoryByYear(@PathVariable(name = "materialId") Long materialId,
-           @RequestParam InvoiceType invoiceType, @RequestParam int year) {
-        return materialPriceHistory.getHistoryByYear(materialId, invoiceType, year);
+           @RequestParam InvoiceType invoiceType, @RequestParam String schemaName, @RequestParam int year) {
+        return materialPriceHistory.getHistoryByYear(materialId, invoiceType, schemaName,year);
     }
 
     @Override
@@ -37,8 +38,9 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
             @PathVariable(name = "customerId") Long customerId,
             @PathVariable(name = "materialId") Long materialId,
            @RequestParam InvoiceType invoiceType,
+            @RequestParam String schemaName,
             @RequestParam int year) {
-        return materialPriceHistory.getHistoryByCustomerAndYear(customerId, materialId, invoiceType, year);
+        return materialPriceHistory.getHistoryByCustomerAndYear(customerId, materialId, invoiceType, schemaName, year);
     }
 
     @Override
@@ -46,7 +48,8 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
     public List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(
             @PathVariable(name = "customerId") Long customerId,
             @PathVariable(name = "materialId") Long materialId,
+           @RequestParam String schemaName,
            @RequestParam InvoiceType invoiceType) {
-        return materialPriceHistory.getHistoryByCustomerAndAllYear(customerId, materialId, invoiceType);
+        return materialPriceHistory.getHistoryByCustomerAndAllYear(customerId, materialId, schemaName, invoiceType);
     }
 }

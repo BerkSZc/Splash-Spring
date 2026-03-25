@@ -109,11 +109,7 @@ export default function MaterialPage() {
                 placeholder="Malzeme ara..."
                 className="bg-gray-900 border-2 border-gray-800 rounded-xl px-4 py-2 pl-10 text-sm focus:border-blue-500 outline-none transition-all w-64"
                 value={state.search}
-                onChange={(e) =>
-                  handlers.handleSearch(
-                    e.target.value.toLocaleUpperCase("tr-TR"),
-                  )
-                }
+                onChange={(e) => handlers.handleSearch(e.target.value)}
               />
               <svg
                 className="w-4 h-4 text-gray-500 absolute left-3 top-3"

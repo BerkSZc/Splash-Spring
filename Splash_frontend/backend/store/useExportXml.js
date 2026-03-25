@@ -5,11 +5,11 @@ import { axiosInstance } from "../lib/axios";
 export const useExportXml = create((set) => ({
   loading: false,
 
-  exportPurchaseInvoice: async (year) => {
+  exportPurchaseInvoice: async (year, schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/purchase-invoices", {
-        params: { year },
+        params: { year, schemaName },
         responseType: "blob",
       });
 
@@ -28,11 +28,11 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportSalesInvoice: async (year) => {
+  exportSalesInvoice: async (year, schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/sales-invoices", {
-        params: { year },
+        params: { year, schemaName },
         responseType: "blob",
       });
 
@@ -51,11 +51,12 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportMaterials: async () => {
+  exportMaterials: async (schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/materials", {
         responseType: "blob",
+        params: { schemaName },
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -72,13 +73,14 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportMaterialsPurchasePrice: async () => {
+  exportMaterialsPurchasePrice: async (schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get(
         "/export/materials-purchase-price",
         {
           responseType: "blob",
+          params: { schemaName },
         },
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -96,13 +98,14 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportMaterialsSalesPrice: async () => {
+  exportMaterialsSalesPrice: async (schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get(
         "/export/materials-sales-price",
         {
           responseType: "blob",
+          params: { schemaName },
         },
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -120,11 +123,12 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportCustomers: async () => {
+  exportCustomers: async (schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/customers", {
         responseType: "blob",
+        params: { schemaName },
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -141,11 +145,11 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportCollections: async (year) => {
+  exportCollections: async (year, schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/collections", {
-        params: { year },
+        params: { year, schemaName },
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -163,11 +167,11 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportPayrolls: async (year) => {
+  exportPayrolls: async (year, schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/payrolls", {
-        params: { year },
+        params: { year, schemaName },
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -186,11 +190,11 @@ export const useExportXml = create((set) => ({
       set({ loading: false });
     }
   },
-  exportOpeningVouchers: async (year) => {
+  exportOpeningVouchers: async (year, schemaName) => {
     set({ loading: true });
     try {
       const response = await axiosInstance.get("/export/vouchers", {
-        params: { year },
+        params: { year, schemaName },
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));

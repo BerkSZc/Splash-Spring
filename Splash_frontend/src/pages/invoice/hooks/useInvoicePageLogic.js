@@ -50,6 +50,15 @@ export const useInvoicePageLogic = () => {
   const [invoiceType, setInvoiceType] = useState(() => {
     return localStorage.getItem("invoice_type") || "sales";
   });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     localStorage.setItem("invoice_type", invoiceType);
@@ -75,13 +84,25 @@ export const useInvoicePageLogic = () => {
       try {
         await Promise.all([
           getMaterials(0, 999, "", false, tenant),
-          getAllCustomers(),
+          getAllCustomers(0, 999, false, "", tenant),
         ]);
         if (ignore) return;
 
         invoiceType === "purchase"
-          ? await getPurchaseInvoiceByYear(page, PAGE_SIZE, year, tenant)
-          : await getSalesInvoicesByYear(page, PAGE_SIZE, year, tenant);
+          ? await getPurchaseInvoiceByYear(
+              page,
+              PAGE_SIZE,
+              debouncedSearch,
+              year,
+              tenant,
+            )
+          : await getSalesInvoicesByYear(
+              page,
+              PAGE_SIZE,
+              debouncedSearch,
+              year,
+              tenant,
+            );
       } catch (error) {
         const backendErr =
           error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -92,7 +113,7 @@ export const useInvoicePageLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, invoiceType, tenant, page]);
+  }, [year, invoiceType, tenant, page, debouncedSearch]);
 
   useEffect(() => {
     const handleGlobalClick = (event) => {
@@ -131,7 +152,7 @@ export const useInvoicePageLogic = () => {
   const syncFinancialData = async () => {
     try {
       await Promise.all([
-        getAllCustomers(),
+        getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
     } catch (error) {
@@ -365,10 +386,22 @@ export const useInvoicePageLogic = () => {
     try {
       if (invoiceType === "purchase") {
         await editPurchaseInvoice(editingInvoice.id, payload, tenant);
-        await getPurchaseInvoiceByYear(page, PAGE_SIZE, year, tenant);
+        await getPurchaseInvoiceByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       } else {
         await editSalesInvoice(editingInvoice.id, payload, tenant);
-        await getSalesInvoicesByYear(page, PAGE_SIZE, year, tenant);
+        await getSalesInvoicesByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       }
       await syncFinancialData();
       setEditingInvoice(null);
@@ -385,10 +418,22 @@ export const useInvoicePageLogic = () => {
     try {
       if (invoiceType === "purchase") {
         await deletePurchaseInvoice(deleteTarget.id, tenant);
-        await getPurchaseInvoiceByYear(page, PAGE_SIZE, year, tenant);
+        await getPurchaseInvoiceByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       } else {
         await deleteSalesInvoice(deleteTarget.id, tenant);
-        await getSalesInvoicesByYear(page, PAGE_SIZE, year, tenant);
+        await getSalesInvoicesByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+        );
       }
       await syncFinancialData();
       setSelectedInvoiceId(null);
@@ -491,22 +536,13 @@ export const useInvoicePageLogic = () => {
     const baseData = invoiceType === "purchase" ? purchase : sales;
     const dataArray = Array.isArray(baseData) ? baseData : [];
 
-    const filtered = dataArray.filter((inv) => {
-      const term = searchTerm.toLocaleLowerCase("tr-TR");
-      return (
-        inv.fileNo?.toString().toLocaleLowerCase("tr-TR").includes(term) ||
-        inv.customer?.name?.toLocaleLowerCase("tr-TR").includes(term) ||
-        inv.date?.toLocaleLowerCase("tr-TR").includes(term)
-      );
-    });
-
-    return [...filtered].sort((a, b) => {
+    return [...dataArray].sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
 
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [purchase, sales, invoiceType, searchTerm, sortOrder]);
+  }, [purchase, sales, invoiceType, sortOrder]);
 
   const formatDateToTR = (dateString) => {
     if (

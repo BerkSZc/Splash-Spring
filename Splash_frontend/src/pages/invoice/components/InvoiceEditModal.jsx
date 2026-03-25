@@ -172,6 +172,7 @@ export default function InvoiceEditModal({
                       <option value="KG">kg</option>
                       <option value="ADET">adet</option>
                       <option value="M">m</option>
+                      <option value="LT">lt</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">

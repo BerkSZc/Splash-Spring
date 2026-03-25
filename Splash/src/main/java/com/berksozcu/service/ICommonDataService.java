@@ -9,5 +9,5 @@ public interface ICommonDataService {
      void updateRatesFromTcmb();
      BigDecimal getRateOrDefault(String currency, LocalDate invoiceDate);
      BigDecimal getTodaysRate(String code, LocalDate invoiceDate);
-     String generateFileNo(LocalDate date, String type);
+     String generateFileNo(LocalDate date, String type, String schemaName);
 }

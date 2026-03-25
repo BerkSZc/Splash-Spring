@@ -57,7 +57,7 @@ export default function PayrollTable({
             </span>
             <input
               type="text"
-              placeholder="Müşteri, banka veya no ara..."
+              placeholder="Müşteri, banka, şube veya no ara..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-gray-800/50 border border-gray-700 rounded-2xl pl-11 pr-4 py-2 text-sm outline-none focus:border-blue-500 w-full sm:w-80 transition"

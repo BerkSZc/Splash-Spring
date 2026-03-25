@@ -3,6 +3,7 @@ package com.berksozcu.controller.base;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -35,6 +36,14 @@ public class RootEntity<T> {
 
     public static <T>RootEntity<List<T>> list(List<T> data) {
         RootEntity<List<T>> rootEntity = new RootEntity<>();
+        rootEntity.setResult(true);
+        rootEntity.setErrorMessage(null);
+        rootEntity.setData(data);
+        return rootEntity;
+    }
+
+    public static <T>RootEntity<Page<T>> page(Page<T> data) {
+        RootEntity<Page<T>> rootEntity = new RootEntity<>();
         rootEntity.setResult(true);
         rootEntity.setErrorMessage(null);
         rootEntity.setData(data);

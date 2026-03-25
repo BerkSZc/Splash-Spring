@@ -1,5 +1,5 @@
 DROP TYPE IF EXISTS public.unit_status CASCADE;
-CREATE TYPE public.unit_status AS ENUM ('KG', 'ADET', 'M');
+CREATE TYPE public.unit_status AS ENUM ('KG', 'ADET', 'M', 'LT');
 
 DROP TYPE IF EXISTS public.currency_status CASCADE;
 CREATE TYPE public.currency_status AS ENUM ('TRY', 'EUR', 'USD');
@@ -13,11 +13,30 @@ CREATE TYPE public.payroll_model_enum AS ENUM ('INPUT', 'OUTPUT', 'UNKNOWN');
 DROP TYPE IF EXISTS public.payroll_type_enum CASCADE;
 CREATE TYPE public.payroll_type_enum AS ENUM ('CHEQUE', 'BOND', 'UNKNOWN');
 
+CREATE COLLATION IF NOT EXISTS tr_tr_custom (
+    provider = 'icu',
+    locale = 'tr-TR'
+);
+
 CREATE CAST (varchar AS public.currency_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.unit_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.invoice_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.payroll_model_enum) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.payroll_type_enum) WITH INOUT AS IMPLICIT;
+
+-- ---------------------------
+-- 1. ŞİRKET TABLOSU
+-- ---------------------------
+CREATE TABLE IF NOT EXISTS company (
+id BIGSERIAL PRIMARY KEY,
+name VARCHAR(255) COLLATE tr_tr_custom,
+schema_name VARCHAR(255),
+description VARCHAR(255)
+);
+
+-- ---------------------------
+-- 1. MÜŞTERİ TABLOSU
+-- ---------------------------
 
 CREATE TABLE IF NOT EXISTS customer (
     id BIGSERIAL PRIMARY KEY,
@@ -28,17 +47,9 @@ CREATE TABLE IF NOT EXISTS customer (
     district VARCHAR(100),
     vd_no VARCHAR(50),
     customer_code VARCHAR(255),
-    archived BOOLEAN NOT NULL DEFAULT FALSE
-);
-
--- ---------------------------
--- 1. ŞİRKET TABLOSU
--- ---------------------------
-CREATE TABLE IF NOT EXISTS company (
-id BIGSERIAL PRIMARY KEY,
-name VARCHAR(255),
-schema_name VARCHAR(255),
-description VARCHAR(255)
+    company_id BIGINT NOT NULL,
+    archived BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- ---------------------------
@@ -47,8 +58,8 @@ description VARCHAR(255)
 
   CREATE TABLE IF NOT EXISTS material (
       id BIGSERIAL PRIMARY KEY ,
-      code VARCHAR(50) NOT NULL,
-      comment VARCHAR(255),
+      code VARCHAR(50) NOT NULL COLLATE tr_tr_custom,
+      comment VARCHAR(255) COLLATE tr_tr_custom,
       unit public.unit_status NOT NULL,
       company_id BIGINT NOT NULL,
       purchase_price DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
@@ -166,11 +177,15 @@ CREATE TABLE material_price_history (
     customer_name VARCHAR(255),
     quantity DECIMAL(18, 2),
     customer_id BIGINT,
+    company_id BIGINT,
 
     CONSTRAINT cutomer_price
         FOREIGN KEY (customer_id) REFERENCES customer(id),
     CONSTRAINT fk_material_price_history_material
-        FOREIGN KEY (material_id) REFERENCES material(id)
+        FOREIGN KEY (material_id) REFERENCES material(id),
+
+        CONSTRAINT fk_material_price_history_company
+        FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 

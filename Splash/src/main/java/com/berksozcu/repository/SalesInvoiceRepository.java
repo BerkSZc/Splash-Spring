@@ -14,17 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long> {
-    List<SalesInvoice> findByDateBetween(LocalDate start, LocalDate end);
 
-    List<SalesInvoice> findAllByDateBetween(LocalDate start, LocalDate end);
+    List<SalesInvoice> findAllByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end);
 
-    boolean existsByFileNo(String fileNo);
+    boolean existsByFileNoAndCompany(String fileNo, Company company);
 
-    @Query(value = "SELECT MAX(s.fileNo) FROM SalesInvoice s WHERE s.date BETWEEN :start AND :end AND s.fileNo LIKE 'SOZ%'")
-    String findMaxFileNoByYear(LocalDate start, LocalDate end);
+    @Query(value = "SELECT MAX(s.fileNo) FROM SalesInvoice s " +
+            "WHERE s.date BETWEEN :start AND :end AND " +
+            " s.fileNo LIKE 'SOZ%' AND " +
+            " s.company = :company " )
+    String findMaxFileNoByYearAndCompany(LocalDate start, LocalDate end, Company company);
 
     @Modifying
     @Transactional
@@ -39,5 +42,12 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long
             "ORDER BY MONTH(si.date)")
     List<DtoMonthlyKdv> getMonthlySales(@Param("year") int year, @Param("companyId") Long companyId);
 
-    Page<SalesInvoice> findByCompanyAndDateBetween(Company company, LocalDate start, LocalDate end, Pageable pageable);
+    @Query("SELECT s FROM SalesInvoice s WHERE s.company = :company " +
+            "AND s.date BETWEEN :start AND :end " +
+            "AND (:search IS NULL OR :search = '' " +
+            "OR LOWER(s.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(s.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<SalesInvoice> findByCompanyAndSearchAndDateBetween(Company company, String search, LocalDate start, LocalDate end, Pageable pageable);
+
+    Optional<SalesInvoice> findByIdAndCompany(Long id, Company company);
 }

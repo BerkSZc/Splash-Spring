@@ -128,6 +128,7 @@ export default function InvoicePage() {
             invoice={state.viewingInvoice}
             onClose={() => handlers.setViewingInvoice(null)}
             formatNumber={state.formatNumber}
+            formatDate={state.formatDateToTR}
           />
         )}
 

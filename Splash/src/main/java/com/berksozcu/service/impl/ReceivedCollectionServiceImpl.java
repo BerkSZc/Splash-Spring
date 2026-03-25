@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -43,25 +44,25 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     @Override
     @Transactional
     public ReceivedCollection addCollection(Long id, ReceivedCollection receivedCollection, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
 
-        Customer customer = customerRepository.findById(id).orElseThrow(() ->
+        Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(() ->
                 new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
-
-        Company company = companyRepository.findBySchemaName(schemaName);
 
         if (customer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if(receivedCollectionRepository.existsByFileNo(receivedCollection.getFileNo())) {
+        if(receivedCollectionRepository.existsByFileNoAndCompany(receivedCollection.getFileNo(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
 
         LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(id, start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                id, company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
         receivedCollection.setComment(Objects.requireNonNullElse(receivedCollection.getComment(), ""));
@@ -80,20 +81,15 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     }
 
     @Override
-    public List<ReceivedCollection> getAll() {
-        return receivedCollectionRepository.findAll();
-    }
-
-    @Override
     @Transactional
     public ReceivedCollection editReceivedCollection(Long id, ReceivedCollection receivedCollection, String schemaName) {
-
-        ReceivedCollection oldCollection = receivedCollectionRepository.findById(id)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI)));
-
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        if(receivedCollectionRepository.existsByFileNo(receivedCollection.getFileNo())
+        ReceivedCollection oldCollection = receivedCollectionRepository.findByIdAndCompany(id, company)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI)));
+
+
+        if(receivedCollectionRepository.existsByFileNoAndCompany(receivedCollection.getFileNo(), company)
         && !oldCollection.getFileNo().equals(receivedCollection.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
@@ -108,13 +104,15 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         Customer newCustomer = receivedCollection.getCustomer();
         Customer oldCustomer = oldCollection.getCustomer();
 
-        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(oldCustomer.getId(), start, end)
+        OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                oldCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
         oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).add(safeGet(oldCollection.getPrice())));
         oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldCollection.getPrice())));
 
-        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndDateBetween(newCustomer.getId(), start, end)
+        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                newCustomer.getId(), company, start, end)
                         .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
         newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).subtract(safeGet(receivedCollection.getPrice())));
@@ -137,12 +135,13 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     @Override
     @Transactional
     public void deleteReceivedCollection(Long id, String schemaName) {
-        ReceivedCollection receivedCollection = receivedCollectionRepository.findById(id).orElseThrow(
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        ReceivedCollection receivedCollection = receivedCollectionRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.TAHSILAT_BULUNAMADI))
         );
 
         Customer customer = receivedCollection.getCustomer();
-        Company company = companyRepository.findBySchemaName(schemaName);
 
         if(!receivedCollection.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
@@ -151,7 +150,8 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
         LocalDate start = LocalDate.of(receivedCollection.getDate().getYear(), 1, 1);
         LocalDate end = LocalDate.of(receivedCollection.getDate().getYear(), 12, 31);
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndDateBetween(customer.getId(), start, end)
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(receivedCollection.getPrice())));
@@ -162,16 +162,23 @@ public class ReceivedCollectionServiceImpl implements IReceivedCollectionService
     }
 
     @Override
-    public Page<ReceivedCollection> getReceivedCollectionsByYear(int page, int size, int year,
+    public Page<ReceivedCollection> getReceivedCollectionsByYear(int page, int size, String search, int year,
                                                                  String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
+        String searchParam;
+        if (search == null || search.trim().isEmpty()) {
+            searchParam = "";
+        } else {
+            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
-        return receivedCollectionRepository.findByCompanyAndDateBetween(company, start, end, pageable);
+        return receivedCollectionRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
     }
 
     private OpeningVoucher getDefaultVoucher(Customer newCustomer, Company company, LocalDate start) {

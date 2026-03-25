@@ -1,9 +1,9 @@
 package com.berksozcu.entites.customer;
 
+import com.berksozcu.entites.company.Company;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -39,6 +39,9 @@ import java.math.BigDecimal;
         @Column(name= "vd_no")
         private String vdNo;
 
+        @ManyToOne
+        @JoinColumn(name = "company_id")
+        private Company company;
 
         @Column(nullable = false)
         private boolean archived = false;
