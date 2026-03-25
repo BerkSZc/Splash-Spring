@@ -451,7 +451,7 @@ export const useInvoiceLogic = () => {
           payload,
           tenant,
         );
-        await getPurchaseInvoiceByYear(0, 999, year, tenant);
+        await getPurchaseInvoiceByYear(0, 999, "", year, tenant);
       }
       resetForm();
 
