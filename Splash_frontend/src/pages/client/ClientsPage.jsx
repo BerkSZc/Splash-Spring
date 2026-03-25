@@ -33,7 +33,10 @@ export default function ClientsPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <button
-              onClick={() => handlers.setShowArchived(!state.showArchived)}
+              onClick={() => {
+                handlers.setPage(0);
+                handlers.setShowArchived(!state.showArchived);
+              }}
               className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap ${
                 state.showArchived
                   ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20"

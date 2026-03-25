@@ -83,8 +83,9 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void addPaymentCompany_ShouldThrowException_WhenCustomerNotExists() {
         Long nonExistentCustomerId = 99L;
-
-        when(customerRepository.findById(nonExistentCustomerId)).thenReturn(Optional.empty());
+        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(nonExistentCustomerId, mockCompany))
+                .thenReturn(Optional.empty());
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.addPaymentCompany(nonExistentCustomerId, mockPayment, "company"));
@@ -96,7 +97,8 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void addPaymentCompany_ShouldThrowException_WhenCustomerIsArchived() {
         mockCustomer.setArchived(true);
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
+        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company"));
@@ -107,8 +109,11 @@ public class PaymentCompanyServiceImplTest {
 
     @Test
     void addPaymentCompany_ShouldThrowException_WhenFileNoExists() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
-        when(paymentCompanyRepository.existsByFileNo(any())).thenReturn(true);
+        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
+
+        when(paymentCompanyRepository.existsByFileNoAndCompany(mockPayment.getFileNo(), mockCompany))
+                .thenReturn(true);
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company"));
@@ -125,10 +130,11 @@ public class PaymentCompanyServiceImplTest {
         mockPayment.setDate(null);
         mockPayment.setComment(null);
 
-        when(customerRepository.findById(anyLong())).thenReturn(Optional.of(mockCustomer));
-        when(companyRepository.findBySchemaName(anyString())).thenReturn(mockCompany);
+        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any()))
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(eq(1L),
+                eq(mockCompany), any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher));
 
         paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company");
@@ -146,9 +152,10 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void addPaymentCompany_ShouldUpdateVoucherBalancesAndSaveEverything() {
 
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any())).thenReturn(Optional.of(mockOpeningVoucher));
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any())).thenReturn(Optional.of(mockOpeningVoucher));
 
         paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company");
 
@@ -161,12 +168,13 @@ public class PaymentCompanyServiceImplTest {
 
     @Test
     void editPaymentCompany_ShouldThrowException_WhenPaymentNotFound() {
-       Long paymentId = 1L;
-
-        when(paymentCompanyRepository.findById(paymentId)).thenReturn(Optional.empty());
+        Long paymentId = 1L;
+        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
+                .thenReturn(Optional.empty());
 
         BaseException exception = assertThrows(BaseException.class, () ->
-        paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPayment, "company"));
+                paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPayment, "company"));
 
         assertEquals("Hata Kodu: 1005 Ödeme bulunamadı", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
@@ -178,9 +186,11 @@ public class PaymentCompanyServiceImplTest {
         PaymentCompany request = new PaymentCompany();
         request.setFileNo("ASSS1");
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.existsByFileNo(request.getFileNo())).thenReturn(true);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockPayment));
+
+        when(paymentCompanyRepository.existsByFileNoAndCompany(request.getFileNo(), mockCompany))
+                .thenReturn(true);
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.editPaymentCompany(1L, request, "company")
@@ -195,8 +205,8 @@ public class PaymentCompanyServiceImplTest {
         Company request = new Company();
         request.setId(2L);
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(request);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, request)).thenReturn(Optional.of(mockPayment));
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.editPaymentCompany(1L, mockPayment, "company"));
@@ -219,11 +229,15 @@ public class PaymentCompanyServiceImplTest {
         newOpeningVoucher.setDebit(new BigDecimal("500.00"));
         newOpeningVoucher.setFinalBalance(new BigDecimal("500.00"));
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.existsByFileNo(request.getFileNo())).thenReturn(false);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+                .thenReturn(Optional.of(mockPayment));
 
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any()))
+        when(paymentCompanyRepository.existsByFileNoAndCompany(request.getFileNo(), mockCompany))
+                .thenReturn(false);
+
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenReturn(Optional.of(newOpeningVoucher));
 
@@ -247,9 +261,11 @@ public class PaymentCompanyServiceImplTest {
 
         ArgumentCaptor<OpeningVoucher> voucherCaptor = ArgumentCaptor.forClass(OpeningVoucher.class);
 
-        when(paymentCompanyRepository.findById(paymentId)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any()))
+        when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
+                .thenReturn(Optional.of(mockPayment));
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any()))
                 .thenReturn(Optional.empty());
 
         when(openingVoucherRepository.save(any(OpeningVoucher.class))).thenAnswer(i -> {
@@ -284,10 +300,12 @@ public class PaymentCompanyServiceImplTest {
 
     @Test
     void editPaymentCompany_ShouldUpdateFinalBalanceAndDebit_AfterExceptions() {
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+                .thenReturn(Optional.of(mockPayment));
 
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any()))
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenThrow(new RuntimeException("Test Durduruldu"));
 
@@ -314,15 +332,17 @@ public class PaymentCompanyServiceImplTest {
         inputPayment.setFileNo(null);
         inputPayment.setCustomerName(null);
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+                .thenReturn(Optional.of(mockPayment));
 
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any())).
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any())).
                 thenReturn(Optional.of(mockOpeningVoucher))
                 .thenThrow(new RuntimeException("Test Durduruldu"));
 
         try {
-        paymentCompanyServiceImpl.editPaymentCompany(1L, inputPayment, "company");
+            paymentCompanyServiceImpl.editPaymentCompany(1L, inputPayment, "company");
         } catch (RuntimeException e) {
             // HATA
         }
@@ -344,10 +364,12 @@ public class PaymentCompanyServiceImplTest {
         newOpeningVoucher.setFinalBalance(new BigDecimal("100.00"));
         newOpeningVoucher.setDebit(new BigDecimal("0.00"));
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+                .thenReturn(Optional.of(mockPayment));
 
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any()))
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenReturn(Optional.of(newOpeningVoucher));
 
@@ -363,7 +385,9 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void deletePaymentCompany_ShouldThrowException_WhenPaymentNotFound() {
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+                .thenReturn(Optional.empty());
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.deletePaymentCompany(1L, "company"));
@@ -376,21 +400,28 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void deletePaymentCompany_ShouldThrowException_WhenCompanyIdIsInvalid() {
 
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
-        when(companyRepository.findBySchemaName("company")).thenReturn(new Company());
+        Company request = new Company();
+        request.setId(1L);
+
+        when(companyRepository.findBySchemaName("company")).thenReturn(request);
+        when(paymentCompanyRepository.findByIdAndCompany(1L, request))
+                .thenReturn(Optional.of(mockPayment));
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 paymentCompanyServiceImpl.deletePaymentCompany(1L, "company"));
 
-    assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
-    verify(paymentCompanyRepository, never()).delete(any());
+        assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
+        verify(paymentCompanyRepository, never()).delete(any());
     }
 
     @Test
     void deletePaymentCompany_ShouldUpdateVoucherBalanceAndSaveEverything() {
-        when(paymentCompanyRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(openingVoucherRepository.findByCustomerIdAndDateBetween(anyLong(), any(), any()))
+        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+                .thenReturn(Optional.of(mockPayment));
+
+        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+                any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher));
 
         paymentCompanyServiceImpl.deletePaymentCompany(1L, "company");

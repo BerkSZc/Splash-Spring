@@ -26,7 +26,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,7 +81,8 @@ public class PurchaseInvoiceServiceImplTest {
 
     @Test
     void addPurchaseInvoice_ShouldThrowException_WhenCustomerNotExists() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+        when(companyRepository.findBySchemaName("Company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.empty());
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, mockInvoice, "Company"));
@@ -94,8 +94,9 @@ public class PurchaseInvoiceServiceImplTest {
     @Test
     void addPurchaseInvoice_ShouldThrowException_WhenCustomerIsArchived() {
         mockCustomer.setArchived(true);
+        when(companyRepository.findBySchemaName("Company")).thenReturn(mockCompany);
 
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
         BaseException exception = assertThrows(BaseException.class, () ->
                 purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, mockInvoice, "Company"));
@@ -106,7 +107,8 @@ public class PurchaseInvoiceServiceImplTest {
 
     @Test
     void addPurchaseInvoice_ShouldThrowException_WhenFileNoExists() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
+        when(companyRepository.findBySchemaName("Company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
         when(purchaseInvoiceRepository.existsByFileNoAndCompany("NO123", mockCompany)).thenReturn(true);
 
         BaseException exception = assertThrows(BaseException.class, () ->
@@ -121,8 +123,8 @@ public class PurchaseInvoiceServiceImplTest {
 
         PurchaseInvoice spyInvoice = spy(mockInvoice);
 
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(mockCustomer));
         when(companyRepository.findBySchemaName("Company")).thenReturn(mockCompany);
+        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
         doThrow(new RuntimeException("Test Durduruldu"))
                 .when(spyInvoice).setFileNo("NO123");
