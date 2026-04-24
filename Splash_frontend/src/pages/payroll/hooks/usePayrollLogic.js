@@ -76,7 +76,7 @@ export const usePayrollLogic = () => {
   const syncFinancialData = async () => {
     try {
       await Promise.all([
-        getPayrollByYear(page, PAGE_SIZE, debouncedSearch, year, tenant),
+        getPayrollByYear(page, PAGE_SIZE, debouncedSearch, type, year, tenant),
         getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
@@ -200,7 +200,14 @@ export const usePayrollLogic = () => {
         if (year) {
           await Promise.all([
             getAllCustomers(0, 999, false, "", tenant),
-            getPayrollByYear(page, PAGE_SIZE, debouncedSearch, year, tenant),
+            getPayrollByYear(
+              page,
+              PAGE_SIZE,
+              debouncedSearch,
+              type,
+              year,
+              tenant,
+            ),
           ]);
         }
         if (!ignore) {
@@ -219,7 +226,7 @@ export const usePayrollLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant, page, debouncedSearch]);
+  }, [year, tenant, page, debouncedSearch, type]);
 
   const resetForm = async () => {
     setForm({
@@ -366,7 +373,14 @@ export const usePayrollLogic = () => {
     try {
       if (deleteTarget) {
         await deleteCheque(deleteTarget.id, tenant);
-        await getPayrollByYear(page, PAGE_SIZE, debouncedSearch, year, tenant);
+        await getPayrollByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          type,
+          year,
+          tenant,
+        );
         setDeleteTarget(null);
       }
       await syncFinancialData();

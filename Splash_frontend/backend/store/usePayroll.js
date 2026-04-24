@@ -12,13 +12,14 @@ export const usePayroll = create((set) => ({
     page = 0,
     size = 20,
     search = "",
+    type,
     year,
     schemaName,
   ) => {
     set({ loading: true, payrolls: [] });
     try {
       const res = await axiosInstance.get(`/payroll/find-by-year`, {
-        params: { page, size, search, year, schemaName },
+        params: { page, size, search, type, year, schemaName },
       });
       set({
         payrolls: res.data.content,

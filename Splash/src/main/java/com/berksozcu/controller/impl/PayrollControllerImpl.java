@@ -21,9 +21,10 @@ public class PayrollControllerImpl implements IPayrollController {
     public Page<Payroll> getPayrollsByYear(@RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "20") int size,
                                            @RequestParam(required = false) String search,
+                                           @RequestParam String type,
                                            @RequestParam int year,
                                            @RequestParam String schemaName) {
-        return payrollService.getPayrollsByYear(page, size, search, year, schemaName);
+        return payrollService.getPayrollsByYear(page, size, search, type, year, schemaName);
     }
 
     @Override
