@@ -360,6 +360,8 @@ export const useInvoicePageLogic = () => {
         unitPrice: Number(i.unitPrice),
         quantity: Number(i.quantity),
         kdv: Number(i.kdv),
+        lineTotal: Number(parseNumber(i.lineTotal)) || 0,
+        kdvTutar: Number(parseNumber(i.kdvTutar)) || 0,
       })),
     };
 

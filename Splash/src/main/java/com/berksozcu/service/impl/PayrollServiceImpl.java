@@ -180,8 +180,6 @@ public class PayrollServiceImpl implements IPayrollService {
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        PayrollType pType = type.contains("cheque") ? PayrollType.CHEQUE : PayrollType.BOND;
-        PayrollModel pModel = type.contains("_in") ? PayrollModel.INPUT : PayrollModel.OUTPUT;
 
         String searchParam;
         if (search == null || search.trim().isEmpty()) {
@@ -191,6 +189,13 @@ public class PayrollServiceImpl implements IPayrollService {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
+
+        if(type == null || type.isEmpty()) {
+            return payrollRepository.findAllByStatement(company, searchParam,start, end, pageable);
+        }
+
+        PayrollType pType = type.contains("cheque") ? PayrollType.CHEQUE : PayrollType.BOND;
+        PayrollModel pModel = type.contains("_in") ? PayrollModel.INPUT : PayrollModel.OUTPUT;
 
         return payrollRepository.findByCompanyAndSearchAndTransactionDateBetween(company, searchParam, start, end, pType, pModel, pageable);
     }

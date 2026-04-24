@@ -22,11 +22,12 @@ export default function InvoiceEditModal({
     const handleF2Key = (e) => {
       if (e.key === "F2") {
         e.preventDefault();
+        e.stopPropagation();
         onSave();
       }
     };
-    window.addEventListener("keydown", handleF2Key);
-    return () => window.removeEventListener("keydown", handleF2Key);
+    window.addEventListener("keydown", handleF2Key, true);
+    return () => window.removeEventListener("keydown", handleF2Key, true);
   }, [onSave]);
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md ">
