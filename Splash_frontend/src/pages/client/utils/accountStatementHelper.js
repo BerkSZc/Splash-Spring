@@ -13,6 +13,12 @@ export const accountStatementHelper = (
   let combined = [];
   if (!selectedCustomer) return [];
   const targetId = Number(selectedCustomer.id);
+  const selectedYear = Number(year);
+
+  const isCorrectYear = (dateString) => {
+    if (!dateString) return false;
+    return new Date(dateString).getFullYear() === selectedYear;
+  };
 
   const formatDateToTR = (dateString) => {
     if (!dateString || typeof dateString !== "string") return dateString;
@@ -38,7 +44,9 @@ export const accountStatementHelper = (
 
   // 2. Satış Faturaları (BORÇ)
   (sales || [])
-    .filter((inv) => Number(inv.customer?.id) === targetId)
+    .filter(
+      (inv) => Number(inv.customer?.id) === targetId && isCorrectYear(inv.date),
+    )
     .forEach((inv) => {
       combined.push({
         date: inv.date,
@@ -50,7 +58,9 @@ export const accountStatementHelper = (
 
   // 3. Alınan Tahsilatlar (ALACAK)
   (collections || [])
-    .filter((col) => Number(col.customer?.id) === targetId)
+    .filter(
+      (col) => Number(col.customer?.id) === targetId && isCorrectYear(col.date),
+    )
     .forEach((col) => {
       combined.push({
         date: col.date,
@@ -62,7 +72,10 @@ export const accountStatementHelper = (
 
   // 4. ÇEK VE SENET (BORÇ / ALACAK Ayrımı)
   (Array.isArray(payrolls) ? payrolls : [])
-    .filter((p) => Number(p.customer?.id) === targetId)
+    .filter(
+      (p) =>
+        Number(p.customer?.id) === targetId && isCorrectYear(p.transactionDate),
+    )
     .forEach((p) => {
       const typeLabel = p.payrollType === "CHEQUE" ? "Çek" : "Senet";
       const isInput = p.payrollModel === "INPUT";
@@ -79,7 +92,9 @@ export const accountStatementHelper = (
 
   // 5. Satın Alma Faturaları (ALACAK)
   (purchase || [])
-    .filter((inv) => Number(inv.customer?.id) === targetId)
+    .filter(
+      (inv) => Number(inv.customer?.id) === targetId && isCorrectYear(inv.date),
+    )
     .forEach((inv) => {
       combined.push({
         date: inv.date,
@@ -91,7 +106,9 @@ export const accountStatementHelper = (
 
   // 6. Yapılan Ödemeler (BORÇ)
   (payments || [])
-    .filter((pay) => Number(pay.customer?.id) === targetId)
+    .filter(
+      (pay) => Number(pay.customer?.id) === targetId && isCorrectYear(pay.date),
+    )
     .forEach((pay) => {
       combined.push({
         date: pay.date,

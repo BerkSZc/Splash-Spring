@@ -5,12 +5,12 @@ import YearDropdown from "./YearDropdown.jsx";
 import CompanyDropDown from "./CompanyDropDown.jsx";
 
 const NAV_ITEMS = [
-  { label: "Malzemeler", to: "/malzeme-ekle", icon: "📦" },
-  { label: "Kasa İşlemleri", to: "/tahsilatlar", icon: "💰" },
   { label: "Fatura İşlemleri", to: "/faturalar-islemleri", icon: "📋" },
   { label: "Faturalar", to: "/faturalar", icon: "🧾" },
-  { label: "Çek-Senet", to: "/payroll", icon: "🏦" },
   { label: "Cari Hesaplar", to: "/musteriler", icon: "👥" },
+  { label: "Kasa İşlemleri", to: "/tahsilatlar", icon: "💰" },
+  { label: "Çek-Senet", to: "/payroll", icon: "🏦" },
+  { label: "Malzemeler", to: "/malzeme-ekle", icon: "📦" },
   { label: "Raporlar", to: "/raporlar", icon: "📊" },
 ];
 

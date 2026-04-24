@@ -27,13 +27,13 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
             "AND p.payrollModel = :model " +
             "AND p.payrollType = :type " +
             "AND p.fileNo LIKE :prefix " +
-            "AND p.company = :company " )
+            "AND p.company = :company ")
     String findMaxFileNoByYearAndModelAndTypeAndCompany(@Param("start") LocalDate start,
-                                              @Param("end") LocalDate end,
-                                              @Param("model") PayrollModel model,
-                                              @Param("type") PayrollType type,
-                                              @Param("prefix") String prefix,
-                                              @Param("company") Company company);
+                                                        @Param("end") LocalDate end,
+                                                        @Param("model") PayrollModel model,
+                                                        @Param("type") PayrollType type,
+                                                        @Param("prefix") String prefix,
+                                                        @Param("company") Company company);
 
     @Modifying
     @Transactional
@@ -50,9 +50,15 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
             "OR LOWER(p.bankBranch) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Payroll> findByCompanyAndSearchAndTransactionDateBetween(Company company, String search, LocalDate start, LocalDate end,
-                                                         PayrollType pType,
-                                                         PayrollModel pModel,
-                                                         Pageable pageable);
+                                                                  PayrollType pType,
+                                                                  PayrollModel pModel,
+                                                                  Pageable pageable);
+
+    @Query("SELECT p FROM Payroll p WHERE p.company = :company " +
+            "AND p.transactionDate BETWEEN :start AND :end " +
+            "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Payroll> findAllByStatement(Company company, String search, LocalDate start, LocalDate end,
+                            Pageable pageable);
 
     Optional<Payroll> findByIdAndCompany(Long id, Company company);
 
