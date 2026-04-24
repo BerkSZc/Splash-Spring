@@ -42,12 +42,16 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
 
     @Query("SELECT p FROM Payroll p WHERE p.company = :company " +
             "AND p.transactionDate BETWEEN :start AND :end " +
+            "AND p.payrollType = :pType  " +
+            "AND p.payrollModel = :pModel  " +
             "AND (:search IS NULL OR :search = '' " +
             "OR LOWER(p.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(p.bankName) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(p.bankBranch) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Payroll> findByCompanyAndSearchAndTransactionDateBetween(Company company, String search, LocalDate start, LocalDate end,
+                                                         PayrollType pType,
+                                                         PayrollModel pModel,
                                                          Pageable pageable);
 
     Optional<Payroll> findByIdAndCompany(Long id, Company company);

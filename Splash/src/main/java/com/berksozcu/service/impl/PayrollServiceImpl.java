@@ -15,7 +15,6 @@ import com.berksozcu.repository.OpeningVoucherRepository;
 import com.berksozcu.repository.PayrollRepository;
 import com.berksozcu.service.IPayrollService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -54,7 +52,7 @@ public class PayrollServiceImpl implements IPayrollService {
         );
 
 
-        if(payrollRepository.existsByFileNoAndCompany(newPayroll.getFileNo(), company)) {
+        if (payrollRepository.existsByFileNoAndCompany(newPayroll.getFileNo(), company)) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
         }
 
@@ -62,7 +60,7 @@ public class PayrollServiceImpl implements IPayrollService {
         LocalDate end = LocalDate.of(newPayroll.getTransactionDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id,
-                         company, start, end)
+                        company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
         newPayroll.setCustomer(customer);
@@ -91,12 +89,12 @@ public class PayrollServiceImpl implements IPayrollService {
         );
 
 
-        if(payrollRepository.existsByFileNoAndCompany(editPayroll.getFileNo(), company)
-        &&  !oldPayroll.getFileNo().equals(editPayroll.getFileNo())) {
+        if (payrollRepository.existsByFileNoAndCompany(editPayroll.getFileNo(), company)
+                && !oldPayroll.getFileNo().equals(editPayroll.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
         }
 
-        if(!oldPayroll.getCompany().getId().equals(company.getId())) {
+        if (!oldPayroll.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
@@ -104,10 +102,10 @@ public class PayrollServiceImpl implements IPayrollService {
         LocalDate end = LocalDate.of(editPayroll.getTransactionDate().getYear(), 12, 31);
 
         Customer oldCustomer = oldPayroll.getCustomer();
-        Customer newCustomer =  editPayroll.getCustomer();
+        Customer newCustomer = editPayroll.getCustomer();
 
         OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                oldCustomer.getId(), company, start, end)
+                        oldCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
 
@@ -120,8 +118,8 @@ public class PayrollServiceImpl implements IPayrollService {
         }
 
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                newCustomer.getId(), company, start, end)
-                        .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
+                        newCustomer.getId(), company, start, end)
+                .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
         oldPayroll.setCompany(company);
         oldPayroll.setPayrollType(Objects.requireNonNullElse(editPayroll.getPayrollType(), PayrollType.UNKNOWN));
@@ -152,7 +150,7 @@ public class PayrollServiceImpl implements IPayrollService {
 
         Customer customer = payroll.getCustomer();
 
-        if(!payroll.getCompany().getId().equals(company.getId())) {
+        if (!payroll.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
@@ -160,7 +158,7 @@ public class PayrollServiceImpl implements IPayrollService {
         LocalDate end = LocalDate.of(payroll.getTransactionDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                customer.getId(), company, start, end)
+                        customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
 
@@ -176,11 +174,14 @@ public class PayrollServiceImpl implements IPayrollService {
     }
 
     @Override
-    public Page<Payroll> getPayrollsByYear(int page, int size, String search, int year, String schemaName) {
+    public Page<Payroll> getPayrollsByYear(int page, int size, String search, String type, int year, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
+
+        PayrollType pType = type.contains("cheque") ? PayrollType.CHEQUE : PayrollType.BOND;
+        PayrollModel pModel = type.contains("_in") ? PayrollModel.INPUT : PayrollModel.OUTPUT;
 
         String searchParam;
         if (search == null || search.trim().isEmpty()) {
@@ -191,10 +192,10 @@ public class PayrollServiceImpl implements IPayrollService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
 
-        return payrollRepository.findByCompanyAndSearchAndTransactionDateBetween(company, searchParam, start, end, pageable);
+        return payrollRepository.findByCompanyAndSearchAndTransactionDateBetween(company, searchParam, start, end, pType, pModel, pageable);
     }
 
-    private void updateBalance( Payroll newPayroll, OpeningVoucher voucher) {
+    private void updateBalance(Payroll newPayroll, OpeningVoucher voucher) {
         if (newPayroll.getPayrollModel() == PayrollModel.INPUT) {
             voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(newPayroll.getAmount())));
             voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(newPayroll.getAmount())));

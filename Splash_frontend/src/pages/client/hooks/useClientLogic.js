@@ -194,7 +194,7 @@ export const useClientLogic = () => {
         getPurchaseInvoiceByYear(0, 999, "", year, tenant),
         getPaymentCollectionsByYear(0, 999, "", year, tenant),
         getReceivedCollectionsByYear(0, 999, "", year, tenant),
-        getPayrollByYear(0, 999, "", year, tenant),
+        getPayrollByYear(0, 999, "", "", year, tenant),
       ]);
       setShowPrintModal(true);
     } catch (error) {
