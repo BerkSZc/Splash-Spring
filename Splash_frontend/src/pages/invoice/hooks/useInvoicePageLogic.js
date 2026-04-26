@@ -51,6 +51,11 @@ export const useInvoicePageLogic = () => {
     return localStorage.getItem("invoice_type") || "sales";
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    setShowAddForm(false);
+  }, [invoiceType]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,7 +70,13 @@ export const useInvoicePageLogic = () => {
   }, [invoiceType]);
 
   useEffect(() => {
-    if (printItem || deleteTarget || editingInvoice || viewingInvoice) {
+    if (
+      printItem ||
+      deleteTarget ||
+      editingInvoice ||
+      viewingInvoice ||
+      showAddForm
+    ) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -74,7 +85,7 @@ export const useInvoicePageLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [printItem, deleteTarget, editingInvoice, viewingInvoice]);
+  }, [printItem, deleteTarget, editingInvoice, viewingInvoice, showAddForm]);
 
   useEffect(() => {
     let ignore = false;
@@ -353,16 +364,21 @@ export const useInvoicePageLogic = () => {
       },
       usdSellingRate: Number(form.usdSellingRate),
       eurSellingRate: Number(form.eurSellingRate),
-      items: (Array.isArray(form.items) ? form.items : []).map((i) => ({
-        id: i.id || null,
-        material: { id: Number(i.materialId) },
-        unit: i.unit,
-        unitPrice: Number(i.unitPrice),
-        quantity: Number(i.quantity),
-        kdv: Number(i.kdv),
-        lineTotal: Number(parseNumber(i.lineTotal)) || 0,
-        kdvTutar: Number(parseNumber(i.kdvTutar)) || 0,
-      })),
+      items: (Array.isArray(form.items) ? form.items : []).map((i) => {
+        const netTutar = Number(i.unitPrice) * Number(i.quantity);
+        const satirKdv = (netTutar * Number(i.kdv)) / 100;
+
+        return {
+          id: i.id || null,
+          material: { id: Number(i.materialId) },
+          unit: i.unit,
+          unitPrice: Number(i.unitPrice),
+          quantity: Number(i.quantity),
+          kdv: Number(i.kdv),
+          lineTotal: netTutar + satirKdv,
+          kdvTutar: satirKdv,
+        };
+      }),
     };
 
     const selectedYear = new Date(form.date).getFullYear();
@@ -629,6 +645,7 @@ export const useInvoicePageLogic = () => {
       totalPages:
         invoiceType === "purchase" ? purchaseTotalPages : salesTotalPages,
       viewingInvoice,
+      showAddForm,
     },
     handlers: {
       toggleMenu,
@@ -654,6 +671,7 @@ export const useInvoicePageLogic = () => {
       setPage,
       setViewingInvoice,
       handleView,
+      setShowAddForm,
     },
   };
 };

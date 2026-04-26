@@ -79,12 +79,12 @@ function App() {
             isAuthenticated ? <CollectionPage /> : <Navigate to={"/login"} />
           }
         />
-        <Route
+        {/* <Route
           path="/faturalar-islemleri"
           element={
             isAuthenticated ? <InvoiceForm /> : <Navigate to={"/login"} />
           }
-        />
+        /> */}
         <Route
           path="/raporlar"
           element={

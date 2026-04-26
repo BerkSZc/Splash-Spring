@@ -165,6 +165,7 @@ export default function MaterialPage() {
           contextMenu={state.contextMenu}
           selectionMode={state.selectionMode}
           showArchived={state.showArchived}
+          showHistorySubMenu={state.showHistorySubMenu}
           onEdit={handlers.handleEdit}
           onClose={() => handlers.setContextMenu(null)}
           setArchiveTargetId={handlers.setArchiveTargetId}
@@ -176,6 +177,8 @@ export default function MaterialPage() {
           onSelectMaterial={handlers.setMenuItemId}
           onView={handlers.handleView}
           onShowHistory={handlers.handleShowHistory}
+          onSetShowHistorySubMenu={handlers.setShowHistorySubMenu}
+          year={state.year}
         />
       )}
 
@@ -208,7 +211,8 @@ export default function MaterialPage() {
 
       {state.historyMaterialId && (
         <MaterialHistoryModal
-          materialId={state.historyMaterialId}
+          materialId={state.historyMaterialId.id}
+          historyType={state.historyMaterialId.type}
           onClose={() => handlers.setHistoryMaterialId(null)}
           formatDate={handlers.formatDateToTR}
         />

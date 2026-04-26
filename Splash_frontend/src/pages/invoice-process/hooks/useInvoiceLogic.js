@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
-export const useInvoiceLogic = () => {
+export const useInvoiceLogic = ({ onSuccess } = {}) => {
   const { materials, getMaterials, loading: materialLoading } = useMaterial();
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const {
@@ -461,6 +461,7 @@ export const useInvoiceLogic = () => {
         getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
+      onSuccess?.();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";

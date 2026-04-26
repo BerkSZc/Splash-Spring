@@ -4,6 +4,8 @@ import InvoiceEditModal from "./components/InvoiceEditModal";
 import InvoicePrintPreview from "./components/InvoicePrintPreview";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import InvoiceViewModal from "./components/InvoiceViewModal.jsx";
+import InvoiceForm from "../invoice-process/InvoiceForm.jsx";
+import InvoiceAddModal from "./components/InvoiceAddModal.jsx";
 
 export default function InvoicePage() {
   const { state, handlers } = useInvoicePageLogic();
@@ -46,6 +48,16 @@ export default function InvoicePage() {
               <option value="purchase">🛒 Satın Alma Faturaları</option>
               <option value="sales">💰 Satış Faturaları</option>
             </select>
+
+            <button
+              onClick={() => handlers.setShowAddForm((p) => !p)}
+              className={
+                "flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg bg-blue-600 text-white hover:bg-blue-500 shadow-blue-600/30"
+              }
+            >
+              <span className="text-lg"> +</span>
+              Fatura Ekle
+            </button>
           </div>
         </div>
 
@@ -130,6 +142,10 @@ export default function InvoicePage() {
             formatNumber={state.formatNumber}
             formatDate={state.formatDateToTR}
           />
+        )}
+
+        {state.showAddForm && (
+          <InvoiceAddModal onClose={() => handlers.setShowAddForm(false)} />
         )}
 
         {/* SİLME ONAY MODALI */}

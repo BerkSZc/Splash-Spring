@@ -7,8 +7,10 @@ export default function MaterialHistoryModal({
   materialId,
   onClose,
   formatDate,
+  historyType,
 }) {
-  const { history, getHistoryByYear, loading } = useMaterialPriceHistory();
+  const { history, getHistoryByYear, getHistoryByAllYear, loading } =
+    useMaterialPriceHistory();
   const { year } = useYear();
   const { tenant } = useTenant();
   const [selectedType, setSelectedType] = useState("PURCHASE");
@@ -16,10 +18,14 @@ export default function MaterialHistoryModal({
 
   useEffect(() => {
     if (materialId) {
-      getHistoryByYear(materialId, selectedType, tenant, year);
+      if (historyType === "all") {
+        getHistoryByAllYear(materialId, tenant, selectedType);
+      } else {
+        getHistoryByYear(materialId, selectedType, tenant, year);
+      }
       setCurrentIndex(0);
     }
-  }, [materialId, selectedType, year]);
+  }, [materialId, selectedType, year, historyType]);
 
   const currentItem = history && history[currentIndex];
   const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
@@ -40,7 +46,9 @@ export default function MaterialHistoryModal({
           <span className="p-2 bg-blue-600/20 text-blue-500 rounded-lg text-sm">
             📊
           </span>
-          {year} Yılı Hareketleri
+          {historyType === "all"
+            ? "Tüm Yıllar Hareketleri"
+            : `${year} Yılı Hareketleri`}
         </h3>
 
         {/* Tür Seçimi */}
