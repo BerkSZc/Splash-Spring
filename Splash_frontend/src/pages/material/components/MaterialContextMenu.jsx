@@ -74,7 +74,6 @@ export const MaterialContextMenu = ({
               onClick={() => {
                 setDeleteConfirmId(contextMenu.item.id);
                 setConfirmOpen(true);
-                setMenuItemId(null);
                 onClose();
               }}
               className="w-full text-left px-4 py-3 hover:bg-red-600/20 text-red-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"

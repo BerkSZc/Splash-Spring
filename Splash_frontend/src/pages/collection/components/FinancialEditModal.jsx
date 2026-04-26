@@ -11,7 +11,7 @@ export default function FinancialEditModal({
   if (!editing) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
+    <div className="fixed modal-container inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
       <form
         onSubmit={onSave}
         className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[550px] shadow-2xl"

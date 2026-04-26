@@ -7,7 +7,7 @@ export default function PayrollViewModal({
   if (!item) return null;
 
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+    <div className="fixed modal-container top-0 left-0 w-screen h-screen bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">

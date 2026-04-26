@@ -117,7 +117,7 @@ export default function PayrollPage() {
           setSearch={handlers.setSearch}
           formatDate={handlers.formatDate}
           selectedId={state.selectedId}
-          onSelectRow={handlers.setSelectedId}
+          onSelectRow={handlers.handleSelectRow}
           onContextMenu={handlers.handleContextMenu}
         />
 
@@ -145,13 +145,16 @@ export default function PayrollPage() {
           <PayrollViewModal
             item={state.viewingPayroll}
             currentTheme={currentTheme}
-            onClose={() => handlers.setViewingPayroll(null)}
+            onClose={() => {
+              handlers.setViewingPayroll(null);
+              handlers.clearSelection();
+            }}
             formatDate={handlers.formatDate}
           />
         )}
 
         {state.deleteTarget && (
-          <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md">
+          <div className="fixed modal-container top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md">
             <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[2.5rem] w-[450px] shadow-2xl text-center">
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl">⚠️</span>
@@ -165,7 +168,10 @@ export default function PayrollPage() {
               </p>
               <div className="flex gap-4">
                 <button
-                  onClick={() => handlers.setDeleteTarget(null)}
+                  onClick={() => {
+                    handlers.setDeleteTarget(null);
+                    handlers.clearSelection();
+                  }}
                   className="flex-1 px-6 py-4 bg-gray-800 text-gray-300 font-bold rounded-2xl hover:bg-gray-700"
                 >
                   Vazgeç

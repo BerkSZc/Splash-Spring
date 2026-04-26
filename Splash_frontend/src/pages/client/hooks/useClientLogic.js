@@ -159,7 +159,11 @@ export const useClientLogic = () => {
 
   useEffect(() => {
     const handleCloseModal = (event) => {
-      if (!event.target.closest(".client-row")) {
+      if (
+        !event.target.closest(".client-row") &&
+        !event.target.closest(".context-menu-container") &&
+        !event.target.closest(".modal-container")
+      ) {
         if (!selectionMode) setSelectedCustomers([]);
       }
       if (contextMenu && !event.target.closest(".context-menu-container")) {
@@ -233,6 +237,9 @@ export const useClientLogic = () => {
         await addCustomer(customerPayload, year, tenant);
       }
 
+      setSelectedCustomers([]);
+      setSelectionMode(false);
+
       const dateString = `${year}-01-01`;
       await getAllOpeningVoucherByYear(dateString, tenant);
 
@@ -304,6 +311,8 @@ export const useClientLogic = () => {
 
   const handleCancelEdit = () => {
     setEditClient(null);
+    setSelectedCustomers([]);
+    setSelectionMode(false);
     setForm({
       name: "",
       balance: 0,
@@ -410,6 +419,12 @@ export const useClientLogic = () => {
     payrollsLoading ||
     vouchersLoading;
 
+  const clearSelection = () => {
+    setSelectedCustomers([]);
+    setSelectionMode(false);
+    setContextMenu(null);
+  };
+
   return {
     state: {
       formatNumber,
@@ -461,6 +476,7 @@ export const useClientLogic = () => {
       setViewingClient,
       handleView,
       setPage,
+      clearSelection,
     },
   };
 };

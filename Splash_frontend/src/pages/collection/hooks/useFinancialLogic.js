@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
 import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
@@ -109,7 +109,11 @@ export const useFinancialLogic = () => {
     const handleClickOutside = (event) => {
       if (event.button === 2) return;
 
-      if (!event.target.closest(".financial-row")) {
+      if (
+        !event.target.closest(".financial-row") &&
+        !event.target.closest(".context-menu-container") &&
+        !event.target.closest(".modal-container")
+      ) {
         setSelectedId(null);
       }
 
@@ -196,16 +200,15 @@ export const useFinancialLogic = () => {
     };
   }, [year, tenant, page, debouncedSearch]);
 
-  const shownList = type === "received" ? collections : payments;
-
-  const filteredList = (Array.isArray(shownList) ? shownList : []).sort(
-    (a, b) => {
+  const filteredList = useMemo(() => {
+    const shownList = type === "received" ? collections : payments;
+    return (Array.isArray(shownList) ? shownList : []).sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
 
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    },
-  );
+    });
+  }, [collections, payments, type, sortOrder]);
 
   const handleSelectRow = (id) => {
     setSelectedId((prev) => (prev === id ? null : id));
@@ -365,6 +368,7 @@ export const useFinancialLogic = () => {
       } else {
         await editPayment(payload.id, payload, tenant);
         setEditing(null);
+        clearSelection();
 
         await getPaymentCollectionsByYear(
           page,
@@ -404,6 +408,7 @@ export const useFinancialLogic = () => {
       } else {
         await deletePaymentCompany(deleteTarget.id, tenant);
         setDeleteTarget(null);
+        clearSelection();
 
         await getPaymentCollectionsByYear(
           page,
@@ -449,6 +454,11 @@ export const useFinancialLogic = () => {
     paymentsLoading ||
     commonDataLoading;
 
+  const clearSelection = () => {
+    setContextMenu(null);
+    setSelectedId(null);
+  };
+
   return {
     state: {
       formatNumber,
@@ -492,6 +502,7 @@ export const useFinancialLogic = () => {
       setPage,
       setViewingItem,
       handleView,
+      clearSelection,
     },
   };
 };

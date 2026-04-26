@@ -205,7 +205,10 @@ export default function MaterialPage() {
       {state.viewingMaterial && (
         <MaterialViewModal
           item={state.viewingMaterial}
-          onClose={() => handlers.setViewingMaterial(null)}
+          onClose={() => {
+            handlers.setViewingMaterial(null);
+            handlers.clearSelection();
+          }}
         />
       )}
 
@@ -213,7 +216,10 @@ export default function MaterialPage() {
         <MaterialHistoryModal
           materialId={state.historyMaterialId.id}
           historyType={state.historyMaterialId.type}
-          onClose={() => handlers.setHistoryMaterialId(null)}
+          onClose={() => {
+            handlers.setHistoryMaterialId(null);
+            handlers.clearSelection();
+          }}
           formatDate={handlers.formatDateToTR}
         />
       )}

@@ -12,7 +12,7 @@ export default function InvoiceViewModal({
   const grandTotal = Number(invoice.totalPrice || 0);
 
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+    <div className="fixed modal-container top-0 left-0 w-screen h-screen bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[1200px] max-h-[95vh] overflow-y-auto shadow-2xl relative">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">

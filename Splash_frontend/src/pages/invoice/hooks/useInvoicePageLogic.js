@@ -136,7 +136,11 @@ export const useInvoicePageLogic = () => {
         setContextMenu(null);
       }
 
-      if (!event.target.closest(".invoice-row")) {
+      if (
+        !event.target.closest(".invoice-row") &&
+        !event.target.closest(".context-menu-container") &&
+        !event.target.closest(".modal-container")
+      ) {
         setSelectedInvoiceId(null);
       }
     };
@@ -620,6 +624,12 @@ export const useInvoicePageLogic = () => {
     customerLoading ||
     commonDataLoading;
 
+  const clearSelection = () => {
+    setContextMenu(null);
+    setSelectedInvoiceId(null);
+    setOpenMenuId(null);
+  };
+
   return {
     state: {
       formatNumber,
@@ -672,6 +682,7 @@ export const useInvoicePageLogic = () => {
       setViewingInvoice,
       handleView,
       setShowAddForm,
+      clearSelection,
     },
   };
 };

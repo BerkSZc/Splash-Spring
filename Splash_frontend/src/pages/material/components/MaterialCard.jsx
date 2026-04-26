@@ -81,30 +81,49 @@ export const MaterialCard = ({
             {item?.unit || ""}
           </span>
 
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={
-                selectionMode
-                  ? selectedIds.includes(item.id)
-                  : menuItemId === item.id
-              }
-              onChange={() => {
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <div
+              onClick={() => {
                 if (selectionMode) {
                   toggleSelectId(item.id);
                 } else {
                   setMenuItemId(menuItemId === item.id ? null : item.id);
                 }
               }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-6 h-6 rounded-lg border-2 border-gray-700 bg-gray-800 accent-blue-500 cursor-pointer transition-all hover:border-blue-500 focus:ring-0 shadow-lg"
-            />
+              className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                (
+                  selectionMode
+                    ? selectedIds.includes(item.id)
+                    : menuItemId === item.id
+                )
+                  ? "bg-blue-500 border-blue-500"
+                  : "border-gray-600 bg-gray-800 hover:border-blue-500"
+              }`}
+            >
+              {(selectionMode
+                ? selectedIds.includes(item.id)
+                : menuItemId === item.id) && (
+                <svg
+                  className="w-3.5 h-3.5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {confirmOpen && deleteConfirmId === item.id && (
-        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[110] backdrop-blur-md">
+        <div className="fixed modal-container inset-0 bg-black/80 flex justify-center items-center z-[110] backdrop-blur-md">
           <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[2.5rem] w-[420px] shadow-2xl text-center">
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-3xl">⚠️</span>
@@ -121,6 +140,7 @@ export const MaterialCard = ({
                 onClick={() => {
                   setConfirmOpen(false);
                   setDeleteConfirmId(null);
+                  setMenuItemId(null);
                 }}
                 className="flex-1 px-6 py-4 bg-gray-800 text-gray-300 font-bold rounded-2xl hover:bg-gray-700"
               >

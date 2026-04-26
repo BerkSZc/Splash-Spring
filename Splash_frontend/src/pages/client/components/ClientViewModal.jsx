@@ -13,7 +13,7 @@ export default function ClientViewModal({
   const isDebtor = balance > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+    <div className="fixed modal-container inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[2.5rem] w-full max-w-4xl shadow-2xl relative animate-in fade-in zoom-in duration-200">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">

@@ -33,7 +33,7 @@ export default function MaterialHistoryModal({
     setCurrentIndex((prev) => Math.min(prev + 1, history.length - 1));
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed modal-container inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-[#0f172a] border border-gray-800 rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in duration-300">
         <button
           onClick={onClose}

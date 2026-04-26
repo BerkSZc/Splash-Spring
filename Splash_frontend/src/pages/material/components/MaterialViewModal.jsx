@@ -13,7 +13,7 @@ export default function MaterialViewModal({ item, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+    <div className="fixed modal-container inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
