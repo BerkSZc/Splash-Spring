@@ -5,7 +5,7 @@ import YearDropdown from "./YearDropdown.jsx";
 import CompanyDropDown from "./CompanyDropDown.jsx";
 
 const NAV_ITEMS = [
-  { label: "Fatura İşlemleri", to: "/faturalar-islemleri", icon: "📋" },
+  // { label: "Fatura İşlemleri", to: "/faturalar-islemleri", icon: "📋" },
   { label: "Faturalar", to: "/faturalar", icon: "🧾" },
   { label: "Cari Hesaplar", to: "/musteriler", icon: "👥" },
   { label: "Kasa İşlemleri", to: "/tahsilatlar", icon: "💰" },

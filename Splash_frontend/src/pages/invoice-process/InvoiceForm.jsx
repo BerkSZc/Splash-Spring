@@ -4,8 +4,8 @@ import InvoiceItemsTable from "./components/InvoiceItemsTable";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import { useEffect } from "react";
 
-export default function InvoiceForm() {
-  const { state, handlers } = useInvoiceLogic();
+export default function InvoiceForm({ onSuccess }) {
+  const { state, handlers } = useInvoiceLogic({ onSuccess });
   const { mode, salesForm, purchaseForm } = state;
 
   const actualForm = state?.currentForm || { items: [] };
@@ -177,6 +177,7 @@ export default function InvoiceForm() {
                   ₺
                 </span>
               </div>
+
               <button
                 type="submit"
                 className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/20"

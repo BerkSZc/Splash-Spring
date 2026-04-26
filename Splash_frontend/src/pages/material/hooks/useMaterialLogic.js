@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useMaterial } from "../../../../backend/store/useMaterial.js";
 import toast from "react-hot-toast";
 import { useTenant } from "../../../context/TenantContext.jsx";
+import { useYear } from "../../../context/YearContext.jsx";
 
 export const useMaterialLogic = () => {
   const {
@@ -16,6 +17,7 @@ export const useMaterialLogic = () => {
     setArchived,
   } = useMaterial();
   const { tenant } = useTenant();
+  const { year } = useYear();
 
   const formRef = useRef(null);
   const [form, setForm] = useState({ code: "", comment: "", unit: "KG" });
@@ -35,6 +37,7 @@ export const useMaterialLogic = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [viewingMaterial, setViewingMaterial] = useState(null);
   const [historyMaterialId, setHistoryMaterialId] = useState(null);
+  const [showHistorySubMenu, setShowHistorySubMenu] = useState(false);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
@@ -257,10 +260,11 @@ export const useMaterialLogic = () => {
     });
   };
 
-  const handleShowHistory = (item) => {
-    setHistoryMaterialId(item.id);
+  const handleShowHistory = (item, type = "year") => {
+    setHistoryMaterialId({ id: item.id, type });
     setContextMenu(null);
     setMenuItemId(null);
+    setShowHistorySubMenu(null);
   };
 
   const handleDelete = async (id) => {
@@ -308,6 +312,7 @@ export const useMaterialLogic = () => {
   return {
     state: {
       form,
+      year,
       editId,
       search,
       filteredMaterials,
@@ -329,6 +334,7 @@ export const useMaterialLogic = () => {
       currentPage,
       viewingMaterial,
       historyMaterialId,
+      showHistorySubMenu,
     },
     refs: { formRef },
     handlers: {
@@ -359,6 +365,7 @@ export const useMaterialLogic = () => {
       setHistoryMaterialId,
       handleShowHistory,
       formatDateToTR,
+      setShowHistorySubMenu,
     },
   };
 };
