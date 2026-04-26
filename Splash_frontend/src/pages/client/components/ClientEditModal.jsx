@@ -21,7 +21,7 @@ export default function CustomerEditModal({
   }, [form?.yearlyDebit, form?.yearlyCredit]);
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
+    <div className="fixed modal-container inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md px-4">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[1100px] max-h-[95vh] overflow-y-auto shadow-2xl relative animate-in fade-in zoom-in duration-200">
         {/* Başlık Bölümü */}
         <h2 className="text-3xl font-extrabold mb-10 text-white flex items-center gap-3">

@@ -6,7 +6,7 @@ export default function DeleteConfirmModal({
   if (!deleteTarget) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md">
+    <div className="fixed modal-container inset-0 bg-black/80 flex justify-center items-center z-[100] backdrop-blur-md">
       <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[2.5rem] w-[450px] shadow-2xl">
         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <span className="text-3xl">⚠️</span>

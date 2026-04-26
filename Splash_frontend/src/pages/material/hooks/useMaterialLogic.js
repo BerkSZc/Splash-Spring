@@ -54,8 +54,13 @@ export const useMaterialLogic = () => {
     const handleGlobalClick = (e) => {
       if (contextMenu && !e.target.closest(".context-menu-container")) {
         setContextMenu(null);
+        setShowHistorySubMenu(false);
       }
-      if (!e.target.closest(".material-card")) {
+      if (
+        !e.target.closest(".material-card") &&
+        !e.target.closest(".context-menu-container") &&
+        !e.target.closest(".modal-container")
+      ) {
         setMenuItemId(null);
       }
     };
@@ -152,6 +157,7 @@ export const useMaterialLogic = () => {
         setEditId(null);
         setIsOpen(false);
         setForm(initialForm);
+        clearSelection();
         await updateMaterials(editId, payload, tenant);
       } else {
         await addMaterial(payload, tenant);
@@ -229,7 +235,6 @@ export const useMaterialLogic = () => {
 
   const handleView = (item) => {
     setViewingMaterial(item);
-    setMenuItemId(null);
   };
 
   const handleContextMenu = (e, item) => {
@@ -263,8 +268,8 @@ export const useMaterialLogic = () => {
   const handleShowHistory = (item, type = "year") => {
     setHistoryMaterialId({ id: item.id, type });
     setContextMenu(null);
-    setMenuItemId(null);
     setShowHistorySubMenu(null);
+    setShowHistorySubMenu(false);
   };
 
   const handleDelete = async (id) => {
@@ -308,6 +313,11 @@ export const useMaterialLogic = () => {
   };
 
   const isLoading = materialsLoading;
+
+  const clearSelection = () => {
+    setMenuItemId(null);
+    setContextMenu(null);
+  };
 
   return {
     state: {
@@ -366,6 +376,7 @@ export const useMaterialLogic = () => {
       handleShowHistory,
       formatDateToTR,
       setShowHistorySubMenu,
+      clearSelection,
     },
   };
 };

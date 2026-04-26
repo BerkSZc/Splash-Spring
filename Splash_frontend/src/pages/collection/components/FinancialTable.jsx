@@ -84,15 +84,35 @@ export default function FinancialTable({
                       {formatDate(item?.date) || ""}
                     </td>
                     <td
-                      className="p-5 text-center"
-                      onClick={(e) => e.stopPropagation()}
+                      className="p-5 text-center w-16 select-none"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Satır tıklamasını engelle
+                        onSelectRow(item.id); // Tüm hücre tıklandığında seç
+                      }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedId === item.id}
-                        onChange={() => onSelectRow(item.id)}
-                        className="w-5 h-5 accent-blue-500 rounded-lg cursor-pointer"
-                      />
+                      <div
+                        className={`w-5 h-5 rounded border-2 mx-auto flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                          selectedId === item.id
+                            ? "bg-blue-500 border-blue-500"
+                            : "border-gray-600 bg-gray-800 hover:border-gray-500"
+                        }`}
+                      >
+                        {selectedId === item.id && (
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="4"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
                     </td>
                     <td className="p-5 font-bold text-white max-w-[300px] truncate">
                       {item?.fileNo || ""}

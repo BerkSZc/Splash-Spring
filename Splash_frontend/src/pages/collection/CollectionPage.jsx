@@ -97,7 +97,10 @@ export default function CollectionPage() {
       {deleteTarget && (
         <DeleteConfirmModal
           deleteTarget={deleteTarget}
-          onCancel={() => handlers.setDeleteTarget(null)}
+          onCancel={() => {
+            handlers.setDeleteTarget(null);
+            handlers.clearSelection();
+          }}
           onConfirm={handlers.handleDelete}
         />
       )}
@@ -107,7 +110,10 @@ export default function CollectionPage() {
           editing={editing}
           editForm={editForm}
           setEditForm={(val) => handlers.setEditForm(val)}
-          onCancel={() => handlers.handleEdit(null)}
+          onCancel={() => {
+            handlers.handleEdit(null);
+            handlers.clearSelection();
+          }}
           onSave={handlers.handleSave}
           customers={customers}
         />
@@ -125,7 +131,10 @@ export default function CollectionPage() {
         <CollectionViewModal
           item={state.viewingItem}
           type={type}
-          onClose={() => handlers.setViewingItem(null)}
+          onClose={() => {
+            handlers.setViewingItem(null);
+            handlers.clearSelection();
+          }}
           formatDate={handlers.formatDate}
         />
       )}

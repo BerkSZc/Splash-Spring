@@ -55,14 +55,36 @@ export default function InvoiceTable({
                     {inv?.fileNo}
                   </td>
 
-                  <td className="p-5 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedInvoiceId === inv.id}
-                      onChange={() => onSelectInvoice(inv.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-5 h-5 accent-blue-500 rounded-lg cursor-pointer"
-                    />
+                  <td
+                    className="p-5 text-center cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectInvoice(inv.id);
+                    }}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded border-2 mx-auto flex items-center justify-center transition-all ${
+                        selectedInvoiceId === inv.id
+                          ? "bg-blue-500 border-blue-500"
+                          : "border-gray-600 bg-gray-800"
+                      }`}
+                    >
+                      {selectedInvoiceId === inv.id && (
+                        <svg
+                          className="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="3"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
                   </td>
 
                   <td className="p-5 text-gray-300 font-mono text-sm">

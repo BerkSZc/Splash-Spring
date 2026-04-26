@@ -18,13 +18,36 @@ export default function ClientRow({
           : "hover:bg-blue-500/5"
       }`}
     >
-      <td className="p-5 text-center" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onCheckboxChange(customer.id)}
-          className="w-5 h-5 rounded-lg accent-blue-500 bg-gray-800 border-gray-700"
-        />
+      <td
+        className="p-5 text-center w-16 select-none"
+        onClick={(e) => {
+          e.stopPropagation();
+          onCheckboxChange(customer.id);
+        }}
+      >
+        <div
+          className={`w-5 h-5 rounded border-2 mx-auto flex items-center justify-center transition-all duration-200 cursor-pointer ${
+            isSelected
+              ? "bg-blue-500 border-blue-500"
+              : "border-gray-600 bg-gray-800 hover:border-gray-500"
+          }`}
+        >
+          {isSelected && (
+            <svg
+              className="w-3 h-3 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="4"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          )}
+        </div>
       </td>
       <td className="p-5">
         <div className="font-bold text-white text-lg">

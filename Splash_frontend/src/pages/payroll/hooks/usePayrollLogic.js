@@ -54,7 +54,12 @@ export const usePayrollLogic = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (event.button === 2) return;
-      if (!event.target.closest(".payroll-row")) setSelectedId(null);
+      if (
+        !event.target.closest(".payroll-row") &&
+        !event.target.closest(".context-menu-container") &&
+        !event.target.closest(".modal-container")
+      )
+        setSelectedId(null);
       if (contextMenu && !event.target.closest(".context-menu-container"))
         setContextMenu(null);
     };
@@ -301,6 +306,8 @@ export const usePayrollLogic = () => {
       setEditing(null);
       setIsOpen(false);
       resetForm();
+      clearSelection();
+
       await syncFinancialData();
     } catch (error) {
       const backendErr =
@@ -353,6 +360,8 @@ export const usePayrollLogic = () => {
 
   const closeEdit = () => {
     setEditing(null);
+    clearSelection();
+
     setForm({
       transactionDate: getInitialDate(year),
       expiredDate: new Date().toISOString().slice(0, 10),
@@ -363,6 +372,10 @@ export const usePayrollLogic = () => {
       bankBranch: "",
       comment: "",
     });
+  };
+
+  const handleSelectRow = (id) => {
+    setSelectedId((prev) => (prev === id ? null : id));
   };
 
   const openDeleteModel = (item) => {
@@ -418,6 +431,11 @@ export const usePayrollLogic = () => {
 
   const isLoading = customersLoading || payrollsLoading || commonDataLoading;
 
+  const clearSelection = () => {
+    setContextMenu(null);
+    setSelectedId(null);
+  };
+
   return {
     state: {
       formatNumber,
@@ -461,6 +479,8 @@ export const usePayrollLogic = () => {
       setPage,
       setViewingPayroll,
       handleView,
+      handleSelectRow,
+      clearSelection,
     },
   };
 };

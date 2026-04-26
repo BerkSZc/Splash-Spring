@@ -178,7 +178,10 @@ export default function ClientsPage() {
         <ArchiveConfirmModal
           isOpen={state.showArchiveModal}
           action={state.archiveAction}
-          onCancel={() => handlers.setShowArchiveModal(false)}
+          onCancel={() => {
+            handlers.setShowArchiveModal(false);
+            handlers.clearSelection();
+          }}
           onConfirm={() =>
             handlers.handleArchiveModalSubmit(state.pendingArchiveIds)
           }
@@ -235,7 +238,10 @@ export default function ClientsPage() {
           customer={state.viewingClient}
           vouchers={state.vouchers}
           formatNumber={state.formatNumber}
-          onClose={() => handlers.setViewingClient(null)}
+          onClose={() => {
+            handlers.setViewingClient(null);
+            handlers.clearSelection();
+          }}
         />
       )}
 
