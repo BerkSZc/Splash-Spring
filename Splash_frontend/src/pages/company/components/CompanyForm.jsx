@@ -19,14 +19,8 @@ export const CompanyForm = ({
     ) : (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <input
-          placeholder="Şirket Kodu"
+          readOnly
           value={newCompData.id}
-          onChange={(e) =>
-            setNewCompData({
-              ...newCompData,
-              id: e.target.value.toLowerCase().replace(" ", "_"),
-            })
-          }
           className="bg-gray-800 border-2 border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
         />
 

@@ -86,8 +86,8 @@ export default function FinancialTable({
                     <td
                       className="p-5 text-center w-16 select-none"
                       onClick={(e) => {
-                        e.stopPropagation(); // Satır tıklamasını engelle
-                        onSelectRow(item.id); // Tüm hücre tıklandığında seç
+                        e.stopPropagation();
+                        onSelectRow(item.id);
                       }}
                     >
                       <div

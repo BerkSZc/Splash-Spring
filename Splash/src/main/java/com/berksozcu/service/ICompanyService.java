@@ -12,4 +12,6 @@ public interface ICompanyService {
      List<Year> getYearsByCompany(Long companyId);
      Year addYearToCompany(Long companyId, Integer year);
      void deleteCompanyAndYear(Long companyId, Integer year);
+     String createDefaultSchemaName();
+     void editCompany(String schemaName, String companyName, String description);
 }
