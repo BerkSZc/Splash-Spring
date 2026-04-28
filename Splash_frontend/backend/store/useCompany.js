@@ -74,4 +74,18 @@ export const useCompany = create((set, get) => ({
       set({ loading: false });
     }
   },
+  editCompany: async (compData) => {
+    set({ loading: true });
+    try {
+      await axiosInstance.put("/company/edit-company", compData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
 }));

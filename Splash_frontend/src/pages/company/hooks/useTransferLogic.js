@@ -16,6 +16,7 @@ export const useTransferLogic = () => {
     addYearToCompany,
     getAllYearByCompanyId,
     deleteYear,
+    editCompany,
     loading: companiesLoading,
   } = useCompany();
   const { transferAllBalances, loading: vouchersLoading } = useVoucher();
@@ -27,12 +28,46 @@ export const useTransferLogic = () => {
   const [confirmCheck, setConfirmCheck] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [confirmDeleteCheck, setConfirmDeleteCheck] = useState(false);
+  const [editingCompany, setEditingCompany] = useState(null);
 
   const [newCompData, setNewCompData] = useState({
     id: "",
     name: "",
     desc: "",
   });
+
+  useEffect(() => {
+    const splashSchemas = (Array.isArray(companies) ? companies : [])
+      .map((c) => c.schemaName)
+      .filter((s) => s?.startsWith("splash_"))
+      .sort((a, b) => {
+        const numA = parseInt(a.split("_")[1]) || 0;
+        const numB = parseInt(b.split("_")[1]) || 0;
+        return numA - numB;
+      });
+
+    const lastSchema = splashSchemas[splashSchemas.length - 1];
+
+    let nextId = "splash_1";
+    if (lastSchema) {
+      const num = parseInt(lastSchema.split("_")[1]) + 1;
+      nextId = `splash_${num}`;
+    }
+
+    setNewCompData((prev) => ({ ...prev, id: nextId }));
+  }, [companies]);
+
+  useEffect(() => {
+    if (editingCompany) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [editingCompany]);
 
   useEffect(() => {
     let ignore = false;
@@ -112,6 +147,35 @@ export const useTransferLogic = () => {
     }
   };
 
+  const handleStartEdit = (company) => {
+    setEditingCompany({
+      schemaName: company.schemaName,
+      name: company.name || "",
+      description: company.description || company.desc || "",
+    });
+  };
+
+  const handleUpdateCompany = async () => {
+    if (!editingCompany.name) return toast.error("Şirket adı boş olamaz");
+
+    const payload = {
+      schemaName: editingCompany.schemaName,
+      companyName: editingCompany.name,
+      description: editingCompany.description,
+    };
+
+    try {
+      await editCompany(payload);
+      toast.success("Şirket bilgileri güncellendi");
+      setEditingCompany(null);
+      await getAllCompanies();
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Güncelleme başarısız";
+      toast.error(backendErr);
+    }
+  };
+
   const handleDeleteYear = async (targetYear) => {
     const selectedCompany = companies?.find((c) => c.schemaName === tenant);
     if (!selectedCompany) {
@@ -130,8 +194,7 @@ export const useTransferLogic = () => {
   };
 
   const handleCreateCompany = async () => {
-    if (!newCompData.id || !newCompData.name)
-      return toast.error("Lütfen şirket kodu ve adını doldurun");
+    if (!newCompData.name) return toast.error("Lütfen şirket adını doldurun");
 
     const currentTenant = localStorage.getItem("tenant");
     const source =
@@ -170,6 +233,7 @@ export const useTransferLogic = () => {
       confirmDeleteCheck,
       isLoading,
       isAuthenticated,
+      editingCompany,
     },
     handlers: {
       changeYear,
@@ -186,6 +250,9 @@ export const useTransferLogic = () => {
       setConfirmCheck,
       setDeleteTarget,
       setConfirmDeleteCheck,
+      handleUpdateCompany,
+      handleStartEdit,
+      setEditingCompany,
     },
   };
 };

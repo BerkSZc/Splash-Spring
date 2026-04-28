@@ -368,7 +368,6 @@ export const useFinancialLogic = () => {
       } else {
         await editPayment(payload.id, payload, tenant);
         setEditing(null);
-        clearSelection();
 
         await getPaymentCollectionsByYear(
           page,
@@ -378,6 +377,7 @@ export const useFinancialLogic = () => {
           tenant,
         );
       }
+      clearSelection();
       await syncFinancialData();
     } catch (error) {
       const backendErr =

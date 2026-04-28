@@ -21,11 +21,10 @@ public class CompanyControllerImpl {
 
     @PostMapping("/create")
     public ResponseEntity<?> createCompany(@RequestBody Map<String, String> request) {
-        String schemaName = request.get("id"); // React'teki newCompData.id
         String companyName = request.get("name");
         String description = request.get("desc");
         String sourceSchema = request.get("sourceSchema");
-        if(companyName == null || companyName.isEmpty() || schemaName == null || schemaName.isEmpty()) {
+        if(companyName == null || companyName.isEmpty()) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_HATA));
         }
 
@@ -33,12 +32,23 @@ public class CompanyControllerImpl {
             sourceSchema = "splash";
         }
 
+        String schemaName = companyService.createDefaultSchemaName();
+
         try {
             companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema);
             return ResponseEntity.ok("Şema '" + schemaName + "' başarıyla oluşturuldu.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Şema oluşturma hatası: " + e.getMessage());
         }
+    }
+
+    @PutMapping("/edit-company")
+    public void editCompany(@RequestBody Map<String, String> request) {
+        String schemaName = request.get("schemaName");
+        String companyName = request.get("companyName");
+        String description = request.get("description");
+
+        companyService.editCompany(schemaName, companyName, description);
     }
 
     @GetMapping("/find-all")

@@ -3,6 +3,7 @@ import { CompanyCard } from "./components/CompanyCard";
 import { YearManager } from "./components/YearManager";
 import { CompanyForm } from "./components/CompanyForm";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
+import { CompanyEditModal } from "./components/CompanyEditModal.jsx";
 
 const CompanyPage = () => {
   const { state, handlers } = useTransferLogic();
@@ -49,6 +50,7 @@ const CompanyPage = () => {
                     company={c}
                     isSelected={state.tenant === c.schemaName}
                     onSelect={handlers.changeTenant}
+                    onEdit={handlers.handleStartEdit}
                   />
                 ),
               )}
@@ -76,6 +78,17 @@ const CompanyPage = () => {
             onSetDeleteTarget={handlers.setDeleteTarget}
             onSetConfirmDeleteCheck={handlers.setConfirmDeleteCheck}
           />
+
+          {/* MODAL */}
+          {state.editingCompany && (
+            <CompanyEditModal
+              isOpen={!!state.editingCompany}
+              data={state.editingCompany}
+              onChange={handlers.setEditingCompany}
+              onSave={handlers.handleUpdateCompany}
+              onCancel={() => handlers.setEditingCompany(null)}
+            />
+          )}
         </div>
       </div>
     </div>

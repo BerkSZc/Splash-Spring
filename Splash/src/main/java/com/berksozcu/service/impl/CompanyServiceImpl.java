@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 //Şirket oluştururken oluştucak şemayı ve kopyalancak tabloları oluşturduğumuz sınıf
 @Service
@@ -117,6 +118,16 @@ public class CompanyServiceImpl implements ICompanyService {
                 throw e;
             }
         }
+    }
+
+    @Transactional
+    @Override
+    public void editCompany(String schemaName, String companyName, String description) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        company.setName(Objects.requireNonNullElse(companyName, ""));
+        company.setDescription(Objects.requireNonNullElse(description, ""));
+        companyRepository.save(company);
     }
 
     public List<Company> getAllCompanies() {
@@ -217,6 +228,23 @@ public class CompanyServiceImpl implements ICompanyService {
         } catch (Exception e) {
             // Hata durumunda güvenli liman: public
             jdbcTemplate.execute("SET search_path TO public");
+        }
+    }
+
+    @Override
+    public String createDefaultSchemaName() {
+        String lastSchema = companyRepository.findMaxSchemaName();
+
+        if(lastSchema == null || lastSchema.isBlank()) {
+            return "splash_1";
+        }
+
+        try {
+            String numberPart = lastSchema.substring(lastSchema.lastIndexOf("_") + 1);
+            int nextNumber = Integer.parseInt(numberPart) + 1;
+            return "splash_" + nextNumber;
+        } catch (Exception e) {
+            return "splash_1";
         }
     }
 
