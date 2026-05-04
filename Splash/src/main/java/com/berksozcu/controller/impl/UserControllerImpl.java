@@ -2,6 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.controller.IUserController;
 import com.berksozcu.controller.base.RootEntity;
+import com.berksozcu.dto.user.SignUpRequest;
 import com.berksozcu.dto.user.DtoUser;
 import com.berksozcu.entites.user.User;
 import com.berksozcu.entites.user.UserResponse;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
 
 import static com.berksozcu.controller.base.RootEntity.ok;
 
@@ -23,14 +26,14 @@ public class UserControllerImpl implements IUserController {
 
     @Override
     @PostMapping("/save")
-    public RootEntity<UserResponse> signUp( @RequestBody User user, @RequestParam String schemaName){
-        return ok(authenticationService.signUp(user, schemaName));
+    public RootEntity<UserResponse> signUp(@RequestBody SignUpRequest request) throws SQLException {
+        return ok(authenticationService.signUp(request));
     }
 
     @Override
     @PostMapping("/login")
-    public RootEntity<UserResponse> login( @RequestBody User user, @RequestParam String schemaName){
-        return ok(authenticationService.login(user, schemaName));
+    public RootEntity<UserResponse> login( @RequestBody User user){
+        return ok(authenticationService.login(user));
     }
 
 

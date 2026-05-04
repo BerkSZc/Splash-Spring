@@ -29,7 +29,12 @@ function App() {
   return (
     <div className="pt-14">
       <Routes>
-        <Route path="/devir" element={<CompanyPage />} />
+        <Route
+          path="/devir"
+          element={
+            isAuthenticated ? <CompanyPage /> : <Navigate to={"/login"} />
+          }
+        />
 
         <Route
           path="/login"

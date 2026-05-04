@@ -4,27 +4,29 @@ import toast from "react-hot-toast";
 
 export const useAuthentication = create((set) => ({
   token: localStorage.getItem("token") || null,
+  tenant: localStorage.getItem("tenant") || null,
   isAuthenticated: false,
   loading: false,
   authChecked: false,
 
-  login: async (user, schemaName) => {
+  login: async (credentials) => {
     try {
       set({ loading: true });
-      const response = await axiosInstance.post("/auth/login", user, {
-        params: { schemaName },
-      });
-      const token = response.data.data.token;
+      const response = await axiosInstance.post("/auth/login", credentials);
+      const { token, schemaName } = response.data.data;
 
       localStorage.setItem("token", token);
+      localStorage.setItem("tenant", schemaName);
 
       set({
         token: token,
+        tenant: schemaName,
         isAuthenticated: true,
         authChecked: true,
       });
 
       toast.success("Giriş başarılı");
+      return response.data.data;
     } catch (error) {
       throw error;
     } finally {
@@ -32,23 +34,24 @@ export const useAuthentication = create((set) => ({
     }
   },
 
-  signUp: async (user, schemaName) => {
+  signUp: async (signUpData) => {
     try {
       set({ loading: true });
-      const response = await axiosInstance.post("/auth/save", user, {
-        params: { schemaName },
-      });
-      const token = response.data.data.token;
+      const response = await axiosInstance.post("/auth/save", signUpData);
+      const { token, schemaName } = response.data.data;
 
       localStorage.setItem("token", token);
+      localStorage.setItem("tenant", schemaName);
 
       set({
         token: token,
+        tenant: schemaName,
         isAuthenticated: true,
         authChecked: true,
       });
 
       toast.success("Kayıt başarılı");
+      return response.data.data;
     } catch (error) {
       set({
         token: null,
@@ -64,6 +67,9 @@ export const useAuthentication = create((set) => ({
 
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("tenant");
+    localStorage.removeItem("year");
+    localStorage.removeItem("years");
     set({
       token: null,
       isAuthenticated: false,
@@ -83,8 +89,10 @@ export const useAuthentication = create((set) => ({
       });
     } catch (error) {
       localStorage.removeItem("token");
+      localStorage.removeItem("tenant");
       set({
         token: null,
+        tenant: null,
         isAuthenticated: false,
         authChecked: true,
       });

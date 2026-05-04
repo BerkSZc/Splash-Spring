@@ -62,28 +62,34 @@ export default function Sidebar() {
     <>
       {/* ── TOP BAR ── */}
       <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-[#0a0f1a]/90 backdrop-blur-xl border-b border-white/5 flex items-center px-4 gap-4">
-        <button
-          ref={hamburgerRef}
-          onClick={() => setOpen((p) => !p)}
-          className="w-9 h-9 flex flex-col justify-center items-center gap-[5px] group"
-          aria-label="Menüyü aç/kapat"
-        >
-          <span
-            className={`block h-[2px] bg-gray-400 transition-all duration-300 origin-center group-hover:bg-white ${
-              open ? "w-5 rotate-45 translate-y-[7px]" : "w-5"
-            }`}
-          />
-          <span
-            className={`block h-[2px] bg-gray-400 transition-all duration-300 group-hover:bg-white ${
-              open ? "w-0 opacity-0" : "w-4"
-            }`}
-          />
-          <span
-            className={`block h-[2px] bg-gray-400 transition-all duration-300 origin-center group-hover:bg-white ${
-              open ? "w-5 -rotate-45 -translate-y-[7px]" : "w-5"
-            }`}
-          />
-        </button>
+        <div className="w-9 h-9 flex items-center justify-center">
+          {isAuthenticated ? (
+            <button
+              ref={hamburgerRef}
+              onClick={() => setOpen((p) => !p)}
+              className="w-9 h-9 flex flex-col justify-center items-center gap-[5px] group"
+              aria-label="Menüyü aç/kapat"
+            >
+              <span
+                className={`block h-[2px] bg-gray-400 transition-all duration-300 origin-center group-hover:bg-white ${
+                  open ? "w-5 rotate-45 translate-y-[7px]" : "w-5"
+                }`}
+              />
+              <span
+                className={`block h-[2px] bg-gray-400 transition-all duration-300 group-hover:bg-white ${
+                  open ? "w-0 opacity-0" : "w-4"
+                }`}
+              />
+              <span
+                className={`block h-[2px] bg-gray-400 transition-all duration-300 origin-center group-hover:bg-white ${
+                  open ? "w-5 -rotate-45 -translate-y-[7px]" : "w-5"
+                }`}
+              />
+            </button>
+          ) : (
+            <div className="w-9" />
+          )}
+        </div>
 
         <Link
           to="/home"
@@ -94,12 +100,12 @@ export default function Sidebar() {
 
         <div className="flex-1" />
 
-        {/* {!isAuthenticated && ( */}
-        <div className="flex items-center gap-2">
-          <CompanyDropDown />
-          <YearDropdown />
-        </div>
-        {/* // )} */}
+        {isAuthenticated && (
+          <div className="flex items-center gap-2">
+            <CompanyDropDown />
+            <YearDropdown />
+          </div>
+        )}
       </header>
 
       <div

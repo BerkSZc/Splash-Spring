@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserResponse {
     private String token;
+    private String schemaName;
 }
