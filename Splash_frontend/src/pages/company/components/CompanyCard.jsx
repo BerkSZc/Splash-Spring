@@ -86,9 +86,6 @@ export const CompanyCard = ({ company, isSelected, onSelect, onEdit }) => {
       <p className="text-gray-400 text-sm">
         {company.description || company.desc}
       </p>
-      <p className="text-xs text-blue-500 mt-2 font-mono">
-        Şema: {company.schemaName}
-      </p>
     </div>
   );
 };

@@ -12,13 +12,13 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
 
-    const currentTenant = localStorage.getItem("tenant") || "splash";
+    const currentTenant = localStorage.getItem("tenant");
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    config.headers["X-Tenant-ID"] = currentTenant;
+    config.headers["X-Tenant-ID"] = currentTenant || "splash";
 
     return config;
   },

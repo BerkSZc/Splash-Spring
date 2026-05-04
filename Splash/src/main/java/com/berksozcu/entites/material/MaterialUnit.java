@@ -1,5 +1,5 @@
 package com.berksozcu.entites.material;
 
 public enum MaterialUnit {
-    KG,ADET,M,LT;
+    KG,ADET,M,LT,PAKET;
 }

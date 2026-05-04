@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { useAuthentication } from "../../../../backend/store/useAuthentication.js";
-import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
+import { useTenant } from "../../../context/TenantContext.jsx";
+import { useYear } from "../../../context/YearContext.jsx";
 
 export const useAuthLogic = () => {
   const { login, signUp, loading } = useAuthentication();
-  const { tenant } = useTenant();
 
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  const [companyName, setCompanyName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const { changeTenant } = useTenant();
+  const { changeYear } = useYear();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,10 +25,22 @@ export const useAuthLogic = () => {
       return;
     }
     try {
+      let response;
       if (mode === "login") {
-        await login({ username, password }, tenant);
+        response = await login({ username, password });
       } else {
-        await signUp({ username, password }, tenant);
+        response = await signUp({
+          username,
+          password,
+          companyName,
+          description,
+        });
+      }
+
+      const newSchema = response?.schemaName;
+      if (newSchema) {
+        changeTenant(newSchema);
+        changeYear(new Date().getFullYear());
       }
     } catch (error) {
       const backendErr =
@@ -32,7 +50,14 @@ export const useAuthLogic = () => {
   };
 
   return {
-    state: { mode, username, password, loading },
-    handlers: { setMode, setUsername, setPassword, handleSubmit },
+    state: { mode, username, password, companyName, description, loading },
+    handlers: {
+      setMode,
+      setUsername,
+      setPassword,
+      setCompanyName,
+      setDescription,
+      handleSubmit,
+    },
   };
 };

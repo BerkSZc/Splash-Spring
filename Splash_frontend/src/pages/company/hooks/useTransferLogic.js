@@ -37,27 +37,6 @@ export const useTransferLogic = () => {
   });
 
   useEffect(() => {
-    const splashSchemas = (Array.isArray(companies) ? companies : [])
-      .map((c) => c.schemaName)
-      .filter((s) => s?.startsWith("splash_"))
-      .sort((a, b) => {
-        const numA = parseInt(a.split("_")[1]) || 0;
-        const numB = parseInt(b.split("_")[1]) || 0;
-        return numA - numB;
-      });
-
-    const lastSchema = splashSchemas[splashSchemas.length - 1];
-
-    let nextId = "splash_1";
-    if (lastSchema) {
-      const num = parseInt(lastSchema.split("_")[1]) + 1;
-      nextId = `splash_${num}`;
-    }
-
-    setNewCompData((prev) => ({ ...prev, id: nextId }));
-  }, [companies]);
-
-  useEffect(() => {
     if (editingCompany) {
       document.body.style.overflow = "hidden";
     } else {

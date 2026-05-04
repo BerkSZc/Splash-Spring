@@ -1,13 +1,17 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.controller.ICompanyController;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
+import com.berksozcu.entites.user.User;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
+import com.berksozcu.service.ICompanyService;
 import com.berksozcu.service.impl.CompanyServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,12 +19,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/rest/api/company")
-public class CompanyControllerImpl {
+public class CompanyControllerImpl implements ICompanyController {
     @Autowired
-    private CompanyServiceImpl companyService;
+    private ICompanyService companyService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createCompany(@RequestBody Map<String, String> request) {
+    @Override
+    public ResponseEntity<?> createCompany(@RequestBody Map<String, String> request, @AuthenticationPrincipal User user) {
         String companyName = request.get("name");
         String description = request.get("desc");
         String sourceSchema = request.get("sourceSchema");
@@ -35,7 +40,7 @@ public class CompanyControllerImpl {
         String schemaName = companyService.createDefaultSchemaName();
 
         try {
-            companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema);
+            companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema, user);
             return ResponseEntity.ok("Şema '" + schemaName + "' başarıyla oluşturuldu.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Şema oluşturma hatası: " + e.getMessage());
@@ -43,6 +48,7 @@ public class CompanyControllerImpl {
     }
 
     @PutMapping("/edit-company")
+    @Override
     public void editCompany(@RequestBody Map<String, String> request) {
         String schemaName = request.get("schemaName");
         String companyName = request.get("companyName");
@@ -52,21 +58,26 @@ public class CompanyControllerImpl {
     }
 
     @GetMapping("/find-all")
-    public List<Company> findAllCompany() {
-       return companyService.getAllCompanies();
+    @Override
+    public List<Company> findAllCompany(@AuthenticationPrincipal User user) {
+        if (user == null) return List.of();
+        return companyService.getAllCompanies(user);
     }
 
     @PostMapping("/create-year")
+    @Override
     public ResponseEntity<Year> createYear(@RequestParam Long companyId, @RequestParam Integer year) {
         return ResponseEntity.ok(companyService.addYearToCompany(companyId, year));
     }
 
     @GetMapping("/get-all-year")
+    @Override
     public ResponseEntity<List<Year>> getAllYear(@RequestParam Long companyId) {
         return ResponseEntity.ok(companyService.getYearsByCompany(companyId));
     }
 
     @DeleteMapping("/delete-year")
+    @Override
     public void deleteYear(@RequestParam Long companyId, @RequestParam Integer year) {
          companyService.deleteCompanyAndYear(companyId, year);
     }

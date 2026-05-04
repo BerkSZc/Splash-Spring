@@ -1,5 +1,5 @@
 DROP TYPE IF EXISTS public.unit_status CASCADE;
-CREATE TYPE public.unit_status AS ENUM ('KG', 'ADET', 'M', 'LT');
+CREATE TYPE public.unit_status AS ENUM ('KG', 'ADET', 'M', 'LT', 'PAKET');
 
 DROP TYPE IF EXISTS public.currency_status CASCADE;
 CREATE TYPE public.currency_status AS ENUM ('TRY', 'EUR', 'USD');
@@ -24,18 +24,29 @@ CREATE CAST (varchar AS public.invoice_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.payroll_model_enum) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.payroll_type_enum) WITH INOUT AS IMPLICIT;
 
+
+
+-- 1. Kullanıcı Tablosu
+CREATE TABLE IF NOT EXISTS app_user(
+id BIGSERIAL PRIMARY KEY,
+username VARCHAR(255) NOT NULL,
+password VARCHAR(255) NOT NULL
+);
+
 -- ---------------------------
--- 1. ŞİRKET TABLOSU
+-- 2. ŞİRKET TABLOSU
 -- ---------------------------
 CREATE TABLE IF NOT EXISTS company (
 id BIGSERIAL PRIMARY KEY,
 name VARCHAR(255) COLLATE tr_tr_custom,
 schema_name VARCHAR(255),
-description VARCHAR(255)
+description VARCHAR(255),
+user_id BIGINT NOT NULL,
+FOREIGN KEY (user_id) REFERENCES app_user(id)
 );
 
 -- ---------------------------
--- 1. MÜŞTERİ TABLOSU
+-- 3. MÜŞTERİ TABLOSU
 -- ---------------------------
 
 CREATE TABLE IF NOT EXISTS customer (
@@ -53,7 +64,7 @@ CREATE TABLE IF NOT EXISTS customer (
 );
 
 -- ---------------------------
--- 2. MALZEME TABLOSU
+-- 4. MALZEME TABLOSU
 -- ---------------------------
 
   CREATE TABLE IF NOT EXISTS material (
@@ -70,15 +81,6 @@ CREATE TABLE IF NOT EXISTS customer (
       FOREIGN KEY (company_id) REFERENCES company(id)
   );
 
-
--- 4. Kullanıcı Tablosu
-CREATE TABLE IF NOT EXISTS app_user(
-id BIGSERIAL PRIMARY KEY,
-username VARCHAR(255) NOT NULL,
-password VARCHAR(255) NOT NULL,
-company_id BIGINT NOT NULL,
-FOREIGN KEY (company_id) REFERENCES company(id)
-);
 
 -- ---------------------------
 -- 5. DÖVİZ KURU TABLOSU

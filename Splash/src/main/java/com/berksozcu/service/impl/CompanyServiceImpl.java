@@ -2,6 +2,7 @@ package com.berksozcu.service.impl;
 
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
+import com.berksozcu.entites.user.User;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -12,14 +13,15 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -68,7 +70,7 @@ public class CompanyServiceImpl implements ICompanyService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema) throws SQLException {
+    public void createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException {
         if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_ISIM_HATA));
         }
@@ -83,7 +85,7 @@ public class CompanyServiceImpl implements ICompanyService {
                 "material_price_history", "received_collection",
                 "payment_company", "payroll", "opening_voucher"};
 
-        List<String> tablesWithData = List.of();
+        List<String> tablesWithData = List.of("");
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
@@ -111,8 +113,14 @@ public class CompanyServiceImpl implements ICompanyService {
                 company.setName(companyName);
                 company.setSchemaName(schemaName);
                 company.setDescription(description);
+                company.setUser(user);
+                Company savedCompany = companyRepository.save(company);
 
-                companyRepository.save(company);
+                Year year = new Year();
+                year.setCompany(savedCompany);
+                year.setYearValue(LocalDate.now().getYear());
+
+                yearRepository.save(year);
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;
@@ -130,8 +138,9 @@ public class CompanyServiceImpl implements ICompanyService {
         companyRepository.save(company);
     }
 
-    public List<Company> getAllCompanies() {
-        return companyRepository.findAll();
+    @Override
+    public List<Company> getAllCompanies(User user) {
+        return companyRepository.findAllByUserId(user.getId());
     }
 
     @Override
@@ -235,7 +244,7 @@ public class CompanyServiceImpl implements ICompanyService {
     public String createDefaultSchemaName() {
         String lastSchema = companyRepository.findMaxSchemaName();
 
-        if(lastSchema == null || lastSchema.isBlank()) {
+        if (lastSchema == null || lastSchema.isBlank()) {
             return "splash_1";
         }
 

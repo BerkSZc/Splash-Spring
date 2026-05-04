@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
@@ -42,9 +43,9 @@ public class JwtService {
         return (username.equals(userDetails.getUsername()) && !exportToken(jwt, Claims::getExpiration).before(new Date()));
     }
 
-    public String generateToken(UserDetails user) {
+    public String generateToken(UserDetails user, Map<String, Object> extraClaims) {
         return Jwts.builder()
-                .setClaims(new HashMap<>())
+                .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))

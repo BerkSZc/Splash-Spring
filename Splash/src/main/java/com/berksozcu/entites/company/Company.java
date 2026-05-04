@@ -1,5 +1,6 @@
 package com.berksozcu.entites.company;
 
+import com.berksozcu.entites.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +25,10 @@ public class Company {
     private String schemaName;
 
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Year> years = new ArrayList<>();

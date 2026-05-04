@@ -130,6 +130,7 @@ export default function InvoiceItemsTable({
                       <option value="ADET">adet</option>
                       <option value="M">m</option>
                       <option value="LT">lt</option>
+                      <option value="PAKET">paket</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">
