@@ -26,6 +26,9 @@ public class User implements UserDetails {
 
     private String password;
 
+    @Column(name = "last_logged_company_id")
+    private Long lastLoggedCompanyId;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

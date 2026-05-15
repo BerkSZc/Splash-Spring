@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTenant } from "./TenantContext";
 
@@ -16,6 +16,15 @@ export const YearProvider = ({ children }) => {
       return [currentYear];
     }
   });
+
+  useEffect(() => {
+    if (!years?.length) return;
+
+    const latest = Math.max(...years);
+
+    setYear(latest);
+    localStorage.setItem("year", latest);
+  }, [tenant, years]);
 
   const [year, setYear] = useState(() => {
     const stored = localStorage.getItem("year");

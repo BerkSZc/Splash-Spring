@@ -70,7 +70,7 @@ public class CompanyServiceImpl implements ICompanyService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException {
+    public Company createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException {
         if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_ISIM_HATA));
         }
@@ -121,6 +121,8 @@ public class CompanyServiceImpl implements ICompanyService {
                 year.setYearValue(LocalDate.now().getYear());
 
                 yearRepository.save(year);
+
+                return savedCompany;
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;

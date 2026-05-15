@@ -30,7 +30,8 @@ CREATE CAST (varchar AS public.payroll_type_enum) WITH INOUT AS IMPLICIT;
 CREATE TABLE IF NOT EXISTS app_user(
 id BIGSERIAL PRIMARY KEY,
 username VARCHAR(255) NOT NULL,
-password VARCHAR(255) NOT NULL
+password VARCHAR(255) NOT NULL,
+last_logged_company_id BIGINT
 );
 
 -- ---------------------------

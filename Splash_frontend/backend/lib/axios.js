@@ -2,8 +2,10 @@ import axios from "axios";
 
 const isElectron = window?.process?.type === "renderer";
 
+const PORT = 9090;
+
 export const axiosInstance = axios.create({
-  baseURL: isElectron ? "http://localhost:8080/rest/api" : "/rest/api",
+  baseURL: isElectron ? `http://localhost:${PORT}/rest/api` : "/rest/api",
 
   withCredentials: true,
 });

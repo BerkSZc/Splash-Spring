@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,13 +66,16 @@ public class AuthenticationService {
 
         String schemaName = companyService.createDefaultSchemaName();
 
-        companyService.createNewTenantSchema(
+        Company newCompany = companyService.createNewTenantSchema(
                 schemaName,
                 request.getCompanyName(),
                 request.getDescription(),
                 "splash",
                 newUser
         );
+
+        newUser.setLastLoggedCompanyId(newCompany.getId());
+        userRepository.save(newUser);
 
         String token = jwtService.generateToken(newUser, Map.of("schemaName", schemaName));
 
@@ -93,8 +97,20 @@ public class AuthenticationService {
                 () -> new BaseException(new ErrorMessage(MessageType.KULLANICI_BULUNAMADI))
         );
 
-        Company company = companyRepository.findFirstByUserIdOrderByIdDesc(newUser.getId())
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.SIRKET_BULUNAMADI)));
+        Company company;
+
+        if(newUser.getLastLoggedCompanyId() != null) {
+            company = companyRepository.findById(newUser.getLastLoggedCompanyId())
+                    .orElseGet(() -> companyRepository.findFirstByUserIdOrderByIdDesc(newUser.getId())
+                            .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.SIRKET_BULUNAMADI))));
+        } else {
+            company = companyRepository.findFirstByUserIdOrderByIdDesc(newUser.getId())
+                    .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.SIRKET_BULUNAMADI)));
+
+            newUser.setLastLoggedCompanyId(company.getId());
+            userRepository.save(newUser);
+        }
+
 
         if (!yearRepository.existsByCompanyId(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YIL_MEVCUT_DEGIL));
@@ -104,5 +120,18 @@ public class AuthenticationService {
         return UserResponse.builder().token(token).
         schemaName(company.getSchemaName()).
         build();
+    }
+
+    public UserResponse switchCompany(Long companyId) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Company newCompany = companyRepository.findByIdAndUserId(companyId, currentUser.getId())
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.SIRKET_BULUNAMADI)));
+
+        currentUser.setLastLoggedCompanyId(newCompany.getId());
+        userRepository.save(currentUser);
+
+        String newToken = jwtService.generateToken(currentUser, Map.of("schemaName", newCompany.getSchemaName()));
+        return UserResponse.builder().token(newToken).schemaName(newCompany.getSchemaName()).build();
     }
 }

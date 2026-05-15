@@ -173,13 +173,13 @@ export function HomePage() {
             title="Satış Yönetimi"
             desc="Müşterilere fatura kesin, bekleyen ödemeleri takip edin ve satış performansınızı inceleyin."
             color="emerald"
-            href="/faturalar"
+            href="/faturalar?tab=sales"
           />
           <QuickLinkCard
             title="Satın Alma"
             desc="Tedarikçi faturalarını sisteme işleyin, stok girişlerini ve firma borçlarını yönetin."
             color="blue"
-            href="/faturalar"
+            href="/faturalar?tab=purchase"
           />
           <QuickLinkCard
             title="Müşteri Paneli"

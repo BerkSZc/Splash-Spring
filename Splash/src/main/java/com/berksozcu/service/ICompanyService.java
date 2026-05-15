@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface ICompanyService {
-     void createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException;
+     Company createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException;
      List<Year> getYearsByCompany(Long companyId);
      Year addYearToCompany(Long companyId, Integer year);
      void deleteCompanyAndYear(Long companyId, Integer year);

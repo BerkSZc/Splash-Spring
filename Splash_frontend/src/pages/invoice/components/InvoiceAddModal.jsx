@@ -1,6 +1,8 @@
+import { useState } from "react";
 import InvoiceForm from "../../invoice-process/InvoiceForm.jsx";
 
-export default function InvoiceAddModal({ onClose }) {
+export default function InvoiceAddModal({ onClose, initialType }) {
+  const [activeType, setActiveType] = useState(initialType || "sales");
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md">
       <div className="bg-[#0f172a] border border-gray-800 rounded-[3rem] w-full max-w-[1300px] min-h-[80vh] max-h-[95vh] overflow-y-auto shadow-2xl relative">
@@ -11,7 +13,7 @@ export default function InvoiceAddModal({ onClose }) {
           ✕
         </button>
 
-        <InvoiceForm onSuccess={onClose} />
+        <InvoiceForm type={activeType} onSuccess={onClose} />
       </div>
     </div>
   );

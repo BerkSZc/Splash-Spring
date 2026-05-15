@@ -113,7 +113,7 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
                   <td class="py-3 px-2 text-right font-mono text-gray-600">${Number(
                     item?.unitPrice ?? 0,
                   ).toLocaleString("tr-TR", {
-                    minimumFractionDigits: 2,
+                    minimumFractionDigits: 4,
                   })} ₺</td>
                   <td class="py-3 px-2 text-right font-mono text-gray-500">${Number(
                     item?.kdvTutar ?? 0,

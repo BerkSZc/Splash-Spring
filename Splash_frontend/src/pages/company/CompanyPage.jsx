@@ -48,7 +48,7 @@ const CompanyPage = () => {
                     key={c.id}
                     company={c}
                     isSelected={state.tenant === c.schemaName}
-                    onSelect={handlers.changeTenant}
+                    onSelect={() => handlers.handleGoToCompany(c.id)}
                     onEdit={handlers.handleStartEdit}
                   />
                 ),

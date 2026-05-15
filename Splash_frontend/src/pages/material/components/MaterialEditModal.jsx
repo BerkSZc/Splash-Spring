@@ -57,7 +57,7 @@ const MaterialEditModal = ({ form, onChange, onSave, onCancel }) => {
                 name="comment"
                 value={form.comment || ""}
                 onChange={onChange}
-                className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 uppercase text-white outline-none focus:border-blue-500 transition-all"
                 required
               />
             </div>

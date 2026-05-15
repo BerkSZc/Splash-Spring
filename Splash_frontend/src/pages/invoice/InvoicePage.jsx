@@ -42,7 +42,7 @@ export default function InvoicePage() {
 
             <select
               value={state?.invoiceType || ""}
-              onChange={(e) => handlers.setInvoiceType(e.target.value)}
+              onChange={handlers.handleTypeChange}
               className="bg-gray-900 border-2 border-gray-800 text-white rounded-2xl px-6 py-3 font-bold cursor-pointer focus:border-blue-500 transition-all outline-none"
             >
               <option value="purchase">🛒 Satın Alma Faturaları</option>
@@ -56,7 +56,7 @@ export default function InvoicePage() {
               }
             >
               <span className="text-lg"> +</span>
-              Fatura Ekle
+              {`${state.invoiceType === "purchase" ? "Satın Alma" : "Satış"} Faturası Ekle`}
             </button>
           </div>
         </div>
@@ -148,7 +148,10 @@ export default function InvoicePage() {
         )}
 
         {state.showAddForm && (
-          <InvoiceAddModal onClose={() => handlers.setShowAddForm(false)} />
+          <InvoiceAddModal
+            onClose={() => handlers.setShowAddForm(false)}
+            initialType={state.invoiceType}
+          />
         )}
 
         {/* SİLME ONAY MODALI */}
