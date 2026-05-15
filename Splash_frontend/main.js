@@ -1,5 +1,5 @@
 import { app, BrowserWindow, nativeTheme } from "electron";
-import { spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import pkg from "electron-updater";
@@ -57,9 +57,9 @@ function createWindow() {
     mainWindow.reload();
   });
 
-  mainWindow.on("close", () => {
-    killSpring();
-  });
+  // mainWindow.on("close", () => {
+  //   killSpring();
+  // });
 
   mainWindow.webContents.on("render-process-gone", (_, details) => {
     dialog.showMessageBox({
@@ -147,7 +147,7 @@ function startBackend() {
         type: "warning",
         title: "Zaman Aşımı",
         message:
-          "Backend başlatılamadı. Lütfen java'nın kurulu olduğundan ve 8080 portunun boş olduğundan emin olun.",
+          "Backend başlatılamadı. Lütfen java'nın kurulu olduğundan emin olun.",
       });
     }
   }, 30000);
@@ -172,7 +172,7 @@ function waitForBackend(retries = 30) {
     if (retries > 0) {
       setTimeout(() => waitForBackend(retries - 1), 1000);
     } else {
-      dialog.showErrorBox("Backend Hatası", "Sunucu başlatılamadı (8080).");
+      dialog.showErrorBox("Backend Hatası", "Sunucu başlatılamadı.");
     }
   });
 }
@@ -189,16 +189,14 @@ app.whenReady().then(() => {
   });
 });
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-
 function killSpring() {
   if (!springBootProcess || springBootProcess.killed) return;
 
   try {
     if (process.platform === "win32") {
-      spawn("taskkill", ["/PID", springBootProcess.pid, "/T", "/F"]);
+      execSync(`taskkill /PID ${springBootProcess.pid} /T /F`, {
+        stdio: "ignore",
+      });
     } else {
       springBootProcess.kill("SIGTERM");
       setTimeout(() => {
@@ -213,6 +211,15 @@ function killSpring() {
 
   springBootProcess = null;
 }
+
+app.on("window-all-closed", () => {
+  killSpring();
+  if (process.platform !== "darwin") app.quit();
+});
+
+app.on("will-quit", () => {
+  killSpring();
+});
 
 app.on("before-quit", () => {
   killSpring();
@@ -230,4 +237,10 @@ process.on("SIGTERM", () => {
 
 process.on("exit", () => {
   killSpring();
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Beklenmedik Hata:", err);
+  killSpring();
+  app.exit(1);
 });
