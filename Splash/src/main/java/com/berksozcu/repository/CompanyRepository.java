@@ -23,4 +23,6 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     @Query(value = "SELECT * FROM splash.company WHERE user_id = :userId", nativeQuery = true)
     List<Company> findAllByUserId(@Param("userId") Long userId);
+
+    Optional<Company> findByIdAndUserId(Long id, Long userId);
 }

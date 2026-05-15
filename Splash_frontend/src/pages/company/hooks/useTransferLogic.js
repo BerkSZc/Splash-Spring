@@ -17,6 +17,7 @@ export const useTransferLogic = () => {
     getAllYearByCompanyId,
     deleteYear,
     editCompany,
+    switchCompany,
     loading: companiesLoading,
   } = useCompany();
   const { transferAllBalances, loading: vouchersLoading } = useVoucher();
@@ -77,7 +78,7 @@ export const useTransferLogic = () => {
             setYears((Array.isArray(data) ? data : []).map((y) => y.yearValue));
           }
         } else {
-          setYears();
+          setYears([]);
         }
       } catch (error) {
         const backendErr =
@@ -89,7 +90,7 @@ export const useTransferLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [tenant, companies?.length]);
+  }, [tenant, companies]);
 
   const handleAddYearClick = async () => {
     if (!newYear.trim()) return toast.error("Lütfen yıl girişi yapın!");
@@ -195,6 +196,19 @@ export const useTransferLogic = () => {
     setConfirmDeleteCheck(false);
   };
 
+  const handleGoToCompany = async (companyId) => {
+    try {
+      const data = await switchCompany(companyId);
+
+      changeTenant(data.schemaName);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+
+      toast.error(backendErr);
+    }
+  };
+
   const isLoading = companiesLoading || vouchersLoading;
 
   return {
@@ -216,7 +230,6 @@ export const useTransferLogic = () => {
     },
     handlers: {
       changeYear,
-      changeTenant,
       setNewYear,
       setNewCompData,
       handleAddYearClick,
@@ -232,6 +245,7 @@ export const useTransferLogic = () => {
       handleUpdateCompany,
       handleStartEdit,
       setEditingCompany,
+      handleGoToCompany,
     },
   };
 };

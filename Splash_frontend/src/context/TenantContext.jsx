@@ -27,7 +27,7 @@ export const TenantProvider = ({ children }) => {
     return () => {
       ignore = true;
     };
-  }, [tenant]);
+  }, []);
 
   const changeTenant = (newTenant) => {
     const val = String(newTenant);

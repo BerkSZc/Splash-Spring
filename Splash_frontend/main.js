@@ -15,7 +15,7 @@ let isSpringReady = false;
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
-const SPRING_PORT = 8080;
+const SPRING_PORT = 9090;
 const START_URL = `http://localhost:${SPRING_PORT}`;
 
 nativeTheme.themeSource = "dark";

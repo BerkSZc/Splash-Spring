@@ -35,18 +35,19 @@ export default function MaterialSearchSelect({
   useEffect(() => {
     if (open && inputRef.current) {
       const updatePos = () => {
+        if (!inputRef.current) return;
         const rect = inputRef.current.getBoundingClientRect();
         setPos({
-          top: rect.bottom + window.scrollY + 5,
-          left: rect.left + window.scrollX,
+          top: rect.bottom + window.pageYOffset + 5,
+          left: rect.left + window.pageXOffset,
           width: rect.width,
         });
       };
       updatePos();
-      window.addEventListener("scroll", updatePos);
+      window.addEventListener("scroll", updatePos, true);
       window.addEventListener("resize", updatePos);
       return () => {
-        window.removeEventListener("scroll", updatePos);
+        window.removeEventListener("scroll", updatePos, true);
         window.removeEventListener("resize", updatePos);
       };
     }

@@ -7,10 +7,11 @@ export const useCompany = create((set, get) => ({
   companies: [],
 
   getAllCompanies: async () => {
-    set({ loading: true, companies: [] });
+    set({ loading: true });
     try {
       const res = await axiosInstance.get("/company/find-all");
       set({ companies: res.data });
+      return res.data;
     } catch (error) {
       set({ companies: [] });
       throw error;
@@ -82,6 +83,23 @@ export const useCompany = create((set, get) => ({
           "Content-Type": "application/json",
         },
       });
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  switchCompany: async (companyId) => {
+    set({ loading: true });
+    try {
+      const res = await axiosInstance.post(
+        `/company/switch-company/${companyId}`,
+      );
+
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("tenant", res.data.schemaName);
+
+      return res.data;
     } catch (error) {
       throw error;
     } finally {

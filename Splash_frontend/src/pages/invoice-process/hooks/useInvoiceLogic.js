@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
-export const useInvoiceLogic = ({ onSuccess } = {}) => {
+export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   const { materials, getMaterials, loading: materialLoading } = useMaterial();
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const {
@@ -37,6 +37,12 @@ export const useInvoiceLogic = ({ onSuccess } = {}) => {
   const [mode, setMode] = useState(() => {
     return localStorage.getItem("invoice_mode") || "sales";
   });
+
+  useEffect(() => {
+    if (type && (type === "sales" || type === "purchase")) {
+      setMode(type);
+    }
+  }, [type]);
 
   useEffect(() => {
     localStorage.setItem("invoice_mode", mode);

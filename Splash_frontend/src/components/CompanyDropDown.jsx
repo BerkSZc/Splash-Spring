@@ -8,6 +8,7 @@ const CompanyDropDown = () => {
   const {
     companies,
     getAllCompanies,
+    switchCompany,
     loading: companiesLoading,
   } = useCompany();
 
@@ -39,7 +40,7 @@ const CompanyDropDown = () => {
     return () => {
       ignore = true;
     };
-  }, [companies?.length]);
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -57,6 +58,23 @@ const CompanyDropDown = () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [open]);
+
+  const changeCompany = async (c) => {
+    if (isLoading) return;
+
+    try {
+      const data = await switchCompany(c.id);
+
+      changeTenant(data.schemaName);
+
+      setOpen(false);
+    } catch (error) {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+
+      toast.error(backendErr);
+    }
+  };
 
   const isLoading = companiesLoading;
 
@@ -103,10 +121,7 @@ const CompanyDropDown = () => {
               (Array.isArray(companies) ? companies : []).map((c) => (
                 <button
                   key={c.id}
-                  onClick={() => {
-                    changeTenant(c?.schemaName);
-                    setOpen(false);
-                  }}
+                  onClick={() => changeCompany(c)}
                   className={`
                   w-full text-left px-4 py-3 text-sm transition-colors
                   flex items-center justify-between

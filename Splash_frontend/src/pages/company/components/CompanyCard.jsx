@@ -28,7 +28,7 @@ export const CompanyCard = ({ company, isSelected, onSelect, onEdit }) => {
   return (
     <div
       ref={cardRef}
-      onClick={() => onSelect(company.schemaName)}
+      onClick={() => onSelect()}
       className={`relative group cursor-pointer p-8 rounded-3xl border-2 transition-all duration-300 ${
         isSelected
           ? "border-blue-500 bg-blue-500/5 shadow-[0_0_25px_rgba(59,130,246,0.15)]"

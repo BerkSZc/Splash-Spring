@@ -9,6 +9,7 @@ import { useYear } from "../../../context/YearContext";
 import { useTenant } from "../../../context/TenantContext";
 import { generateInvoiceHTML } from "../../../utils/printHelpers.js";
 import toast from "react-hot-toast";
+import { useSearchParams } from "react-router-dom";
 
 export const useInvoicePageLogic = () => {
   const {
@@ -52,6 +53,22 @@ export const useInvoicePageLogic = () => {
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+
+    if (tab === "sales" || tab === "purchase") {
+      setInvoiceType(tab);
+    }
+  }, [searchParams]);
+
+  const handleTypeChange = (e) => {
+    const newType = e.target.value;
+    setInvoiceType(newType);
+    setSearchParams({ tab: newType });
+  };
 
   useEffect(() => {
     setShowAddForm(false);
@@ -683,6 +700,7 @@ export const useInvoicePageLogic = () => {
       handleView,
       setShowAddForm,
       clearSelection,
+      handleTypeChange,
     },
   };
 };

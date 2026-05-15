@@ -4,8 +4,8 @@ import InvoiceItemsTable from "./components/InvoiceItemsTable";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import { useEffect } from "react";
 
-export default function InvoiceForm({ onSuccess }) {
-  const { state, handlers } = useInvoiceLogic({ onSuccess });
+export default function InvoiceForm({ onSuccess, type }) {
+  const { state, handlers } = useInvoiceLogic({ onSuccess, type });
   const { mode, salesForm, purchaseForm } = state;
 
   const actualForm = state?.currentForm || { items: [] };
