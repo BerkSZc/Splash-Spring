@@ -17,7 +17,7 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
     getAllOpeningVoucherByYear,
     loading: vouchersLoading,
   } = useVoucher();
-  const { getAllCustomers, loading: customersLoading } = useClient();
+  const { loading: customersLoading } = useClient();
   const { year } = useYear();
   const { tenant } = useTenant();
 
@@ -58,7 +58,6 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
     let ignore = false;
     const fetchAndSyncData = async () => {
       try {
-        await getAllCustomers(0, 999, false, "", tenant);
         if (year) {
           const dateString = `${year}-01-01`;
           await getAllOpeningVoucherByYear(dateString, tenant);

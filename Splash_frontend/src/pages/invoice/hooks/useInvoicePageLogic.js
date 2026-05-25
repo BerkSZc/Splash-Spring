@@ -246,8 +246,8 @@ export const useInvoicePageLogic = () => {
           return {
             ...item,
             unitPrice: newUnitPrice,
-            lineTotal,
-            kdvTutar,
+            lineTotal: lineTotal,
+            kdvTutar: kdvTutar,
           };
         },
       );
@@ -331,16 +331,20 @@ export const useInvoicePageLogic = () => {
         } else if (name === "quantity" || name === "unitPrice") {
           const qty = Number(item.quantity) || 0;
           const up = Number(item.unitPrice) || 0;
-          item.lineTotal = (qty * up).toFixed(2);
+          item.lineTotal = (
+            Math.round((qty * up + Number.EPSILON) * 100) / 100
+          ).toFixed(2);
         }
 
-        const { kdvTutar } = calculateRow(
+        const { kdvTutar, lineTotal } = calculateRow(
           Number(item.unitPrice) || 0,
           Number(item.quantity) || 0,
           Number(item.kdv) || 0,
         );
 
         item.kdvTutar = kdvTutar;
+        item.lineTotal = lineTotal;
+
         newItems[index] = item;
 
         return { ...prev, items: newItems };
@@ -349,12 +353,43 @@ export const useInvoicePageLogic = () => {
   };
 
   const handleEdit = (invoice) => {
-    setEditingInvoice(invoice);
+    // MÜŞTERİ KONTROLÜ: Faturadaki müşteriler arşivli ise ismini ekle
+    if (invoice.customer && invoice.customer.id) {
+      const invCustId = String(invoice.customer.id);
+
+      const customerExists = customers.some((c) => String(c.id) === invCustId);
+
+      if (!customerExists) {
+        customers.unshift({
+          ...invoice.customer,
+          archived: true,
+        });
+      }
+    }
+
+    //  MALZEME KONTROLÜ: Faturadaki malzemeler listede arşivli ise ismini ekle
+    if (Array.isArray(invoice.items)) {
+      invoice.items.forEach((item) => {
+        if (item.material) {
+          const materialExists = materials.find(
+            (m) => String(m.id) === String(item.material.id),
+          );
+          if (!materialExists) {
+            materials.unshift({
+              ...item.material,
+              archived: true,
+            });
+          }
+        }
+      });
+    }
+
+    setEditingInvoice({ ...invoice });
 
     setForm({
       date: invoice.date || "",
       fileNo: invoice.fileNo || "",
-      customerId: invoice.customer.id,
+      customerId: invoice.customer?.id,
       usdSellingRate: invoice.usdSellingRate || "",
       eurSellingRate: invoice.eurSellingRate || "",
       items: (Array.isArray(invoice?.items) ? invoice.items : [])
@@ -496,9 +531,10 @@ export const useInvoicePageLogic = () => {
     const q = Number(qty) || 0;
     const k = Number(kdvRate) || 0;
 
-    const lineTotal = roundHalfUp(p * q);
+    const lineTotal = Math.round((p * q + Number.EPSILON) * 100) / 100;
 
-    const kdvTutar = roundHalfUp((lineTotal * k) / 100);
+    const kdvTutar =
+      Math.round(((lineTotal * k) / 100 + Number.EPSILON) * 100) / 100;
 
     return { lineTotal: lineTotal.toFixed(2), kdvTutar: kdvTutar.toFixed(2) };
   };
@@ -506,17 +542,18 @@ export const useInvoicePageLogic = () => {
   const modalTotals = useMemo(() => {
     if (!form?.items) return { subTotal: 0, kdvTotal: 0, generalTotal: 0 };
 
-    const subTotal = roundHalfUp(
-      form.items.reduce((sum, i) => sum + Number(i.lineTotal || 0), 0),
+    const subTotal = form.items.reduce(
+      (sum, i) => sum + (Number(i.lineTotal) || 0),
+      0,
     );
-
-    const kdvTotal = roundHalfUp(
-      form.items.reduce((sum, i) => sum + Number(i.kdvTutar || 0), 0),
+    const kdvTotal = form.items.reduce(
+      (sum, i) => sum + (Number(i.kdvTutar) || 0),
+      0,
     );
 
     return {
-      subTotal,
-      kdvTotal,
+      subTotal: roundHalfUp(subTotal),
+      kdvTotal: roundHalfUp(kdvTotal),
       generalTotal: roundHalfUp(subTotal + kdvTotal),
     };
   }, [form?.items]);

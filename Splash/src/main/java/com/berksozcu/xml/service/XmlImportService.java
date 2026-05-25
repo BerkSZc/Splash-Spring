@@ -353,10 +353,10 @@ public class XmlImportService {
             }
             material.setArchived(Objects.requireNonNullElse(m.getARCHIVED(), false));
             material.setCompany(company);
-//            material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
-//            material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
-//            material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
-//            material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
+            material.setPurchasePrice(safeGet(parseBigDecimal(m.getPURCHASE_PRICE())));
+            material.setPurchaseCurrency(Objects.requireNonNullElse(m.getPURCHASE_CURRENCY(), Currency.TRY));
+            material.setSalesPrice(safeGet(parseBigDecimal(m.getSALES_PRICE())));
+            material.setSalesCurrency(Objects.requireNonNullElse(m.getSALES_CURRENCY(), Currency.TRY));
             materialRepository.save(material);
 
             existingMaterials.add(code);

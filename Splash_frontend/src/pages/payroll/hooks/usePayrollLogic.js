@@ -317,6 +317,20 @@ export const usePayrollLogic = () => {
   };
 
   const handleEditClick = (item) => {
+    // MÜŞTERİ KONTROLÜ: Faturadaki müşteriler arşivli ise ismini ekle
+    if (item.customer && item.customer.id) {
+      const custIdStr = String(item.customer.id);
+
+      const customerExists = customers.some((c) => String(c.id) === custIdStr);
+
+      if (!customerExists) {
+        customers.unshift({
+          ...item.customer,
+          archived: true,
+        });
+      }
+    }
+
     setEditing(item);
     setForm({
       transactionDate: item.transactionDate,

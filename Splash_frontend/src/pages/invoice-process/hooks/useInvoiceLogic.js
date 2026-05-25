@@ -248,18 +248,15 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
     });
   };
 
-  const roundHalfUp = (num) => {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
-  };
-
   const calculateRow = (price, qty, kdvRate) => {
     const p = Number(price) || 0;
     const q = Number(qty) || 0;
     const k = Number(kdvRate) || 0;
 
-    const lineTotal = roundHalfUp(p * q);
+    const lineTotal = Math.round((p * q + Number.EPSILON) * 100) / 100;
 
-    const kdvTutar = roundHalfUp((lineTotal * k) / 100);
+    const kdvTutar =
+      Math.round(((lineTotal * k) / 100 + Number.EPSILON) * 100) / 100;
 
     return { lineTotal: lineTotal.toFixed(2), kdvTutar: kdvTutar.toFixed(2) };
   };
@@ -287,12 +284,14 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
         currentItem.lineTotal = (qty * up).toFixed(2);
       }
-      const { kdvTutar } = calculateRow(
+      const { kdvTutar, lineTotal } = calculateRow(
         Number(currentItem.unitPrice) || 0,
         Number(currentItem.quantity) || 0,
         Number(currentItem.kdv) || 0,
       );
+
       currentItem.kdvTutar = kdvTutar;
+      currentItem.lineTotal = lineTotal;
 
       newItems[index] = currentItem;
       return { ...prev, items: newItems };
@@ -348,13 +347,18 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
           const qty = Number(item.quantity) || 0;
           const kdvRate = Number(item.kdv) || 0;
-          const lineTotal = newUnitPrice * qty;
 
           return {
             ...item,
             unitPrice: newUnitPrice,
-            lineTotal: lineTotal,
-            kdvTutar: (lineTotal * kdvRate) / 100,
+            lineTotal: (
+              Math.round((newUnitPrice * qty + Number.EPSILON) * 100) / 100
+            ).toFixed(2),
+            kdvTutar: (
+              Math.round(
+                ((newUnitPrice * qty * kdvRate) / 100 + Number.EPSILON) * 100,
+              ) / 100
+            ).toFixed(2),
           };
         }
         return item;
