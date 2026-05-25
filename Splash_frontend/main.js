@@ -29,6 +29,7 @@ const getAssetPath = (assetName) => {
 function createWindow() {
   mainWindow = new BrowserWindow({
     backgroundColor: "#030712",
+    show: false,
     width: 1280,
     height: 800,
     minWidth: 800,
@@ -41,25 +42,23 @@ function createWindow() {
     },
   });
 
+  mainWindow.webContents.on("did-fail-load", () => {
+    console.log("Backend hazır değil, 2 saniye içinde tekrar denenecek...");
+    setTimeout(() => {
+      if (mainWindow) mainWindow.loadURL(START_URL);
+    }, 2000);
+  });
+
   mainWindow.loadURL(START_URL);
 
   mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
-    mainWindow.focus();
-  });
-
-  mainWindow.webContents.on("did-fail-load", () => {
-    setTimeout(() => mainWindow.loadURL(START_URL), 2000);
+    mainWindow.show(); // Sadece içerik gerçekten yüklendiğinde pencereyi aç
   });
 
   mainWindow.on("unresponsive", () => {
     console.log("Uygulama yanıt vermiyor, yeniden yükleniyor...");
     mainWindow.reload();
   });
-
-  // mainWindow.on("close", () => {
-  //   killSpring();
-  // });
 
   mainWindow.webContents.on("render-process-gone", (_, details) => {
     dialog.showMessageBox({
@@ -160,17 +159,19 @@ function startBackend() {
   });
 }
 
-function waitForBackend(retries = 30) {
+function waitForBackend(retries = 100) {
   const req = http.get(START_URL, () => {
     if (!isSpringReady) {
       isSpringReady = true;
       if (!mainWindow) createWindow();
+    } else {
+      mainWindow.loadURL(START_URL);
     }
   });
 
   req.on("error", () => {
     if (retries > 0) {
-      setTimeout(() => waitForBackend(retries - 1), 1000);
+      setTimeout(() => waitForBackend(retries - 1), 1500);
     } else {
       dialog.showErrorBox("Backend Hatası", "Sunucu başlatılamadı.");
     }
