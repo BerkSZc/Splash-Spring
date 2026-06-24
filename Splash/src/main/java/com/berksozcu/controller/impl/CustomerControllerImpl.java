@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.ICustomerController;
 import com.berksozcu.controller.base.RestBaseController;
 import com.berksozcu.controller.base.RootEntity;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/customer")
+@RateLimit(capacity = 5000)
 public class CustomerControllerImpl extends RestBaseController implements ICustomerController {
 
     @Autowired

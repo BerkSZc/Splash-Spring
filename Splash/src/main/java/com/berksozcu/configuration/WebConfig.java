@@ -14,6 +14,9 @@ public class WebConfig implements WebMvcConfigurer{
     @Autowired
     private TenantInterceptor tenantInterceptor;
 
+    @Autowired
+    private RateLimitInterceptor rateLimitInterceptor;
+
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -33,5 +36,8 @@ public class WebConfig implements WebMvcConfigurer{
     //Interceptor, Bir web isteği geldiğinde isteği işleyen metoda ulaşmadan önce kontrol yapmak için kullanılır.
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tenantInterceptor);
+
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/rest/api/**");
     }
 }

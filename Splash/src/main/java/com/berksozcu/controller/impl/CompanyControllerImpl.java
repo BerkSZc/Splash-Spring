@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.ICompanyController;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/rest/api/company")
+@RateLimit(capacity = 5000)
 public class CompanyControllerImpl implements ICompanyController {
     @Autowired
     private ICompanyService companyService;

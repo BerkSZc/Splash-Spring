@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.ISalesInvoiceController;
 import com.berksozcu.entites.sales.SalesInvoice;
 import com.berksozcu.service.ISalesInvoiceService;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/sales")
+@RateLimit(capacity = 5000)
 public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
 
     @Autowired

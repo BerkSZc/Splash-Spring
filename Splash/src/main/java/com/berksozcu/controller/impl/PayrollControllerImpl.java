@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IPayrollController;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.service.IPayrollService;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/payroll")
+@RateLimit(capacity = 5000)
 public class PayrollControllerImpl implements IPayrollController {
 
     @Autowired

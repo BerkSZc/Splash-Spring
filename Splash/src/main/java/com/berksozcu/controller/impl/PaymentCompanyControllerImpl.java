@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IPaymentCompanyController;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.service.IPaymentCompanyService;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/payment")
+@RateLimit(capacity = 5000)
 public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
 
     @Autowired

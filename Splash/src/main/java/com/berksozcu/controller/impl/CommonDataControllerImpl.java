@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.ICommonDataController;
 import com.berksozcu.entites.currency.CurrencyRate;
 import com.berksozcu.entites.material_price_history.InvoiceType;
@@ -24,6 +25,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/rest/api/currency")
+@RateLimit(capacity = 5000)
 public class CommonDataControllerImpl implements ICommonDataController {
 
     @Autowired
