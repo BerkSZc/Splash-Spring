@@ -37,7 +37,8 @@ public enum MessageType {
     MALI_YIL_MEVCUT(1028, "Şirket mali yılı mevcut"),
     ISLEM_MEVCUT(1029, "İşlem no mevcut"),
     SIRKET_YIL_MEVCUT_DEGIL(1030, "Lütfen Şirket İçin Bir Mali Yılı Oluşturun"),
-    MALZEME_KULLANIMDA(1031, "Faturalarda Kullanılan Malzemeler Silinemez!");
+    MALZEME_KULLANIMDA(1031, "Faturalarda Kullanılan Malzemeler Silinemez!"),
+    ISTEK_FAZLALALIGI(1032, "Sunucuya çok fazla istek gönderdiniz bir süre sonra tekrar deneyiniz!");
 
     private Integer code;
     private String message;

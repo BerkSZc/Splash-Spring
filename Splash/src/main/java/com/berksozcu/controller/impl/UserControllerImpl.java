@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IUserController;
 import com.berksozcu.controller.base.RootEntity;
 import com.berksozcu.dto.user.SignUpRequest;
@@ -26,12 +27,14 @@ public class UserControllerImpl implements IUserController {
 
     @Override
     @PostMapping("/save")
+    @RateLimit(capacity = 5)
     public RootEntity<UserResponse> signUp(@RequestBody SignUpRequest request) throws SQLException {
         return ok(authenticationService.signUp(request));
     }
 
     @Override
     @PostMapping("/login")
+    @RateLimit(capacity = 5)
     public RootEntity<UserResponse> login( @RequestBody User user){
         return ok(authenticationService.login(user));
     }

@@ -1,5 +1,6 @@
 package com.berksozcu.xml.controller;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IXmlController;
 import com.berksozcu.xml.service.XmlImportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/rest/api/import")
+@RateLimit(capacity = 100)
 public class XmlImportController implements IXmlController {
 
     @Autowired

@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IMaterialPriceHistoryController;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/history")
+@RateLimit(capacity = 5000)
 public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistoryController {
 
     @Autowired

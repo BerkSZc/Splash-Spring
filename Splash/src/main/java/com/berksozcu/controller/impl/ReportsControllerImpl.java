@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IReportsController;
 import com.berksozcu.dto.report.DtoFullReport;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/report")
+@RateLimit(capacity = 5000)
 public class ReportsControllerImpl implements IReportsController {
 
     @Autowired

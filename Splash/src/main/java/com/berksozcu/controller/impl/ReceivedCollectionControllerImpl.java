@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IReceivedCollectionController;
 import com.berksozcu.entites.collections.ReceivedCollection;
 import com.berksozcu.service.IReceivedCollectionService;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/receive")
+@RateLimit(capacity = 5000)
 public class ReceivedCollectionControllerImpl implements IReceivedCollectionController {
 
     @Autowired

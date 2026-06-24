@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IOpeningVoucherController;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.repository.CustomerRepository;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/voucher")
+@RateLimit(capacity = 5000)
 public class OpeningVoucherControllerImpl implements IOpeningVoucherController {
 
     @Autowired

@@ -1,5 +1,6 @@
 package com.berksozcu.controller.impl;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IMaterialController;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.service.IMaterialService;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/api/material")
+@RateLimit(capacity = 5000)
 public class MaterialControllerImpl implements IMaterialController {
 
     @Autowired

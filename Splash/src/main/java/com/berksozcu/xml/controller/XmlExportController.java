@@ -1,5 +1,6 @@
 package com.berksozcu.xml.controller;
 
+import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.base.RestBaseController;
 import com.berksozcu.xml.service.XmlExportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rest/api/export")
+@RateLimit(capacity = 100)
 public class XmlExportController extends RestBaseController {
 
     @Autowired
