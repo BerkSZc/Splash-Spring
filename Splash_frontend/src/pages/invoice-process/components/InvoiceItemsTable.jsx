@@ -113,7 +113,17 @@ export default function InvoiceItemsTable({
                         }
                       }}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.,]/g, "");
+                        let val = e.target.value.replace(/[^0-9.,]/g, "");
+                        if (!val.includes(",")) {
+                          val = val.replace(/\./g, "");
+                        } else {
+                          val = val.replace(/\./g, "");
+                        }
+                        const commaCount = (val.match(/,/g) || []).length;
+                        if (commaCount > 1) return;
+                        const parts = val.split(",");
+                        parts[0] = parts[0].replace(/\./g, "");
+                        val = parts.join(",");
                         onItemChange(mode, i, "quantity", val);
                       }}
                     />
@@ -149,7 +159,17 @@ export default function InvoiceItemsTable({
                           }
                         }}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          let val = e.target.value.replace(/[^0-9.,]/g, "");
+                          if (!val.includes(",")) {
+                            val = val.replace(/\./g, "");
+                          } else {
+                            val = val.replace(/\./g, "");
+                          }
+                          const commaCount = (val.match(/,/g) || []).length;
+                          if (commaCount > 1) return;
+                          const parts = val.split(",");
+                          parts[0] = parts[0].replace(/\./g, "");
+                          val = parts.join(",");
                           onItemChange(mode, i, "unitPrice", val);
                         }}
                       />
@@ -202,7 +222,12 @@ export default function InvoiceItemsTable({
                         type="text"
                         step="0.01"
                         className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-right font-mono font-bold text-blue-400 focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        value={formatNumber(item?.lineTotal) || ""}
+                        value={
+                          item?.lineTotal === undefined ||
+                          item?.lineTotal === null
+                            ? ""
+                            : formatNumber(item?.lineTotal)
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -213,7 +238,17 @@ export default function InvoiceItemsTable({
                           }
                         }}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          let val = e.target.value.replace(/[^0-9.,]/g, "");
+                          if (!val.includes(",")) {
+                            val = val.replace(/\./g, "");
+                          } else {
+                            val = val.replace(/\./g, "");
+                          }
+                          const commaCount = (val.match(/,/g) || []).length;
+                          if (commaCount > 1) return;
+                          const parts = val.split(",");
+                          parts[0] = parts[0].replace(/\./g, "");
+                          val = parts.join(",");
                           onItemChange(mode, i, "lineTotal", val);
                         }}
                       />

@@ -91,7 +91,7 @@ export const useHomeLogic = () => {
       },
       { totalDebts: 0, totalCredits: 0 },
     );
-  }, [vouchers]);
+  }, [vouchers, year]);
 
   const currentCompany = (Array.isArray(companies) ? companies : []).find(
     (c) => c?.schemaName === tenant,
@@ -119,7 +119,7 @@ export const useHomeLogic = () => {
       totalDebts: financialSummary.totalDebts,
       netBalance: financialSummary.totalCredits - financialSummary.totalDebts,
       companyDisplayName,
-      year,
+      year: year,
       lastUpdate: new Date().toLocaleString("tr-TR"),
     },
   };

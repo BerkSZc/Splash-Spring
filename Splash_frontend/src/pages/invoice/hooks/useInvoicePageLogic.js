@@ -314,42 +314,53 @@ export const useInvoicePageLogic = () => {
     const name = isManual ? e : e.target ? e.target.name : "";
     let rawValue = isManual ? manualValue : e.target ? e.target.value : e;
 
-    const value = parseNumber(rawValue);
+    const parsedValue = parseNumber(rawValue);
 
     if (name === "materialId") {
-      handleMaterialSelect(index, value);
+      handleMaterialSelect(index, parsedValue);
       return;
-    } else {
-      setForm((prev) => {
-        const newItems = [...prev.items];
-        const item = { ...newItems[index], [name]: value };
-
-        if (name === "lineTotal") {
-          const qty = Number(item.quantity) || 1;
-          const newTotal = Number(value) || 0;
-          item.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(4);
-        } else if (name === "quantity" || name === "unitPrice") {
-          const qty = Number(item.quantity) || 0;
-          const up = Number(item.unitPrice) || 0;
-          item.lineTotal = (
-            Math.round((qty * up + Number.EPSILON) * 100) / 100
-          ).toFixed(2);
-        }
-
-        const { kdvTutar, lineTotal } = calculateRow(
-          Number(item.unitPrice) || 0,
-          Number(item.quantity) || 0,
-          Number(item.kdv) || 0,
-        );
-
-        item.kdvTutar = kdvTutar;
-        item.lineTotal = lineTotal;
-
-        newItems[index] = item;
-
-        return { ...prev, items: newItems };
-      });
     }
+
+    setForm((prev) => {
+      const newItems = [...prev.items];
+      const item = { ...newItems[index], [name]: parsedValue };
+
+      const qty = Number(parseNumber(item.quantity)) || 0;
+      const kdvRate = Number(item.kdv) || 0;
+
+      if (name === "lineTotal") {
+        const divisor = qty === 0 ? 1 : qty;
+
+        const calculatedUP =
+          parsedValue === "" ? "" : Number(parsedValue) / divisor;
+        item.unitPrice = calculatedUP !== "" ? calculatedUP.toString() : "";
+
+        item.lineTotal = parsedValue;
+
+        item.kdvTutar =
+          parsedValue === ""
+            ? ""
+            : ((Number(parsedValue) * kdvRate) / 100).toFixed(2);
+      } else {
+        item[name] = parsedValue;
+
+        if (item.quantity === "" || item.unitPrice === "") {
+          item.lineTotal = "";
+          item.kdvTutar = "";
+        } else {
+          const currentUP = Number(parseNumber(item.unitPrice)) || 0;
+          const currentQTY = Number(parseNumber(item.quantity)) || 0;
+
+          item.lineTotal = (currentQTY * currentUP).toFixed(2);
+
+          const { kdvTutar } = calculateRow(currentUP, currentQTY, kdvRate);
+          item.kdvTutar = kdvTutar;
+        }
+      }
+
+      newItems[index] = item;
+      return { ...prev, items: newItems };
+    });
   };
 
   const handleEdit = (invoice) => {
@@ -631,16 +642,42 @@ export const useInvoicePageLogic = () => {
     return `${d}.${m}.${y}`;
   };
 
-  const formatNumber = (val) => {
+  const parseNumber = (val) => {
     if (val === undefined || val === null || val === "") return "";
-    let parts = val.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return parts.join(",");
+    if (typeof val !== "string") return val.toString();
+    return val.replace(/\./g, "").replace(",", ".");
   };
 
-  const parseNumber = (val) => {
-    if (typeof val !== "string") return val;
-    return val.replace(/\./g, "").replace(",", ".");
+  const formatNumber = (val) => {
+    if (val === undefined || val === null || val === "") return "";
+
+    let str = val.toString();
+
+    // Türkçe sayı
+    if (str.includes(",")) {
+      const [intPart, decPart] = str.split(",");
+      return (
+        intPart.replace(/\./g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".") +
+        "," +
+        decPart
+      );
+    }
+
+    if (str.includes(".")) {
+      const last = str.lastIndexOf(".");
+
+      if (str.length - last - 1 > 2) {
+        str = str.replace(/\./g, "");
+      }
+    }
+
+    const num = str.replace(",", ".");
+
+    const [intPart, decPart] = num.split(".");
+
+    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return decPart !== undefined ? `${formattedInt},${decPart}` : formattedInt;
   };
 
   const handleSelectInvoice = (id) => {
@@ -717,7 +754,8 @@ export const useInvoicePageLogic = () => {
       setEditingInvoice,
       setInvoiceType,
       setSearchTerm,
-      setPrintItem,
+      setPrintItem: (item) =>
+        setPrintItem(item ? { ...item, invoiceType } : null),
       setForm,
       handleItemChange,
       addItem,
