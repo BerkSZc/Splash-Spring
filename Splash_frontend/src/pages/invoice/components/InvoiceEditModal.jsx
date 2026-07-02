@@ -29,6 +29,7 @@ export default function InvoiceEditModal({
     window.addEventListener("keydown", handleF2Key, true);
     return () => window.removeEventListener("keydown", handleF2Key, true);
   }, [onSave]);
+
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md ">
       <div className="bg-[#0f172a] border border-gray-800 p-10 rounded-[3rem] w-full max-w-[1300px] min-h-[80vh] max-h-[95vh] overflow-y-auto shadow-2xl relative">

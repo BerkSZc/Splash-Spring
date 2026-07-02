@@ -205,12 +205,7 @@ export default function InvoiceItemsTable({
                     />
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-xs text-gray-400">
-                    {(
-                      (Number(item?.unitPrice) *
-                        Number(item?.quantity) *
-                        Number(item?.kdv)) /
-                        100 || 0
-                    ).toLocaleString("tr-TR", {
+                    {formatNumber(item?.kdvTutar || 0).toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}
