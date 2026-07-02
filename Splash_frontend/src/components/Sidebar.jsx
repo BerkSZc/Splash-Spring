@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuthentication } from "../../backend/store/useAuthentication";
 import YearDropdown from "./YearDropdown.jsx";
 import CompanyDropDown from "./CompanyDropDown.jsx";
+import { useYear } from "../context/YearContext.jsx";
 
 const NAV_ITEMS = [
   // { label: "Fatura İşlemleri", to: "/faturalar-islemleri", icon: "📋" },
@@ -20,6 +21,10 @@ const BOTTOM_ITEMS = [
 ];
 
 export default function Sidebar() {
+  const { year } = useYear();
+  const currentActualYear = new Date().getFullYear();
+  const isDifferentYear = year && Number(year) !== currentActualYear;
+
   const [open, setOpen] = useState(false);
   const { logout, isAuthenticated } = useAuthentication();
   const location = useLocation();
@@ -97,6 +102,33 @@ export default function Sidebar() {
         >
           SPLASH
         </Link>
+
+        <div className="flex-1" />
+
+        {isAuthenticated && isDifferentYear && (
+          <div className="flex items-center gap-2 bg-red-950/30 border border-red-500/30 text-red-400 px-4 py-1.5 rounded-full animate-pulse shadow-md select-none max-w-xl mx-auto">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              className="w-4 h-4 shrink-0 text-red-500"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"
+              />
+            </svg>
+            <span className="text-sm font-bold tracking-wide">
+              Farklı Mali Yıldasınız! Çalışma Yılı:{" "}
+              <span className="bg-red-500 text-white px-2 py-0.5 rounded-md font-mono font-black text-xs">
+                {year}
+              </span>
+            </span>
+          </div>
+        )}
 
         <div className="flex-1" />
 

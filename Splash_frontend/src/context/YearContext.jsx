@@ -17,19 +17,19 @@ export const YearProvider = ({ children }) => {
     }
   });
 
-  useEffect(() => {
-    if (!years?.length) return;
-
-    const latest = Math.max(...years);
-
-    setYear(latest);
-    localStorage.setItem("year", latest);
-  }, [tenant, years]);
-
   const [year, setYear] = useState(() => {
     const stored = localStorage.getItem("year");
     return stored ? Number(stored) : currentYear;
   });
+
+  useEffect(() => {
+    if (!years.length) return;
+
+    if (!years.includes(year)) {
+      const latest = Math.max(...years);
+      changeYear(latest);
+    }
+  }, [years, year]);
 
   const changeYear = (newYear) => {
     const y = Number(newYear);

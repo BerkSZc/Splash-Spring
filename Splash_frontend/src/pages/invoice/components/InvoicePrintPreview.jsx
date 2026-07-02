@@ -49,10 +49,6 @@ export default function InvoicePrintPreview({
 
   const isPurchase = printItem?.invoiceType === "purchase";
   const typeTitle = isPurchase ? "Satın Alma Faturası" : "Satış Faturası";
-  const typeBadgeColor = isPurchase
-    ? "bg-amber-100 text-amber-800"
-    : "bg-blue-100 text-blue-800";
-  const primaryColor = isPurchase ? "#92400e" : "#1e3a8a";
 
   const formattedDate = printItem?.date?.includes("-")
     ? printItem.date.split("-").reverse().join(".")
@@ -92,66 +88,74 @@ export default function InvoicePrintPreview({
 
         {/* Önizleme Alanı */}
         <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gray-800/30 flex justify-center items-start">
-          <div className="bg-white w-[210mm] min-h-[297mm] p-[12mm] shadow-2xl text-black font-sans origin-top transform scale-[0.8] md:scale-100">
-            <div className="border-b-2 border-gray-200 pb-6 mb-8 flex justify-between items-start">
-              <div className="flex flex-col gap-2 text-left">
-                <span
-                  className={`px-3 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase ${typeBadgeColor} w-fit`}
-                >
-                  {typeTitle || ""}
-                </span>
-                <p className="font-mono font-bold text-lg tracking-tight leading-none mt-1">
-                  NO: {printItem?.fileNo || ""}
+          <div className="bg-white w-[210mm] min-h-[297mm] p-[12mm] shadow-2xl text-black font-sans origin-top transform scale-[0.65] md:scale-95 lg:scale-100 rounded-lg">
+            {/* Üst Logo ve Başlık Bilgisi */}
+            <div className="pb-6 mb-8 flex justify-between items-start border-b border-gray-200">
+              <div className="flex flex-col gap-1 text-left">
+                <h2 className="text-lg font-extrabold text-blue-900 leading-tight">
+                  SÖZCÜ MATBAA <br /> MALZEMELERİ LTD. ŞTİ.
+                </h2>
+                <p className="text-[10px] text-gray-500 mt-1 leading-relaxed uppercase">
+                  Himaye-i Etfal Sok. Aydoğmuş İş Hanı 7/1
+                  <br />
+                  Cağaloğlu / İSTANBUL
+                  <br />
+                  <span className="font-semibold text-gray-900">
+                    VERGİ NO: 7800063113
+                  </span>
                 </p>
-                <p className="italic text-[11px] text-gray-600">
+              </div>
+
+              <div className="text-right flex flex-col items-end pt-1">
+                <h1
+                  className="text-base font-bold tracking-tight"
+                  style={{ color: "#000000" }}
+                >
+                  {typeTitle.toUpperCase()}
+                </h1>
+                <p className="font-mono font-bold text-xs tracking-tight text-gray-700 mt-1">
+                  NO: <b>{printItem?.fileNo || ""}</b>
+                </p>
+                <p className="italic text-[10px] text-gray-500 mt-0.5">
                   Tarih: {formattedDate || ""}
                 </p>
               </div>
+            </div>
 
-              <div className="text-right flex flex-col items-end">
-                <h2 className="text-lg font-extrabold uppercase text-blue-900 leading-tight max-w-[250px]">
-                  SÖZCÜ MATBAA MALZEMELERİ LTD. ŞTİ.
-                </h2>
-                <div className="h-[2px] w-16 bg-blue-900 my-2"></div>
-                <p className="text-[10px] uppercase tracking-tight text-gray-500 leading-relaxed max-w-[200px]">
-                  Himaye-i Etfal Sok. <br />
-                  Aydoğmuş İş Hanı 7/1 <br />
-                  Cağaloğlu / İSTANBUL
+            {/* Müşteri Kartı */}
+            <div className="flex justify-end mb-10">
+              <div
+                className="p-4 bg-[#f9fafb] rounded-l-xl border border-gray-200 border-r-4 w-full max-w-[380px] text-right"
+                style={{ borderRightColor: "#000000" }}
+              >
+                <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  FATURA EDİLEN MÜŞTERİ
+                </h3>
+                <p className="text-sm font-bold uppercase text-gray-900 leading-tight mb-1">
+                  {printItem?.customer?.name || "—"}
                 </p>
-                <p className="text-[10px] font-bold mt-1 text-black bg-gray-100 px-2 py-0.5 rounded">
-                  VERGİ NO: 7800063113
+                <p className="text-[11px] text-gray-600 leading-snug ml-auto max-w-[280px] mb-2">
+                  {printItem?.customer?.address ||
+                    "Adres bilgisi mevcut değil."}
                 </p>
+                <span className="inline-block px-2 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-semibold font-mono text-gray-600">
+                  VD & NO: {printItem?.customer?.vdNo || "—"}
+                </span>
               </div>
             </div>
 
-            {/* Müşteri Bilgileri*/}
-            <div className="p-5 border border-gray-200 bg-gray-50/50 rounded-xl mb-10 w-2/3 text-left">
-              <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b">
-                Müşteri Bilgileri
-              </h3>
-              <p className="text-base font-bold uppercase leading-tight text-gray-900">
-                {printItem?.customer?.name || ""}
-              </p>
-              <p className="text-[11px] text-gray-600 mt-1 leading-snug">
-                {printItem?.customer?.address || "Adres bilgisi yok."}
-              </p>
-              <p className="text-[10px] mt-2 font-mono bg-gray-800 text-white inline-block px-2 py-0.5 rounded">
-                VN: {printItem?.customer?.vdNo || ""}
-              </p>
-            </div>
-
             {/* Kalemler Tablosu */}
-            <table className="w-full text-left border-collapse mb-10">
+            <table className="w-full text-left mb-8 border-collapse">
               <thead>
-                <tr className="border-b border-gray-300 text-[9px] font-bold uppercase text-gray-400 bg-gray-50/50">
-                  <th className="py-3 px-2">Malzeme</th>
+                <tr className="border-b border-gray-200 text-[9px] font-bold uppercase text-gray-400">
+                  <th className="py-3 px-2">Açıklama / Ürün Kodu</th>
                   <th className="py-3 px-2 text-center">Miktar</th>
                   <th className="py-3 px-2 text-right">Birim Fiyat</th>
                   <th className="py-3 px-2 text-right">KDV Tutarı</th>
                   <th className="py-3 px-2 text-right">Satır Toplam</th>
                 </tr>
               </thead>
-              <tbody className="text-[11px]">
+              <tbody className="text-[11px] divide-y divide-gray-50">
                 {(Array.isArray(printItem.items) ? printItem.items : []).map(
                   (item, idx) => (
                     <tr key={idx} className="border-b border-gray-100">
@@ -161,7 +165,7 @@ export default function InvoicePrintPreview({
                         </div>
                       </td>
                       <td className="py-3 px-2 text-center font-mono text-gray-600">
-                        {item?.quantity || ""}
+                        {item?.quantity ?? 0}
                         <span className="text-[9px] font-bold text-gray-400 ml-1">
                           {item?.unit || ""}
                         </span>
@@ -175,20 +179,19 @@ export default function InvoicePrintPreview({
                         )}{" "}
                         ₺
                       </td>
-                      <td className="py-3 px-2 text-right font-mono text-gray-400 italic">
+                      <td className="py-3 px-2 text-right font-mono text-gray-500">
                         {(Number(item?.kdvTutar) || 0).toLocaleString("tr-TR", {
                           minimumFractionDigits: 2,
                         })}{" "}
                         ₺
                       </td>
                       <td className="py-3 px-2 text-right font-bold text-gray-900">
-                        {(
-                          Number(
-                            item?.lineTotal || item.unitPrice * item.quantity,
-                          ) || 0
-                        ).toLocaleString("tr-TR", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
+                        {(Number(item?.lineTotal) || 0).toLocaleString(
+                          "tr-TR",
+                          {
+                            minimumFractionDigits: 2,
+                          },
+                        )}{" "}
                         ₺
                       </td>
                     </tr>
@@ -197,71 +200,40 @@ export default function InvoicePrintPreview({
               </tbody>
             </table>
 
-            {/* Alt Bilgiler: Döviz ve Toplamlar */}
-            <div className="flex justify-between items-start pt-4">
-              <div className="w-1/3 p-3 border border-gray-100 rounded-xl bg-gray-50/30 text-left">
-                <h4 className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b">
-                  Günlük Döviz Kurları
-                </h4>
-                <div className="space-y-1 font-mono text-[10px]">
-                  {usdRate > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">USD:</span>
-                      <span className="font-bold">
-                        {usdRate?.toLocaleString("tr-TR", {
-                          minimumFractionDigits: 4,
-                        })}{" "}
-                        ₺
-                      </span>
-                    </div>
-                  )}
-                  {eurRate > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">EUR:</span>
-                      <span className="font-bold">
-                        {eurRate?.toLocaleString("tr-TR", {
-                          minimumFractionDigits: 4,
-                        })}{" "}
-                        ₺
-                      </span>
-                    </div>
-                  )}
-                  {usdRate === 0 && eurRate === 0 && (
-                    <span className="italic text-gray-400 text-[9px]">
-                      Kur bilgisi bulunamadı.
-                    </span>
-                  )}
-                </div>
+            {/* Matrah, KDV ve Genel Toplam Katmanı */}
+            <div className="flex justify-between items-stretch gap-10 mt-6 mb-8 bg-white">
+              <div className="flex flex-col justify-between w-1/3">
+                <div className="mt-auto"></div>
               </div>
 
-              <div className="w-72 space-y-2">
-                <div className="flex justify-between text-[10px] text-gray-500 font-medium px-1">
+              <div className="space-y-2 bg-white min-w-[300px]">
+                <div className="flex justify-between text-[10px] text-gray-500 font-medium px-1 gap-12">
                   <span>ARA TOPLAM (MATRAH)</span>
                   <span className="font-mono text-gray-800">
-                    {subTotal?.toLocaleString("tr-TR", {
+                    {subTotal.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                     })}{" "}
                     ₺
                   </span>
                 </div>
-                <div className="flex justify-between text-[10px] text-gray-500 font-medium px-1 border-b border-gray-100 pb-1">
+                <div className="flex justify-between text-[10px] text-gray-500 font-medium px-1 pb-1">
                   <span>TOPLAM KDV</span>
                   <span className="font-mono text-gray-800">
-                    {kdvToplam?.toLocaleString("tr-TR", {
+                    {kdvToplam.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                     })}{" "}
                     ₺
                   </span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-xl border border-gray-900 bg-gray-50/50">
-                  <span className="text-[10px] font-bold text-gray-600 uppercase">
-                    Genel Toplam
+                <div className="flex justify-between items-center p-3 rounded-xl border border-gray-900 bg-gray-50/30">
+                  <span className="text-[10px] font-bold uppercase tracking-tight text-gray-600 mr-8">
+                    GENEL TOPLAM
                   </span>
                   <span
                     className="text-xl font-extrabold tracking-tight"
-                    style={{ color: primaryColor }}
+                    style={{ color: "#000000" }}
                   >
-                    {totalPrice?.toLocaleString("tr-TR", {
+                    {totalPrice.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                     })}{" "}
                     ₺
@@ -270,21 +242,76 @@ export default function InvoicePrintPreview({
               </div>
             </div>
 
-            {/* Bakiye Bilgisi */}
-            <div className="mt-8 flex justify-end pb-4">
-              <div className="p-3 border border-emerald-200 rounded-xl w-fit min-w-[200px] bg-emerald-50/20 text-right">
-                <h3 className="text-[8px] font-bold text-emerald-700 uppercase tracking-widest mb-0.5">
-                  {(printItem?.date || "")?.split("-")[0]} Yılı Dönem Bakiyesi
-                </h3>
-                <p className="text-lg font-bold text-emerald-900 font-mono">
-                  {currentBalance.toLocaleString("tr-TR", {
-                    minimumFractionDigits: 2,
-                  })}{" "}
-                  ₺
+            {/* GENEL AÇIKLAMALAR, CARİ BAKİYE VE BANKA BİLGİLERİ (BASKI ŞABLONUNUN BİREBİR AYNISI) */}
+            <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
+              {/* Cari Hesap Bakiyesi */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  Genel Açıklamalar
+                </h4>
+                <p className="text-xs text-gray-900 font-bold uppercase tracking-wide">
+                  Son Cari Hesap Bakiyesi:{" "}
+                  <span className="text-sm font-extrabold text-black font-mono px-2 py-0.5 bg-yellow-100 rounded border border-yellow-200">
+                    {currentBalance.toLocaleString("tr-TR", {
+                      minimumFractionDigits: 2,
+                    })}{" "}
+                    ₺
+                  </span>{" "}
+                  Dir.
                 </p>
-                <p className="text-[8px] text-emerald-600 italic font-medium">
-                  * Fatura tarihi itibarıyla mühürlenmiş bakiye.
-                </p>
+              </div>
+
+              {/* Banka Bilgileri */}
+              <div>
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="text-[9px] font-bold uppercase text-gray-400 border-b border-gray-100">
+                      <th className="pb-2 w-1/3">BANKA ADI</th>
+                      <th className="pb-2 font-mono">İBAN NO</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-800 divide-y divide-gray-50 font-medium">
+                    <tr>
+                      <td className="py-2 text-gray-900 font-semibold">
+                        Enpara Bank
+                      </td>
+                      <td className="py-2 font-mono tracking-wide text-gray-700">
+                        TR10 0015 7000 0000 0098 6528 18
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-900 font-semibold">
+                        Denizbank Cağaloğlu Şb.
+                      </td>
+                      <td className="py-2 font-mono tracking-wide text-gray-700">
+                        TR88 0013 4000 0018 5773 3000 10
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Ödeme Notu ve Resmi İbareler */}
+              <div className="flex justify-between items-center text-[10px] bg-white pt-2 border-collapse">
+                <div className="text-gray-500 font-mono">
+                  <span className="font-bold text-gray-700">Ödeme Notu:</span>{" "}
+                  EURO:{" "}
+                  <span className="font-bold text-gray-900 mr-4">
+                    {eurRate > 0
+                      ? eurRate.toLocaleString("tr-TR", {
+                          minimumFractionDigits: 4,
+                        }) + " ₺"
+                      : "---"}
+                  </span>
+                  DOLAR:{" "}
+                  <span className="font-bold text-gray-900">
+                    {usdRate > 0
+                      ? usdRate.toLocaleString("tr-TR", {
+                          minimumFractionDigits: 4,
+                        }) + " ₺"
+                      : "---"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

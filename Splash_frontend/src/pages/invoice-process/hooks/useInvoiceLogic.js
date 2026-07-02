@@ -32,8 +32,6 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   const { year } = useYear();
   const { tenant } = useTenant();
 
-  const [refreshCouter, setRefreshCounter] = useState(0);
-
   const [mode, setMode] = useState(() => {
     return localStorage.getItem("invoice_mode") || "sales";
   });
@@ -73,7 +71,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
     quantity: "",
     kdv: 20,
     kdvTutar: 0,
-    lineTotal: 0,
+    lineTotal: "",
   };
 
   const getInitialFormState = (selectedYear) => {
@@ -170,7 +168,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
     return () => {
       ignore = true;
     };
-  }, [mode, tenant, salesForm.date, purchaseForm.date, refreshCouter]);
+  }, [mode, tenant, salesForm.date, purchaseForm.date]);
 
   const salesCalculation = useMemo(() => {
     const total = salesForm.items.reduce(
@@ -260,38 +258,43 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
     return { lineTotal: lineTotal.toFixed(2), kdvTutar: kdvTutar.toFixed(2) };
   };
-
   const handleItemChange = (formType, index, field, value) => {
     const setter = formType === "sales" ? setSalesForm : setPurchaseForm;
-
     const parsedValue = parseNumber(value);
 
     if (field === "materialId") {
       handleMaterialSelect(formType, index, parsedValue);
       return;
     }
+
     setter((prev) => {
       const newItems = [...prev.items];
-      const currentItem = { ...newItems[index], [field]: parsedValue };
+      const currentItem = { ...newItems[index] };
+
+      currentItem[field] = value;
+
+      const qty = Number(parseNumber(currentItem.quantity)) || 0;
+      const up = Number(parseNumber(currentItem.unitPrice)) || 0;
+      const kdvRate = Number(currentItem.kdv) || 0;
 
       if (field === "lineTotal") {
-        const qty = Number(currentItem.quantity) || 1;
-        const newTotal = Number(parsedValue) || 0;
-        currentItem.unitPrice = (newTotal / (qty === 0 ? 1 : qty)).toFixed(4);
+        const parsedLineTotal = Number(parsedValue) || 0;
+        currentItem.unitPrice =
+          qty === 0 ? "" : (parsedLineTotal / qty).toString();
+        currentItem.kdvTutar = ((parsedLineTotal * kdvRate) / 100).toFixed(2);
       } else if (field === "quantity" || field === "unitPrice") {
-        const qty = Number(currentItem.quantity) || 0;
-        const up = Number(currentItem.unitPrice) || 0;
-
-        currentItem.lineTotal = (qty * up).toFixed(2);
+        const currentUP = field === "unitPrice" ? Number(parsedValue) || 0 : up;
+        const currentQTY =
+          field === "quantity" ? Number(parsedValue) || 0 : qty;
+        currentItem.lineTotal = (currentQTY * currentUP).toFixed(2);
+        currentItem.kdvTutar = (
+          (currentQTY * currentUP * kdvRate) /
+          100
+        ).toFixed(2);
+      } else {
+        const { kdvTutar } = calculateRow(up, qty, Number(parsedValue) || 0);
+        currentItem.kdvTutar = kdvTutar;
       }
-      const { kdvTutar, lineTotal } = calculateRow(
-        Number(currentItem.unitPrice) || 0,
-        Number(currentItem.quantity) || 0,
-        Number(currentItem.kdv) || 0,
-      );
-
-      currentItem.kdvTutar = kdvTutar;
-      currentItem.lineTotal = lineTotal;
 
       newItems[index] = currentItem;
       return { ...prev, items: newItems };
@@ -463,15 +466,16 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
         );
         await getPurchaseInvoiceByYear(0, 999, "", year, tenant);
       }
-      resetForm();
+      onSuccess?.();
 
-      setRefreshCounter((prev) => prev + 1);
+      setTimeout(() => {
+        resetForm();
+      }, 200);
 
-      await Promise.all([
+      Promise.all([
         getAllCustomers(0, 999, false, "", tenant),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
-      onSuccess?.();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -482,16 +486,37 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   const currentForm = mode === "sales" ? salesForm : purchaseForm;
   const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
 
-  const formatNumber = (val) => {
+  const parseNumber = (val) => {
     if (val === undefined || val === null || val === "") return "";
-    let parts = val.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return parts.join(",");
+    if (typeof val !== "string") return val.toString();
+    return val.replace(/\./g, "").replace(",", ".");
   };
 
-  const parseNumber = (val) => {
-    if (typeof val !== "string") return val;
-    return val.replace(/\./g, "").replace(",", ".");
+  const formatNumber = (val) => {
+    if (val === undefined || val === null || val === "") return "";
+
+    const str = val.toString();
+
+    const dotIndex = str.indexOf(".");
+    const hasDecimal = dotIndex !== -1;
+
+    if (hasDecimal) {
+      const intPart = str
+        .slice(0, dotIndex)
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      const decPart = str.slice(dotIndex + 1);
+      return `${intPart},${decPart}`;
+    }
+
+    if (str.includes(",")) {
+      const parts = str.split(",");
+      parts[0] = parts[0]
+        .replace(/\./g, "")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      return parts.join(",");
+    }
+
+    return str.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const isLoading =

@@ -132,49 +132,13 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
             </tbody>
           </table>
 
-          <div class="grid grid-cols-2 gap-10 items-end">
-            <div class="space-y-6 pb-2">
-              <div class="flex gap-6 border-l-2 border-gray-100 pl-3">
-                ${
-                  usdRate > 0
-                    ? `
-                  <div>
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">USD KURU</p>
-                    <p class="text-xs font-mono font-bold">${usdRate.toLocaleString(
-                      "tr-TR",
-                      { minimumFractionDigits: 4 },
-                    )} ₺</p>
-                  </div>
-                `
-                    : ""
-                }
-                ${
-                  eurRate > 0
-                    ? `
-                  <div>
-                    <p class="text-[8px] font-bold text-gray-400 uppercase">EUR KURU</p>
-                    <p class="text-xs font-mono font-bold">${eurRate.toLocaleString(
-                      "tr-TR",
-                      { minimumFractionDigits: 4 },
-                    )} ₺</p>
-                  </div>
-                `
-                    : ""
-                }
-              </div>
-
-              <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 w-fit min-w-[180px]">
-                <p class="text-[8px] font-bold text-gray-400 uppercase mb-0.5 tracking-wider">GÜNCEL TOPLAM BAKİYE</p>
-                <p class="text-lg font-bold text-gray-900 font-mono">
-                   ${currentBalance?.toLocaleString("tr-TR", {
-                     minimumFractionDigits: 2,
-                   })} ₺
-                </p>
-              </div>
+          <div class="flex justify-between items-stretch gap-10 mt-6 mb-8 bg-white">
+            <div class="flex flex-col justify-between space-y-4">
+              <div class="mt-auto"></div>
             </div>
 
-            <div class="space-y-2 bg-white">
-              <div class="flex justify-between text-[10px] text-gray-500 font-medium px-1">
+            <div class="space-y-2 bg-white min-w-[300px]">
+              <div class="flex justify-between text-[10px] text-gray-500 font-medium px-1 gap-12">
                 <span>ARA TOPLAM (MATRAH)</span>
                 <span class="font-mono text-gray-800">${subTotal.toLocaleString(
                   "tr-TR",
@@ -189,7 +153,7 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
                 )} ₺</span>
               </div>
               <div class="flex justify-between items-center p-3 rounded-xl border border-gray-900 bg-gray-50/30">
-                <span class="text-[10px] font-bold uppercase tracking-tight text-gray-600">GENEL TOPLAM</span>
+                <span class="text-[10px] font-bold uppercase tracking-tight text-gray-600 mr-8">GENEL TOPLAM</span>
                 <span class="text-xl font-extrabold tracking-tight" style="color: ${primaryColor}">
                   ${totalPrice.toLocaleString("tr-TR", {
                     minimumFractionDigits: 2,
@@ -198,6 +162,52 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
               </div>
             </div>
           </div>
+
+          <div class="mt-8 pt-6 border-t border-gray-200 space-y-6">
+            
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Genel Açıklamalar</h4>
+              <p class="text-xs text-gray-900 font-bold uppercase tracking-wide">
+                Son Cari Hesap Bakiyesi: 
+                <span class="text-sm font-extrabold text-black font-mono px-2 py-0.5 bg-yellow-100 rounded border border-yellow-200">
+                  ${currentBalance?.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺
+                </span> 
+                Dir.
+              </p>
+            </div>
+
+            <div>
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="text-[9px] font-bold uppercase text-gray-400 border-b border-gray-100">
+                    <th class="pb-2 w-1/3">BANKA ADI</th>
+                    <th class="pb-2 font-mono">İBAN NO</th>
+                  </tr>
+                </thead>
+                <tbody class="text-gray-800 divide-y divide-gray-50 font-medium">
+                  <tr>
+                    <td class="py-2 text-gray-900 font-semibold">Enpara Bank</td>
+                    <td class="py-2 font-mono tracking-wide text-gray-700">TR10 0015 7000 0000 0098 6528 18</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 text-gray-900 font-semibold">Denizbank Cağaloğlu Şb.</td>
+                    <td class="py-2 font-mono tracking-wide text-gray-700">TR88 0013 4000 0018 5773 3000 10</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="flex justify-between items-center text-[10px] bg-white pt-2">
+              <div class="text-gray-500 font-mono">
+                <span class="font-bold text-gray-700">Ödeme Notu:</span> 
+                EURO: <span class="font-bold text-gray-900 mr-4">${eurRate > 0 ? eurRate.toLocaleString("tr-TR", { minimumFractionDigits: 4 }) + " ₺" : "---"}</span>
+                DOLAR: <span class="font-bold text-gray-900">${usdRate > 0 ? usdRate.toLocaleString("tr-TR", { minimumFractionDigits: 4 }) + " ₺" : "---"}</span>
+              </div>
+              
+            </div>
+
+          </div>
+
         </div>
 
         <script>

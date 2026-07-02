@@ -237,7 +237,13 @@ export default function InvoiceEditModal({
                       <input
                         type="text"
                         step="0.01"
-                        value={formatNumber(item?.lineTotal) || ""}
+                        value={
+                          item?.lineTotal === undefined ||
+                          item?.lineTotal === null ||
+                          item?.lineTotal === ""
+                            ? ""
+                            : formatNumber(item?.lineTotal)
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -248,7 +254,21 @@ export default function InvoiceEditModal({
                           }
                         }}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          let val = e.target.value;
+
+                          // 1. Sadece rakamlar, noktalar ve virgülleri kabul et
+                          val = val.replace(/[^0-9.,]/g, "");
+
+                          // 2. Birden fazla virgül yazılmasını engelle
+                          const commaCount = (val.match(/,/g) || []).length;
+                          if (commaCount > 1) return;
+
+                          // Ekleme formundaki gibi boşluk kontrolü
+                          if (val === "") {
+                            onItemChange(i, "lineTotal", "");
+                            return;
+                          }
+
                           onItemChange(i, "lineTotal", val);
                         }}
                         onFocus={(e) => e.target.select()}

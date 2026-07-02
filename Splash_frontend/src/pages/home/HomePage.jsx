@@ -13,10 +13,10 @@ export function HomePage() {
     totalDebts = 0,
     netBalance = 0,
     companyDisplayName = "",
-    year = new Date().getFullYear(),
+    year,
     lastUpdate = "",
   } = state;
-
+  console.log("HOME YEAR:", year);
   return (
     <div className="min-h-screen w-full bg-[#0a0f1a] text-gray-100 p-6 lg:p-12">
       {state.isLoading && (
