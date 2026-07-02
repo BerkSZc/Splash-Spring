@@ -16,7 +16,6 @@ export default function TokenWatcher() {
 
     // Yeni zamanlayıcı başlat
     timerRef.current = setTimeout(() => {
-      console.log("15 dakika hareketsizlik tespit edildi, çıkış yapılıyor...");
       logout();
     }, INACTIVITY_LIMIT);
   };
