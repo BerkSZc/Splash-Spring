@@ -134,6 +134,12 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
     });
   };
 
+  const parseNumber = (val) => {
+    if (val === "" || val == null) return 0;
+
+    return parseFloat(val.toString().replace(/\./g, "").replace(",", ".")) || 0;
+  };
+
   useEffect(() => {
     let ignore = false;
 
@@ -172,13 +178,18 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
   const salesCalculation = useMemo(() => {
     const total = salesForm.items.reduce(
-      (s, i) => s + (Number(i.unitPrice) * Number(i.quantity) || 0),
+      (s, i) =>
+        s +
+        (Number(parseNumber(i.unitPrice)) * Number(parseNumber(i.quantity)) ||
+          0),
       0,
     );
     const kdv = salesForm.items.reduce(
       (s, i) =>
         s +
-        ((Number(i.unitPrice) * Number(i.quantity) || 0) * Number(i.kdv)) / 100,
+        ((parseNumber(i.unitPrice) * parseNumber(i.quantity) || 0) *
+          Number(i.kdv)) /
+          100,
       0,
     );
     return { total, kdv, grandTotal: total + kdv };
@@ -186,13 +197,18 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
   const purchaseCalculation = useMemo(() => {
     const total = purchaseForm.items.reduce(
-      (s, i) => s + (Number(i.unitPrice) * Number(i.quantity) || 0),
+      (s, i) =>
+        s +
+        (Number(parseNumber(i.unitPrice)) * Number(parseNumber(i.quantity)) ||
+          0),
       0,
     );
     const kdv = purchaseForm.items.reduce(
       (s, i) =>
         s +
-        ((Number(i.unitPrice) * Number(i.quantity) || 0) * Number(i.kdv)) / 100,
+        ((parseNumber(i.unitPrice) * parseNumber(i.quantity) || 0) *
+          Number(i.kdv)) /
+          100,
       0,
     );
     return { total, kdv, grandTotal: total + kdv };
@@ -247,8 +263,8 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   };
 
   const calculateRow = (price, qty, kdvRate) => {
-    const p = Number(price) || 0;
-    const q = Number(qty) || 0;
+    const p = parseNumber(price);
+    const q = parseNumber(qty);
     const k = Number(kdvRate) || 0;
 
     const lineTotal = Math.round((p * q + Number.EPSILON) * 100) / 100;
@@ -348,7 +364,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
             newUnitPrice = mPrice * numericRate;
           }
 
-          const qty = Number(item.quantity) || 0;
+          const qty = parseNumber(item.quantity);
           const kdvRate = Number(item.kdv) || 0;
 
           return {
@@ -407,7 +423,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
     const hasInvalidValue = validItems.some(
       (item) =>
-        Number(item.quantity || 0) <= 0 || Number(item.unitPrice || 0) <= 0,
+        parseNumber(item.quantity) <= 0 || parseNumber(item.unitPrice) <= 0,
     );
 
     if (hasInvalidValue) {
@@ -439,13 +455,14 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       ...(isSales ? { customer: { id: Number(currentForm.customerId) } } : {}),
       items: (Array.isArray(currentForm.items) ? currentForm.items : []).map(
         (i) => {
-          const netTutar = Number(i.unitPrice) * Number(i.quantity);
+          const netTutar =
+            Number(parseNumber(i.unitPrice)) * Number(parseNumber(i.quantity));
           const satirKdv = (netTutar * Number(i.kdv)) / 100;
           return {
             material: { id: Number(i.materialId) },
             unit: i.unit,
-            unitPrice: Number(i.unitPrice),
-            quantity: Number(i.quantity),
+            unitPrice: Number(parseNumber(i.unitPrice)),
+            quantity: Number(parseNumber(i.quantity)),
             kdv: Number(i.kdv),
             kdvTutar: satirKdv,
             lineTotal: netTutar + satirKdv,
@@ -485,12 +502,6 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
   const currentForm = mode === "sales" ? salesForm : purchaseForm;
   const currentCalc = mode === "sales" ? salesCalculation : purchaseCalculation;
-
-  const parseNumber = (val) => {
-    if (val === undefined || val === null || val === "") return "";
-    if (typeof val !== "string") return val.toString();
-    return val.replace(/\./g, "").replace(",", ".");
-  };
 
   const formatNumber = (val) => {
     if (val === undefined || val === null || val === "") return "";

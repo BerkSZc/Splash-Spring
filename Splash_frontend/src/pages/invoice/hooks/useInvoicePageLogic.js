@@ -663,14 +663,6 @@ export const useInvoicePageLogic = () => {
       );
     }
 
-    if (str.includes(".")) {
-      const last = str.lastIndexOf(".");
-
-      if (str.length - last - 1 > 2) {
-        str = str.replace(/\./g, "");
-      }
-    }
-
     const num = str.replace(",", ".");
 
     const [intPart, decPart] = num.split(".");
