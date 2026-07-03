@@ -349,7 +349,7 @@ export const useInvoicePageLogic = () => {
           item.kdvTutar = "";
         } else {
           const currentUP = Number(item.unitPrice) || 0;
-          const currentQTY = Number(parseNumber(item.quantity)) || 0;
+          const currentQTY = Number(item.quantity) || 0;
 
           item.lineTotal = (currentQTY * currentUP).toFixed(2);
 
