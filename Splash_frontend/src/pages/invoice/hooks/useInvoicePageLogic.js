@@ -325,7 +325,7 @@ export const useInvoicePageLogic = () => {
       const newItems = [...prev.items];
       const item = { ...newItems[index], [name]: parsedValue };
 
-      const qty = Number(parseNumber(item.quantity)) || 0;
+      const qty = Number(item.quantity) || 0;
       const kdvRate = Number(item.kdv) || 0;
 
       if (name === "lineTotal") {
@@ -348,7 +348,7 @@ export const useInvoicePageLogic = () => {
           item.lineTotal = "";
           item.kdvTutar = "";
         } else {
-          const currentUP = Number(parseNumber(item.unitPrice)) || 0;
+          const currentUP = Number(item.unitPrice) || 0;
           const currentQTY = Number(parseNumber(item.quantity)) || 0;
 
           item.lineTotal = (currentQTY * currentUP).toFixed(2);
