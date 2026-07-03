@@ -174,7 +174,7 @@ export default function InvoicePrintPreview({
                         {(Number(item?.unitPrice) || 0).toLocaleString(
                           "tr-TR",
                           {
-                            minimumFractionDigits: 4,
+                            minimumFractionDigits: 2,
                           },
                         )}{" "}
                         ₺
