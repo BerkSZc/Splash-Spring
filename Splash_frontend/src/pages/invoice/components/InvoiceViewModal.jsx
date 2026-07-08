@@ -54,9 +54,7 @@ export default function InvoiceViewModal({
           </div>
         </div>
 
-        {/* 👑 YENİ DÜZENLENEN KISIM: 3 KOLONLU KURLAR VE DURUM ŞERİDİ */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 p-5 bg-gray-800/20 rounded-3xl border border-gray-800 flex items-center">
-          {/* USD KURU (Küçültüldü) */}
           <div className="flex items-center justify-between px-4 h-9">
             <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
               USD Kuru
@@ -68,7 +66,6 @@ export default function InvoiceViewModal({
             </span>
           </div>
 
-          {/* EUR KURU (Küçültüldü ve Sol Çizgi Eklendi) */}
           <div className="flex items-center justify-between px-4 h-9 border-t md:border-t-0 md:border-l border-gray-800">
             <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest">
               EUR Kuru
