@@ -91,6 +91,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       customerId: "",
       usdSellingRate: "",
       eurSellingRate: "",
+      invoiced: false,
       items: [{ ...initalItem }],
     };
   };
@@ -452,6 +453,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       totalPrice: Number(currentCalc.total) || 0,
       eurSellingRate: Number(currentForm.eurSellingRate) || 0,
       usdSellingRate: Number(currentForm.usdSellingRate) || 0,
+      invoiced: Boolean(currentForm.invoiced),
       ...(isSales ? { customer: { id: Number(currentForm.customerId) } } : {}),
       items: (Array.isArray(currentForm.items) ? currentForm.items : []).map(
         (i) => {
@@ -559,6 +561,10 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       handleRateChange,
       addItem,
       removeItem,
+      onStatusChange: (status) => {
+        const setter = mode === "sales" ? setSalesForm : setPurchaseForm;
+        setter((prev) => ({ ...prev, invoiced: status }));
+      },
       submitForm,
     },
   };

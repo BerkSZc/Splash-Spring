@@ -77,6 +77,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         newPurchaseInvoice.setEurSellingRate(safeGet(newPurchaseInvoice.getEurSellingRate()));
         newPurchaseInvoice.setDate(Objects.requireNonNullElse(newPurchaseInvoice.getDate(), LocalDate.now()));
         newPurchaseInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), "").toUpperCase());
+        newPurchaseInvoice.setInvoiced(newPurchaseInvoice.isInvoiced());
 
         //Fatura toplam fiyatı
         BigDecimal totalPrice = BigDecimal.ZERO;
@@ -182,6 +183,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         oldInvoice.setUsdSellingRate(safeGet(newPurchaseInvoice.getUsdSellingRate()));
         oldInvoice.setCustomer(newCustomer);
         oldInvoice.setCompany(company);
+        oldInvoice.setInvoiced(newPurchaseInvoice.isInvoiced());
 
         for (PurchaseInvoiceItem item : oldInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(

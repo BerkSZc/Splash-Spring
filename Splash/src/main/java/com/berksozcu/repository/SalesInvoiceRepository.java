@@ -37,7 +37,7 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Long
     @Query("SELECT new com.berksozcu.dto.report.DtoMonthlyKdv(" +
             "MONTH(si.date), YEAR(si.date), SUM(si.totalPrice - si.kdvToplam), SUM(si.kdvToplam), SUM(si.totalPrice)) " +
             "FROM SalesInvoice si " +
-            "WHERE YEAR(si.date) = :year AND si.company.id = :companyId " +
+            "WHERE YEAR(si.date) = :year AND si.company.id = :companyId AND si.invoiced = true " +
             "GROUP BY MONTH(si.date), YEAR(si.date) " +
             "ORDER BY MONTH(si.date)")
     List<DtoMonthlyKdv> getMonthlySales(@Param("year") int year, @Param("companyId") Long companyId);

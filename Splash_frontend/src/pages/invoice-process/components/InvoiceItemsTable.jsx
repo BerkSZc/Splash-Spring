@@ -11,6 +11,8 @@ export default function InvoiceItemsTable({
   onRemoveItem,
   currencyRates,
   onRateChange,
+  invoiced,
+  onStatusChange,
   formatNumber,
 }) {
   return (
@@ -47,10 +49,36 @@ export default function InvoiceItemsTable({
           <span className="text-gray-500 text-xs font-bold">₺</span>
         </div>
 
-        <div className="flex-1 flex items-center justify-end">
-          <p className="text-[10px] text-gray-500 italic max-w-[200px] text-right">
-            * Bu kurlar faturanın yazdırılan nüshasında görünecektir.
-          </p>
+        <div className="flex-1 flex items-center justify-end gap-3">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest hidden sm:inline">
+            E-Fatura
+          </span>
+          <select
+            value={invoiced ?? false}
+            onChange={(e) => {
+              if (onStatusChange) {
+                onStatusChange(e.target.value === "true");
+              }
+            }}
+            className={`bg-gray-800 border-2 rounded-2xl px-4 py-2 text-xs font-black outline-none cursor-pointer transition-all ${
+              invoiced
+                ? "border-emerald-600/50 text-emerald-400 focus:border-emerald-500"
+                : "border-amber-600/50 text-amber-400 focus:border-amber-500"
+            }`}
+          >
+            <option
+              value="false"
+              className="text-amber-400 bg-[#0f172a] font-bold"
+            >
+              Kesilmedi
+            </option>
+            <option
+              value="true"
+              className="text-emerald-400 bg-[#0f172a] font-bold"
+            >
+              Kesildi
+            </option>
+          </select>
         </div>
       </div>
 

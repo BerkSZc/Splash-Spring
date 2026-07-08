@@ -135,6 +135,8 @@ export default function InvoiceForm({ onSuccess, type }) {
               usd: actualForm.usdSellingRate,
               eur: actualForm.eurSellingRate,
             }}
+            invoiced={actualForm.invoiced}
+            onStatusChange={handlers.onStatusChange}
             onRateChange={handlers.handleRateChange}
           />
 

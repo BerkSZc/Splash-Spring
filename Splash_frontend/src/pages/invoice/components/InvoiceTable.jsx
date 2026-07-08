@@ -33,6 +33,9 @@ export default function InvoiceTable({
               <th className="p-5 text-xs font-bold uppercase tracking-widest">
                 Müşteri / Firma
               </th>
+              <th className="p-5 text-xs font-bold uppercase tracking-widest">
+                E-Fatura
+              </th>
               <th className="p-5 text-xs font-bold uppercase tracking-widest text-right">
                 Toplam Tutar
               </th>
@@ -93,6 +96,23 @@ export default function InvoiceTable({
                   <td className="p-5 font-bold text-white">
                     {inv.customer?.name || ""}
                   </td>
+
+                  <td className="p-5 text-left">
+                    {inv.invoiced === true ||
+                    inv.invoiced === undefined ||
+                    inv.invoiced === null ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)] ">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Kesildi
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)] ">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        Kesilmedi
+                      </span>
+                    )}
+                  </td>
+
                   <td className="p-5 text-right font-mono text-lg font-bold text-emerald-400">
                     {(Number(inv.totalPrice) || 0)?.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,

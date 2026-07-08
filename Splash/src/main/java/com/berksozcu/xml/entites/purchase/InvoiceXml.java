@@ -33,6 +33,9 @@ public class InvoiceXml {
     @XmlElement(name="TOTAL_NET")
     private BigDecimal TOTAL_NET;
 
+    @XmlElement(name="INVOICED")
+    private Boolean INVOICED;
+
     @XmlElement(name = "CANCELLED")
     private Integer CANCELLED;
 

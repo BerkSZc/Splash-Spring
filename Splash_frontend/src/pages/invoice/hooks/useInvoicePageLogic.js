@@ -377,7 +377,6 @@ export const useInvoicePageLogic = () => {
         });
       }
     }
-
     //  MALZEME KONTROLÜ: Faturadaki malzemeler listede arşivli ise ismini ekle
     if (Array.isArray(invoice.items)) {
       invoice.items.forEach((item) => {
@@ -396,13 +395,13 @@ export const useInvoicePageLogic = () => {
     }
 
     setEditingInvoice({ ...invoice });
-
     setForm({
       date: invoice.date || "",
       fileNo: invoice.fileNo || "",
       customerId: invoice.customer?.id,
       usdSellingRate: invoice.usdSellingRate || "",
       eurSellingRate: invoice.eurSellingRate || "",
+      invoiced: Boolean(invoice.invoiced),
       items: (Array.isArray(invoice?.items) ? invoice.items : [])
         .sort((a, b) => a.id - b.id)
         .map((i) => ({
@@ -431,6 +430,7 @@ export const useInvoicePageLogic = () => {
       },
       usdSellingRate: Number(form.usdSellingRate),
       eurSellingRate: Number(form.eurSellingRate),
+      invoiced: form.invoiced,
       items: (Array.isArray(form.items) ? form.items : []).map((i) => {
         const netTutar = Number(i.unitPrice) * Number(i.quantity);
         const satirKdv = (netTutar * Number(i.kdv)) / 100;
@@ -496,6 +496,13 @@ export const useInvoicePageLogic = () => {
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
       toast.error(backendErr);
     }
+  };
+
+  const handleInvoiceStatusChange = (status) => {
+    setForm((prev) => ({
+      ...prev,
+      invoiced: status,
+    }));
   };
 
   const confirmDelete = async () => {
@@ -768,6 +775,7 @@ export const useInvoicePageLogic = () => {
       setShowAddForm,
       clearSelection,
       handleTypeChange,
+      handleInvoiceStatusChange,
     },
   };
 };

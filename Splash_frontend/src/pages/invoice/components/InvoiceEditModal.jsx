@@ -17,6 +17,7 @@ export default function InvoiceEditModal({
   onCancel,
   onSave,
   formatNumber,
+  onStatusChange,
 }) {
   useEffect(() => {
     const handleF2Key = (e) => {
@@ -109,6 +110,35 @@ export default function InvoiceEditModal({
                 />
               </div>
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-blue-400 uppercase ml-1 tracking-widest">
+              Fatura Kesildi mi?
+            </label>
+            <select
+              value={String(form?.invoiced)}
+              onChange={(e) => {
+                onStatusChange(e.target.value === "true");
+              }}
+              className={`w-full bg-gray-800 border-2 rounded-2xl px-5 py-3 text-white outline-none font-bold cursor-pointer transition-all ${
+                form?.invoiced
+                  ? "border-emerald-600/50 focus:border-emerald-500 text-emerald-400"
+                  : "border-red-600/50 focus:border-red-500 text-red-400"
+              }`}
+            >
+              <option
+                value="true"
+                className="text-emerald-400 bg-[#0f172a] font-bold"
+              >
+                EVET
+              </option>
+              <option
+                value="false"
+                className="text-red-400 bg-[#0f172a] font-bold"
+              >
+                HAYIR
+              </option>
+            </select>
           </div>
         </div>
         <div className="bg-gray-900/60 border border-gray-800 rounded-3xl p-6 overflow-hidden mb-8">
