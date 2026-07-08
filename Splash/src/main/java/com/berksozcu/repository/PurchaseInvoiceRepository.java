@@ -40,7 +40,7 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     @Query("SELECT new com.berksozcu.dto.report.DtoMonthlyKdv(" +
             "MONTH(pi.date), YEAR(pi.date), SUM(pi.totalPrice - pi.kdvToplam), SUM(pi.kdvToplam), SUM(pi.totalPrice)) " +
             "FROM PurchaseInvoice pi " +
-            "WHERE YEAR(pi.date) = :year AND pi.company.id = :companyId " +
+            "WHERE YEAR(pi.date) = :year AND pi.company.id = :companyId AND pi.invoiced = true " +
             "GROUP BY MONTH(pi.date), YEAR(pi.date) " +
             "ORDER BY MONTH(pi.date)")
     List<DtoMonthlyKdv> getMonthlyPurchases(@Param("year") int year, @Param("companyId") Long companyId);

@@ -20,6 +20,9 @@ public class SalesInvoiceXml {
     @XmlElement(name = "COMPANY_ID")
     private Long COMPANY_ID;
 
+    @XmlElement(name = "INVOICED")
+    private Boolean INVOICED;
+
     @XmlElement(name = "DATE")
     private String DATE;
 

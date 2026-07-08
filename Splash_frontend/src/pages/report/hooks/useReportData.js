@@ -43,12 +43,34 @@ export const useReportData = (reportType) => {
   }, [year, tenant, reportType]);
 
   const processedData = useMemo(() => {
+    const rawPurchases = Array.isArray(reports.purchaseReports)
+      ? reports.purchaseReports
+      : [];
+    const rawSales = Array.isArray(reports?.salesReports)
+      ? reports.salesReports
+      : [];
     const summaryList = Array.isArray(reports?.kdvAnalysis)
       ? reports.kdvAnalysis
       : [];
-
     const isBalanceArray = Array.isArray(reports) ? reports : [];
 
+    const filteredPurchases = rawPurchases.filter(
+      (inv) => inv?.invoiced === true || inv?.invoiced === undefined,
+    );
+
+    const filteredSales = rawSales.filter(
+      (inv) => inv?.invoiced === true || inv?.invoiced === undefined,
+    );
+
+    const totalPurchaseKdv = summaryList.reduce(
+      (acc, curr) => acc + Number(curr.purchaseKdv || 0),
+      0,
+    );
+
+    const totalSalesKdv = summaryList.reduce(
+      (acc, curr) => acc + Number(curr.salesKdv || 0),
+      0,
+    );
     const filteredBalanceStatus = isBalanceArray
       .filter((item) => {
         const isArchived = Boolean(item.customer?.archived);
@@ -69,23 +91,11 @@ export const useReportData = (reportType) => {
           return Math.abs(balanceB) - Math.abs(balanceA);
         }
       });
-
-    const totalPurchaseKdv = summaryList.reduce(
-      (acc, curr) => acc + (Number(curr?.purchaseKdv) || 0),
-      0,
-    );
-    const totalSalesKdv = summaryList.reduce(
-      (acc, curr) => acc + (Number(curr?.salesKdv) || 0),
-      0,
-    );
-
     return {
-      purchases: Array.isArray(reports?.purchaseReports)
-        ? reports.purchaseReports
-        : [],
-      sales: Array.isArray(reports?.salesReports) ? reports.salesReports : [],
+      purchases: filteredPurchases,
+      sales: filteredSales,
       balanceStatus: filteredBalanceStatus,
-      monthlySummary: Array.isArray(summaryList) ? summaryList : [],
+      monthlySummary: summaryList,
       totalPurchaseKdv,
       totalSalesKdv,
       netKdv: Number(totalSalesKdv || 0) - Number(totalPurchaseKdv || 0),

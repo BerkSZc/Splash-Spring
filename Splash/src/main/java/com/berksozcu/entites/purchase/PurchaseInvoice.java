@@ -3,6 +3,7 @@ package com.berksozcu.entites.purchase;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,6 +50,8 @@ public class PurchaseInvoice {
 
     @Column(name = "usd_selling_rate", precision = 18, scale = 4)
     private BigDecimal usdSellingRate;
+
+    private boolean invoiced = false;
 
     @ManyToOne
     @JoinColumn(name = "company_id")

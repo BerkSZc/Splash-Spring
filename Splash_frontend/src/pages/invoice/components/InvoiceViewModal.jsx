@@ -54,31 +54,51 @@ export default function InvoiceViewModal({
           </div>
         </div>
 
-        {(invoice?.usdSellingRate > 0 || invoice?.eurSellingRate > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 p-6 bg-gray-800/30 rounded-3xl border border-gray-700/50">
-            {invoice?.usdSellingRate > 0 && (
-              <div className="flex items-center justify-between px-4">
-                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
-                  USD Satış Kuru
-                </span>
-                <span className="text-white font-mono font-bold">
-                  $ {invoice?.usdSellingRate || 0}
-                </span>
-              </div>
-            )}
-            {invoice?.eurSellingRate > 0 && (
-              <div className="flex items-center justify-between px-4 border-l border-gray-700/50">
-                <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest">
-                  EUR Satış Kuru
-                </span>
-                <span className="text-white font-mono font-bold">
-                  € {invoice?.eurSellingRate || 0}
-                </span>
-              </div>
+        {/* 👑 YENİ DÜZENLENEN KISIM: 3 KOLONLU KURLAR VE DURUM ŞERİDİ */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 p-5 bg-gray-800/20 rounded-3xl border border-gray-800 flex items-center">
+          {/* USD KURU (Küçültüldü) */}
+          <div className="flex items-center justify-between px-4 h-9">
+            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+              USD Kuru
+            </span>
+            <span className="text-white font-mono font-bold text-sm">
+              {invoice?.usdSellingRate > 0
+                ? `$ ${invoice.usdSellingRate}`
+                : "-"}
+            </span>
+          </div>
+
+          {/* EUR KURU (Küçültüldü ve Sol Çizgi Eklendi) */}
+          <div className="flex items-center justify-between px-4 h-9 border-t md:border-t-0 md:border-l border-gray-800">
+            <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest">
+              EUR Kuru
+            </span>
+            <span className="text-white font-mono font-bold text-sm">
+              {invoice?.eurSellingRate > 0
+                ? `€ ${invoice.eurSellingRate}`
+                : "-"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between px-4 h-9 border-t md:border-t-0 md:border-l border-gray-800">
+            <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+              E-Fatura
+            </span>
+            {invoice?.invoiced === true ||
+            invoice?.invoiced === undefined ||
+            invoice?.invoiced === null ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Kesildi
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black tracking-wide bg-amber-500/10 text-amber-400 border border-amber-500/20 ">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Kesilmedi
+              </span>
             )}
           </div>
-        )}
-
+        </div>
         <div className="bg-gray-900/60 border border-gray-800 rounded-3xl p-6 overflow-hidden mb-8 shadow-inner">
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>

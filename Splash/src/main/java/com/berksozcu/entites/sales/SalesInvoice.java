@@ -51,6 +51,8 @@ public class SalesInvoice {
     @Column(name = "usd_selling_rate", precision = 18, scale = 2)
     private BigDecimal usdSellingRate;
 
+    private boolean invoiced = false;
+
     @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;

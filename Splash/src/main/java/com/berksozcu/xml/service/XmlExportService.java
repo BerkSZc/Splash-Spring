@@ -104,6 +104,7 @@ public class XmlExportService {
             invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
             invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()));
             invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()));
+            invXml.setINVOICED(inv.isInvoiced());
             TransactionsXml txsXml = new TransactionsXml();
             List<TransactionXml> txList = new ArrayList<>();
 
@@ -162,6 +163,7 @@ public class XmlExportService {
             invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()).setScale(2, RoundingMode.HALF_UP));
             invXml.setNUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
             invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
+            invXml.setINVOICED(inv.isInvoiced());
 
             TransactionsXml txsXml = new TransactionsXml();
             List<TransactionXml> txList = new ArrayList<>();

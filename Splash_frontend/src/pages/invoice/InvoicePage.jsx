@@ -118,6 +118,7 @@ export default function InvoicePage() {
               handlers.setEditingInvoice(null);
               handlers.setForm(null);
             }}
+            onStatusChange={handlers.handleInvoiceStatusChange}
             onSave={handlers.handleSave}
             modalTotals={state.modalTotals}
             addItem={handlers.addItem}

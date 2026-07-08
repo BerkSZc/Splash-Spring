@@ -129,6 +129,7 @@ public class XmlImportService {
             invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
             invoice.setEurSellingRate(BigDecimal.ONE);
             invoice.setUsdSellingRate(BigDecimal.ONE);
+            invoice.setInvoiced(Objects.requireNonNullElse(xmlInv.getINVOICED(), true));
 
             invoice.setTotalPrice(safeGet(xmlInv.getTOTAL_NET()).setScale(2, RoundingMode.HALF_UP));
             // Customer eşleştirme
@@ -246,6 +247,7 @@ public class XmlImportService {
             invoice.setTotalPrice(totalPrice);
             invoice.setEurSellingRate(BigDecimal.ONE);
             invoice.setUsdSellingRate(BigDecimal.ONE);
+            invoice.setInvoiced(Objects.requireNonNullElse(xmlInv.getINVOICED(), true));
 
             invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
 
