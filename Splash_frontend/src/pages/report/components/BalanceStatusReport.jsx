@@ -7,9 +7,11 @@ const BalanceStatusReport = ({
   setSortDirection,
   sortDirection,
 }) => {
-  const totals = items.reduce(
+  const totals = (Array.isArray(items) ? items : []).reduce(
     (acc, curr) => {
-      const balance = Number(curr?.finalBalance || 0);
+      const balance = Number(
+        curr?.finalBalance ?? curr?.openingVoucher?.finalBalance ?? 0,
+      );
       if (balance > 0) {
         acc.debit += balance;
       } else if (balance < 0) {
@@ -101,17 +103,19 @@ const BalanceStatusReport = ({
           <tbody className="divide-y divide-gray-800/50 font-mono text-sm text-gray-200">
             {(Array.isArray(items) ? items : []).length > 0 ? (
               (Array.isArray(items) ? items : []).map((row, i) => {
-                const balance = Number(row?.finalBalance || 0);
+                const balance = Number(
+                  row?.finalBalance ?? row?.openingVoucher?.finalBalance ?? 0,
+                );
                 return (
                   <tr
                     key={i}
                     className="hover:bg-blue-500/5 transition-colors group"
                   >
                     <td className="p-5 text-gray-500 group-hover:text-gray-300">
-                      {row.customer?.code || "-"}
+                      {row?.code || "-"}
                     </td>
                     <td className="p-5 font-bold max-w-[400px] truncate">
-                      {row.customer?.name || "Bilinmeyen Cari"}
+                      {row?.name || "Bilinmeyen Cari"}
                     </td>
                     {/* Bakiye Borç Sütunu */}
                     <td className="p-5 text-right text-emerald-400 font-bold">

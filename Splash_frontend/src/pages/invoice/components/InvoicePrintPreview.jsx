@@ -8,34 +8,8 @@ export default function InvoicePrintPreview({
   onCancel,
   onExecutePrint,
 }) {
-  const { getOpeningVoucherByYear } = useVoucher();
-  const [voucher, setVoucher] = useState(null);
   const { tenant } = useTenant();
   const { year } = useYear();
-
-  useEffect(() => {
-    let ignore = false;
-    const loadBalance = async () => {
-      if (!printItem?.customer?.id || !printItem?.date) return;
-      setVoucher(null);
-
-      const year = new Date(printItem.date).getFullYear();
-      const dateString = `${year}-01-01`;
-
-      const data = await getOpeningVoucherByYear(
-        printItem.customer.id,
-        dateString,
-        tenant,
-      );
-      if (!ignore) {
-        setVoucher(data);
-      }
-    };
-    loadBalance();
-    return () => {
-      ignore = true;
-    };
-  }, [printItem?.id, tenant, year]);
 
   if (!printItem) return null;
 
@@ -43,7 +17,12 @@ export default function InvoicePrintPreview({
   const totalPrice = Number(printItem.totalPrice || 0);
   const subTotal = totalPrice - kdvToplam;
 
-  const currentBalance = Number(voucher?.finalBalance || 0);
+  const currentBalance = Number(
+    printItem?.customer?.finalBalance ??
+      printItem?.customer?.openingVoucher?.finalBalance ??
+      0,
+  );
+
   const usdRate = Number(printItem?.usdSellingRate || 0);
   const eurRate = Number(printItem?.eurSellingRate || 0);
 
@@ -53,7 +32,6 @@ export default function InvoicePrintPreview({
   const formattedDate = printItem?.date?.includes("-")
     ? printItem.date.split("-").reverse().join(".")
     : printItem?.date;
-
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black/90 flex justify-center items-center z-[9999] backdrop-blur-sm md:p-10 text-left">
       <div className="bg-[#1a1f2e] border border-gray-800 w-full max-w-5xl max-h-[95vh] rounded-[2rem] flex flex-col overflow-hidden shadow-2xl">
@@ -78,7 +56,9 @@ export default function InvoicePrintPreview({
               Vazgeç
             </button>
             <button
-              onClick={() => onExecutePrint(printItem, voucher)}
+              onClick={() =>
+                onExecutePrint(printItem, { finalBalance: currentBalance })
+              }
               className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 shadow-lg flex items-center gap-2"
             >
               <span>🖨️</span> Şimdi Yazdır
@@ -173,9 +153,7 @@ export default function InvoicePrintPreview({
                       <td className="py-3 px-2 text-right font-mono text-gray-600">
                         {(Number(item?.unitPrice) || 0).toLocaleString(
                           "tr-TR",
-                          {
-                            minimumFractionDigits: 2,
-                          },
+                          { minimumFractionDigits: 2 },
                         )}{" "}
                         ₺
                       </td>
@@ -188,9 +166,7 @@ export default function InvoicePrintPreview({
                       <td className="py-3 px-2 text-right font-bold text-gray-900">
                         {(Number(item?.lineTotal) || 0).toLocaleString(
                           "tr-TR",
-                          {
-                            minimumFractionDigits: 2,
-                          },
+                          { minimumFractionDigits: 2 },
                         )}{" "}
                         ₺
                       </td>
@@ -218,7 +194,7 @@ export default function InvoicePrintPreview({
                 </div>
                 <div className="flex justify-between text-[10px] text-gray-500 font-medium px-1 pb-1">
                   <span>TOPLAM KDV</span>
-                  <span className="font-mono text-gray-800">
+                  <span class="font-mono text-gray-800">
                     {kdvToplam.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                     })}{" "}
@@ -242,9 +218,8 @@ export default function InvoicePrintPreview({
               </div>
             </div>
 
-            {/* GENEL AÇIKLAMALAR, CARİ BAKİYE VE BANKA BİLGİLERİ (BASKI ŞABLONUNUN BİREBİR AYNISI) */}
+            {/* Genel Açıklamalar */}
             <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
-              {/* Cari Hesap Bakiyesi */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Genel Açıklamalar
@@ -291,7 +266,7 @@ export default function InvoicePrintPreview({
                 </table>
               </div>
 
-              {/* Ödeme Notu ve Resmi İbareler */}
+              {/* Ödeme Notu */}
               <div className="flex justify-between items-center text-[10px] bg-white pt-2 border-collapse">
                 <div className="text-gray-500 font-mono">
                   <span className="font-bold text-gray-700">Ödeme Notu:</span>{" "}

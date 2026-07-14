@@ -1,6 +1,7 @@
 package com.berksozcu.security;
 
-import com.berksozcu.dto.user.SignUpRequest;
+import com.berksozcu.dto.company.CompanyDto;
+import com.berksozcu.dto.user.AuthDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.user.User;
 import com.berksozcu.entites.user.UserResponse;
@@ -47,7 +48,7 @@ public class AuthenticationService {
     private ICompanyService companyService;
 
     @Transactional(rollbackFor = Exception.class)
-    public UserResponse signUp(SignUpRequest request) throws SQLException {
+    public UserResponse signUp(AuthDto request) throws SQLException {
 
         if(userRepository.findByUsername(request.getUsername()).isPresent()){
             throw new BaseException(new ErrorMessage(MessageType.KULLANICI_MEVCUT));
@@ -66,7 +67,7 @@ public class AuthenticationService {
 
         String schemaName = companyService.createDefaultSchemaName();
 
-        Company newCompany = companyService.createNewTenantSchema(
+        CompanyDto newCompany = companyService.createNewTenantSchema(
                 schemaName,
                 request.getCompanyName(),
                 request.getDescription(),
@@ -83,7 +84,7 @@ public class AuthenticationService {
     }
 
 
-    public UserResponse login(User user) {
+    public UserResponse login(AuthDto user) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     user.getUsername(), user.getPassword()

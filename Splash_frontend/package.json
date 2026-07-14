@@ -21,6 +21,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.0",
+    "dotenv": "^17.4.2",
     "electron-updater": "^6.6.2",
     "jwt-decode": "^4.0.0",
     "react": "^19.1.1",
@@ -34,14 +35,17 @@
     "appId": "com.Splash-vs.app",
     "productName": "Splash",
     "files": [
-      "dist/**/*",
+      "dist",
       "main.js",
-      "package.json",
-      "backend.jar"
+      "package.json"
     ],
     "extraResources": [
       {
         "from": "backend.jar",
+        "to": "."
+      },
+      {
+        "from": ".env",
         "to": "."
       }
     ],
@@ -62,7 +66,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Splash VS"
+      "shortcutName": "Splash VS",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   },
   "devDependencies": {

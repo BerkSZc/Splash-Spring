@@ -3,13 +3,15 @@ package com.berksozcu.controller.impl;
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IUserController;
 import com.berksozcu.controller.base.RootEntity;
-import com.berksozcu.dto.user.SignUpRequest;
-import com.berksozcu.dto.user.DtoUser;
+import com.berksozcu.dto.user.AuthDto;
+import com.berksozcu.dto.user.UserDto;
 import com.berksozcu.entites.user.User;
 import com.berksozcu.entites.user.UserResponse;
+import com.berksozcu.exception.BaseException;
+import com.berksozcu.exception.ErrorMessage;
+import com.berksozcu.exception.MessageType;
 import com.berksozcu.security.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -28,27 +30,27 @@ public class UserControllerImpl implements IUserController {
     @Override
     @PostMapping("/save")
     @RateLimit(capacity = 5)
-    public RootEntity<UserResponse> signUp(@RequestBody SignUpRequest request) throws SQLException {
+    public RootEntity<UserResponse> signUp(@RequestBody AuthDto request) throws SQLException {
         return ok(authenticationService.signUp(request));
     }
 
     @Override
     @PostMapping("/login")
     @RateLimit(capacity = 5)
-    public RootEntity<UserResponse> login( @RequestBody User user){
+    public RootEntity<UserResponse> login( @RequestBody AuthDto user){
         return ok(authenticationService.login(user));
     }
 
 
     @GetMapping("/me")
-    public ResponseEntity<DtoUser> me(Authentication authentication) {
+    public ResponseEntity<UserDto> me(Authentication authentication) {
         if (authentication == null ||
                 !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new BaseException(new ErrorMessage(MessageType.OTURUM_SURE_DOLDU));
         }
 
         return ResponseEntity.ok(
-                new DtoUser(
+                new UserDto(
                         user.getId(),
                         user.getUsername()
                 )

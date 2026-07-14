@@ -2,6 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IPaymentCompanyController;
+import com.berksozcu.dto.collections.PaymentCompanyDto;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.service.IPaymentCompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +22,16 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
 
     @Override
     @PostMapping("/add/{id}")
-    public PaymentCompany addPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany,
-                                            @RequestParam String schemaName) {
+    public PaymentCompanyDto addPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompanyDto paymentCompany,
+                                               @RequestParam String schemaName) {
         return paymentCompanyService.addPaymentCompany(id, paymentCompany, schemaName);
     }
 
     @Override
     @PutMapping("/edit/{id}")
-    public PaymentCompany editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompany paymentCompany,
+    public void editPaymentCompany(@PathVariable(name = "id") Long id, @RequestBody PaymentCompanyDto paymentCompany,
                                              @RequestParam String schemaName) {
-        return paymentCompanyService.editPaymentCompany(id, paymentCompany, schemaName);
+         paymentCompanyService.editPaymentCompany(id, paymentCompany, schemaName);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class PaymentCompanyControllerImpl implements IPaymentCompanyController {
 
     @Override
     @GetMapping("/find-by-year")
-    public Page<PaymentCompany> getPaymentCollectionsByYear(@RequestParam(defaultValue = "0") int page,
+    public Page<PaymentCompanyDto> getPaymentCollectionsByYear(@RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "20") int size,
                                                             @RequestParam(required = false) String search,
                                                             @RequestParam int year,

@@ -10,8 +10,8 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DtoFullReport {
-    private List<DtoMonthlyKdv> purchaseReports;
-    private List<DtoMonthlyKdv> salesReports;
+public class FullReportDto {
+    private List<MonthlyKdvDto> purchaseReports;
+    private List<MonthlyKdvDto> salesReports;
     private List<Map<String, Object>> kdvAnalysis;
 }

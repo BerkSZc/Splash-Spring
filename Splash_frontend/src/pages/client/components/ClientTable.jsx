@@ -5,7 +5,6 @@ export default function ClientTable({
   selectedCustomers,
   onCheckboxChange,
   onContextMenu,
-  vouchers,
 }) {
   return (
     <div className="bg-gray-900/20 border border-gray-800 rounded-[2.5rem] overflow-hidden">
@@ -33,7 +32,6 @@ export default function ClientTable({
                 isSelected={selectedCustomers.includes(customer.id)}
                 onCheckboxChange={onCheckboxChange}
                 onContextMenu={onContextMenu}
-                vouchers={vouchers}
               />
             ))}
           </tbody>

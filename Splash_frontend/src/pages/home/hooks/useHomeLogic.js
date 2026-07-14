@@ -49,7 +49,7 @@ export const useHomeLogic = () => {
         const dateString = `${year}-01-01`;
         await Promise.all([
           getAllCompanies(),
-          getAllCustomers(0, 999, false, "", tenant),
+          getAllCustomers(0, 999, false, "", tenant, year),
           getReceivedCollectionsByYear(0, 999, "", year, tenant),
           getPaymentCollectionsByYear(0, 999, "", year, tenant),
           getPurchaseInvoiceByYear(0, 999, "", year, tenant),
@@ -71,16 +71,21 @@ export const useHomeLogic = () => {
 
   // Finansal hesaplamalar
   const financialSummary = useMemo(() => {
-    const voucherList = Array.isArray(vouchers) ? vouchers : [];
+    const sourceList =
+      Array.isArray(vouchers) && vouchers.length > 0
+        ? vouchers
+        : Array.isArray(customers)
+          ? customers
+          : [];
 
-    const activeVouchers = voucherList.filter(
-      (v) => v?.customer?.archived === false,
-    );
+    const activeItems = sourceList.filter((item) => {
+      const isArchived = Boolean(item?.archived ?? item?.customer?.archived);
+      return !isArchived;
+    });
 
-    return activeVouchers.reduce(
-      (acc, v) => {
-        const balance = Number(v?.finalBalance || 0);
-
+    return activeItems.reduce(
+      (acc, item) => {
+        const balance = Number(item?.finalBalance || 0);
         if (balance > 0) {
           acc.totalCredits += balance;
         } else if (balance < 0) {
@@ -91,7 +96,7 @@ export const useHomeLogic = () => {
       },
       { totalDebts: 0, totalCredits: 0 },
     );
-  }, [vouchers, year]);
+  }, [vouchers, customers, year]);
 
   const currentCompany = (Array.isArray(companies) ? companies : []).find(
     (c) => c?.schemaName === tenant,

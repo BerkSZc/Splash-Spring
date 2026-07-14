@@ -1,30 +1,31 @@
-import { app, BrowserWindow, nativeTheme } from "electron";
+import { app, BrowserWindow, nativeTheme, shell } from "electron";
 import { execSync, spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import pkg from "electron-updater";
 const { autoUpdater } = pkg;
 import http from "http";
-
 import { dialog } from "electron";
+import dotenv from "dotenv";
 
 let springBootProcess;
 let mainWindow;
 let isSpringReady = false;
 
-autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = true;
-
-const SPRING_PORT = 8080;
-const START_URL = `http://localhost:${SPRING_PORT}`;
-
-nativeTheme.themeSource = "dark";
-
 const getAssetPath = (assetName) => {
   return app.isPackaged
     ? path.join(process.resourcesPath, assetName)
-    : path.join(app.getAppPath(), assetName);
+    : path.join(process.cwd(), assetName);
 };
+
+dotenv.config({ path: getAssetPath(".env") });
+
+const START_URL = process.env.START_URL;
+
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
+nativeTheme.themeSource = "dark";
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -39,7 +40,32 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      webviewTag: false,
     },
+  });
+
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (!url.startsWith(START_URL)) {
+      event.preventDefault();
+      console.warn(`Güvensiz Yönlendirme Engellendi: ${url}`);
+    }
+  });
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.includes("action=print") || url === "about:blank") {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          autoHideMenuBar: true,
+          backgroundColor: "#ffffff",
+        },
+      };
+    }
+
+    console.warn(`Güvensiz harici link dış tarayıcıya yönlendirildi: ${url}`);
+    if (url.startsWith("http")) {
+      shell.openExternal(url);
+    }
+    return { action: "deny" };
   });
 
   mainWindow.webContents.on("did-fail-load", () => {
@@ -127,27 +153,41 @@ function startBackend() {
     return;
   }
 
-  springBootProcess = spawn("java", ["-jar", jarPath], {
-    cwd: app.isPackaged ? process.resourcesPath : app.getAppPath(),
-    stdio: "pipe",
-  });
+  springBootProcess = spawn(
+    "java",
+    ["-jar", jarPath, "--server.address=127.0.0.1"],
+    {
+      cwd: app.isPackaged ? process.resourcesPath : app.getAppPath(),
+      stdio: "pipe",
+    },
+  );
 
   springBootProcess.on("error", (err) => {
-    dialog.showErrorBox(
-      "Java Başlatma Hatası",
-      "Bilgisayarınızda Java kurulu olmayabilir veya yol hatalıdır.\n Hata: " +
+    dialog.showMessageBoxSync({
+      type: "error",
+      title: "Java Başlatma Hatası",
+      message:
+        "Bilgisayarınızda Java kurulu olmayabilir veya yol hatalıdır.\n\nLütfen Java'nın kurulu olduğundan emin olup uygulamayı tekrar başlatın.\nHata: " +
         err.message,
-    );
+      buttons: ["Tamam"],
+    });
+    killSpring();
+    app.exit(0);
   });
 
   setTimeout(() => {
     if (!isSpringReady) {
-      dialog.showMessageBox({
-        type: "warning",
-        title: "Zaman Aşımı",
+      dialog.showMessageBoxSync({
+        type: "error",
+        title: "Sistem Başlatılamadı",
         message:
-          "Backend başlatılamadı. Lütfen java'nın kurulu olduğundan emin olun.",
+          "Uygulama sunucusu (Backend) zaman aşımına uğradı ve başlatılamadı.\n\nLütfen bilgisayarınızda Java'nın kurulu olduğundan emin olun ve uygulamayı yeniden çalıştırın.",
+        buttons: ["Tamam"],
       });
+
+      console.log("Zaman aşımı nedeniyle uygulama kapatılıyor...");
+      killSpring();
+      app.exit(0);
     }
   }, 30000);
 
@@ -173,14 +213,24 @@ function waitForBackend(retries = 100) {
     if (retries > 0) {
       setTimeout(() => waitForBackend(retries - 1), 1500);
     } else {
-      dialog.showErrorBox("Backend Hatası", "Sunucu başlatılamadı.");
+      dialog.showMessageBoxSync({
+        type: "error",
+        title: "Bağlantı Hatası",
+        message:
+          "Uygulama yerel sunucuya bağlanamadı.\n\nLütfen arka planda başka bir uygulamanın portu meşgul etmediğinden emin olun ve uygulamayı yeniden çalıştırın.",
+        buttons: ["Tamam"],
+      });
+
+      console.log("Bağlantı sınırı aşıldığı için uygulama kapatılıyor...");
+      killSpring();
+      app.exit(0);
     }
   });
 }
 
 app.whenReady().then(() => {
   startBackend();
-  waitForBackend();
+  waitForBackend(15);
   checkUpdates();
 
   app.on("activate", () => {

@@ -1,25 +1,14 @@
 // Müşteri seçme alanı
 
 import { useState, useRef, useEffect } from "react";
-import { useVoucher } from "../../backend/store/useVoucher.js";
 import { useClient } from "../../backend/store/useClient.js";
-import { useYear } from "../context/YearContext";
-import { useTenant } from "../context/TenantContext.jsx";
-import toast from "react-hot-toast";
 
 export default function CustomerSearchSelect({ customers, value, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef(null);
 
-  const {
-    vouchers,
-    getAllOpeningVoucherByYear,
-    loading: vouchersLoading,
-  } = useVoucher();
   const { loading: customersLoading } = useClient();
-  const { year } = useYear();
-  const { tenant } = useTenant();
 
   // Seçili müşteriyi bul
   const selectedCustomer = (Array.isArray(customers) ? customers : []).find(
@@ -54,29 +43,7 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
     },
   );
 
-  useEffect(() => {
-    let ignore = false;
-    const fetchAndSyncData = async () => {
-      try {
-        if (year) {
-          const dateString = `${year}-01-01`;
-          await getAllOpeningVoucherByYear(dateString, tenant);
-        }
-        if (ignore) return;
-      } catch (error) {
-        const backendErr =
-          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-        toast.error(backendErr);
-      }
-    };
-    fetchAndSyncData();
-    return () => {
-      ignore = true;
-    };
-  }, [year, tenant]);
-
-  const isLoading = customersLoading || vouchersLoading;
-
+  const isLoading = customersLoading;
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <div
@@ -92,11 +59,20 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
             <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
           )}
           <span className={selectedCustomer ? "text-white" : "text-gray-500"}>
-            {isLoading
-              ? "Müşteriler Yükleniyor..."
-              : selectedCustomer
-                ? selectedCustomer.name
-                : "Müşteri / Firma Ara..."}
+            {isLoading ? (
+              "Müşteriler Yükleniyor..."
+            ) : selectedCustomer ? (
+              <>
+                {selectedCustomer.name}
+                {selectedCustomer.archived && (
+                  <span className="text-xs text-red-400 font-normal ml-2">
+                    (Arşivli)
+                  </span>
+                )}
+              </>
+            ) : (
+              "Müşteri / Firma Ara..."
+            )}
           </span>
         </div>
         {!isLoading && (
@@ -132,11 +108,7 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
             {Array.isArray(filteredCustomers) &&
             filteredCustomers.length > 0 ? (
               filteredCustomers.map((c) => {
-                const myVoucher = (
-                  Array.isArray(vouchers) ? vouchers : []
-                ).find((v) => v?.customer?.id === c?.id);
-
-                const balanceDisplay = Number(myVoucher?.finalBalance ?? 0);
+                const balanceDisplay = Number(c?.finalBalance ?? 0);
                 return (
                   <div
                     key={c?.id}
@@ -158,7 +130,6 @@ export default function CustomerSearchSelect({ customers, value, onChange }) {
                       </div>
                     </div>
 
-                    {/* Voucher'dan gelen dinamik bakiye */}
                     <div
                       className={`text-xs font-mono px-2 py-1 rounded ${
                         balanceDisplay < 0

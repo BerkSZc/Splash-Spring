@@ -11,6 +11,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -18,6 +19,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -149,6 +151,22 @@ public class CommonDataServiceImpl implements ICommonDataService {
         } catch (Exception e) {
             return String.format("%s%d001", prefix, date.getYear());
         }
+    }
+
+    @Override
+    public BigDecimal convertToTry(String code, BigDecimal amount, LocalDate date) {
+
+        if(code == null || amount == null) {
+            return amount != null ? amount : BigDecimal.ZERO;
+        }
+
+        if("TRY".equals(code)) return amount;
+
+        CurrencyRate rate = currencyRateRepository.findByCurrencyAndLastUpdated(code, date)
+                .orElse(null);
+
+        BigDecimal selectedRate = rate != null ? rate.getSellingRate() : BigDecimal.ONE;
+        return amount.multiply(selectedRate).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void saveOrUpdateRate(String code, Element element) {

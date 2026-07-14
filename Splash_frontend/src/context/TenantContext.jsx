@@ -1,17 +1,22 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useCompany } from "../../backend/store/useCompany.js";
 import toast from "react-hot-toast";
+import { useAuthentication } from "../../backend/store/useAuthentication.js";
 
 const TenantContext = createContext();
 
 export const TenantProvider = ({ children }) => {
   const { getAllCompanies } = useCompany();
+  const { isAuthenticated } = useAuthentication();
 
   const [tenant, setTenantState] = useState(
     localStorage.getItem("tenant") || "splash",
   );
+
   // Şirketleri state içinde tutuyoruz
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     let ignore = false;
     const fetchData = async () => {
       try {

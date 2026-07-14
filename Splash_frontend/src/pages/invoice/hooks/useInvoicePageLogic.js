@@ -112,7 +112,7 @@ export const useInvoicePageLogic = () => {
       try {
         await Promise.all([
           getMaterials(0, 999, "", false, tenant),
-          getAllCustomers(0, 999, false, "", tenant),
+          getAllCustomers(0, 999, false, "", tenant, year),
         ]);
         if (ignore) return;
 
@@ -171,7 +171,11 @@ export const useInvoicePageLogic = () => {
 
   const executePrint = async (inv, voucher) => {
     if (!inv) return;
-    const printWindow = window.open("", "_blank", "width=1000, height=800");
+    const printWindow = window.open(
+      "about:blank?action=print",
+      "_blank",
+      "width=1000, height=800",
+    );
     if (printWindow) {
       const html = generateInvoiceHTML(inv, invoiceType, voucher);
       printWindow.document.open();
@@ -185,7 +189,7 @@ export const useInvoicePageLogic = () => {
     try {
       await Promise.all([
         getAllCustomers(0, 999, false, "", tenant),
-        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
+        getAllOpeningVoucherByYear(`${year}-01-01`, tenant, year),
       ]);
     } catch (error) {
       const backendErr =

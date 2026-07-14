@@ -98,7 +98,14 @@ export const useClientLogic = () => {
       const dateString = `${year}-01-01`;
 
       await Promise.all([
-        getAllCustomers(page, PAGE_SIZE, showArchived, debouncedSearch, tenant),
+        getAllCustomers(
+          page,
+          PAGE_SIZE,
+          showArchived,
+          debouncedSearch,
+          tenant,
+          year,
+        ),
         getAllOpeningVoucherByYear(dateString, tenant),
       ]);
 
@@ -119,7 +126,9 @@ export const useClientLogic = () => {
   useEffect(() => {
     if (selectedCustomerForStatement && year) {
       const customerVoucher = vouchers?.find(
-        (v) => v?.customer?.id === selectedCustomerForStatement?.id,
+        (v) =>
+          (v?.customerId ?? v?.customer?.id) ===
+          selectedCustomerForStatement?.id,
       );
       const data = accountStatementHelper(
         selectedCustomerForStatement,
@@ -180,16 +189,12 @@ export const useClientLogic = () => {
   };
 
   const handleOpenStatement = async (customer) => {
-    const customerVoucher = (Array.isArray(vouchers) ? vouchers : []).find(
-      (v) => v?.customer?.id === customer?.id,
-    );
     const updatedCustomer = {
       ...customer,
-      openingBalance: customerVoucher
-        ? Number(customerVoucher.yearlyDebit) -
-          Number(customerVoucher.yearlyCredit)
+      openingBalance: customer
+        ? Number(customer.yearlyDebit || 0) - Number(customer.yearlyCredit || 0)
         : 0,
-      finalBalance: customerVoucher ? customerVoucher.finalBalance : 0,
+      finalBalance: customer ? Number(customer.finalBalance || 0) : 0,
     };
     try {
       setSelectedCustomerForStatement(updatedCustomer);
@@ -289,17 +294,12 @@ export const useClientLogic = () => {
 
   const handleEdit = async (customer) => {
     if (customer.archived) return;
-
-    const customerVoucher = (Array.isArray(vouchers) ? vouchers : []).find(
-      (v) => String(v?.customer?.id) === String(customer?.id),
-    );
-
     setEditClient(customer);
     setForm({
       name: customer.name || "",
-      finalBalance: customerVoucher?.finalBalance || 0,
-      yearlyDebit: customerVoucher.yearlyDebit || 0,
-      yearlyCredit: customerVoucher.yearlyCredit || 0,
+      finalBalance: customer?.finalBalance || 0,
+      yearlyDebit: customer?.yearlyDebit || 0,
+      yearlyCredit: customer.yearlyCredit || 0,
       address: customer.address || "",
       country: customer.country || "",
       local: customer.local || "",
@@ -362,15 +362,8 @@ export const useClientLogic = () => {
     const baseList = Array.isArray(customers) ? customers : [];
 
     return [...baseList].sort((a, b) => {
-      const voucherA = (Array.isArray(vouchers) ? vouchers : []).find(
-        (v) => v?.customer?.id === a?.id,
-      );
-      const voucherB = (Array.isArray(vouchers) ? vouchers : []).find(
-        (v) => v?.customer?.id === b?.id,
-      );
-
-      const valA = Number(voucherA?.finalBalance || 0);
-      const valB = Number(voucherB?.finalBalance || 0);
+      const valA = Number(a?.finalBalance || 0);
+      const valB = Number(b?.finalBalance || 0);
 
       if (sortDirection === "desc") {
         if (valA >= 0 && valB < 0) return -1;
@@ -384,7 +377,7 @@ export const useClientLogic = () => {
         return Math.abs(valB) - Math.abs(valA);
       }
     });
-  }, [customers, search, showArchived, vouchers, sortDirection]);
+  }, [customers, search, showArchived, sortDirection]);
 
   const formatNumber = (val) => {
     if (val === null || val === undefined || val === "") return "";

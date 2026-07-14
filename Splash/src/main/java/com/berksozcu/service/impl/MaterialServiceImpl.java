@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.material.MaterialDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
@@ -42,7 +43,7 @@ public class MaterialServiceImpl implements IMaterialService {
 
     @Override
     @Transactional
-    public Material addMaterial(Material newMaterial, String schemaName) {
+    public MaterialDto addMaterial(MaterialDto newMaterial, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         String code = newMaterial.getCode() != null ? newMaterial.getCode().trim().toUpperCase() : "";
@@ -50,19 +51,34 @@ public class MaterialServiceImpl implements IMaterialService {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
         }
 
-        newMaterial.setCode(code.toUpperCase());
-        newMaterial.setComment(Objects.requireNonNullElse(newMaterial.getComment(), "").toUpperCase());
-        newMaterial.setUnit(Objects.requireNonNullElse(newMaterial.getUnit(), MaterialUnit.KG));
-        newMaterial.setPurchasePrice(safePrice(newMaterial.getPurchasePrice()));
-        newMaterial.setCompany(company);
-        newMaterial.setSalesPrice(safePrice(newMaterial.getSalesPrice()));
-        newMaterial.setPurchaseCurrency(Objects.requireNonNullElse(newMaterial.getPurchaseCurrency(), Currency.TRY));
-        newMaterial.setSalesCurrency(Objects.requireNonNullElse(newMaterial.getSalesCurrency(), Currency.TRY));
-        return materialRepository.save(newMaterial);
+        Material material = new Material();
+
+        material.setCode(code.toUpperCase());
+        material.setComment(Objects.requireNonNullElse(newMaterial.getComment(), "").toUpperCase());
+        material.setUnit(Objects.requireNonNullElse(newMaterial.getUnit(), MaterialUnit.KG));
+        material.setPurchasePrice(safePrice(newMaterial.getPurchasePrice()));
+        material.setCompany(company);
+        material.setSalesPrice(safePrice(newMaterial.getSalesPrice()));
+        material.setPurchaseCurrency(Objects.requireNonNullElse(newMaterial.getPurchaseCurrency(), Currency.TRY));
+        material.setSalesCurrency(Objects.requireNonNullElse(newMaterial.getSalesCurrency(), Currency.TRY));
+        Material savedMaterial = materialRepository.save(material);
+
+        MaterialDto materialDto = new MaterialDto();
+        materialDto.setId(savedMaterial.getId());
+        materialDto.setCode(savedMaterial.getCode());
+        materialDto.setComment(savedMaterial.getComment());
+        materialDto.setUnit(savedMaterial.getUnit());
+        materialDto.setPurchasePrice(safePrice(savedMaterial.getPurchasePrice()));
+        materialDto.setCompanyId(savedMaterial.getCompany().getId());
+        materialDto.setSalesPrice(savedMaterial.getSalesPrice());
+        materialDto.setPurchaseCurrency(savedMaterial.getPurchaseCurrency());
+        materialDto.setSalesCurrency(savedMaterial.getSalesCurrency());
+
+        return materialDto;
     }
 
     @Override
-    public Page<Material> getAllMaterials(int page, int size, String search, Boolean archived, String schemName) {
+    public Page<MaterialDto> getAllMaterials(int page, int size, String search, Boolean archived, String schemName) {
         Company company = companyRepository.findBySchemaName(schemName);
         Pageable pageable = PageRequest.of(page, size, Sort.by("code").ascending());
 
@@ -75,12 +91,27 @@ public class MaterialServiceImpl implements IMaterialService {
 
         boolean isArchived = archived != null && archived;
 
-        return materialRepository.findByCompanyAndArchivedWithSearch(company, isArchived, searchParam, pageable);
+        Page<Material> pageableMaterial = materialRepository.findByCompanyAndArchivedWithSearch(company, isArchived, searchParam, pageable);
+
+        return pageableMaterial.map(material -> {
+            MaterialDto materialDto = new MaterialDto();
+            materialDto.setId(material.getId());
+            materialDto.setCode(material.getCode());
+            materialDto.setComment(material.getComment());
+            materialDto.setCompanyId(material.getCompany().getId());
+            materialDto.setUnit(material.getUnit());
+            materialDto.setPurchasePrice(material.getPurchasePrice());
+            materialDto.setSalesPrice(material.getSalesPrice());
+            materialDto.setPurchaseCurrency(material.getPurchaseCurrency());
+            materialDto.setSalesCurrency(material.getSalesCurrency());
+            materialDto.setArchived(material.isArchived());
+            return materialDto;
+        });
     }
 
     @Override
     @Transactional
-    public void updateMaterial(Long id, Material updateMaterial, String schemaName) {
+    public void updateMaterial(Long id, MaterialDto updateMaterial, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         Material existingMaterial = materialRepository.findByIdAndCompany(id, company)
@@ -90,7 +121,7 @@ public class MaterialServiceImpl implements IMaterialService {
         String code = updateMaterial.getCode() != null ? updateMaterial.getCode().trim().toUpperCase() : "";
 
         if (materialRepository.existsByCodeAndCompany(code, company)
-                && !updateMaterial.getCode().equals(existingMaterial.getCode())) {
+                && !code.equals(existingMaterial.getCode())) {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KODU_MEVCUT));
         }
 

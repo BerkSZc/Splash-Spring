@@ -73,12 +73,16 @@ export const useReportData = (reportType) => {
     );
     const filteredBalanceStatus = isBalanceArray
       .filter((item) => {
-        const isArchived = Boolean(item.customer?.archived);
+        const isArchived = Boolean(item?.archived ?? item.customer?.archived);
         return showArchived ? isArchived : !isArchived;
       })
       .sort((a, b) => {
-        const balanceA = Number(a?.finalBalance || 0);
-        const balanceB = Number(b?.finalBalance || 0);
+        const balanceA = Number(
+          a?.finalBalance ?? a?.openingVoucher?.finalBalance ?? 0,
+        );
+        const balanceB = Number(
+          b?.finalBalance ?? b?.openingVoucher?.finalBalance ?? 0,
+        );
         if (sortDirection === "desc") {
           if (balanceA >= 0 && balanceB < 0) return -1;
           if (balanceA < 0 && balanceB >= 0) return 1;

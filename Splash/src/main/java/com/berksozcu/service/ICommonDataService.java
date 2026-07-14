@@ -10,4 +10,5 @@ public interface ICommonDataService {
      BigDecimal getRateOrDefault(String currency, LocalDate invoiceDate);
      BigDecimal getTodaysRate(String code, LocalDate invoiceDate);
      String generateFileNo(LocalDate date, String type, String schemaName);
+    BigDecimal convertToTry(String code, BigDecimal amount, LocalDate date);
 }

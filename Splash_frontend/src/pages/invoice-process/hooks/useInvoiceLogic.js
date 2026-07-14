@@ -138,7 +138,15 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   const parseNumber = (val) => {
     if (val === "" || val == null) return 0;
 
-    return parseFloat(val.toString().replace(/\./g, "").replace(",", ".")) || 0;
+    if (typeof val === "number") return val;
+
+    const str = val.toString();
+
+    if (str.includes(".") && !str.includes(",")) {
+      return parseFloat(str);
+    }
+
+    return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
   };
 
   useEffect(() => {
@@ -492,7 +500,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       }, 200);
 
       Promise.all([
-        getAllCustomers(0, 999, false, "", tenant),
+        getAllCustomers(0, 999, false, "", tenant, year),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
     } catch (error) {

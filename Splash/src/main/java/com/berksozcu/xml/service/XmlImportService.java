@@ -544,7 +544,7 @@ public class XmlImportService {
                 PaymentCompany py = new PaymentCompany();
                 py.setCustomer(customer);
                 py.setDate(date);
-                py.setComment(Objects.requireNonNullElse(customer.getName(), ""));
+                py.setComment(Objects.requireNonNullElse(c.getDESCRIPTION(), ""));
                 py.setFileNo(Objects.requireNonNullElse(c.getNUMBER(), ""));
                 py.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
                 py.setPrice(safeGet(total));

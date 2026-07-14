@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DtoMonthlyKdv {
+public class MonthlyKdvDto {
     private int month;
     private int year;
     private BigDecimal totalAmount; // KDV siz tutar

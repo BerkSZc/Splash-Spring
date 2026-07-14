@@ -1,6 +1,6 @@
 package com.berksozcu.repository;
 
-import com.berksozcu.dto.report.DtoMonthlyKdv;
+import com.berksozcu.dto.report.MonthlyKdvDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import org.springframework.data.domain.Page;
@@ -37,13 +37,13 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     @Query(value = "DELETE FROM PurchaseInvoice p WHERE p.company.id = :companyId AND p.date BETWEEN :start AND :end")
     void deleteByCompanyIdAndDateBetween(Long companyId, LocalDate start, LocalDate end);
 
-    @Query("SELECT new com.berksozcu.dto.report.DtoMonthlyKdv(" +
+    @Query("SELECT new com.berksozcu.dto.report.MonthlyKdvDto(" +
             "MONTH(pi.date), YEAR(pi.date), SUM(pi.totalPrice - pi.kdvToplam), SUM(pi.kdvToplam), SUM(pi.totalPrice)) " +
             "FROM PurchaseInvoice pi " +
             "WHERE YEAR(pi.date) = :year AND pi.company.id = :companyId AND pi.invoiced = true " +
             "GROUP BY MONTH(pi.date), YEAR(pi.date) " +
             "ORDER BY MONTH(pi.date)")
-    List<DtoMonthlyKdv> getMonthlyPurchases(@Param("year") int year, @Param("companyId") Long companyId);
+    List<MonthlyKdvDto> getMonthlyPurchases(@Param("year") int year, @Param("companyId") Long companyId);
 
 
     @Query("SELECT p FROM PurchaseInvoice p WHERE p.company = :company " +

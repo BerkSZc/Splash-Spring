@@ -1,5 +1,6 @@
 package com.berksozcu.service;
 
+import com.berksozcu.dto.collections.PaymentCompanyDto;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
@@ -87,8 +88,18 @@ public class PaymentCompanyServiceImplTest {
         when(customerRepository.findByIdAndCompany(nonExistentCustomerId, mockCompany))
                 .thenReturn(Optional.empty());
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.addPaymentCompany(nonExistentCustomerId, mockPayment, "company"));
+                paymentCompanyServiceImpl.addPaymentCompany(nonExistentCustomerId, mockPaymentCompanyDto, "company"));
 
         assertEquals("Hata Kodu: 1001 Müşteri mevcut değil", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
@@ -100,8 +111,18 @@ public class PaymentCompanyServiceImplTest {
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
         when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company"));
+                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company"));
 
         assertEquals("Hata Kodu: 1012 Arşivdeki müşteriye işlem yapılamaz", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
@@ -115,8 +136,18 @@ public class PaymentCompanyServiceImplTest {
         when(paymentCompanyRepository.existsByFileNoAndCompany(mockPayment.getFileNo(), mockCompany))
                 .thenReturn(true);
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company"));
+                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company"));
 
         assertEquals("Hata Kodu: 1029 İşlem no mevcut", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
@@ -137,7 +168,17 @@ public class PaymentCompanyServiceImplTest {
                 eq(mockCompany), any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher));
 
-        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company");
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
+        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company");
 
         assertEquals(BigDecimal.ZERO, mockPayment.getPrice());
         assertEquals("", mockPayment.getCustomerName());
@@ -157,7 +198,17 @@ public class PaymentCompanyServiceImplTest {
         when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
                 any(), any())).thenReturn(Optional.of(mockOpeningVoucher));
 
-        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPayment, "company");
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
+        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company");
 
         assertEquals(new BigDecimal("200.00"), mockOpeningVoucher.getFinalBalance());
         assertEquals(new BigDecimal("200.00"), mockOpeningVoucher.getDebit());
@@ -173,8 +224,18 @@ public class PaymentCompanyServiceImplTest {
         when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
                 .thenReturn(Optional.empty());
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPayment, "company"));
+                paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPaymentCompanyDto, "company"));
 
         assertEquals("Hata Kodu: 1005 Ödeme bulunamadı", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
@@ -183,7 +244,7 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void editPaymentCompany_ShouldThrowException_WhenFileNoExistsAndNewFileNoNotExists() {
 
-        PaymentCompany request = new PaymentCompany();
+        PaymentCompanyDto request = new PaymentCompanyDto();
         request.setFileNo("ASSS1");
 
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
@@ -208,8 +269,18 @@ public class PaymentCompanyServiceImplTest {
         when(companyRepository.findBySchemaName("company")).thenReturn(request);
         when(paymentCompanyRepository.findByIdAndCompany(1L, request)).thenReturn(Optional.of(mockPayment));
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.editPaymentCompany(1L, mockPayment, "company"));
+                paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company"));
 
         assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
         verify(paymentCompanyRepository, never()).save(any());
@@ -220,10 +291,10 @@ public class PaymentCompanyServiceImplTest {
         Customer newCustomer = new Customer();
         newCustomer.setId(1L);
 
-        PaymentCompany request = new PaymentCompany();
+        PaymentCompanyDto request = new PaymentCompanyDto();
         request.setPrice(new BigDecimal("150.00"));
         request.setFileNo("NEW-123");
-        request.setCustomer(newCustomer);
+        request.setCustomerId(1L);
 
         OpeningVoucher newOpeningVoucher = new OpeningVoucher();
         newOpeningVoucher.setDebit(new BigDecimal("500.00"));
@@ -276,8 +347,18 @@ public class PaymentCompanyServiceImplTest {
             return input;
         });
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         try {
-            paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPayment, "company");
+            paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPaymentCompanyDto, "company");
         } catch (RuntimeException e) {
             assertEquals("HATA", e.getMessage());
         }
@@ -309,8 +390,18 @@ public class PaymentCompanyServiceImplTest {
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenThrow(new RuntimeException("Test Durduruldu"));
 
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
         try {
-            paymentCompanyServiceImpl.editPaymentCompany(1L, mockPayment, "company");
+            paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company");
         } catch (RuntimeException e) {
             //HATA
         }
@@ -324,8 +415,8 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void editPaymentCompany_ShouldFillDefaultValues_WhenInputIsMissing() {
 
-        PaymentCompany inputPayment = new PaymentCompany();
-        inputPayment.setCustomer(mockCustomer);
+        PaymentCompanyDto inputPayment = new PaymentCompanyDto();
+        inputPayment.setCustomerId(1L);;
         inputPayment.setDate(null);
         inputPayment.setPrice(null);
         inputPayment.setComment(null);
@@ -373,7 +464,18 @@ public class PaymentCompanyServiceImplTest {
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenReturn(Optional.of(newOpeningVoucher));
 
-        paymentCompanyServiceImpl.editPaymentCompany(1L, mockPayment, "company");
+        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        mockPaymentCompanyDto.setId(mockPayment.getId());
+        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+
+
+        paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company");
 
         assertEquals(new BigDecimal("200.00"), newOpeningVoucher.getFinalBalance());
         assertEquals(new BigDecimal("100.00"), newOpeningVoucher.getDebit());
