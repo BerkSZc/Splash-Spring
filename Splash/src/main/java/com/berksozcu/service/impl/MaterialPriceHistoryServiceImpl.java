@@ -1,6 +1,8 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.material_price_history.MaterialPriceHistoryDto;
 import com.berksozcu.entites.company.Company;
+import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.repository.CompanyRepository;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistoryService {
@@ -22,43 +25,69 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
     private CompanyRepository companyRepository;
 
     @Override
-    public List<MaterialPriceHistory> getHistoryAllYear(Long materialId,
-            String schemaName
-            ,InvoiceType invoiceType) {
+    public List<MaterialPriceHistoryDto> getHistoryAllYear(Long materialId,
+                                                           String schemaName
+            , InvoiceType invoiceType) {
         Company company = companyRepository.findBySchemaName(schemaName);
-        return materialPriceHistoryRepository.
+        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.
                 findByMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(materialId, company, invoiceType);
+
+      return returnDefaultDto(materialPriceHistories);
     }
 
     @Override
-    public List<MaterialPriceHistory> getHistoryByYear(Long materialId, InvoiceType invoiceType,
+    public List<MaterialPriceHistoryDto> getHistoryByYear(Long materialId, InvoiceType invoiceType,
            String schemaName,
            int year) {
         Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
+        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
                 materialId, invoiceType, company,
                 start, end);
+
+        return returnDefaultDto(materialPriceHistories);
     }
 
     @Override
-    public List<MaterialPriceHistory> getHistoryByCustomerAndYear(Long customerId, Long materialId,
+    public List<MaterialPriceHistoryDto> getHistoryByCustomerAndYear(Long customerId, Long materialId,
                   InvoiceType invoiceType, String schemaName, int year) {
         Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        return materialPriceHistoryRepository
+        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
                 .findByCustomerIdAndMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(customerId,
                         materialId, invoiceType, company, start, end);
+
+      return returnDefaultDto(materialPriceHistories);
     }
 
     @Override
-    public List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(Long customerId, Long materialId,
+    public List<MaterialPriceHistoryDto> getHistoryByCustomerAndAllYear(Long customerId, Long materialId,
                   String schemaName, InvoiceType invoiceType) {
         Company company = companyRepository.findBySchemaName(schemaName);
-        return materialPriceHistoryRepository
+        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
                 .findByCustomerIdAndMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(customerId,
                         materialId, company, invoiceType);
+        return returnDefaultDto(materialPriceHistories);
+    }
+
+    private List<MaterialPriceHistoryDto> returnDefaultDto(List<MaterialPriceHistory> materialPriceHistories) {
+
+        return materialPriceHistories.stream().map(materialPriceHistory -> {
+            MaterialPriceHistoryDto materialPriceHistoryDto = new MaterialPriceHistoryDto();
+            materialPriceHistoryDto.setId(materialPriceHistory.getId());
+            materialPriceHistoryDto.setCompanyId(materialPriceHistory.getCompany().getId());
+            materialPriceHistoryDto.setMaterialId(materialPriceHistory.getMaterial().getId());
+            materialPriceHistoryDto.setCustomerId(materialPriceHistory.getCustomer().getId());
+            materialPriceHistoryDto.setPrice(materialPriceHistory.getPrice());
+            materialPriceHistoryDto.setDate(materialPriceHistory.getDate());
+            materialPriceHistoryDto.setInvoiceType(materialPriceHistory.getInvoiceType());
+            materialPriceHistoryDto.setQuantity(materialPriceHistory.getQuantity());
+            materialPriceHistoryDto.setDate(materialPriceHistory.getDate());
+            materialPriceHistoryDto.setCustomerName(materialPriceHistory.getCustomer().getName());
+
+            return materialPriceHistoryDto;
+        }).collect(Collectors.toList());
     }
 }

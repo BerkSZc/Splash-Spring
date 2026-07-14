@@ -2,7 +2,8 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IReportsController;
-import com.berksozcu.dto.report.DtoFullReport;
+import com.berksozcu.dto.customer.CustomerDto;
+import com.berksozcu.dto.report.FullReportDto;
 import com.berksozcu.entites.customer.OpeningVoucher;
 import com.berksozcu.service.IReportsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +27,14 @@ public class ReportsControllerImpl implements IReportsController {
 
     @GetMapping("/all-reports")
     @Override
-    public ResponseEntity<DtoFullReport> getAllReports(@RequestParam int year, @RequestParam String schemaName) {
+    public ResponseEntity<FullReportDto> getAllReports(@RequestParam int year, @RequestParam String schemaName) {
         return ResponseEntity.ok(reportService.getFullReport(year, schemaName));
     }
 
     @GetMapping("/get-balance-status")
     @Override
-    public List<OpeningVoucher> getAllOpeningVoucherDateBetween(@RequestParam LocalDate start, @RequestParam LocalDate end,
-                                                            @RequestParam String schemaName
+    public List<CustomerDto> getAllOpeningVoucherDateBetween(@RequestParam LocalDate start, @RequestParam LocalDate end,
+                                                             @RequestParam String schemaName
                                                          ) {
         return reportService.getAllOpeningVoucherByDateBetween(start, end, schemaName );
     }

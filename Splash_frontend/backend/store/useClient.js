@@ -9,6 +9,7 @@ export const useClient = create((set, get) => ({
   currentPage: 0,
   lastSearch: "",
   showArchived: false,
+  selectedYear: new Date().getFullYear(),
 
   getAllCustomers: async (
     page = 0,
@@ -16,11 +17,12 @@ export const useClient = create((set, get) => ({
     archived = false,
     search = "",
     schemaName,
+    year = 2025,
   ) => {
     set({ loading: true, lastSearch: search, showArchived: archived });
     try {
       const res = await axiosInstance.get("/customer/list", {
-        params: { page, size, archived, search, schemaName },
+        params: { page, size, archived, search, schemaName, year },
       });
       set({
         customers: res.data.data.content,
@@ -44,7 +46,14 @@ export const useClient = create((set, get) => ({
 
       const { lastSearch, showArchived } = get();
 
-      await get().getAllCustomers(0, 20, showArchived, lastSearch, schemaName);
+      await get().getAllCustomers(
+        0,
+        20,
+        showArchived,
+        lastSearch,
+        schemaName,
+        year,
+      );
     } catch (error) {
       throw error;
     } finally {
@@ -75,6 +84,7 @@ export const useClient = create((set, get) => ({
         showArchived,
         lastSearch,
         schemaName,
+        currentYear,
       );
     } catch (error) {
       throw error;
@@ -98,13 +108,14 @@ export const useClient = create((set, get) => ({
           ? `${idList.length} müşteri arşivlendi`
           : `${idList.length} müşteri arşivden çıkartıldı`,
       );
-      const { currentPage, lastSearch, showArchived } = get();
+      const { currentPage, lastSearch, showArchived, selectedYear } = get();
       await get().getAllCustomers(
         currentPage,
         20,
         showArchived,
         lastSearch,
         schemaName,
+        selectedYear,
       );
     } catch (error) {
       throw error;

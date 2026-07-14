@@ -2,6 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IMaterialPriceHistoryController;
+import com.berksozcu.dto.material_price_history.MaterialPriceHistoryDto;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.service.IMaterialPriceHistoryService;
@@ -20,7 +21,7 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
 
     @Override
     @GetMapping("/find-by-all-year/{materialId}")
-    public List<MaterialPriceHistory> getHistoryAllYear(
+    public List<MaterialPriceHistoryDto> getHistoryAllYear(
             @PathVariable(name = "materialId") Long materialId, @RequestParam String schemaName,
             @RequestParam InvoiceType invoiceType
   ) {
@@ -29,14 +30,14 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
 
     @Override
     @GetMapping("/find-by-year/{materialId}")
-    public List<MaterialPriceHistory> getHistoryByYear(@PathVariable(name = "materialId") Long materialId,
+    public List<MaterialPriceHistoryDto> getHistoryByYear(@PathVariable(name = "materialId") Long materialId,
            @RequestParam InvoiceType invoiceType, @RequestParam String schemaName, @RequestParam int year) {
         return materialPriceHistory.getHistoryByYear(materialId, invoiceType, schemaName,year);
     }
 
     @Override
     @GetMapping("/find-by-customer-year/{customerId}/{materialId}")
-    public List<MaterialPriceHistory> getHistoryByCustomerAndYear(
+    public List<MaterialPriceHistoryDto> getHistoryByCustomerAndYear(
             @PathVariable(name = "customerId") Long customerId,
             @PathVariable(name = "materialId") Long materialId,
            @RequestParam InvoiceType invoiceType,
@@ -47,7 +48,7 @@ public class MaterialPriceHistoryControllerImpl implements IMaterialPriceHistory
 
     @Override
     @GetMapping("/find-by-customer-all-year/{customerId}/{materialId}")
-    public List<MaterialPriceHistory> getHistoryByCustomerAndAllYear(
+    public List<MaterialPriceHistoryDto> getHistoryByCustomerAndAllYear(
             @PathVariable(name = "customerId") Long customerId,
             @PathVariable(name = "materialId") Long materialId,
            @RequestParam String schemaName,

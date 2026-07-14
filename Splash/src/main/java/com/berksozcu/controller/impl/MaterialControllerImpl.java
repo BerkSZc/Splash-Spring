@@ -2,6 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IMaterialController;
+import com.berksozcu.dto.material.MaterialDto;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.service.IMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +21,13 @@ public class MaterialControllerImpl implements IMaterialController {
 
     @Override
     @PostMapping("/add-material")
-    public Material addMaterial(@RequestBody Material newMaterial, @RequestParam String schemaName) {
+    public MaterialDto addMaterial(@RequestBody MaterialDto newMaterial, @RequestParam String schemaName) {
         return materialService.addMaterial(newMaterial, schemaName);
     }
 
     @Override
     @GetMapping("/list")
-    public Page<Material> getAllMaterials(@RequestParam(defaultValue = "0") int page,
+    public Page<MaterialDto> getAllMaterials(@RequestParam(defaultValue = "0") int page,
                                           @RequestParam(defaultValue = "20") int size,
                                           @RequestParam(required = false) String search,
                                           @RequestParam(required = false) Boolean archived,
@@ -36,7 +37,7 @@ public class MaterialControllerImpl implements IMaterialController {
 
     @Override
     @PutMapping("/update-material/{id}")
-    public void updateMaterial(@PathVariable(name = "id") Long id, @RequestBody Material updateMaterial,
+    public void updateMaterial(@PathVariable(name = "id") Long id, @RequestBody MaterialDto updateMaterial,
                                @RequestParam String schemaName) {
         materialService.updateMaterial(id, updateMaterial, schemaName);
     }

@@ -1,5 +1,6 @@
 package com.berksozcu.repository;
 
+import com.berksozcu.dto.material_price_history.MaterialPriceHistoryDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;

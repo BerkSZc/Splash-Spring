@@ -3,11 +3,7 @@ export default function ClientRow({
   isSelected,
   onCheckboxChange,
   onContextMenu,
-  vouchers = [],
 }) {
-  const myVoucher = (Array.isArray(vouchers) ? vouchers : []).find(
-    (v) => v?.customer?.id === customer?.id,
-  );
   return (
     <tr
       onContextMenu={(e) => onContextMenu(e, customer)}
@@ -82,12 +78,12 @@ export default function ClientRow({
       <td className="p-5 text-right font-mono">
         <span
           className={`text-lg font-bold whitespace-nowrap ${
-            (Number(myVoucher?.finalBalance) || 0) < 0
+            (Number(customer?.finalBalance) || 0) < 0
               ? "text-red-400"
               : "text-emerald-400"
           }`}
         >
-          {(Number(myVoucher?.finalBalance) || 0).toLocaleString("tr-TR", {
+          {(Number(customer?.finalBalance) || 0).toLocaleString("tr-TR", {
             minimumFractionDigits: 2,
           })}{" "}
           ₺

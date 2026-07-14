@@ -1,18 +1,12 @@
 package com.berksozcu.dto.customer;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class DtoCustomer {
+@Data
+public class CustomerDto {
 
     private Long id;
 
@@ -33,6 +27,8 @@ public class DtoCustomer {
     private BigDecimal yearlyCredit = BigDecimal.ZERO;
 
     private BigDecimal yearlyDebit = BigDecimal.ZERO;
+
+    private BigDecimal finalBalance = BigDecimal.ZERO;
 
     private Long companyId;
 

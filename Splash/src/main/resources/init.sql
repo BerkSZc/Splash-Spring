@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS purchase_invoice (
     kdv_toplam DECIMAL(18,2) DEFAULT 0,
     eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
-    invoiced BOOLEAN NOT NULL DEFAULT FALSE,
+    invoiced BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (customer_id) REFERENCES customer(id),
     FOREIGN KEY (company_id) REFERENCES company(id)
 );
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS sales_invoice (
     kdv_toplam DECIMAL(18,2) DEFAULT 0,
     eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
     usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
-    invoiced BOOLEAN NOT NULL DEFAULT FALSE,
+    invoiced BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (customer_id) REFERENCES customer(id),
     FOREIGN KEY (company_id) REFERENCES company(id)
 );

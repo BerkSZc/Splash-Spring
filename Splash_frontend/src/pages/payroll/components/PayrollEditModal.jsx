@@ -56,7 +56,7 @@ export default function PayrollEditModal({
               </label>
               <CustomerSearchSelect
                 customers={customers}
-                value={form.customerId}
+                value={form.customerId || ""}
                 onChange={(id) => setForm({ ...form, customerId: id })}
               />
             </div>

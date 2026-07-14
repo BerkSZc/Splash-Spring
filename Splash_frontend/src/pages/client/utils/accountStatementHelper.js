@@ -28,12 +28,24 @@ export const accountStatementHelper = (
     return `${day}.${month}.${year}`;
   };
 
-  // 1. AÇILIŞ FİŞİ (Mevcut Bakiye)
   const displayYear = year || new Date().getFullYear();
-  if (selectedCustomer && customerVoucher) {
-    const openingBal =
-      Number(customerVoucher.yearlyDebit || 0) -
-      Number(customerVoucher.yearlyCredit || 0);
+  if (selectedCustomer) {
+    const yearlyDebit = Number(
+      selectedCustomer?.yearlyDebit ??
+        selectedCustomer?.openingVoucher?.yearlyDebit ??
+        customerVoucher?.yearlyDebit ??
+        0,
+    );
+
+    const yearlyCredit = Number(
+      selectedCustomer?.yearlyCredit ??
+        selectedCustomer?.openingVoucher?.yearlyCredit ??
+        customerVoucher?.yearlyCredit ??
+        0,
+    );
+
+    const openingBal = yearlyDebit - yearlyCredit;
+
     combined.push({
       date: `${displayYear}-01-01`,
       desc: "Açılış Fişi",
@@ -81,7 +93,7 @@ export const accountStatementHelper = (
       const isInput = p.payrollModel === "INPUT";
 
       combined.push({
-        date: formatDateToTR(p.transactionDate),
+        date: p.transactionDate,
         desc: `${typeLabel} ${isInput ? "Girişi" : "Çıkışı"} (Vade: ${formatDateToTR(
           p.expiredDate,
         )} - No: ${p.fileNo})`,
@@ -134,7 +146,7 @@ export const accountStatementHelper = (
     runningBalance += (item.debit || 0) - (item.credit || 0);
     return {
       ...item,
-      date: formatDateToTR(item.date),
+      date: formatDateToTR(item.date), // Kullanıcı arayüzünde görülecek TR formatlama burada tek elden yapılıyor
       balance: runningBalance,
     };
   });

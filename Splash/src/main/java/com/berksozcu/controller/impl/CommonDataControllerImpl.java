@@ -31,26 +31,12 @@ public class CommonDataControllerImpl implements ICommonDataController {
     @Autowired
     private ICommonDataService currencyRateService;
 
-    @Autowired
-    private CurrencyRateRepository currencyRateRepository;
-
     @GetMapping("/convert")
     @Override
     public BigDecimal convertToTry(@RequestParam(required = false) String code,
                                    @RequestParam(required = false) BigDecimal amount,
                                    @RequestParam LocalDate date) {
-
-        if(code == null || amount == null) {
-            return amount != null ? amount : BigDecimal.ZERO;
-        }
-
-        if("TRY".equals(code)) return amount;
-
-        CurrencyRate rate = currencyRateRepository.findByCurrencyAndLastUpdated(code, date)
-                .orElse(null);
-
-        BigDecimal selectedRate = rate != null ? rate.getSellingRate() : BigDecimal.ONE;
-        return amount.multiply(selectedRate).setScale(2, RoundingMode.HALF_UP);
+        return currencyRateService.convertToTry(code, amount, date);
     }
 
     @GetMapping("/today-rates")

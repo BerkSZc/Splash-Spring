@@ -3,7 +3,7 @@ package com.berksozcu.dto.user;
 import lombok.Data;
 
 @Data
-public class SignUpRequest {
+public class AuthDto {
     private String username;
     private String password;
     private String companyName;

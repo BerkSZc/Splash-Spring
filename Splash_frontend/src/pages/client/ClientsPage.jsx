@@ -158,7 +158,6 @@ export default function ClientsPage() {
               }
             }}
             onContextMenu={(e, c) => handlers.handleContextMenu(e, c)}
-            vouchers={state.vouchers}
           />
         </div>
       </div>
@@ -236,7 +235,6 @@ export default function ClientsPage() {
       {state.viewingClient && (
         <ClientViewModal
           customer={state.viewingClient}
-          vouchers={state.vouchers}
           formatNumber={state.formatNumber}
           onClose={() => {
             handlers.setViewingClient(null);

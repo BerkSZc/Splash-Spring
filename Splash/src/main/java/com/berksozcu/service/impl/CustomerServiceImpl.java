@@ -1,6 +1,7 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.dto.customer.DtoCustomer;
+import com.berksozcu.dto.customer.CustomerDto;
+import com.berksozcu.dto.customer.OpeningVoucherDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,7 +24,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements ICustomerService {
@@ -40,11 +42,13 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional
-    public Customer addCustomer(DtoCustomer newCustomer, int year, String schemaName) {
+    public CustomerDto addCustomer(CustomerDto newCustomer, int year, String schemaName) {
 
         Company company = getCompany(schemaName);
 
-        if (customerRepository.existsByCodeAndCompany(newCustomer.getCode(), company)) {
+        String code = newCustomer.getCode() != null ?  newCustomer.getCode().trim().toUpperCase() : "";
+
+        if (customerRepository.existsByCodeAndCompany(code, company)) {
             throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
         }
 
@@ -55,7 +59,7 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setLocal(Objects.requireNonNullElse(newCustomer.getLocal(), "").toUpperCase());
         customer.setDistrict(Objects.requireNonNullElse(newCustomer.getDistrict(), "").toUpperCase());
         customer.setVdNo(Objects.requireNonNullElse(newCustomer.getVdNo(), ""));
-        customer.setCode(Objects.requireNonNullElse(newCustomer.getCode(), "").trim().toUpperCase());
+        customer.setCode(code);
         customer.setCompany(company);
         customer.setArchived(false);
         Customer savedCustomer = customerRepository.save(customer);
@@ -68,12 +72,27 @@ public class CustomerServiceImpl implements ICustomerService {
 
         voucher.setYearlyCredit(safeGet(newCustomer.getYearlyCredit()));
         voucher.setYearlyDebit(safeGet(newCustomer.getYearlyDebit()));
-        openingVoucherRepository.save(voucher);
-        return savedCustomer;
+        OpeningVoucher savedVoucher = openingVoucherRepository.save(voucher);
+
+        CustomerDto customerDto = new CustomerDto();
+        customerDto.setId(savedCustomer.getId());
+        customerDto.setName(savedCustomer.getName());
+        customerDto.setAddress(savedCustomer.getAddress());
+        customerDto.setCountry(savedCustomer.getCountry());
+        customerDto.setLocal(savedCustomer.getLocal());
+        customerDto.setDistrict(savedCustomer.getDistrict());
+        customerDto.setVdNo(savedCustomer.getVdNo());
+        customerDto.setCode(savedCustomer.getCode());
+        customerDto.setCompanyId(savedCustomer.getCompany().getId());
+        customerDto.setArchived(savedCustomer.isArchived());
+        customerDto.setYearlyCredit(savedVoucher.getYearlyCredit());
+        customerDto.setYearlyDebit(savedVoucher.getYearlyDebit());
+
+        return customerDto;
     }
 
     @Override
-    public Page<Customer> getAllCustomer(int page, int size, Boolean archived, String search, String schemaName) {
+    public Page<CustomerDto> getAllCustomer(int page, int size, Boolean archived, String search, String schemaName, int year) {
         Company company = getCompany(schemaName);
 
         Pageable pageable = PageRequest.of(page, size);
@@ -87,12 +106,50 @@ public class CustomerServiceImpl implements ICustomerService {
 
         boolean isArchived = archived != null && archived;
 
-        return customerRepository.findAllByCompanyAndArchivedAndSearch(company, isArchived, searchParam, pageable);
+        Page<Customer> pageableCustomer = customerRepository.findAllByCompanyAndArchivedAndSearch(company, isArchived, searchParam, pageable);
+
+        List<Customer> customersInPage = pageableCustomer.getContent();
+
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+
+        List<OpeningVoucher> vouchers = openingVoucherRepository.findAllByCompanyAndCustomerInAndDateBetween(company, customersInPage, start, end);
+
+        Map<Long, OpeningVoucher> voucherMap = vouchers.stream()
+                .collect(Collectors.toMap(v -> v.getCustomer().getId(), v -> v));
+
+        return pageableCustomer.map((customer) -> {
+            CustomerDto customerDto = new CustomerDto();
+            customerDto.setId(customer.getId());
+            customerDto.setName(customer.getName());
+            customerDto.setAddress(customer.getAddress());
+            customerDto.setCountry(customer.getCountry());
+            customerDto.setLocal(customer.getLocal());
+            customerDto.setDistrict(customer.getDistrict());
+            customerDto.setVdNo(customer.getVdNo());
+            customerDto.setCode(customer.getCode());
+            customerDto.setCompanyId(customer.getCompany().getId());
+            customerDto.setArchived(customer.isArchived());
+
+
+            OpeningVoucher savedVoucher = voucherMap.get(customer.getId());
+            if(savedVoucher != null) {
+                customerDto.setYearlyCredit(savedVoucher.getYearlyCredit());
+                customerDto.setYearlyDebit(savedVoucher.getYearlyDebit());
+                customerDto.setFinalBalance(savedVoucher.getFinalBalance());
+            } else {
+                customerDto.setYearlyCredit(BigDecimal.ZERO);
+                customerDto.setYearlyDebit(BigDecimal.ZERO);
+                customerDto.setFinalBalance(BigDecimal.ZERO);
+            }
+
+            return customerDto;
+        });
     }
 
     @Override
     @Transactional
-    public void updateCustomer(Long id, DtoCustomer updateCustomer, int currentYear, String schemaName) {
+    public void updateCustomer(Long id, CustomerDto updateCustomer, int currentYear, String schemaName) {
 
         Company company = getCompany(schemaName);
 
@@ -172,7 +229,7 @@ public class CustomerServiceImpl implements ICustomerService {
         return companyRepository.findBySchemaName(schemaName);
     }
 
-    private OpeningVoucher getDefaultVoucher(Company company, Customer customer, LocalDate date, DtoCustomer dtoCustomer) {
+    private OpeningVoucher getDefaultVoucher(Company company, Customer customer, LocalDate date, CustomerDto customerDto) {
         OpeningVoucher voucher = new OpeningVoucher();
         voucher.setCompany(company);
         voucher.setDate(Objects.requireNonNullElse(date, LocalDate.now()));
@@ -180,9 +237,9 @@ public class CustomerServiceImpl implements ICustomerService {
         voucher.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
         voucher.setDebit(BigDecimal.ZERO);
         voucher.setCredit(BigDecimal.ZERO);
-        voucher.setYearlyDebit(safeGet(dtoCustomer.getYearlyDebit()));
-        voucher.setYearlyCredit(safeGet(dtoCustomer.getYearlyCredit()));
-        voucher.setFinalBalance(safeGet(dtoCustomer.getYearlyDebit()).subtract(safeGet(dtoCustomer.getYearlyCredit())).setScale(2, RoundingMode.HALF_UP));
+        voucher.setYearlyDebit(safeGet(customerDto.getYearlyDebit()));
+        voucher.setYearlyCredit(safeGet(customerDto.getYearlyCredit()));
+        voucher.setFinalBalance(safeGet(customerDto.getYearlyDebit()).subtract(safeGet(customerDto.getYearlyCredit())).setScale(2, RoundingMode.HALF_UP));
         voucher.setFileNo("001");
         voucher.setDescription("Eklendi");
         return openingVoucherRepository.save(voucher);

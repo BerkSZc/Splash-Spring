@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.customer.OpeningVoucherDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -17,7 +18,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -33,10 +36,96 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
     @Autowired
     private CompanyRepository companyRepository;
 
+    @Transactional
+    public void transferAllCustomers(int targetYear, String schemaName) {
+        List<Customer> allCustomers = customerRepository.findAll();
+
+        for (Customer customer : allCustomers) {
+            try {
+                this.calculateAndSetOpeningVoucher(customer, targetYear, schemaName);
+            } catch (Exception e) {
+                System.err.println("Müşteri devir hatası (" + customer.getName() + "): " + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public List<OpeningVoucherDto> getAllOpeningVoucherByCustomer(LocalDate date, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        List<Customer> allCustomers = customerRepository.findAllByCompany(company);
+
+        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
+        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
+
+        List<OpeningVoucher> allVouchersInYear = openingVoucherRepository
+                .findAllByCompanyAndDateBetween(company, start, end);
+
+        Map<Long, OpeningVoucher> voucherMap = allVouchersInYear.stream()
+                .collect(Collectors.toMap(v -> v.getCustomer().getId(),
+                        v -> v));
+
+        List<OpeningVoucherDto> dtoList = new ArrayList<>();
+
+        for (Customer customer : allCustomers) {
+           OpeningVoucher voucher = voucherMap.get(customer.getId());
+
+           if(voucher == null){
+               voucher = getDefaultVoucher(company, customer, start);
+           }
+
+           OpeningVoucherDto dto = new OpeningVoucherDto();
+            dto.setId(voucher.getId());
+            dto.setDate(voucher.getDate());
+            dto.setCustomerId(voucher.getCustomer().getId());
+            dto.setCompanyId(voucher.getCompany().getId());
+            dto.setCustomerName(voucher.getCustomer().getName());
+            dto.setDebit(voucher.getDebit());
+            dto.setCredit(voucher.getCredit());
+            dto.setDescription(voucher.getDescription());
+            dto.setYearlyCredit(voucher.getYearlyCredit());
+            dto.setYearlyDebit(voucher.getYearlyDebit());
+            dto.setFinalBalance(voucher.getFinalBalance());
+            dto.setFileNo(voucher.getFileNo());
+
+            dtoList.add(dto);
+        }
+
+        return dtoList;
+    }
+
+    @Override
+    public OpeningVoucherDto getOpeningVoucherByCustomer(Long customerId, LocalDate date, String schemaName) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
+        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
+
+        Customer customer = customerRepository.findByIdAndCompany(customerId, company)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+
+      OpeningVoucher openingVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(customerId, company, start, end)
+                .orElseGet(() -> getDefaultVoucher(company, customer, start));
+
+      OpeningVoucherDto dto = new OpeningVoucherDto();
+      dto.setId(openingVoucher.getId());
+      dto.setDate(openingVoucher.getDate());
+      dto.setCustomerId(openingVoucher.getCustomer().getId());
+      dto.setYearlyDebit(openingVoucher.getYearlyDebit());
+      dto.setYearlyCredit(openingVoucher.getYearlyCredit());
+      dto.setCredit(openingVoucher.getCredit());
+      dto.setDebit(openingVoucher.getDebit());
+      dto.setCustomerName(openingVoucher.getCustomer().getName());
+      dto.setFileNo(openingVoucher.getFileNo());
+      dto.setFinalBalance(openingVoucher.getFinalBalance());
+      dto.setDescription(openingVoucher.getDescription());
+      dto.setCompanyId(openingVoucher.getCompany().getId());
+
+      return dto;
+    }
 
     @Transactional
-    @Override
-    public OpeningVoucher calculateAndSetOpeningVoucher(Customer customer, int targetYear, String schemaName) {
+    private void calculateAndSetOpeningVoucher(Customer customer, int targetYear, String schemaName) {
 
         Company company = companyRepository.findBySchemaName(schemaName);
 
@@ -64,53 +153,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         openingVoucher.setYearlyDebit(safeGet(closingVoucher.getDebit()));
         openingVoucher.setYearlyCredit(safeGet(closingVoucher.getCredit()));
 
-        return openingVoucherRepository.save(openingVoucher);
-    }
-
-    @Transactional
-    public void transferAllCustomers(int targetYear, String schemaName) {
-        List<Customer> allCustomers = customerRepository.findAll();
-
-        for (Customer customer : allCustomers) {
-            try {
-                this.calculateAndSetOpeningVoucher(customer, targetYear, schemaName);
-            } catch (Exception e) {
-                System.err.println("Müşteri devir hatası (" + customer.getName() + "): " + e.getMessage());
-            }
-        }
-    }
-
-    @Override
-    public List<OpeningVoucher> getAllOpeningVoucherByCustomer(LocalDate date, String schemaName) {
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        List<Customer> allCustomers = customerRepository.findAllByCompany(company);
-        List<OpeningVoucher> vouchers = new ArrayList<>();
-
-        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
-        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
-
-        for (Customer customer : allCustomers) {
-            OpeningVoucher voucher = openingVoucherRepository
-                    .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
-                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
-            vouchers.add(voucher);
-        }
-        return vouchers;
-    }
-
-    @Override
-    public OpeningVoucher getOpeningVoucherByCustomer(Long customerId, LocalDate date, String schemaName) {
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        LocalDate start = LocalDate.of(date.getYear(), 1, 1);
-        LocalDate end = LocalDate.of(date.getYear(), 12, 31);
-
-        Customer customer = customerRepository.findByIdAndCompany(customerId, company)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-
-        return openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(customerId, company, start, end)
-                .orElseGet(() -> getDefaultVoucher(company, customer, start));
+        openingVoucherRepository.save(openingVoucher);
     }
 
     private OpeningVoucher getDefaultVoucher(Company company, Customer newCustomer, LocalDate date) {

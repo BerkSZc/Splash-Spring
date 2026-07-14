@@ -5,7 +5,9 @@ export const handleReportPrint = (items, typeLabel) => {
   // Toplamları hesapla
   const totals = items.reduce(
     (acc, curr) => {
-      const balance = Number(curr.finalBalance || 0);
+      const balance = Number(
+        curr.finalBalance ?? curr?.openingVoucher?.finalBalance ?? 0,
+      );
       if (balance > 0) acc.debit += balance;
       else if (balance < 0) acc.credit += Math.abs(balance);
       return acc;
@@ -47,18 +49,22 @@ export const handleReportPrint = (items, typeLabel) => {
             </tr>
           </thead>
           <tbody>
-            ${items
-              .map(
-                (row) => `
-              <tr>
-                <td>${row.customer?.code || "-"}</td>
-                <td>${row.customer?.name || "-"}</td>
-                <td class="text-right">${Number(row.finalBalance) > 0 ? Number(row.finalBalance).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) : "0,00"} ₺</td>
-                <td class="text-right">${Number(row.finalBalance) < 0 ? Math.abs(Number(row.finalBalance)).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) : "0,00"} ₺</td>
-              </tr>
-            `,
-              )
-              .join("")}
+          ${(Array.isArray(items) ? items : [])
+            .map((row) => {
+              const currentBalance = Number(
+                row?.finalBalance ?? row?.openingVoucher?.finalBalance ?? 0,
+              );
+
+              return `
+                <tr>
+                  <td>${row?.code || "-"}</td>
+                  <td>${row?.name || "-"}</td>
+                  <td class="text-right">${currentBalance > 0 ? currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 }) : "0,00"} ₺</td>
+                  <td class="text-right">${currentBalance < 0 ? Math.abs(currentBalance).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) : "0,00"} ₺</td>
+                </tr>
+                `;
+            })
+            .join("")}
           </tbody>
           <tfoot>
             <tr class="total-footer">
@@ -69,9 +75,11 @@ export const handleReportPrint = (items, typeLabel) => {
           </tfoot>
         </table>
         <script>
-          window.onload = function() { 
-            window.print(); 
-          };
+            window.onload = function() { 
+            setTimeout(() => {
+              window.print(); 
+              window.onafterprint = function() { window.close(); };
+            }, 300);
         </script>
       </body>
     </html>

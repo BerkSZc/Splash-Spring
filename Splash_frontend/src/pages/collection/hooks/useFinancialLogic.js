@@ -6,7 +6,6 @@ import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
-import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
 export const useFinancialLogic = () => {
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
@@ -30,8 +29,6 @@ export const useFinancialLogic = () => {
     getPaymentCollectionsByYear,
     loading: paymentsLoading,
   } = usePaymentCompany();
-
-  const { getAllOpeningVoucherByYear } = useVoucher();
 
   const { getFileNo, loading: commonDataLoading } = useCommonData();
 
@@ -84,10 +81,7 @@ export const useFinancialLogic = () => {
 
   const syncFinancialData = async () => {
     try {
-      await Promise.all([
-        getAllCustomers(0, 999, false, "", tenant),
-        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
-      ]);
+      await Promise.all([getAllCustomers(0, 999, false, "", tenant, year)]);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message ||
@@ -171,7 +165,7 @@ export const useFinancialLogic = () => {
       if (!year || !tenant) return;
       try {
         await Promise.all([
-          getAllCustomers(0, 999, false, "", tenant),
+          getAllCustomers(0, 999, false, "", tenant, year),
           getReceivedCollectionsByYear(
             page,
             PAGE_SIZE,
@@ -320,14 +314,17 @@ export const useFinancialLogic = () => {
     }
 
     // MÜŞTERİ KONTROLÜ: Faturadaki müşteriler arşivli ise ismini ekle
-    if (item.customer && item.customer.id) {
-      const custIdStr = String(item.customer.id);
+    if (item.customerId) {
+      const custIdStr = String(item.customerId);
 
-      const customerExists = customers.some((c) => String(c.id) === custIdStr);
+      const customerExists = customers.some(
+        (c) => String(c.id ?? c.customerId) === custIdStr,
+      );
 
       if (!customerExists) {
         customers.unshift({
-          ...item.customer,
+          id: item.customerId,
+          name: item.customerName || "",
           archived: true,
         });
       }
@@ -337,7 +334,7 @@ export const useFinancialLogic = () => {
 
     setEditForm({
       date: item.date || "",
-      customerId: item?.customer?.id || "",
+      customerId: item?.customerId ?? "",
       price: formatNumber(item?.price) || "",
       comment: item.comment || "",
       fileNo: item.fileNo || "",
@@ -358,9 +355,10 @@ export const useFinancialLogic = () => {
       comment: editForm.comment || "",
       price: price || 0,
       fileNo: editForm.fileNo || "",
-      customer: { id: customerId },
+      customerId: customerId,
       customerName: selectedCustomer?.name || "",
     };
+    console.log(customerId);
 
     const selectedYear = new Date(editForm.date).getFullYear();
 

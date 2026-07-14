@@ -1,15 +1,7 @@
-export default function ClientViewModal({
-  customer,
-  onClose,
-  vouchers,
-  formatNumber,
-}) {
+export default function ClientViewModal({ customer, onClose, formatNumber }) {
   if (!customer) return null;
 
-  const customerVoucher = (Array.isArray(vouchers) ? vouchers : [])?.find(
-    (v) => v?.customer?.id === customer.id,
-  );
-  const balance = Number(customerVoucher?.finalBalance || 0);
+  const balance = Number(customer?.finalBalance || 0);
   const isDebtor = balance > 0;
 
   return (

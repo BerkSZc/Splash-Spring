@@ -82,7 +82,7 @@ export const usePayrollLogic = () => {
     try {
       await Promise.all([
         getPayrollByYear(page, PAGE_SIZE, debouncedSearch, type, year, tenant),
-        getAllCustomers(0, 999, false, "", tenant),
+        getAllCustomers(0, 999, false, "", tenant, year),
         getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
       ]);
     } catch (error) {
@@ -204,7 +204,7 @@ export const usePayrollLogic = () => {
       try {
         if (year) {
           await Promise.all([
-            getAllCustomers(0, 999, false, "", tenant),
+            getAllCustomers(0, 999, false, "", tenant, year),
             getPayrollByYear(
               page,
               PAGE_SIZE,

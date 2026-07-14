@@ -2,6 +2,8 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.ICompanyController;
+import com.berksozcu.dto.company.CompanyDto;
+import com.berksozcu.dto.company.YearDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
 import com.berksozcu.entites.user.User;
@@ -23,7 +25,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/rest/api/company")
-@RateLimit(capacity = 5000)
+@RateLimit(capacity = 100)
 public class CompanyControllerImpl implements ICompanyController {
     @Autowired
     private ICompanyService companyService;
@@ -67,20 +69,20 @@ public class CompanyControllerImpl implements ICompanyController {
 
     @GetMapping("/find-all")
     @Override
-    public List<Company> findAllCompany(@AuthenticationPrincipal User user) {
+    public List<CompanyDto> findAllCompany(@AuthenticationPrincipal User user) {
         if (user == null) return List.of();
         return companyService.getAllCompanies(user);
     }
 
     @PostMapping("/create-year")
     @Override
-    public ResponseEntity<Year> createYear(@RequestParam Long companyId, @RequestParam Integer year) {
+    public ResponseEntity<YearDto> createYear(@RequestParam Long companyId, @RequestParam Integer year) {
         return ResponseEntity.ok(companyService.addYearToCompany(companyId, year));
     }
 
     @GetMapping("/get-all-year")
     @Override
-    public ResponseEntity<List<Year>> getAllYear(@RequestParam Long companyId) {
+    public ResponseEntity<List<YearDto>> getAllYear(@RequestParam Long companyId) {
         return ResponseEntity.ok(companyService.getYearsByCompany(companyId));
     }
 

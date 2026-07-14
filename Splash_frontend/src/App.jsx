@@ -14,12 +14,17 @@ import PayrollPage from "./pages/payroll/PayrollPage";
 import { useEffect } from "react";
 import AuthLoading from "./components/AuthLoading";
 import ReportsPage from "./pages/report/ReportsPage";
+import toast from "react-hot-toast";
 
 function App() {
   const { isAuthenticated, authControl, authChecked } = useAuthentication();
 
   useEffect(() => {
-    authControl();
+    authControl().catch((error) => {
+      const backendErr =
+        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+      toast.error(backendErr);
+    });
   }, []);
 
   if (!authChecked) {

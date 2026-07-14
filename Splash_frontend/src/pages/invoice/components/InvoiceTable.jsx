@@ -125,7 +125,7 @@ export default function InvoiceTable({
             ) : (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="p-20 text-center text-gray-600 italic"
                 >
                   {isLoading

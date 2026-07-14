@@ -118,7 +118,7 @@ export default function FinancialTable({
                       {item?.fileNo || ""}
                     </td>
                     <td className="p-5 font-bold text-white max-w-[300px] truncate">
-                      {item.customer?.name || ""}
+                      {item.customerName || ""}
                     </td>
                     <td className="p-5 text-gray-400 text-sm max-w-[250px] truncate">
                       {item.comment || "-"}

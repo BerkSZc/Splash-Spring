@@ -1,5 +1,7 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.company.CompanyDto;
+import com.berksozcu.dto.company.YearDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
 import com.berksozcu.entites.user.User;
@@ -27,6 +29,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 //Şirket oluştururken oluştucak şemayı ve kopyalancak tabloları oluşturduğumuz sınıf
 @Service
@@ -70,7 +73,7 @@ public class CompanyServiceImpl implements ICompanyService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Company createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException {
+    public CompanyDto createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException {
         if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_ISIM_HATA));
         }
@@ -120,9 +123,23 @@ public class CompanyServiceImpl implements ICompanyService {
                 year.setCompany(savedCompany);
                 year.setYearValue(LocalDate.now().getYear());
 
-                yearRepository.save(year);
+                Year savedYear = yearRepository.save(year);
 
-                return savedCompany;
+                CompanyDto companyDto = new CompanyDto();
+                companyDto.setId(savedCompany.getId());
+                companyDto.setName(savedCompany.getName());
+                companyDto.setDescription(savedCompany.getDescription());
+                companyDto.setSchemaName(savedCompany.getSchemaName());
+                companyDto.setUserId(savedCompany.getUser().getId());
+
+                YearDto yearDto = new YearDto();
+                yearDto.setId(savedYear.getId());
+                yearDto.setCompanyId(savedYear.getCompany().getId());
+                yearDto.setYearValue(savedYear.getYearValue());
+
+                companyDto.getYears().add(yearDto);
+
+                return companyDto;
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;
@@ -141,18 +158,47 @@ public class CompanyServiceImpl implements ICompanyService {
     }
 
     @Override
-    public List<Company> getAllCompanies(User user) {
-        return companyRepository.findAllByUserId(user.getId());
+    public List<CompanyDto> getAllCompanies(User user) {
+        List<Company> allCompanies = companyRepository.findAllByUserId(user.getId());
+        return allCompanies.stream().map(company -> {
+            CompanyDto companyDto = new CompanyDto();
+            companyDto.setId(company.getId());
+            companyDto.setName(company.getName());
+            companyDto.setDescription(company.getDescription());
+            companyDto.setSchemaName(company.getSchemaName());
+            companyDto.setUserId(company.getUser().getId());
+
+            if (companyDto.getYears() != null) {
+                List<YearDto> yearDtoList = company.getYears().stream().map(year -> {
+                    YearDto yearDto = new YearDto();
+                    yearDto.setId(year.getId());
+                    yearDto.setYearValue(year.getYearValue());
+                    yearDto.setCompanyId(year.getCompany().getId());
+                    return yearDto;
+                }).collect(Collectors.toList());
+
+                companyDto.setYears(yearDtoList);
+            }
+            return companyDto;
+        }).collect(Collectors.toList());
     }
 
     @Override
-    public List<Year> getYearsByCompany(Long companyId) {
-        return yearRepository.findByCompanyIdOrderByYearValueDesc(companyId);
+    public List<YearDto> getYearsByCompany(Long companyId) {
+        List<Year> years = yearRepository.findByCompanyIdOrderByYearValueDesc(companyId);
+
+        return years.stream().map(year -> {
+            YearDto yearDto = new YearDto();
+            yearDto.setId(year.getId());
+            yearDto.setYearValue(year.getYearValue());
+            yearDto.setCompanyId(year.getCompany().getId());
+            return yearDto;
+        }).collect(Collectors.toList());
     }
 
     @Transactional
     @Override
-    public Year addYearToCompany(Long companyId, Integer year) {
+    public YearDto addYearToCompany(Long companyId, Integer year) {
         if (yearRepository.existsByYearValueAndCompanyId(year, companyId)) {
             throw new BaseException(new ErrorMessage(MessageType.MALI_YIL_MEVCUT));
         }
@@ -162,7 +208,13 @@ public class CompanyServiceImpl implements ICompanyService {
         Year newYear = new Year();
         newYear.setCompany(company);
         newYear.setYearValue(year);
-        return yearRepository.save(newYear);
+        Year savedYear = yearRepository.save(newYear);
+
+        YearDto yearDto = new YearDto();
+        yearDto.setId(savedYear.getId());
+        yearDto.setYearValue(savedYear.getYearValue());
+        yearDto.setCompanyId(savedYear.getCompany().getId());
+        return yearDto;
     }
 
     @Transactional
