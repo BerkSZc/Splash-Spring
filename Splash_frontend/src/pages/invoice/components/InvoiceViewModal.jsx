@@ -49,7 +49,7 @@ export default function InvoiceViewModal({
               Müşteri / Firma
             </label>
             <div className="w-full bg-gray-800/50 border-2 border-gray-700 rounded-2xl px-5 py-3 text-white font-semibold">
-              {invoice.customer?.name || ""}
+              {invoice?.customerName || ""}
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function InvoiceViewModal({
                 (item, i) => (
                   <tr key={i} className="bg-gray-800/50">
                     <td className="px-4 py-3 rounded-l-xl font-bold text-white">
-                      {item.material?.comment || ""}
+                      {item?.materialName || ""}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-300">
                       {formatNumber(item.quantity) || ""}

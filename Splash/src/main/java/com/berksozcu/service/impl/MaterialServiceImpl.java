@@ -61,20 +61,10 @@ public class MaterialServiceImpl implements IMaterialService {
         material.setSalesPrice(safePrice(newMaterial.getSalesPrice()));
         material.setPurchaseCurrency(Objects.requireNonNullElse(newMaterial.getPurchaseCurrency(), Currency.TRY));
         material.setSalesCurrency(Objects.requireNonNullElse(newMaterial.getSalesCurrency(), Currency.TRY));
+        material.setArchived(false);
         Material savedMaterial = materialRepository.save(material);
 
-        MaterialDto materialDto = new MaterialDto();
-        materialDto.setId(savedMaterial.getId());
-        materialDto.setCode(savedMaterial.getCode());
-        materialDto.setComment(savedMaterial.getComment());
-        materialDto.setUnit(savedMaterial.getUnit());
-        materialDto.setPurchasePrice(safePrice(savedMaterial.getPurchasePrice()));
-        materialDto.setCompanyId(savedMaterial.getCompany().getId());
-        materialDto.setSalesPrice(savedMaterial.getSalesPrice());
-        materialDto.setPurchaseCurrency(savedMaterial.getPurchaseCurrency());
-        materialDto.setSalesCurrency(savedMaterial.getSalesCurrency());
-
-        return materialDto;
+        return convertToDto(savedMaterial);
     }
 
     @Override
@@ -93,25 +83,12 @@ public class MaterialServiceImpl implements IMaterialService {
 
         Page<Material> pageableMaterial = materialRepository.findByCompanyAndArchivedWithSearch(company, isArchived, searchParam, pageable);
 
-        return pageableMaterial.map(material -> {
-            MaterialDto materialDto = new MaterialDto();
-            materialDto.setId(material.getId());
-            materialDto.setCode(material.getCode());
-            materialDto.setComment(material.getComment());
-            materialDto.setCompanyId(material.getCompany().getId());
-            materialDto.setUnit(material.getUnit());
-            materialDto.setPurchasePrice(material.getPurchasePrice());
-            materialDto.setSalesPrice(material.getSalesPrice());
-            materialDto.setPurchaseCurrency(material.getPurchaseCurrency());
-            materialDto.setSalesCurrency(material.getSalesCurrency());
-            materialDto.setArchived(material.isArchived());
-            return materialDto;
-        });
+        return pageableMaterial.map(this::convertToDto);
     }
 
     @Override
     @Transactional
-    public void updateMaterial(Long id, MaterialDto updateMaterial, String schemaName) {
+    public MaterialDto updateMaterial(Long id, MaterialDto updateMaterial, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         Material existingMaterial = materialRepository.findByIdAndCompany(id, company)
@@ -137,7 +114,9 @@ public class MaterialServiceImpl implements IMaterialService {
         existingMaterial.setPurchasePrice(safePrice(updateMaterial.getPurchasePrice()));
         existingMaterial.setCompany(company);
         existingMaterial.setSalesPrice(safePrice(updateMaterial.getSalesPrice()));
-        materialRepository.save(existingMaterial);
+        Material savedMaterial = materialRepository.save(existingMaterial);
+
+        return convertToDto(savedMaterial);
     }
 
     @Override
@@ -167,6 +146,21 @@ public class MaterialServiceImpl implements IMaterialService {
     public void archiveMaterial(List<Long> ids, boolean archived, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
         materialRepository.updateArchivedStatus(ids, archived, company);
+    }
+
+    private MaterialDto convertToDto(Material material) {
+        MaterialDto materialDto = new MaterialDto();
+        materialDto.setId(material.getId());
+        materialDto.setCompanyId(material.getCompany().getId());
+        materialDto.setCode(material.getCode());
+        materialDto.setComment(material.getComment());
+        materialDto.setUnit(material.getUnit());
+        materialDto.setPurchasePrice(safePrice(material.getPurchasePrice()));
+        materialDto.setSalesPrice(safePrice(material.getSalesPrice()));
+        materialDto.setPurchaseCurrency(material.getPurchaseCurrency());
+        materialDto.setSalesCurrency(material.getSalesCurrency());
+        materialDto.setArchived(material.isArchived());
+        return materialDto;
     }
 
     private BigDecimal safePrice(BigDecimal value) {

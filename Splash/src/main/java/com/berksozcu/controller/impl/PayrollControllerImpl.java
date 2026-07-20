@@ -2,6 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IPayrollController;
+import com.berksozcu.dto.payroll.PayrollDto;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.service.IPayrollService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,25 +21,25 @@ public class PayrollControllerImpl implements IPayrollController {
 
     @Override
     @GetMapping("/find-by-year")
-    public Page<Payroll> getPayrollsByYear(@RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(defaultValue = "20") int size,
-                                           @RequestParam(required = false) String search,
-                                           @RequestParam(required = false) String type,
-                                           @RequestParam int year,
-                                           @RequestParam String schemaName) {
+    public Page<PayrollDto> getPayrollsByYear(@RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "20") int size,
+                                              @RequestParam(required = false) String search,
+                                              @RequestParam(required = false) String type,
+                                              @RequestParam int year,
+                                              @RequestParam String schemaName) {
         return payrollService.getPayrollsByYear(page, size, search, type, year, schemaName);
     }
 
     @Override
     @PostMapping("/add/{id}")
-    public Payroll addPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll,
+    public PayrollDto addPayroll(@PathVariable(name = "id") Long id, @RequestBody PayrollDto newPayroll,
                               @RequestParam String schemaName) {
         return payrollService.addPayroll(id, newPayroll, schemaName);
     }
 
     @Override
     @PutMapping("/edit/{id}")
-    public Payroll editPayroll(@PathVariable(name = "id") Long id, @RequestBody Payroll newPayroll
+    public PayrollDto editPayroll(@PathVariable(name = "id") Long id, @RequestBody PayrollDto newPayroll
             , String schemaName) {
         return payrollService.editPayroll(id, newPayroll, schemaName);
     }

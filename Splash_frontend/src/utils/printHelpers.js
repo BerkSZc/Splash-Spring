@@ -1,5 +1,9 @@
 // Fatura yazdırma templatei
-export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
+export const generateInvoiceHTML = (inv, invoiceType, customers) => {
+  const currentCustomer = (Array.isArray(customers) ? customers : []).find(
+    (c) => Number(c.id) === Number(inv?.customerId),
+  );
+
   const kdvToplam = Number(inv?.kdvToplam ?? 0);
   const totalPrice = Number(inv?.totalPrice ?? 0);
   const subTotal = totalPrice - kdvToplam || 0;
@@ -8,9 +12,7 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
   const typeTitle = isPurchase ? "Satın Alma Faturası" : "Satış Faturası";
   const primaryColor = isPurchase ? "#111827" : "#1e3a8a";
 
-  const currentBalance = Number(
-    voucher?.finalBalance ?? inv?.customer?.finalBalance ?? 0,
-  );
+  const currentBalance = Number(inv?.finalBalance ?? 0);
 
   const usdRate = Number(inv?.usdSellingRate ?? 0);
   const eurRate = Number(inv?.eurSellingRate ?? 0);
@@ -102,13 +104,13 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
             <div class="customer-card">
               <h3 style="font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 8px 0;">FATURA EDİLEN MÜŞTERİ</h3>
               <p style="font-size: 15px; font-weight: 700; text-transform: uppercase; color: #111827; margin: 0 0 4px 0; line-height: 1.2;">${
-                inv?.customer?.name || "—"
+                inv?.customerName || "—"
               }</p>
               <p style="font-size: 11px; color: #4b5563; margin: 0 0 12px auto; line-height: 1.4; max-width: 300px;">
-                ${inv?.customer?.address || "Adres bilgisi mevcut değil."}
+                ${currentCustomer?.address || "Adres bilgisi mevcut değil."}
               </p>
               <span style="display: inline-block; padding: 2px 8px; background: white; border: 1px solid #d1d5db; border-radius: 6px; font-size: 10px; font-weight: 600; font-family: monospace; color: #374151;">
-                VD & NO: ${inv?.customer?.vdNo || "—"}
+                VD & NO: ${currentCustomer?.vdNo || "—"}
               </span>
             </div>
           </div>
@@ -130,7 +132,7 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
                   (item) => `
                 <tr>
                   <td style="text-align: left; font-weight: 600; color: #111827;">
-                    ${item?.material?.comment || ""}
+                    ${item?.materialName || ""}
                   </td>
                   <td style="text-align: center; font-family: monospace; color: #4b5563;">
                     ${item?.quantity ?? 0} <span style="font-size: 9px; font-weight: 700; color: #9ca3af; margin-left: 2px;">${item?.unit || ""}</span>
@@ -225,7 +227,7 @@ export const generateInvoiceHTML = (inv, invoiceType, voucher) => {
           window.onload = function() {
             setTimeout(() => {
               window.print();
-              window.onafterprint = function() { window.close(); };
+             // window.onafterprint = function() { window.close(); };
             }, 300);
           };
         </script>

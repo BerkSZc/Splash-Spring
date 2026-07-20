@@ -70,28 +70,54 @@ export default function MaterialSearchSelect({
 
   return (
     <div className="relative w-full">
-      <input
+      {/* 🎯 Tıpkı müşteri seçicindeki gibi butona/input alanına tıklama alanı yapıyoruz */}
+      <div
         ref={inputRef}
-        type="text"
-        autoComplete="off"
-        value={
-          open
-            ? search
-            : selectedMaterial
-              ? `${selectedMaterial?.code || ""} – ${selectedMaterial?.comment || ""}`
-              : ""
-        }
-        placeholder={placeholder}
-        onFocus={() => {
+        onClick={() => {
           setOpen(true);
           setSearch("");
         }}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setOpen(true);
-        }}
-        className="w-full bg-gray-900/60 border-2 border-gray-800 text-white rounded-xl px-4 py-2 focus:border-blue-500 focus:outline-none transition-all placeholder-gray-500"
-      />
+        className={`w-full bg-gray-900/60 border-2 rounded-xl px-4 py-2 cursor-pointer transition-all flex items-center min-h-[42px] ${
+          open
+            ? "border-blue-500"
+            : selectedMaterial?.archived
+              ? "border-red-500/50"
+              : "border-gray-800"
+        }`}
+      >
+        {open ? (
+          // Arama açıkken kullanıcı buraya yazı yazabilsin diye input'u gösteriyoruz
+          <input
+            type="text"
+            autoComplete="off"
+            value={search}
+            autoFocus
+            placeholder={placeholder}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-transparent text-white focus:outline-none placeholder-gray-500 text-sm"
+          />
+        ) : (
+          <span
+            className={`text-sm ${selectedMaterial ? "text-white animate-in fade-in duration-200" : "text-gray-500"}`}
+          >
+            {selectedMaterial ? (
+              <div className="flex items-center gap-2">
+                <span>
+                  {selectedMaterial.code ? `${selectedMaterial.code} - ` : ""}
+                  {selectedMaterial.comment || ""}
+                </span>
+                {selectedMaterial.archived && (
+                  <span className="text-xs text-red-400 font-normal ml-2 bg-red-950/50 px-1.5 py-0.5 rounded border border-red-900/40 animate-pulse">
+                    (Arşivli)
+                  </span>
+                )}
+              </div>
+            ) : (
+              "Malzeme Ara..."
+            )}
+          </span>
+        )}
+      </div>
 
       {open &&
         pos &&

@@ -455,21 +455,22 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
     const payload = {
       date: currentForm.date || "",
-      currencyDate: currentForm.date || "",
       fileNo: currentForm.fileNo || "",
+      customerId: currentForm.customerId || null,
       kdvToplam: Number(currentCalc.kdv) || 0,
       totalPrice: Number(currentCalc.total) || 0,
       eurSellingRate: Number(currentForm.eurSellingRate) || 0,
       usdSellingRate: Number(currentForm.usdSellingRate) || 0,
+      currencyDate: currentForm.date || "",
       invoiced: Boolean(currentForm.invoiced),
-      ...(isSales ? { customer: { id: Number(currentForm.customerId) } } : {}),
+
       items: (Array.isArray(currentForm.items) ? currentForm.items : []).map(
         (i) => {
           const netTutar =
             Number(parseNumber(i.unitPrice)) * Number(parseNumber(i.quantity));
           const satirKdv = (netTutar * Number(i.kdv)) / 100;
           return {
-            material: { id: Number(i.materialId) },
+            materialId: Number(i.materialId),
             unit: i.unit,
             unitPrice: Number(parseNumber(i.unitPrice)),
             quantity: Number(parseNumber(i.quantity)),

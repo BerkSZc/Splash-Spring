@@ -32,7 +32,7 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
         List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.
                 findByMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(materialId, company, invoiceType);
 
-      return returnDefaultDto(materialPriceHistories);
+      return convertToDto(materialPriceHistories);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
                 materialId, invoiceType, company,
                 start, end);
 
-        return returnDefaultDto(materialPriceHistories);
+        return convertToDto(materialPriceHistories);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
                 .findByCustomerIdAndMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(customerId,
                         materialId, invoiceType, company, start, end);
 
-      return returnDefaultDto(materialPriceHistories);
+      return convertToDto(materialPriceHistories);
     }
 
     @Override
@@ -69,10 +69,10 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
         List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
                 .findByCustomerIdAndMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(customerId,
                         materialId, company, invoiceType);
-        return returnDefaultDto(materialPriceHistories);
+        return convertToDto(materialPriceHistories);
     }
 
-    private List<MaterialPriceHistoryDto> returnDefaultDto(List<MaterialPriceHistory> materialPriceHistories) {
+    private List<MaterialPriceHistoryDto> convertToDto(List<MaterialPriceHistory> materialPriceHistories) {
 
         return materialPriceHistories.stream().map(materialPriceHistory -> {
             MaterialPriceHistoryDto materialPriceHistoryDto = new MaterialPriceHistoryDto();

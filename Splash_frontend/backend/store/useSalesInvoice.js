@@ -11,13 +11,24 @@ export const useSalesInvoice = create((set) => ({
   addSalesInvoice: async (id, newSalesInvoice, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post(`/sales/add/${id}`, newSalesInvoice, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axiosInstance.post(
+        `/sales/add/${id}`,
+        newSalesInvoice,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: { schemaName },
         },
-        params: { schemaName },
-      });
+      );
+      const savedInvoice = res.data;
+
+      set((state) => ({
+        sales: [savedInvoice, ...state.sales],
+      }));
+
       toast.success("Fatura eklendi");
+      return savedInvoice;
     } catch (error) {
       throw error;
     } finally {
@@ -28,13 +39,20 @@ export const useSalesInvoice = create((set) => ({
   editSalesInvoice: async (id, salesInvoice, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(`/sales/update/${id}`, salesInvoice, {
+      const res = await axiosInstance.put(`/sales/update/${id}`, salesInvoice, {
         headers: {
           "Content-Type": "application/json",
         },
         params: { schemaName },
       });
+
+      const updatedInvoice = res.data;
+
+      set((state) => ({
+        sales: state.sales.map((inv) => (inv.id === id ? updatedInvoice : inv)),
+      }));
       toast.success("Fatura değiştirildi");
+      return updatedInvoice;
     } catch (error) {
       throw error;
     } finally {
@@ -48,6 +66,9 @@ export const useSalesInvoice = create((set) => ({
       await axiosInstance.delete(`/sales/delete/${id}`, {
         params: { schemaName },
       });
+      set((state) => ({
+        sales: state.sales.filter((inv) => inv.id !== id),
+      }));
       toast.success("Fatura başarıyla silindi");
     } catch (error) {
       throw error;

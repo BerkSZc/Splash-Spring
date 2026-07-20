@@ -37,9 +37,9 @@ public class MaterialControllerImpl implements IMaterialController {
 
     @Override
     @PutMapping("/update-material/{id}")
-    public void updateMaterial(@PathVariable(name = "id") Long id, @RequestBody MaterialDto updateMaterial,
+    public MaterialDto updateMaterial(@PathVariable(name = "id") Long id, @RequestBody MaterialDto updateMaterial,
                                @RequestParam String schemaName) {
-        materialService.updateMaterial(id, updateMaterial, schemaName);
+        return materialService.updateMaterial(id, updateMaterial, schemaName);
     }
 
     @Override

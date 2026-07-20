@@ -148,7 +148,6 @@ export const useTransferLogic = () => {
       await editCompany(payload);
       toast.success("Şirket bilgileri güncellendi");
       setEditingCompany(null);
-      await getAllCompanies();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Güncelleme başarısız";
@@ -183,7 +182,6 @@ export const useTransferLogic = () => {
     try {
       await addCompany({ ...newCompData, sourceSchema: source });
       setNewCompData({ id: "", name: "", desc: "" });
-      await getAllCompanies();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";

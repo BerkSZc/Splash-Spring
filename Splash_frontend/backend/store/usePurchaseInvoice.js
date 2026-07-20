@@ -11,15 +11,24 @@ export const usePurchaseInvoice = create((set) => ({
   addPurchaseInvoice: async (id, newPurchaseInvoice, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post(`/purchase/add/${id}`, newPurchaseInvoice, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axiosInstance.post(
+        `/purchase/add/${id}`,
+        newPurchaseInvoice,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: {
+            schemaName,
+          },
         },
-        params: {
-          schemaName,
-        },
-      });
+      );
+      const savedInvoice = res.data;
+      set((state) => ({
+        sales: [savedInvoice, ...state.purchase],
+      }));
       toast.success("Fatura eklendi.");
+      return savedInvoice;
     } catch (error) {
       throw error;
     } finally {
@@ -30,15 +39,27 @@ export const usePurchaseInvoice = create((set) => ({
   editPurchaseInvoice: async (id, purchaseInvoice, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(`/purchase/update/${id}`, purchaseInvoice, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axiosInstance.put(
+        `/purchase/update/${id}`,
+        purchaseInvoice,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: {
+            schemaName,
+          },
         },
-        params: {
-          schemaName,
-        },
-      });
+      );
+      const updatedInvoice = res.data;
+      set((state) => ({
+        purchase: state.purchase.map((inv) =>
+          inv.id === id ? updatedInvoice : inv,
+        ),
+      }));
+
       toast.success("Fatura değiştirildi");
+      return updatedInvoice;
     } catch (error) {
       throw error;
     } finally {
@@ -53,6 +74,9 @@ export const usePurchaseInvoice = create((set) => ({
         params: { schemaName },
       });
       toast.success("Fatura silindi");
+      set((state) => ({
+        sales: state.purchase.filter((inv) => inv.id !== id),
+      }));
     } catch (error) {
       throw error;
     } finally {

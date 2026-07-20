@@ -11,7 +11,7 @@ public interface IMaterialService {
 
      Page<MaterialDto> getAllMaterials(int page, int size, String search, Boolean archived,String schemName);
 
-     void updateMaterial(Long id, MaterialDto updateMaterial, String schemaName);
+     MaterialDto updateMaterial(Long id, MaterialDto updateMaterial, String schemaName);
 
      void deleteMaterial(Long id, String schemaName);
 

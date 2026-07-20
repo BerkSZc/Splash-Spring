@@ -11,13 +11,22 @@ export const useReceivedCollection = create((set) => ({
   addCollection: async (id, receivedCollection, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post(`/receive/add/${id}`, receivedCollection, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axiosInstance.post(
+        `/receive/add/${id}`,
+        receivedCollection,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: { schemaName },
         },
-        params: { schemaName },
-      });
+      );
+      const savedCollection = res.data;
+      set((state) => ({
+        collections: [savedCollection, ...state.collections],
+      }));
       toast.success("Alınan tahsilat eklendi");
+      return savedCollection;
     } catch (error) {
       throw error;
     } finally {
@@ -28,13 +37,24 @@ export const useReceivedCollection = create((set) => ({
   editCollection: async (id, receivedCollection, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(`/receive/edit/${id}`, receivedCollection, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axiosInstance.put(
+        `/receive/edit/${id}`,
+        receivedCollection,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: { schemaName },
         },
-        params: { schemaName },
-      });
-      toast.success("Tahsilat değiştrildi");
+      );
+      const updatedCollection = res.data;
+      set((state) => ({
+        collections: state.collections.map((col) =>
+          col.id === id ? updatedCollection : col,
+        ),
+      }));
+      toast.success("Tahsilat değiştirildi");
+      return updatedCollection;
     } catch (error) {
       throw error;
     } finally {
@@ -47,6 +67,9 @@ export const useReceivedCollection = create((set) => ({
       await axiosInstance.delete(`/receive/delete/${id}`, {
         params: { schemaName },
       });
+      set((state) => ({
+        collections: state.collections.filter((col) => col.id !== id),
+      }));
       toast.success("Tahsilat başarıyla silindi");
     } catch (error) {
       throw error;

@@ -7,6 +7,7 @@ const { autoUpdater } = pkg;
 import http from "http";
 import { dialog } from "electron";
 import dotenv from "dotenv";
+import contextMenu from "electron-context-menu";
 
 let springBootProcess;
 let mainWindow;
@@ -41,6 +42,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       webviewTag: false,
+      contextMenu: true,
     },
   });
 
@@ -232,6 +234,42 @@ app.whenReady().then(() => {
   startBackend();
   waitForBackend(15);
   checkUpdates();
+
+  app.on("browser-window-created", (_, win) => {
+    // Ana pencereye menü ekleme
+    if (win === mainWindow) return;
+
+    // Bu pencerenin URL'si yüklendikten sonra kontrol et
+    win.webContents.on("did-finish-load", () => {
+      const url = win.webContents.getURL();
+
+      console.log("Yeni pencere URL:", url);
+
+      if (url.includes("action=print")) {
+        contextMenu({
+          window: win, // BrowserWindow veriyoruz
+          showInspectElement: false,
+          showCopyImage: false,
+          showSaveImageAs: false,
+          showSearchWithGoogle: false,
+          labels: {
+            copy: "Kopyala",
+            selectAll: "Tümünü Seç",
+          },
+          prepend: () => [
+            {
+              label: "Yazdır",
+              accelerator: "CmdOrCtrl+P",
+              click: () => win.webContents.print(),
+            },
+            { type: "separator" },
+          ],
+        });
+
+        console.log("Context menu bağlandı");
+      }
+    });
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0 && isSpringReady) {

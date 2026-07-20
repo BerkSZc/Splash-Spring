@@ -57,7 +57,7 @@ export const accountStatementHelper = (
   // 2. Satış Faturaları (BORÇ)
   (sales || [])
     .filter(
-      (inv) => Number(inv.customer?.id) === targetId && isCorrectYear(inv.date),
+      (inv) => Number(inv.customerId) === targetId && isCorrectYear(inv.date),
     )
     .forEach((inv) => {
       combined.push({
@@ -71,7 +71,7 @@ export const accountStatementHelper = (
   // 3. Alınan Tahsilatlar (ALACAK)
   (collections || [])
     .filter(
-      (col) => Number(col.customer?.id) === targetId && isCorrectYear(col.date),
+      (col) => Number(col.customerId) === targetId && isCorrectYear(col.date),
     )
     .forEach((col) => {
       combined.push({
@@ -86,7 +86,7 @@ export const accountStatementHelper = (
   (Array.isArray(payrolls) ? payrolls : [])
     .filter(
       (p) =>
-        Number(p.customer?.id) === targetId && isCorrectYear(p.transactionDate),
+        Number(p.customerId) === targetId && isCorrectYear(p.transactionDate),
     )
     .forEach((p) => {
       const typeLabel = p.payrollType === "CHEQUE" ? "Çek" : "Senet";
@@ -105,7 +105,7 @@ export const accountStatementHelper = (
   // 5. Satın Alma Faturaları (ALACAK)
   (purchase || [])
     .filter(
-      (inv) => Number(inv.customer?.id) === targetId && isCorrectYear(inv.date),
+      (inv) => Number(inv.customerId) === targetId && isCorrectYear(inv.date),
     )
     .forEach((inv) => {
       combined.push({
@@ -119,7 +119,7 @@ export const accountStatementHelper = (
   // 6. Yapılan Ödemeler (BORÇ)
   (payments || [])
     .filter(
-      (pay) => Number(pay.customer?.id) === targetId && isCorrectYear(pay.date),
+      (pay) => Number(pay.customerId) === targetId && isCorrectYear(pay.date),
     )
     .forEach((pay) => {
       combined.push({

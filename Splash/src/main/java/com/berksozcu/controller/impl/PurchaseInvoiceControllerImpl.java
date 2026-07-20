@@ -2,6 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.IPurchaseInvoiceController;
+import com.berksozcu.dto.invoice.InvoiceDto;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.service.IPurchaseInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +22,14 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
 
     @Override
     @PostMapping("/add/{id}")
-    public PurchaseInvoice addPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice
+    public InvoiceDto addPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody InvoiceDto newPurchaseInvoice
             , @RequestParam String schemaName) {
         return purchaseInvoice.addPurchaseInvoice(id, newPurchaseInvoice, schemaName);
     }
 
     @Override
     @PutMapping("/update/{id}")
-    public PurchaseInvoice editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody PurchaseInvoice newPurchaseInvoice,
+    public InvoiceDto editPurchaseInvoice(@PathVariable(name = "id") Long id, @RequestBody InvoiceDto newPurchaseInvoice,
                                                @RequestParam String schemaName) {
         return purchaseInvoice.editPurchaseInvoice(id, newPurchaseInvoice, schemaName);
     }
@@ -42,7 +43,7 @@ public class PurchaseInvoiceControllerImpl implements IPurchaseInvoiceController
 
     @Override
     @GetMapping("/find-by-year")
-    public Page<PurchaseInvoice> getPurchaseInvoiceByYear(@RequestParam(defaultValue = "0") int page,
+    public Page<InvoiceDto> getPurchaseInvoiceByYear(@RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "20") int size,
                                                           @RequestParam(required = false) String search,
                                                           @RequestParam int year,

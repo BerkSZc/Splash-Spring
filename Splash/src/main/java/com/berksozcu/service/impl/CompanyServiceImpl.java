@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -125,21 +126,9 @@ public class CompanyServiceImpl implements ICompanyService {
 
                 Year savedYear = yearRepository.save(year);
 
-                CompanyDto companyDto = new CompanyDto();
-                companyDto.setId(savedCompany.getId());
-                companyDto.setName(savedCompany.getName());
-                companyDto.setDescription(savedCompany.getDescription());
-                companyDto.setSchemaName(savedCompany.getSchemaName());
-                companyDto.setUserId(savedCompany.getUser().getId());
+                savedCompany.setYears(new ArrayList<>(List.of(savedYear)));
 
-                YearDto yearDto = new YearDto();
-                yearDto.setId(savedYear.getId());
-                yearDto.setCompanyId(savedYear.getCompany().getId());
-                yearDto.setYearValue(savedYear.getYearValue());
-
-                companyDto.getYears().add(yearDto);
-
-                return companyDto;
+                return convertToDto(savedCompany);
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;
@@ -149,38 +138,20 @@ public class CompanyServiceImpl implements ICompanyService {
 
     @Transactional
     @Override
-    public void editCompany(String schemaName, String companyName, String description) {
+    public CompanyDto editCompany(String schemaName, String companyName, String description) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         company.setName(Objects.requireNonNullElse(companyName, ""));
         company.setDescription(Objects.requireNonNullElse(description, ""));
-        companyRepository.save(company);
+        Company savedCompany = companyRepository.save(company);
+        return convertToDto(savedCompany);
     }
 
     @Override
     public List<CompanyDto> getAllCompanies(User user) {
         List<Company> allCompanies = companyRepository.findAllByUserId(user.getId());
-        return allCompanies.stream().map(company -> {
-            CompanyDto companyDto = new CompanyDto();
-            companyDto.setId(company.getId());
-            companyDto.setName(company.getName());
-            companyDto.setDescription(company.getDescription());
-            companyDto.setSchemaName(company.getSchemaName());
-            companyDto.setUserId(company.getUser().getId());
-
-            if (companyDto.getYears() != null) {
-                List<YearDto> yearDtoList = company.getYears().stream().map(year -> {
-                    YearDto yearDto = new YearDto();
-                    yearDto.setId(year.getId());
-                    yearDto.setYearValue(year.getYearValue());
-                    yearDto.setCompanyId(year.getCompany().getId());
-                    return yearDto;
-                }).collect(Collectors.toList());
-
-                companyDto.setYears(yearDtoList);
-            }
-            return companyDto;
-        }).collect(Collectors.toList());
+        return allCompanies.stream().map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -311,6 +282,25 @@ public class CompanyServiceImpl implements ICompanyService {
         }
     }
 
+    private CompanyDto convertToDto(Company company) {
+        CompanyDto companyDto = new CompanyDto();
+        companyDto.setId(company.getId());
+        companyDto.setName(company.getName());
+        companyDto.setDescription(company.getDescription());
+        companyDto.setSchemaName(company.getSchemaName());
+        companyDto.setUserId(company.getUser().getId());
+        List<YearDto> yearDtoList = company.getYears().stream()
+                        .map(year -> {
+                            YearDto yearDto = new YearDto();
+                            yearDto.setId(year.getId());
+                            yearDto.setYearValue(year.getYearValue());
+                            yearDto.setCompanyId(year.getCompany().getId());
+                            return yearDto;
+                        }).collect(Collectors.toList());
+
+        companyDto.setYears(yearDtoList);
+        return companyDto;
+    }
 
     private void updateSequence(Statement statement, String schemaName, String tableName) throws SQLException {
         String sql = String.format(

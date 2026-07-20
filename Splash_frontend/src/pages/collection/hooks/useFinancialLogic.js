@@ -79,18 +79,6 @@ export const useFinancialLogic = () => {
     };
   }, [editing, deleteTarget, viewingItem]);
 
-  const syncFinancialData = async () => {
-    try {
-      await Promise.all([getAllCustomers(0, 999, false, "", tenant, year)]);
-    } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message ||
-        error.message ||
-        "Bilinmeyen Hata";
-      toast.error(backendErr);
-    }
-  };
-
   const [addForm, setAddForm] = useState({
     date: getInitialDate(year),
     customerId: "",
@@ -265,22 +253,8 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await addCollection(customerId, payload, tenant);
-        await getReceivedCollectionsByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       } else {
         await addPayment(customerId, payload, tenant);
-        await getPaymentCollectionsByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       }
       const resetDate = getInitialDate(year);
 
@@ -290,7 +264,7 @@ export const useFinancialLogic = () => {
         tenant,
       );
 
-      await syncFinancialData();
+      await getAllCustomers(0, 999, false, "", tenant, year);
 
       setIsOpen(false);
       setAddForm({
@@ -358,7 +332,6 @@ export const useFinancialLogic = () => {
       customerId: customerId,
       customerName: selectedCustomer?.name || "",
     };
-    console.log(customerId);
 
     const selectedYear = new Date(editForm.date).getFullYear();
 
@@ -369,29 +342,12 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await editCollection(payload.id, payload, tenant);
-        setEditing(null);
-
-        await getReceivedCollectionsByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       } else {
         await editPayment(payload.id, payload, tenant);
-        setEditing(null);
-
-        await getPaymentCollectionsByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       }
+      setEditing(null);
       clearSelection();
-      await syncFinancialData();
+      await getAllCustomers(0, 999, false, "", tenant, year);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -409,29 +365,13 @@ export const useFinancialLogic = () => {
     try {
       if (type === "received") {
         await deleteReceivedCollection(deleteTarget.id, tenant);
-        setDeleteTarget(null);
-
-        await getReceivedCollectionsByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       } else {
         await deletePaymentCompany(deleteTarget.id, tenant);
-        setDeleteTarget(null);
-        clearSelection();
-
-        await getPaymentCollectionsByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       }
-      await syncFinancialData();
+      setDeleteTarget(null);
+      clearSelection();
+
+      await getAllCustomers(0, 999, false, "", tenant, year);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";

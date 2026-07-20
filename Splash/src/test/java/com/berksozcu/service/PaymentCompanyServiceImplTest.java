@@ -1,6 +1,6 @@
 package com.berksozcu.service;
 
-import com.berksozcu.dto.collections.PaymentCompanyDto;
+import com.berksozcu.dto.collection.CollectionDto;
 import com.berksozcu.entites.collections.PaymentCompany;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
@@ -88,7 +88,7 @@ public class PaymentCompanyServiceImplTest {
         when(customerRepository.findByIdAndCompany(nonExistentCustomerId, mockCompany))
                 .thenReturn(Optional.empty());
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -111,7 +111,7 @@ public class PaymentCompanyServiceImplTest {
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
         when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -136,7 +136,7 @@ public class PaymentCompanyServiceImplTest {
         when(paymentCompanyRepository.existsByFileNoAndCompany(mockPayment.getFileNo(), mockCompany))
                 .thenReturn(true);
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -168,7 +168,7 @@ public class PaymentCompanyServiceImplTest {
                 eq(mockCompany), any(), any()))
                 .thenReturn(Optional.of(mockOpeningVoucher));
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -198,7 +198,7 @@ public class PaymentCompanyServiceImplTest {
         when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
                 any(), any())).thenReturn(Optional.of(mockOpeningVoucher));
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -224,7 +224,7 @@ public class PaymentCompanyServiceImplTest {
         when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
                 .thenReturn(Optional.empty());
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -244,7 +244,7 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void editPaymentCompany_ShouldThrowException_WhenFileNoExistsAndNewFileNoNotExists() {
 
-        PaymentCompanyDto request = new PaymentCompanyDto();
+        CollectionDto request = new CollectionDto();
         request.setFileNo("ASSS1");
 
         when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
@@ -269,7 +269,7 @@ public class PaymentCompanyServiceImplTest {
         when(companyRepository.findBySchemaName("company")).thenReturn(request);
         when(paymentCompanyRepository.findByIdAndCompany(1L, request)).thenReturn(Optional.of(mockPayment));
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -291,7 +291,7 @@ public class PaymentCompanyServiceImplTest {
         Customer newCustomer = new Customer();
         newCustomer.setId(1L);
 
-        PaymentCompanyDto request = new PaymentCompanyDto();
+        CollectionDto request = new CollectionDto();
         request.setPrice(new BigDecimal("150.00"));
         request.setFileNo("NEW-123");
         request.setCustomerId(1L);
@@ -347,7 +347,7 @@ public class PaymentCompanyServiceImplTest {
             return input;
         });
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -390,7 +390,7 @@ public class PaymentCompanyServiceImplTest {
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenThrow(new RuntimeException("Test Durduruldu"));
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
@@ -415,7 +415,7 @@ public class PaymentCompanyServiceImplTest {
     @Test
     void editPaymentCompany_ShouldFillDefaultValues_WhenInputIsMissing() {
 
-        PaymentCompanyDto inputPayment = new PaymentCompanyDto();
+        CollectionDto inputPayment = new CollectionDto();
         inputPayment.setCustomerId(1L);;
         inputPayment.setDate(null);
         inputPayment.setPrice(null);
@@ -464,7 +464,7 @@ public class PaymentCompanyServiceImplTest {
                 .thenReturn(Optional.of(mockOpeningVoucher))
                 .thenReturn(Optional.of(newOpeningVoucher));
 
-        PaymentCompanyDto mockPaymentCompanyDto = new PaymentCompanyDto();
+        CollectionDto mockPaymentCompanyDto = new CollectionDto();
         mockPaymentCompanyDto.setId(mockPayment.getId());
         mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
         mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());

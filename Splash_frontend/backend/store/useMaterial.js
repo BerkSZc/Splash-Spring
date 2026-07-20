@@ -12,12 +12,20 @@ export const useMaterial = create((set, get) => ({
   addMaterial: async (material, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post("/material/add-material", material, {
+      const res = await axiosInstance.post("/material/add-material", material, {
         params: { schemaName },
       });
-      toast.success("Malzeme eklendi");
+      const savedMaterial = res.data;
       const { lastArchivedFilter } = get();
-      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
+
+      set((state) => ({
+        materials: !lastArchivedFilter
+          ? [savedMaterial, ...state.materials]
+          : state.materials,
+      }));
+
+      toast.success("Malzeme eklendi");
+      return savedMaterial;
     } catch (error) {
       throw error;
     } finally {
@@ -52,7 +60,7 @@ export const useMaterial = create((set, get) => ({
   updateMaterials: async (id, updateMaterial, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(
+      const res = await axiosInstance.put(
         `/material/update-material/${id}`,
         updateMaterial,
         {
@@ -62,9 +70,20 @@ export const useMaterial = create((set, get) => ({
           params: { schemaName },
         },
       );
-      toast.success("Malzeme bilgileri değiştirildi.");
+      const updatedMaterial = res.data;
       const { lastArchivedFilter } = get();
-      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
+
+      set((state) => {
+        const shouldRemove = updatedMaterial.archived !== lastArchivedFilter;
+
+        return {
+          materials: shouldRemove
+            ? state.materials.filter((m) => m.id !== id)
+            : state.materials.map((m) => (m.id === id ? updatedMaterial : m)),
+        };
+      });
+      toast.success("Malzeme bilgileri değiştirildi.");
+      return updatedMaterial;
     } catch (error) {
       throw error;
     } finally {
@@ -78,9 +97,10 @@ export const useMaterial = create((set, get) => ({
       await axiosInstance.delete(`/material/delete-material/${id}`, {
         params: { schemaName },
       });
+      set((state) => ({
+        materials: state.materials.filter((m) => m.id !== id),
+      }));
       toast.success("Malzeme Silindi.");
-      const { lastArchivedFilter } = get();
-      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
     } catch (error) {
       throw error;
     } finally {
@@ -101,13 +121,16 @@ export const useMaterial = create((set, get) => ({
           },
         },
       );
+
+      set((state) => ({
+        materials: state.materials.filter((m) => !idList.includes(m.id)),
+      }));
+
       toast.success(
         archived
           ? `${idList.length} malzeme arşivlendi`
           : `${idList.length} malzeme arşivden çıkartıldı`,
       );
-      const { lastArchivedFilter } = get();
-      await get().getMaterials(0, 20, "", lastArchivedFilter, schemaName);
     } catch (error) {
       throw error;
     } finally {

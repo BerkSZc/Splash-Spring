@@ -11,13 +11,22 @@ export const usePaymentCompany = create((set) => ({
   addPayment: async (id, paymentCompany, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post(`/payment/add/${id}`, paymentCompany, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axiosInstance.post(
+        `/payment/add/${id}`,
+        paymentCompany,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: { schemaName },
         },
-        params: { schemaName },
-      });
+      );
+      const savedCollection = res.data;
+      set((state) => ({
+        payments: [savedCollection, ...state.payments],
+      }));
       toast.success("Firmaya ödeme gerçekleştirildi");
+      return savedCollection;
     } catch (error) {
       throw error;
     } finally {
@@ -27,13 +36,20 @@ export const usePaymentCompany = create((set) => ({
   editPayment: async (id, payment, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(`/payment/edit/${id}`, payment, {
+      const res = await axiosInstance.put(`/payment/edit/${id}`, payment, {
         headers: {
           "Content-Type": "application/json",
         },
         params: { schemaName },
       });
+      const updatedCollection = res.data;
+      set((state) => ({
+        payments: state.payments.map((col) =>
+          col.id === id ? updatedCollection : col,
+        ),
+      }));
       toast.success("Ödeme değiştirildi");
+      return updatedCollection;
     } catch (error) {
       throw error;
     } finally {
@@ -47,6 +63,9 @@ export const usePaymentCompany = create((set) => ({
         params: { schemaName },
       });
       toast.success("Ödeme başarıyla silindi");
+      set((state) => ({
+        payments: state.payments.filter((col) => col.id !== id),
+      }));
     } catch (error) {
       throw error;
     } finally {
@@ -71,7 +90,7 @@ export const usePaymentCompany = create((set) => ({
         currentPage: res.data.number,
       });
     } catch (error) {
-      set({ sales: [] });
+      set({ payments: [] });
       throw error;
     } finally {
       set({ loading: false });

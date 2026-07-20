@@ -1,27 +1,20 @@
-import { useEffect, useState } from "react";
-import { useVoucher } from "../../../../backend/store/useVoucher";
-import { useTenant } from "../../../context/TenantContext";
-import { useYear } from "../../../context/YearContext";
-
 export default function InvoicePrintPreview({
   printItem,
   onCancel,
   onExecutePrint,
+  customers,
 }) {
-  const { tenant } = useTenant();
-  const { year } = useYear();
-
   if (!printItem) return null;
 
-  const kdvToplam = Number(printItem.kdvToplam || 0);
-  const totalPrice = Number(printItem.totalPrice || 0);
+  const currentCustomer = (Array.isArray(customers) ? customers : []).find(
+    (c) => Number(c.id) === Number(printItem?.customerId),
+  );
+
+  const kdvToplam = Number(printItem?.kdvToplam || 0);
+  const totalPrice = Number(printItem?.totalPrice || 0);
   const subTotal = totalPrice - kdvToplam;
 
-  const currentBalance = Number(
-    printItem?.customer?.finalBalance ??
-      printItem?.customer?.openingVoucher?.finalBalance ??
-      0,
-  );
+  const currentBalance = Number(printItem?.finalBalance ?? 0);
 
   const usdRate = Number(printItem?.usdSellingRate || 0);
   const eurRate = Number(printItem?.eurSellingRate || 0);
@@ -56,9 +49,7 @@ export default function InvoicePrintPreview({
               Vazgeç
             </button>
             <button
-              onClick={() =>
-                onExecutePrint(printItem, { finalBalance: currentBalance })
-              }
+              onClick={() => onExecutePrint(printItem)}
               className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 shadow-lg flex items-center gap-2"
             >
               <span>🖨️</span> Şimdi Yazdır
@@ -112,14 +103,13 @@ export default function InvoicePrintPreview({
                   FATURA EDİLEN MÜŞTERİ
                 </h3>
                 <p className="text-sm font-bold uppercase text-gray-900 leading-tight mb-1">
-                  {printItem?.customer?.name || "—"}
+                  {printItem?.customerName || "—"}
                 </p>
                 <p className="text-[11px] text-gray-600 leading-snug ml-auto max-w-[280px] mb-2">
-                  {printItem?.customer?.address ||
-                    "Adres bilgisi mevcut değil."}
+                  {currentCustomer?.address || "Adres bilgisi mevcut değil."}
                 </p>
                 <span className="inline-block px-2 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-semibold font-mono text-gray-600">
-                  VD & NO: {printItem?.customer?.vdNo || "—"}
+                  VD & NO: {currentCustomer?.vdNo || "—"}
                 </span>
               </div>
             </div>
@@ -141,7 +131,7 @@ export default function InvoicePrintPreview({
                     <tr key={idx} className="border-b border-gray-100">
                       <td className="py-3 px-2">
                         <div className="font-semibold text-gray-900">
-                          {item?.material?.comment || ""}
+                          {item?.materialName || ""}
                         </div>
                       </td>
                       <td className="py-3 px-2 text-center font-mono text-gray-600">
@@ -194,7 +184,7 @@ export default function InvoicePrintPreview({
                 </div>
                 <div className="flex justify-between text-[10px] text-gray-500 font-medium px-1 pb-1">
                   <span>TOPLAM KDV</span>
-                  <span class="font-mono text-gray-800">
+                  <span className="font-mono text-gray-800">
                     {kdvToplam.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
                     })}{" "}
