@@ -1,5 +1,7 @@
 package com.berksozcu.service;
 
+import com.berksozcu.dto.invoice.InvoiceDto;
+import com.berksozcu.dto.invoice.InvoiceItemDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.company.Year;
 import com.berksozcu.entites.customer.Customer;
@@ -84,8 +86,11 @@ public class PurchaseInvoiceServiceImplTest {
         when(companyRepository.findBySchemaName("Company")).thenReturn(mockCompany);
         when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.empty());
 
+        InvoiceDto invoiceDto = new InvoiceDto();
+
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, mockInvoice, "Company"));
+                purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, invoiceDto, "Company"));
 
         assertEquals("Hata Kodu: 1001 Müşteri mevcut değil", exception.getMessage());
         verify(purchaseInvoiceRepository, never()).save(any());
@@ -98,8 +103,10 @@ public class PurchaseInvoiceServiceImplTest {
 
         when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
+        InvoiceDto invoiceDto = new InvoiceDto();
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, mockInvoice, "Company"));
+                purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, invoiceDto, "Company"));
 
         assertEquals("Hata Kodu: 1012 Arşivdeki müşteriye işlem yapılamaz", exception.getMessage());
         verify(purchaseInvoiceRepository, never()).save(mockInvoice);
@@ -111,8 +118,10 @@ public class PurchaseInvoiceServiceImplTest {
         when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
         when(purchaseInvoiceRepository.existsByFileNoAndCompany("NO123", mockCompany)).thenReturn(true);
 
+        InvoiceDto invoiceDto = new InvoiceDto();
+
         BaseException exception = assertThrows(BaseException.class, () ->
-                purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, mockInvoice, "Company"));
+                purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, invoiceDto, "Company"));
 
         assertEquals("Hata Kodu: 1015 Fatura No Mevcut", exception.getMessage());
         verify(purchaseInvoiceRepository, never()).save(any());
@@ -123,6 +132,9 @@ public class PurchaseInvoiceServiceImplTest {
 
         PurchaseInvoice spyInvoice = spy(mockInvoice);
 
+        InvoiceDto invoiceDto = new InvoiceDto();
+
+
         when(companyRepository.findBySchemaName("Company")).thenReturn(mockCompany);
         when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
 
@@ -130,7 +142,7 @@ public class PurchaseInvoiceServiceImplTest {
                 .when(spyInvoice).setFileNo("NO123");
 
         try {
-        purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, spyInvoice, "Company");
+        purchaseInvoiceServiceImpl.addPurchaseInvoice(1L, invoiceDto, "Company");
         } catch (Exception e) {
             // Hata
         }

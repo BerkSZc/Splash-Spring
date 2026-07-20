@@ -1,4 +1,4 @@
-package com.berksozcu.dto.collections;
+package com.berksozcu.dto.collection;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class PaymentCompanyDto {
+public class CollectionDto {
 
     private Long id;
 
@@ -21,6 +21,8 @@ public class PaymentCompanyDto {
     private Long companyId;
 
     private String customerName;
+
+    private BigDecimal finalBalance;
 
     private String fileNo;
 }

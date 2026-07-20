@@ -94,7 +94,7 @@ export default function InvoiceTable({
                     {formatDateToTR(inv?.date) || ""}
                   </td>
                   <td className="p-5 font-bold text-white">
-                    {inv.customer?.name || ""}
+                    {inv?.customerName || ""}
                   </td>
 
                   <td className="p-5 text-left">

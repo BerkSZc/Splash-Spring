@@ -133,10 +133,10 @@ export default function PayrollTable({
                 </td>
                 <td className="p-6">
                   <div className="font-bold text-white text-base">
-                    {item.customer?.name || ""}
+                    {item.customerName || ""}
                   </div>
                   <div className="text-[10px] text-gray-500 uppercase font-bold mt-1">
-                    Cari ID: #{item.customer?.id || ""}
+                    Cari ID: #{item.customerId || ""}
                   </div>
                 </td>
                 <td className="p-6">

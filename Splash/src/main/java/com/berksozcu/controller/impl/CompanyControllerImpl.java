@@ -15,6 +15,7 @@ import com.berksozcu.security.AuthenticationService;
 import com.berksozcu.service.ICompanyService;
 import com.berksozcu.service.impl.CompanyServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,7 +36,7 @@ public class CompanyControllerImpl implements ICompanyController {
 
     @PostMapping("/create")
     @Override
-    public ResponseEntity<?> createCompany(@RequestBody Map<String, String> request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<CompanyDto> createCompany(@RequestBody Map<String, String> request, @AuthenticationPrincipal User user) {
         String companyName = request.get("name");
         String description = request.get("desc");
         String sourceSchema = request.get("sourceSchema");
@@ -50,21 +51,21 @@ public class CompanyControllerImpl implements ICompanyController {
         String schemaName = companyService.createDefaultSchemaName();
 
         try {
-            companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema, user);
-            return ResponseEntity.ok("Şema '" + schemaName + "' başarıyla oluşturuldu.");
+            CompanyDto createdCompanyDto = companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema, user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdCompanyDto);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Şema oluşturma hatası: " + e.getMessage());
+            throw new BaseException(new ErrorMessage(MessageType.SIRKET_HATA));
         }
     }
 
     @PutMapping("/edit-company")
     @Override
-    public void editCompany(@RequestBody Map<String, String> request) {
+    public CompanyDto editCompany(@RequestBody Map<String, String> request) {
         String schemaName = request.get("schemaName");
         String companyName = request.get("companyName");
         String description = request.get("description");
 
-        companyService.editCompany(schemaName, companyName, description);
+        return companyService.editCompany(schemaName, companyName, description);
     }
 
     @GetMapping("/find-all")

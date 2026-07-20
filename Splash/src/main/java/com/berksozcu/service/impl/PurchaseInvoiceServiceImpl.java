@@ -1,5 +1,7 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.invoice.InvoiceDto;
+import com.berksozcu.dto.invoice.InvoiceItemDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -8,8 +10,7 @@ import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.entites.purchase.PurchaseInvoice;
 import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
-import com.berksozcu.entites.sales.SalesInvoice;
-import com.berksozcu.entites.sales.SalesInvoiceItem;
+
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -55,7 +57,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
     @Override
     @Transactional
-    public PurchaseInvoice addPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
+    public InvoiceDto addPurchaseInvoice(Long id, InvoiceDto invoiceDto, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         Customer customer = customerRepository.findByIdAndCompany(id, company)
@@ -65,40 +67,46 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if (purchaseInvoiceRepository.existsByFileNoAndCompany(newPurchaseInvoice.getFileNo(), company)) {
+        String fileNo = invoiceDto.getFileNo() != null ? invoiceDto.getFileNo().trim().toUpperCase() : "";
+
+        if (purchaseInvoiceRepository.existsByFileNoAndCompany(fileNo, company)) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
+        PurchaseInvoice newPurchaseInvoice = new PurchaseInvoice();
 
         newPurchaseInvoice.setCompany(company);
         newPurchaseInvoice.setCustomer(customer);
 
-        newPurchaseInvoice.setUsdSellingRate(safeGet(newPurchaseInvoice.getUsdSellingRate()));
-        newPurchaseInvoice.setEurSellingRate(safeGet(newPurchaseInvoice.getEurSellingRate()));
-        newPurchaseInvoice.setDate(Objects.requireNonNullElse(newPurchaseInvoice.getDate(), LocalDate.now()));
-        newPurchaseInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), "").toUpperCase());
-        newPurchaseInvoice.setInvoiced(newPurchaseInvoice.isInvoiced());
+        newPurchaseInvoice.setUsdSellingRate(safeGet(invoiceDto.getUsdSellingRate()));
+        newPurchaseInvoice.setEurSellingRate(safeGet(invoiceDto.getEurSellingRate()));
+        newPurchaseInvoice.setDate(Objects.requireNonNullElse(invoiceDto.getDate(), LocalDate.now()));
+        newPurchaseInvoice.setFileNo(fileNo);
+        newPurchaseInvoice.setInvoiced(invoiceDto.isInvoiced());
 
         //Fatura toplam fiyatı
         BigDecimal totalPrice = BigDecimal.ZERO;
         //Kdv Toplam fiyatı
         BigDecimal kdvToplam = BigDecimal.ZERO;
 
-        LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
+        List<PurchaseInvoiceItem> entityItems = new ArrayList<>();
 
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id, company, start, end)
-                .orElseGet(() -> getDefaultVoucher(customer, company, start));
-
-        if (newPurchaseInvoice.getItems() != null) {
-            for (PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
+        if (invoiceDto.getItems() != null && !invoiceDto.getItems().isEmpty()) {
+            for (InvoiceItemDto itemDto : invoiceDto.getItems()) {
 
                 Material material = materialRepository
-                        .findByIdAndCompany(item.getMaterial().getId(), company)
+                        .findByIdAndCompany(itemDto.getMaterialId(), company)
                         .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
-                item.setMaterial(material);
+                PurchaseInvoiceItem item = new PurchaseInvoiceItem();
+
+                item.setCompany(company);
                 item.setPurchaseInvoice(newPurchaseInvoice);
+                item.setMaterial(material);
+                item.setQuantity(safeGet(itemDto.getQuantity()));
+                item.setUnitPrice(safeGet(itemDto.getUnitPrice()));
+                item.setKdv(safeGet(itemDto.getKdv()));
+                item.setUnit(Objects.requireNonNullElse(itemDto.getUnit(), material.getUnit()));
 
                 //KDV HESAPLAMA
                 BigDecimal kdv = safeGet(item.getKdv()).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
@@ -115,39 +123,42 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
                 item.setKdvTutar(kdvTutarHesaplama);
                 item.setLineTotal(lineTotal);
 
-                item.setQuantity(safeGet(item.getQuantity()));
-                item.setUnitPrice(safeGet(item.getUnitPrice()));
-                item.setKdv(safeGet(item.getKdv()));
-                item.setCompany(company);
-                item.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));
+                entityItems.add(item);
 
                 kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
                 totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
             }
         }
 
+        newPurchaseInvoice.setItems(entityItems);
         newPurchaseInvoice.setKdvToplam(kdvToplam);
-        totalPrice = totalPrice.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
+        totalPrice = totalPrice.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
         newPurchaseInvoice.setTotalPrice(totalPrice);
+
+        LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id, company, start, end)
+                .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
         // Müşteri bakiyesini güncelle
         voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(totalPrice).setScale(2, RoundingMode.HALF_UP));
         voucher.setCredit(safeGet(voucher.getCredit()).add(totalPrice).setScale(2, RoundingMode.HALF_UP));
 
-        purchaseInvoiceRepository.save(newPurchaseInvoice);
+        PurchaseInvoice savedInvoice = purchaseInvoiceRepository.save(newPurchaseInvoice);
         openingVoucherRepository.save(voucher);
 
-        for (PurchaseInvoiceItem item : newPurchaseInvoice.getItems()) {
-           saveHistoryPrice(item, newPurchaseInvoice, customer, company);
+        for (PurchaseInvoiceItem item : savedInvoice.getItems()) {
+            saveHistoryPrice(item, savedInvoice, customer, company);
         }
 
-        return newPurchaseInvoice;
+        return convertToDto(savedInvoice);
     }
 
     @Override
     @Transactional
-    public PurchaseInvoice editPurchaseInvoice(Long id, PurchaseInvoice newPurchaseInvoice, String schemaName) {
+    public InvoiceDto editPurchaseInvoice(Long id, InvoiceDto invoiceDto, String schemaName) {
 
         Company company = companyRepository.findBySchemaName(schemaName);
 
@@ -156,68 +167,78 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
 
         Customer oldCustomer = oldInvoice.getCustomer();
 
-        Customer newCustomer = newPurchaseInvoice.getCustomer();
+        Customer newCustomer = customerRepository
+                .findByIdAndCompany(invoiceDto.getCustomerId(), company)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
         if (!oldInvoice.getCompany().getId().equals(company.getId())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
-        LocalDate start = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(newPurchaseInvoice.getDate().getYear(), 12, 31);
+        String fileNo = invoiceDto.getFileNo() != null ? invoiceDto.getFileNo().trim().toUpperCase() : "";
 
-        if (purchaseInvoiceRepository.existsByFileNoAndCompany(newPurchaseInvoice.getFileNo(), company)
-                && !oldInvoice.getFileNo().equals(newPurchaseInvoice.getFileNo())) {
+        LocalDate oldStart = LocalDate.of(oldInvoice.getDate().getYear(), 1, 1);
+        LocalDate oldEnd = LocalDate.of(oldInvoice.getDate().getYear(), 12, 31);
+
+        if (purchaseInvoiceRepository.existsByFileNoAndCompany(fileNo, company)
+                && !oldInvoice.getFileNo().equals(fileNo)) {
             throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
         }
 
         OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                oldCustomer.getId(), company, start, end)
-                .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
+                        oldCustomer.getId(), company, oldStart, oldEnd)
+                .orElseGet(() -> getDefaultVoucher(oldCustomer, company, oldStart));
 
         oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).add(safeGet(oldInvoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP)));
         oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldInvoice.getTotalPrice()).setScale(2, RoundingMode.HALF_UP)));
-
-        oldInvoice.setDate(Objects.requireNonNullElse(newPurchaseInvoice.getDate(), LocalDate.now()));
-        oldInvoice.setFileNo(Objects.requireNonNullElse(newPurchaseInvoice.getFileNo(), "").toUpperCase());
-        oldInvoice.setEurSellingRate(safeGet(newPurchaseInvoice.getEurSellingRate()));
-        oldInvoice.setUsdSellingRate(safeGet(newPurchaseInvoice.getUsdSellingRate()));
-        oldInvoice.setCustomer(newCustomer);
-        oldInvoice.setCompany(company);
-        oldInvoice.setInvoiced(newPurchaseInvoice.isInvoiced());
 
         for (PurchaseInvoiceItem item : oldInvoice.getItems()) {
             materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
                     item.getMaterial().getId(), oldInvoice.getId(), company);
         }
 
+        oldInvoice.setDate(Objects.requireNonNullElse(invoiceDto.getDate(), LocalDate.now()));
+        oldInvoice.setFileNo(fileNo);
+        oldInvoice.setEurSellingRate(safeGet(invoiceDto.getEurSellingRate()));
+        oldInvoice.setUsdSellingRate(safeGet(invoiceDto.getUsdSellingRate()));
+        oldInvoice.setCustomer(newCustomer);
+        oldInvoice.setCompany(company);
+        oldInvoice.setInvoiced(invoiceDto.isInvoiced());
+
         List<PurchaseInvoiceItem> oldItems = oldInvoice.getItems();
-        List<PurchaseInvoiceItem> newItems = newPurchaseInvoice.getItems();
+        List<InvoiceItemDto> newItems = invoiceDto.getItems() != null ? invoiceDto.getItems() : new ArrayList<>();
 
         oldItems.removeIf(old ->
                 newItems.stream().noneMatch(n ->
                         n.getId() != null && n.getId().equals(old.getId())));
 
 
-        for (PurchaseInvoiceItem newItem : newItems) {
-            Material material = materialRepository.findByIdAndCompany(newItem.getMaterial().getId(), company)
+        for (InvoiceItemDto newItemDto : newItems) {
+            Material material = materialRepository.findByIdAndCompany(newItemDto.getMaterialId(), company)
                     .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
-            if (newItem.getId() == null) {
-                newItem.setMaterial(material);
+            if (newItemDto.getId() == null) {
+                PurchaseInvoiceItem newItem = new PurchaseInvoiceItem();
+                newItem.setCompany(company);
                 newItem.setPurchaseInvoice(oldInvoice);
-                newItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
+                newItem.setMaterial(material);
+                newItem.setQuantity(safeGet(newItemDto.getQuantity()));
+                newItem.setUnitPrice(safeGet(newItemDto.getUnitPrice()));
+                newItem.setKdv(safeGet(newItemDto.getKdv()));
+                newItem.setUnit(Objects.requireNonNullElse(newItemDto.getUnit(), material.getUnit()));
+
                 oldItems.add(newItem);
             } else {
                 PurchaseInvoiceItem oldItem = oldItems.stream()
-                        .filter(i -> i.getId().equals(newItem.getId()))
+                        .filter(i -> i.getId().equals(newItemDto.getId()))
                         .findFirst()
                         .orElseThrow();
 
                 oldItem.setMaterial(material);
-                oldItem.setQuantity(safeGet(newItem.getQuantity()));
-                oldItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
-                oldItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
-                oldItem.setKdv(safeGet(newItem.getKdv()));
+                oldItem.setQuantity(safeGet(newItemDto.getQuantity()));
+                oldItem.setUnitPrice(safeGet(newItemDto.getUnitPrice()));
+                oldItem.setUnit(Objects.requireNonNullElse(newItemDto.getUnit(), material.getUnit()));
+                oldItem.setKdv(safeGet(newItemDto.getKdv()));
             }
         }
 
@@ -238,23 +259,31 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
             total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
 
-            saveHistoryPrice(item, newPurchaseInvoice, newCustomer, company);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 
         oldInvoice.setKdvToplam(kdvToplam);
         oldInvoice.setTotalPrice(total);
 
+        LocalDate start = LocalDate.of(invoiceDto.getDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(invoiceDto.getDate().getYear(), 12, 31);
+
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                newCustomer.getId(), company, start, end)
+                        newCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(newCustomer, company, start));
 
         newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).subtract(total));
         newVoucher.setCredit(safeGet(newVoucher.getCredit()).add(total));
+        openingVoucherRepository.save(oldVoucher);
 
         openingVoucherRepository.save(newVoucher);
-        openingVoucherRepository.save(oldVoucher);
-        return purchaseInvoiceRepository.save(oldInvoice);
+        PurchaseInvoice savedInvoice = purchaseInvoiceRepository.save(oldInvoice);
+
+        for (PurchaseInvoiceItem item : savedInvoice.getItems()) {
+            saveHistoryPrice(item, savedInvoice, newCustomer, company);
+        }
+
+        return convertToDto(savedInvoice);
     }
 
     @Override
@@ -275,7 +304,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         LocalDate end = LocalDate.of(purchaseInvoice.getDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                customer.getId(), company, start, end)
+                        customer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(customer, company, start));
 
         for (PurchaseInvoiceItem item : purchaseInvoice.getItems()) {
@@ -291,8 +320,8 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
     }
 
     @Override
-    public Page<PurchaseInvoice> getPurchaseInvoiceByDateBetween(int page, int size, String search, int year,
-                                                                 String schemaName) {
+    public Page<InvoiceDto> getPurchaseInvoiceByDateBetween(int page, int size, String search, int year,
+                                                            String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
@@ -306,7 +335,10 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
             searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
         }
 
-        return purchaseInvoiceRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
+        Page<PurchaseInvoice> pagedInvoice = purchaseInvoiceRepository
+                .findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
+
+        return pagedInvoice.map(this::convertToDto);
     }
 
     private void saveHistoryPrice(PurchaseInvoiceItem item, PurchaseInvoice invoice, Customer customer,
@@ -324,6 +356,56 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         materialPriceHistoryRepository.save(materialPriceHistory);
     }
 
+    private InvoiceDto convertToDto(PurchaseInvoice purchaseInvoice) {
+        InvoiceDto dto = new InvoiceDto();
+        dto.setId(purchaseInvoice.getId());
+        dto.setCustomerId(purchaseInvoice.getCustomer().getId());
+        dto.setCompanyId(purchaseInvoice.getCompany().getId());
+        dto.setDate(purchaseInvoice.getDate());
+        dto.setTotalPrice(purchaseInvoice.getTotalPrice());
+        dto.setInvoiced(purchaseInvoice.isInvoiced());
+        dto.setCustomerName(purchaseInvoice.getCustomer().getName());
+        dto.setEurSellingRate(purchaseInvoice.getEurSellingRate());
+        dto.setUsdSellingRate(purchaseInvoice.getUsdSellingRate());
+        dto.setKdvToplam(purchaseInvoice.getKdvToplam());
+        dto.setFileNo(purchaseInvoice.getFileNo());
+        dto.setCustomerCode(purchaseInvoice.getCustomer().getCode());
+
+        LocalDate invoiceStart = LocalDate.of(purchaseInvoice.getDate().getYear(), 1, 1);
+        LocalDate invoiceEnd = LocalDate.of(purchaseInvoice.getDate().getYear(), 12, 31);
+
+        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+                purchaseInvoice.getCustomer().getId(),
+                purchaseInvoice.getCompany(),
+                invoiceStart,
+                invoiceEnd
+        ).orElseGet(() -> getDefaultVoucher(purchaseInvoice.getCustomer(), purchaseInvoice.getCompany(), invoiceStart));
+
+        dto.setFinalBalance(voucher.getFinalBalance());
+
+        List<InvoiceItemDto> invoiceItemDtos = new ArrayList<>();
+
+        for (PurchaseInvoiceItem item : purchaseInvoice.getItems()) {
+            InvoiceItemDto itemDto = new InvoiceItemDto();
+            itemDto.setId(item.getId());
+            itemDto.setCompanyId(item.getCompany().getId());
+            itemDto.setMaterialId(item.getMaterial().getId());
+            itemDto.setKdvTutar(item.getKdvTutar());
+            itemDto.setMaterialName(item.getMaterial().getComment());
+            itemDto.setLineTotal(item.getLineTotal());
+            itemDto.setKdv(item.getKdv());
+            itemDto.setUnitPrice(item.getUnitPrice());
+            itemDto.setQuantity(item.getQuantity());
+            itemDto.setUnit(item.getUnit());
+            itemDto.setInvoiceId(purchaseInvoice.getId());
+            itemDto.setMaterialCode(item.getMaterial().getCode());
+
+            invoiceItemDtos.add(itemDto);
+        }
+        dto.setItems(invoiceItemDtos);
+        return dto;
+    }
+
     private OpeningVoucher getDefaultVoucher(Customer customer, Company company, LocalDate start) {
         OpeningVoucher newVoucher = new OpeningVoucher();
         newVoucher.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
@@ -335,7 +417,7 @@ public class PurchaseInvoiceServiceImpl implements IPurchaseInvoiceService {
         newVoucher.setYearlyDebit(BigDecimal.ZERO);
         newVoucher.setYearlyCredit(BigDecimal.ZERO);
         newVoucher.setCompany(company);
-        newVoucher.setDate(Objects.requireNonNullElse(start,  LocalDate.now()));
+        newVoucher.setDate(Objects.requireNonNullElse(start, LocalDate.now()));
         newVoucher.setCustomer(customer);
         return newVoucher;
     }

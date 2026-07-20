@@ -4,7 +4,6 @@ import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice";
 import { useMaterial } from "../../../../backend/store/useMaterial";
 import { useClient } from "../../../../backend/store/useClient";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
-import { useVoucher } from "../../../../backend/store/useVoucher.js";
 import { useYear } from "../../../context/YearContext";
 import { useTenant } from "../../../context/TenantContext";
 import { generateInvoiceHTML } from "../../../utils/printHelpers.js";
@@ -31,7 +30,6 @@ export const useInvoicePageLogic = () => {
   const { materials, getMaterials, loading: materialLoading } = useMaterial();
   const { customers, getAllCustomers, loading: customerLoading } = useClient();
   const { convertCurrency, loading: commonDataLoading } = useCommonData();
-  const { getAllOpeningVoucherByYear } = useVoucher();
   const { year } = useYear();
   const { tenant } = useTenant();
 
@@ -169,7 +167,7 @@ export const useInvoicePageLogic = () => {
     };
   }, [contextMenu]);
 
-  const executePrint = async (inv, voucher) => {
+  const executePrint = async (inv) => {
     if (!inv) return;
     const printWindow = window.open(
       "about:blank?action=print",
@@ -177,24 +175,11 @@ export const useInvoicePageLogic = () => {
       "width=1000, height=800",
     );
     if (printWindow) {
-      const html = generateInvoiceHTML(inv, invoiceType, voucher);
+      const html = generateInvoiceHTML(inv, invoiceType, customers);
       printWindow.document.open();
       printWindow.document.write(html);
       printWindow.document.close();
       setPrintItem(null);
-    }
-  };
-
-  const syncFinancialData = async () => {
-    try {
-      await Promise.all([
-        getAllCustomers(0, 999, false, "", tenant),
-        getAllOpeningVoucherByYear(`${year}-01-01`, tenant, year),
-      ]);
-    } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
     }
   };
 
@@ -369,14 +354,15 @@ export const useInvoicePageLogic = () => {
 
   const handleEdit = (invoice) => {
     // MÜŞTERİ KONTROLÜ: Faturadaki müşteriler arşivli ise ismini ekle
-    if (invoice.customer && invoice.customer.id) {
-      const invCustId = String(invoice.customer.id);
+    if (invoice.customerId) {
+      const invCustId = String(invoice.customerId);
 
       const customerExists = customers.some((c) => String(c.id) === invCustId);
 
       if (!customerExists) {
         customers.unshift({
-          ...invoice.customer,
+          id: invoice.customerId,
+          name: invoice.customerName,
           archived: true,
         });
       }
@@ -384,13 +370,15 @@ export const useInvoicePageLogic = () => {
     //  MALZEME KONTROLÜ: Faturadaki malzemeler listede arşivli ise ismini ekle
     if (Array.isArray(invoice.items)) {
       invoice.items.forEach((item) => {
-        if (item.material) {
+        if (item.materialId) {
           const materialExists = materials.find(
-            (m) => String(m.id) === String(item.material.id),
+            (m) => String(m.id) === String(item.materialId),
           );
           if (!materialExists) {
             materials.unshift({
-              ...item.material,
+              id: item.materialId,
+              code: item.materialCode,
+              comment: item.materialName,
               archived: true,
             });
           }
@@ -402,7 +390,7 @@ export const useInvoicePageLogic = () => {
     setForm({
       date: invoice.date || "",
       fileNo: invoice.fileNo || "",
-      customerId: invoice.customer?.id,
+      customerId: invoice?.customerId,
       usdSellingRate: invoice.usdSellingRate || "",
       eurSellingRate: invoice.eurSellingRate || "",
       invoiced: Boolean(invoice.invoiced),
@@ -410,7 +398,7 @@ export const useInvoicePageLogic = () => {
         .sort((a, b) => a.id - b.id)
         .map((i) => ({
           id: i.id,
-          materialId: String(i.material.id),
+          materialId: String(i.materialId),
           unit: i.unit || i.material.unit || "ADET",
           unitPrice: i.unitPrice || 0,
           quantity: i.quantity || 0,
@@ -423,25 +411,25 @@ export const useInvoicePageLogic = () => {
 
   const handleSave = async () => {
     const customerId = Number(form.customerId);
-    const selectedCustomer = customers.find((c) => Number(c.id) === customerId);
+    const selectedCustomer = (Array.isArray(customers) ? customers : []).find(
+      (c) => Number(c.id) === customerId,
+    );
     const payload = {
       id: editingInvoice?.id,
       date: form.date,
       fileNo: form.fileNo,
-      customer: {
-        id: Number(form.customerId),
-        name: selectedCustomer?.name || "",
-      },
-      usdSellingRate: Number(form.usdSellingRate),
-      eurSellingRate: Number(form.eurSellingRate),
-      invoiced: form.invoiced,
+      customerId: customerId || null,
+      customerName: selectedCustomer?.customerName || "",
+      usdSellingRate: Number(form.usdSellingRate) || 0,
+      eurSellingRate: Number(form.eurSellingRate) || 0,
+      invoiced: Boolean(form.invoiced),
       items: (Array.isArray(form.items) ? form.items : []).map((i) => {
         const netTutar = Number(i.unitPrice) * Number(i.quantity);
         const satirKdv = (netTutar * Number(i.kdv)) / 100;
 
         return {
           id: i.id || null,
-          material: { id: Number(i.materialId) },
+          materialId: Number(i.materialId),
           unit: i.unit,
           unitPrice: Number(i.unitPrice),
           quantity: Number(i.quantity),
@@ -475,24 +463,10 @@ export const useInvoicePageLogic = () => {
     try {
       if (invoiceType === "purchase") {
         await editPurchaseInvoice(editingInvoice.id, payload, tenant);
-        await getPurchaseInvoiceByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       } else {
         await editSalesInvoice(editingInvoice.id, payload, tenant);
-        await getSalesInvoicesByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       }
-      await syncFinancialData();
+      await getAllCustomers(0, 999, false, "", tenant, year);
       setEditingInvoice(null);
       setForm(null);
     } catch (error) {
@@ -514,24 +488,10 @@ export const useInvoicePageLogic = () => {
     try {
       if (invoiceType === "purchase") {
         await deletePurchaseInvoice(deleteTarget.id, tenant);
-        await getPurchaseInvoiceByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       } else {
         await deleteSalesInvoice(deleteTarget.id, tenant);
-        await getSalesInvoicesByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          year,
-          tenant,
-        );
       }
-      await syncFinancialData();
+      await getAllCustomers(0, 999, false, "", tenant, year);
       setSelectedInvoiceId(null);
     } catch (error) {
       const backendErr =

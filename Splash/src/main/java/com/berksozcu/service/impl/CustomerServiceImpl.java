@@ -46,7 +46,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
         Company company = getCompany(schemaName);
 
-        String code = newCustomer.getCode() != null ?  newCustomer.getCode().trim().toUpperCase() : "";
+        String code = newCustomer.getCode() != null ? newCustomer.getCode().trim().toUpperCase() : "";
 
         if (customerRepository.existsByCodeAndCompany(code, company)) {
             throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
@@ -74,21 +74,7 @@ public class CustomerServiceImpl implements ICustomerService {
         voucher.setYearlyDebit(safeGet(newCustomer.getYearlyDebit()));
         OpeningVoucher savedVoucher = openingVoucherRepository.save(voucher);
 
-        CustomerDto customerDto = new CustomerDto();
-        customerDto.setId(savedCustomer.getId());
-        customerDto.setName(savedCustomer.getName());
-        customerDto.setAddress(savedCustomer.getAddress());
-        customerDto.setCountry(savedCustomer.getCountry());
-        customerDto.setLocal(savedCustomer.getLocal());
-        customerDto.setDistrict(savedCustomer.getDistrict());
-        customerDto.setVdNo(savedCustomer.getVdNo());
-        customerDto.setCode(savedCustomer.getCode());
-        customerDto.setCompanyId(savedCustomer.getCompany().getId());
-        customerDto.setArchived(savedCustomer.isArchived());
-        customerDto.setYearlyCredit(savedVoucher.getYearlyCredit());
-        customerDto.setYearlyDebit(savedVoucher.getYearlyDebit());
-
-        return customerDto;
+        return convertToDto(savedCustomer, savedVoucher);
     }
 
     @Override
@@ -133,7 +119,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
 
             OpeningVoucher savedVoucher = voucherMap.get(customer.getId());
-            if(savedVoucher != null) {
+            if (savedVoucher != null) {
                 customerDto.setYearlyCredit(savedVoucher.getYearlyCredit());
                 customerDto.setYearlyDebit(savedVoucher.getYearlyDebit());
                 customerDto.setFinalBalance(savedVoucher.getFinalBalance());
@@ -149,7 +135,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional
-    public void updateCustomer(Long id, CustomerDto updateCustomer, int currentYear, String schemaName) {
+    public CustomerDto updateCustomer(Long id, CustomerDto updateCustomer, int currentYear, String schemaName) {
 
         Company company = getCompany(schemaName);
 
@@ -157,16 +143,18 @@ public class CustomerServiceImpl implements ICustomerService {
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
+        String code = updateCustomer.getCode() != null ? updateCustomer.getCode().trim().toUpperCase() : oldCustomer.getCode();
+
         if (oldCustomer.isArchived()) {
             throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
         }
 
-        if (customerRepository.existsByCodeAndCompany(updateCustomer.getCode(), company)
-                && !updateCustomer.getCode().equals(oldCustomer.getCode())) {
+        if (customerRepository.existsByCodeAndCompany(code, company)
+                && !code.equals(oldCustomer.getCode())) {
             throw new BaseException(new ErrorMessage(MessageType.MUSTERI_KOD_MEVCUT));
         }
 
-        if(!company.equals(oldCustomer.getCompany())) {
+        if (!company.equals(oldCustomer.getCompany())) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
@@ -176,7 +164,7 @@ public class CustomerServiceImpl implements ICustomerService {
         oldCustomer.setDistrict(Objects.requireNonNullElse(updateCustomer.getDistrict(), "").toUpperCase());
         oldCustomer.setVdNo(Objects.requireNonNullElse(updateCustomer.getVdNo(), ""));
         oldCustomer.setCountry(Objects.requireNonNullElse(updateCustomer.getCountry(), "").toUpperCase());
-        oldCustomer.setCode(Objects.requireNonNullElse(updateCustomer.getCode(), "").trim().toUpperCase());
+        oldCustomer.setCode(code);
 
         LocalDate start = LocalDate.of(currentYear, 1, 1);
         LocalDate end = LocalDate.of(currentYear, 12, 31);
@@ -204,8 +192,9 @@ public class CustomerServiceImpl implements ICustomerService {
         openingVoucher.setDebit(safeGet(openingVoucher.getDebit()).add(newDebit));
         openingVoucher.setFinalBalance(currentBalance.add(finalBalance));
 
-        openingVoucherRepository.save(openingVoucher);
-        customerRepository.save(oldCustomer);
+        Customer savedCustomer = customerRepository.save(oldCustomer);
+        OpeningVoucher savedVoucher = openingVoucherRepository.save(openingVoucher);
+        return convertToDto(savedCustomer, savedVoucher);
     }
 
     @Override
@@ -223,6 +212,25 @@ public class CustomerServiceImpl implements ICustomerService {
     public void setArchived(List<Long> ids, boolean archived, String schemaName) {
         Company company = getCompany(schemaName);
         customerRepository.updateArchivedStatus(ids, archived, company);
+    }
+
+    private CustomerDto convertToDto(Customer customer, OpeningVoucher voucher) {
+        CustomerDto customerDto = new CustomerDto();
+        customerDto.setId(customer.getId());
+        customerDto.setName(customer.getName());
+        customerDto.setAddress(customer.getAddress());
+        customerDto.setCountry(customer.getCountry());
+        customerDto.setLocal(customer.getLocal());
+        customerDto.setDistrict(customer.getDistrict());
+        customerDto.setVdNo(customer.getVdNo());
+        customerDto.setCode(customer.getCode());
+        customerDto.setCompanyId(customer.getCompany().getId());
+        customerDto.setArchived(customer.isArchived());
+        customerDto.setYearlyCredit(voucher.getYearlyCredit());
+        customerDto.setYearlyDebit(voucher.getYearlyDebit());
+        customerDto.setFinalBalance(voucher.getFinalBalance());
+
+        return customerDto;
     }
 
     private Company getCompany(String schemaName) {
@@ -245,7 +253,7 @@ public class CustomerServiceImpl implements ICustomerService {
         return openingVoucherRepository.save(voucher);
     }
 
-    private BigDecimal safeGet (BigDecimal value) {
+    private BigDecimal safeGet(BigDecimal value) {
         return value != null ? value : BigDecimal.ZERO;
     }
 }

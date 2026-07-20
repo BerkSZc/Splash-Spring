@@ -37,7 +37,7 @@ export const usePayroll = create((set) => ({
   addCheque: async (id, newPayroll, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post(`payroll/add/${id}`, newPayroll, {
+      const res = await axiosInstance.post(`/payroll/add/${id}`, newPayroll, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -45,7 +45,12 @@ export const usePayroll = create((set) => ({
           schemaName,
         },
       });
+      const savedPayroll = res.data;
+      set((state) => ({
+        payrolls: [savedPayroll, ...state.payrolls],
+      }));
       toast.success("Bordro başarıyla eklendi");
+      return savedPayroll;
     } catch (error) {
       throw error;
     } finally {
@@ -56,7 +61,7 @@ export const usePayroll = create((set) => ({
   editCheque: async (id, newPayroll, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(`/payroll/edit/${id}`, newPayroll, {
+      const res = await axiosInstance.put(`/payroll/edit/${id}`, newPayroll, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -64,7 +69,14 @@ export const usePayroll = create((set) => ({
           schemaName,
         },
       });
+      const updatedPayroll = res.data;
+      set((state) => ({
+        payrolls: state.payrolls.map((payroll) =>
+          payroll.id === id ? updatedPayroll : payroll,
+        ),
+      }));
       toast.success("Bordro değiştirildi");
+      return updatedPayroll;
     } catch (error) {
       throw error;
     } finally {
@@ -79,6 +91,9 @@ export const usePayroll = create((set) => ({
           schemaName,
         },
       });
+      set((state) => ({
+        payrolls: state.payrolls.filter((payroll) => payroll.id !== id),
+      }));
       toast.success("Bordro başarıyla silindi");
     } catch (error) {
       throw error;

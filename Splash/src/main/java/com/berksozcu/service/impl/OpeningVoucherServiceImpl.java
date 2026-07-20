@@ -68,29 +68,14 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         List<OpeningVoucherDto> dtoList = new ArrayList<>();
 
         for (Customer customer : allCustomers) {
-           OpeningVoucher voucher = voucherMap.get(customer.getId());
+            OpeningVoucher voucher = voucherMap.get(customer.getId());
 
-           if(voucher == null){
-               voucher = getDefaultVoucher(company, customer, start);
-           }
-
-           OpeningVoucherDto dto = new OpeningVoucherDto();
-            dto.setId(voucher.getId());
-            dto.setDate(voucher.getDate());
-            dto.setCustomerId(voucher.getCustomer().getId());
-            dto.setCompanyId(voucher.getCompany().getId());
-            dto.setCustomerName(voucher.getCustomer().getName());
-            dto.setDebit(voucher.getDebit());
-            dto.setCredit(voucher.getCredit());
-            dto.setDescription(voucher.getDescription());
-            dto.setYearlyCredit(voucher.getYearlyCredit());
-            dto.setYearlyDebit(voucher.getYearlyDebit());
-            dto.setFinalBalance(voucher.getFinalBalance());
-            dto.setFileNo(voucher.getFileNo());
-
+            if (voucher == null) {
+                voucher = getDefaultVoucher(company, customer, start);
+            }
+            OpeningVoucherDto dto = convertToDto(voucher);
             dtoList.add(dto);
         }
-
         return dtoList;
     }
 
@@ -104,24 +89,10 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         Customer customer = customerRepository.findByIdAndCompany(customerId, company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
-      OpeningVoucher openingVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(customerId, company, start, end)
+        OpeningVoucher openingVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(customerId, company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
-      OpeningVoucherDto dto = new OpeningVoucherDto();
-      dto.setId(openingVoucher.getId());
-      dto.setDate(openingVoucher.getDate());
-      dto.setCustomerId(openingVoucher.getCustomer().getId());
-      dto.setYearlyDebit(openingVoucher.getYearlyDebit());
-      dto.setYearlyCredit(openingVoucher.getYearlyCredit());
-      dto.setCredit(openingVoucher.getCredit());
-      dto.setDebit(openingVoucher.getDebit());
-      dto.setCustomerName(openingVoucher.getCustomer().getName());
-      dto.setFileNo(openingVoucher.getFileNo());
-      dto.setFinalBalance(openingVoucher.getFinalBalance());
-      dto.setDescription(openingVoucher.getDescription());
-      dto.setCompanyId(openingVoucher.getCompany().getId());
-
-      return dto;
+        return convertToDto(openingVoucher);
     }
 
     @Transactional
@@ -146,7 +117,7 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         // ---------- AÇILIŞ VOUCHER (01.01) ----------
         OpeningVoucher openingVoucher =
                 openingVoucherRepository
-                        .findByCustomerIdAndCompanyAndDate(customer.getId(), company,openingDate)
+                        .findByCustomerIdAndCompanyAndDate(customer.getId(), company, openingDate)
                         .orElseGet(() -> getDefaultVoucher(company, customer, openingDate));
 
         openingVoucher.setFinalBalance(safeGet(closingVoucher.getFinalBalance()));
@@ -154,6 +125,23 @@ public class OpeningVoucherServiceImpl implements IOpeningVoucherService {
         openingVoucher.setYearlyCredit(safeGet(closingVoucher.getCredit()));
 
         openingVoucherRepository.save(openingVoucher);
+    }
+
+    private OpeningVoucherDto convertToDto(OpeningVoucher openingVoucher) {
+        OpeningVoucherDto dto = new OpeningVoucherDto();
+        dto.setId(openingVoucher.getId());
+        dto.setDate(openingVoucher.getDate());
+        dto.setCustomerId(openingVoucher.getCustomer().getId());
+        dto.setYearlyDebit(openingVoucher.getYearlyDebit());
+        dto.setYearlyCredit(openingVoucher.getYearlyCredit());
+        dto.setCredit(openingVoucher.getCredit());
+        dto.setDebit(openingVoucher.getDebit());
+        dto.setCustomerName(openingVoucher.getCustomer().getName());
+        dto.setFileNo(openingVoucher.getFileNo());
+        dto.setFinalBalance(openingVoucher.getFinalBalance());
+        dto.setDescription(openingVoucher.getDescription());
+        dto.setCompanyId(openingVoucher.getCompany().getId());
+        return dto;
     }
 
     private OpeningVoucher getDefaultVoucher(Company company, Customer newCustomer, LocalDate date) {

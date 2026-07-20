@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface ICompanyController {
-    ResponseEntity<?> createCompany(Map<String, String> request, User user);
-    void editCompany(Map<String, String> request);
+    ResponseEntity<CompanyDto> createCompany(Map<String, String> request, User user);
+    CompanyDto editCompany(Map<String, String> request);
      List<CompanyDto> findAllCompany(User user);
      ResponseEntity<YearDto> createYear(Long companyId, Integer year);
      ResponseEntity<List<YearDto>> getAllYear( Long companyId);

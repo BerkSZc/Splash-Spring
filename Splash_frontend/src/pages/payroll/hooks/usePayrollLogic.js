@@ -5,13 +5,11 @@ import { useTenant } from "../../../context/TenantContext.jsx";
 import { usePayroll } from "../../../../backend/store/usePayroll.js";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import toast from "react-hot-toast";
-import { useVoucher } from "../../../../backend/store/useVoucher.js";
 
 export const usePayrollLogic = () => {
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const { year } = useYear();
   const { tenant } = useTenant();
-  const { getAllOpeningVoucherByYear } = useVoucher();
   const {
     payrolls,
     payrollTotalPages,
@@ -76,20 +74,6 @@ export const usePayrollLogic = () => {
     return currentActualYear === Number(year)
       ? new Date().toISOString().slice(0, 10)
       : `${selectedYear}-01-01`;
-  };
-
-  const syncFinancialData = async () => {
-    try {
-      await Promise.all([
-        getPayrollByYear(page, PAGE_SIZE, debouncedSearch, type, year, tenant),
-        getAllCustomers(0, 999, false, "", tenant, year),
-        getAllOpeningVoucherByYear(`${year}-01-01`, tenant),
-      ]);
-    } catch (error) {
-      const backendErr =
-        error?.response?.data?.exception?.message || "Bilinmeyen Hata";
-      toast.error(backendErr);
-    }
   };
 
   const [form, setForm] = useState({
@@ -302,13 +286,11 @@ export const usePayrollLogic = () => {
       } else {
         await addCheque(form.customerId, payload, tenant);
       }
-
+      await getAllCustomers(0, 999, false, "", tenant, year);
       setEditing(null);
       setIsOpen(false);
       resetForm();
       clearSelection();
-
-      await syncFinancialData();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -318,14 +300,17 @@ export const usePayrollLogic = () => {
 
   const handleEditClick = (item) => {
     // MÜŞTERİ KONTROLÜ: Faturadaki müşteriler arşivli ise ismini ekle
-    if (item.customer && item.customer.id) {
-      const custIdStr = String(item.customer.id);
+    if (item.customerId) {
+      const custIdStr = String(item.customerId);
 
-      const customerExists = customers.some((c) => String(c.id) === custIdStr);
+      const customerExists = customers.some(
+        (c) => String(c.id ?? c.customerId) === custIdStr,
+      );
 
       if (!customerExists) {
         customers.unshift({
-          ...item.customer,
+          id: item.customerId,
+          name: item.customerName || "",
           archived: true,
         });
       }
@@ -335,7 +320,7 @@ export const usePayrollLogic = () => {
     setForm({
       transactionDate: item.transactionDate,
       expiredDate: item.expiredDate,
-      customerId: item.customer?.id || "",
+      customerId: item.customerId || "",
       amount: item.amount ? formatNumber(item.amount) : "",
       fileNo: item.fileNo || "",
       bankName: item.bankName || "",
@@ -400,17 +385,9 @@ export const usePayrollLogic = () => {
     try {
       if (deleteTarget) {
         await deleteCheque(deleteTarget.id, tenant);
-        await getPayrollByYear(
-          page,
-          PAGE_SIZE,
-          debouncedSearch,
-          type,
-          year,
-          tenant,
-        );
+        await getAllCustomers(0, 999, false, "", tenant, year);
         setDeleteTarget(null);
       }
-      await syncFinancialData();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";

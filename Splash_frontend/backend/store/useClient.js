@@ -19,7 +19,12 @@ export const useClient = create((set, get) => ({
     schemaName,
     year = 2025,
   ) => {
-    set({ loading: true, lastSearch: search, showArchived: archived });
+    set({
+      loading: true,
+      lastSearch: search,
+      showArchived: archived,
+      selectedYear: year,
+    });
     try {
       const res = await axiosInstance.get("/customer/list", {
         params: { page, size, archived, search, schemaName, year },
@@ -39,21 +44,21 @@ export const useClient = create((set, get) => ({
   addCustomer: async (customer, year, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.post("/customer/add-customer", customer, {
+      const res = await axiosInstance.post("/customer/add-customer", customer, {
         params: { year, schemaName },
       });
+
+      const savedCustomer = res.data.data || res.data;
+      const { showArchived } = get();
+
+      set((state) => ({
+        customers: !showArchived
+          ? [savedCustomer, ...state.customers]
+          : state.customers,
+      }));
+
       toast.success("Musteri eklendi");
-
-      const { lastSearch, showArchived } = get();
-
-      await get().getAllCustomers(
-        0,
-        20,
-        showArchived,
-        lastSearch,
-        schemaName,
-        year,
-      );
+      return savedCustomer;
     } catch (error) {
       throw error;
     } finally {
@@ -74,18 +79,18 @@ export const useClient = create((set, get) => ({
           params: { currentYear, schemaName },
         },
       );
+
+      const updatedCustomer = res.data.data || res.data;
+
+      set((state) => ({
+        customers: state.customers.map((c) =>
+          c.id === id ? updatedCustomer : c,
+        ),
+      }));
+
       toast.success("Müşteri değiştirildi");
 
-      const { currentPage, lastSearch, showArchived } = get();
-
-      await get().getAllCustomers(
-        currentPage,
-        20,
-        showArchived,
-        lastSearch,
-        schemaName,
-        currentYear,
-      );
+      return updatedCustomer;
     } catch (error) {
       throw error;
     } finally {
@@ -103,19 +108,15 @@ export const useClient = create((set, get) => ({
           schemaName,
         },
       });
+
+      set((state) => ({
+        customers: state.customers.filter((c) => !idList.includes(c.id)),
+      }));
+
       toast.success(
         archived
           ? `${idList.length} müşteri arşivlendi`
           : `${idList.length} müşteri arşivden çıkartıldı`,
-      );
-      const { currentPage, lastSearch, showArchived, selectedYear } = get();
-      await get().getAllCustomers(
-        currentPage,
-        20,
-        showArchived,
-        lastSearch,
-        schemaName,
-        selectedYear,
       );
     } catch (error) {
       throw error;

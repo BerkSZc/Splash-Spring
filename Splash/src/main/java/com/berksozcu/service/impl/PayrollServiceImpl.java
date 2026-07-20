@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.dto.payroll.PayrollDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -44,53 +45,57 @@ public class PayrollServiceImpl implements IPayrollService {
 
     @Transactional
     @Override
-    public Payroll addPayroll(Long id, Payroll newPayroll, String schemaName) {
+    public PayrollDto addPayroll(Long id, PayrollDto payrollDto, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI))
         );
 
+        String fileNo = payrollDto.getFileNo() != null ? payrollDto.getFileNo().trim().toUpperCase() : "";
 
-        if (payrollRepository.existsByFileNoAndCompany(newPayroll.getFileNo(), company)) {
+        if (payrollRepository.existsByFileNoAndCompany(fileNo, company)) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
         }
 
-        LocalDate start = LocalDate.of(newPayroll.getTransactionDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(newPayroll.getTransactionDate().getYear(), 12, 31);
+        LocalDate start = LocalDate.of(payrollDto.getTransactionDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(payrollDto.getTransactionDate().getYear(), 12, 31);
 
         OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(id,
                         company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
-        newPayroll.setCustomer(customer);
-        newPayroll.setAmount(safeGet(newPayroll.getAmount()));
-        newPayroll.setFileNo(Objects.requireNonNullElse(newPayroll.getFileNo(), "").toUpperCase());
-        newPayroll.setExpiredDate(Objects.requireNonNullElse(newPayroll.getExpiredDate(), LocalDate.now()));
-        newPayroll.setTransactionDate(Objects.requireNonNullElse(newPayroll.getTransactionDate(), LocalDate.now()));
-        newPayroll.setPayrollModel(Objects.requireNonNullElse(newPayroll.getPayrollModel(), PayrollModel.INPUT));
-        newPayroll.setPayrollType(Objects.requireNonNullElse(newPayroll.getPayrollType(), PayrollType.CHEQUE));
-        newPayroll.setBankName(Objects.requireNonNullElse(newPayroll.getBankName(), "").toUpperCase());
-        newPayroll.setBankBranch(Objects.requireNonNullElse(newPayroll.getBankBranch(), "").toUpperCase());
-        newPayroll.setCompany(company);
+        Payroll payroll = new Payroll();
+        payroll.setCustomer(customer);
+        payroll.setAmount(safeGet(payrollDto.getAmount()));
+        payroll.setFileNo(fileNo);
+        payroll.setExpiredDate(Objects.requireNonNullElse(payrollDto.getExpiredDate(), LocalDate.now()));
+        payroll.setTransactionDate(Objects.requireNonNullElse(payrollDto.getTransactionDate(), LocalDate.now()));
+        payroll.setPayrollModel(Objects.requireNonNullElse(payrollDto.getPayrollModel(), PayrollModel.INPUT));
+        payroll.setPayrollType(Objects.requireNonNullElse(payrollDto.getPayrollType(), PayrollType.CHEQUE));
+        payroll.setBankName(Objects.requireNonNullElse(payrollDto.getBankName(), "").toUpperCase());
+        payroll.setBankBranch(Objects.requireNonNullElse(payrollDto.getBankBranch(), "").toUpperCase());
+        payroll.setCompany(company);
 
-        updateBalance(newPayroll, voucher);
+        updateBalance(payrollDto, voucher);
         openingVoucherRepository.save(voucher);
-        return payrollRepository.save(newPayroll);
+        Payroll savedPayroll = payrollRepository.save(payroll);
+        return convertDto(savedPayroll, start, end);
     }
 
     @Transactional
     @Override
-    public Payroll editPayroll(Long id, Payroll editPayroll, String schemaName) {
+    public PayrollDto editPayroll(Long id, PayrollDto payrollDto, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         Payroll oldPayroll = payrollRepository.findByIdAndCompany(id, company).orElseThrow(
                 () -> new BaseException(new ErrorMessage(MessageType.BORDRO_HATA))
         );
 
+        String fileNo = payrollDto.getFileNo() != null ? payrollDto.getFileNo().trim().toUpperCase() : "";
 
-        if (payrollRepository.existsByFileNoAndCompany(editPayroll.getFileNo(), company)
-                && !oldPayroll.getFileNo().equals(editPayroll.getFileNo())) {
+        if (payrollRepository.existsByFileNoAndCompany(fileNo, company)
+                && !oldPayroll.getFileNo().equals(fileNo)) {
             throw new BaseException(new ErrorMessage(MessageType.BORDRO_MEVCUT));
         }
 
@@ -98,15 +103,17 @@ public class PayrollServiceImpl implements IPayrollService {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
-        LocalDate start = LocalDate.of(editPayroll.getTransactionDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(editPayroll.getTransactionDate().getYear(), 12, 31);
+        LocalDate oldStart = LocalDate.of(oldPayroll.getTransactionDate().getYear(), 1, 1);
+        LocalDate oldEnd = LocalDate.of(oldPayroll.getTransactionDate().getYear(), 12, 31);
 
         Customer oldCustomer = oldPayroll.getCustomer();
-        Customer newCustomer = editPayroll.getCustomer();
+        Customer newCustomer = customerRepository
+                .findByIdAndCompany(payrollDto.getCustomerId(), company)
+                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
 
         OpeningVoucher oldVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                        oldCustomer.getId(), company, start, end)
-                .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
+                        oldCustomer.getId(), company, oldStart, oldEnd)
+                .orElseGet(() -> getDefaultVoucher(company, newCustomer, oldStart));
 
 
         if (oldPayroll.getPayrollModel() == PayrollModel.INPUT) {
@@ -117,26 +124,30 @@ public class PayrollServiceImpl implements IPayrollService {
             oldVoucher.setCredit(safeGet(oldVoucher.getCredit()).subtract(safeGet(oldPayroll.getAmount())));
         }
 
+        LocalDate start = LocalDate.of(payrollDto.getTransactionDate().getYear(), 1, 1);
+        LocalDate end = LocalDate.of(payrollDto.getTransactionDate().getYear(), 12, 31);
+
         OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
                         newCustomer.getId(), company, start, end)
                 .orElseGet(() -> getDefaultVoucher(company, newCustomer, start));
 
         oldPayroll.setCompany(company);
-        oldPayroll.setPayrollType(Objects.requireNonNullElse(editPayroll.getPayrollType(), PayrollType.UNKNOWN));
-        oldPayroll.setBankName(Objects.requireNonNullElse(editPayroll.getBankName(), "").toUpperCase());
-        oldPayroll.setPayrollModel(Objects.requireNonNullElse(editPayroll.getPayrollModel(), PayrollModel.UNKNOWN));
-        oldPayroll.setAmount(safeGet(editPayroll.getAmount()));
+        oldPayroll.setPayrollType(Objects.requireNonNullElse(payrollDto.getPayrollType(), PayrollType.UNKNOWN));
+        oldPayroll.setBankName(Objects.requireNonNullElse(payrollDto.getBankName(), "").toUpperCase());
+        oldPayroll.setPayrollModel(Objects.requireNonNullElse(payrollDto.getPayrollModel(), PayrollModel.UNKNOWN));
+        oldPayroll.setAmount(safeGet(payrollDto.getAmount()));
         oldPayroll.setCustomer(newCustomer);
-        oldPayroll.setFileNo(Objects.requireNonNullElse(editPayroll.getFileNo(), "").toUpperCase());
-        oldPayroll.setTransactionDate(Objects.requireNonNullElse(editPayroll.getTransactionDate(), LocalDate.now()));
-        oldPayroll.setExpiredDate(Objects.requireNonNullElse(editPayroll.getExpiredDate(), LocalDate.now()));
-        oldPayroll.setBankBranch(Objects.requireNonNullElse(editPayroll.getBankBranch(), "").toUpperCase());
+        oldPayroll.setFileNo(fileNo);
+        oldPayroll.setTransactionDate(Objects.requireNonNullElse(payrollDto.getTransactionDate(), LocalDate.now()));
+        oldPayroll.setExpiredDate(Objects.requireNonNullElse(payrollDto.getExpiredDate(), LocalDate.now()));
+        oldPayroll.setBankBranch(Objects.requireNonNullElse(payrollDto.getBankBranch(), "").toUpperCase());
 
-        updateBalance(editPayroll, newVoucher);
+        updateBalance(payrollDto, newVoucher);
 
         openingVoucherRepository.save(oldVoucher);
         openingVoucherRepository.save(newVoucher);
-        return payrollRepository.save(oldPayroll);
+        Payroll savedPayroll = payrollRepository.save(oldPayroll);
+        return convertDto(savedPayroll, start, end);
     }
 
     @Transactional
@@ -174,7 +185,7 @@ public class PayrollServiceImpl implements IPayrollService {
     }
 
     @Override
-    public Page<Payroll> getPayrollsByYear(int page, int size, String search, String type, int year, String schemaName) {
+    public Page<PayrollDto> getPayrollsByYear(int page, int size, String search, String type, int year, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
@@ -190,17 +201,49 @@ public class PayrollServiceImpl implements IPayrollService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
 
-        if(type == null || type.isEmpty()) {
-            return payrollRepository.findAllByStatement(company, searchParam,start, end, pageable);
+        if (type == null || type.isEmpty()) {
+            Page<Payroll> payrollPage = payrollRepository.findAllByStatement(company, searchParam, start, end, pageable);
+            return payrollPage.map(payroll ->
+                    convertDto(payroll, start, end)
+            );
         }
 
         PayrollType pType = type.contains("cheque") ? PayrollType.CHEQUE : PayrollType.BOND;
         PayrollModel pModel = type.contains("_in") ? PayrollModel.INPUT : PayrollModel.OUTPUT;
 
-        return payrollRepository.findByCompanyAndSearchAndTransactionDateBetween(company, searchParam, start, end, pType, pModel, pageable);
+        Page<Payroll> pageablePayroll = payrollRepository.findByCompanyAndSearchAndTransactionDateBetween(company, searchParam, start, end, pType, pModel, pageable);
+
+        return pageablePayroll.map(payroll ->
+                convertDto(payroll, start, end)
+        );
     }
 
-    private void updateBalance(Payroll newPayroll, OpeningVoucher voucher) {
+    private PayrollDto convertDto(Payroll payroll, LocalDate start, LocalDate end) {
+        PayrollDto payrollDto = new PayrollDto();
+        payrollDto.setId(payroll.getId());
+        payrollDto.setCompanyId(payroll.getCompany().getId());
+        payrollDto.setCustomerId(payroll.getCustomer().getId());
+        payrollDto.setTransactionDate(payroll.getTransactionDate());
+        payrollDto.setAmount(payroll.getAmount());
+        payrollDto.setPayrollModel(payroll.getPayrollModel());
+        payrollDto.setFileNo(payroll.getFileNo());
+        payrollDto.setBankBranch(payroll.getBankBranch());
+        payrollDto.setPayrollType(payroll.getPayrollType());
+        payrollDto.setExpiredDate(payroll.getExpiredDate());
+        payrollDto.setBankName(payroll.getBankName());
+        payrollDto.setCustomerName(payroll.getCustomer().getName());
+
+        OpeningVoucher openingVoucher = openingVoucherRepository
+                .findByCustomerIdAndCompanyAndDateBetween(payroll.getCustomer().getId(), payroll.getCompany(), start, end)
+                .orElseGet(() -> getDefaultVoucher(payroll.getCompany(), payroll.getCustomer(), start));
+
+
+        payrollDto.setFinalBalance(openingVoucher.getFinalBalance());
+
+        return payrollDto;
+    }
+
+    private void updateBalance(PayrollDto newPayroll, OpeningVoucher voucher) {
         if (newPayroll.getPayrollModel() == PayrollModel.INPUT) {
             voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(newPayroll.getAmount())));
             voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(newPayroll.getAmount())));

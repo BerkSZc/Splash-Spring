@@ -22,6 +22,7 @@
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.0",
     "dotenv": "^17.4.2",
+    "electron-context-menu": "^4.1.2",
     "electron-updater": "^6.6.2",
     "jwt-decode": "^4.0.0",
     "react": "^19.1.1",

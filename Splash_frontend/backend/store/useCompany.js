@@ -27,8 +27,12 @@ export const useCompany = create((set, get) => ({
           "Content-Type": "application/json",
         },
       });
-      await get().getAllCompanies();
+      const savedCompany = res.data;
+      set((state) => ({
+        companies: [...state.companies, savedCompany],
+      }));
       toast.success("Şirket oluşturuldu");
+      return savedCompany;
     } catch (error) {
       throw error;
     } finally {
@@ -41,8 +45,25 @@ export const useCompany = create((set, get) => ({
       const res = await axiosInstance.post("/company/create-year", null, {
         params: { companyId, year },
       });
-      await get().getAllCompanies();
-      return res.data;
+      const savedYear = res.data;
+
+      set((state) => ({
+        companies: state.companies.map((company) => {
+          if (company.id === companyId) {
+            const currentYears = company.years || [];
+            const exists = currentYears.some(
+              (y) => y.yearValue === savedYear.yearValue,
+            );
+            return {
+              ...company,
+              years: exists ? currentYears : [...currentYears, savedYear],
+            };
+          }
+          return company;
+        }),
+      }));
+
+      return savedYear;
     } catch (error) {
       throw error;
     } finally {
@@ -65,10 +86,21 @@ export const useCompany = create((set, get) => ({
   deleteYear: async (companyId, year) => {
     set({ loading: true });
     try {
-      const res = await axiosInstance.delete("/company/delete-year", {
+      await axiosInstance.delete("/company/delete-year", {
         params: { companyId, year },
       });
-      return res.data;
+
+      set((state) => ({
+        companies: state.companies.map((company) => {
+          if (company.id === companyId) {
+            return {
+              ...company,
+              years: (company.years || []).filter((y) => y.yearValue !== year),
+            };
+          }
+          return company;
+        }),
+      }));
     } catch (error) {
       throw error;
     } finally {
@@ -78,11 +110,21 @@ export const useCompany = create((set, get) => ({
   editCompany: async (compData) => {
     set({ loading: true });
     try {
-      await axiosInstance.put("/company/edit-company", compData, {
+      const res = await axiosInstance.put("/company/edit-company", compData, {
         headers: {
           "Content-Type": "application/json",
         },
       });
+      const updatedCompany = res.data;
+
+      set((state) => ({
+        companies: state.companies.map((c) =>
+          c.schemaName === compData.schemaName
+            ? { ...c, ...updatedCompany }
+            : c,
+        ),
+      }));
+      toast.success("Şirket bilgileri başarıyla değiştirildi.");
     } catch (error) {
       throw error;
     } finally {

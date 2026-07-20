@@ -15,7 +15,7 @@ public interface IMaterialController {
                                     Boolean archived,
                                    String schemaName);
 
-    void updateMaterial(Long id, MaterialDto updateMaterial, String schemaName);
+    MaterialDto updateMaterial(Long id, MaterialDto updateMaterial, String schemaName);
 
     void deleteMaterial(Long id, String schemaName);
 

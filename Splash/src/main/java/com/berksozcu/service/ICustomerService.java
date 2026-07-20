@@ -12,7 +12,7 @@ public interface ICustomerService {
 
      Page<CustomerDto> getAllCustomer(int page, int size, Boolean archived, String search, String schemaName, int year);
 
-     void updateCustomer(Long id, CustomerDto updateCustomer, int currentYear, String schemaName);
+     CustomerDto updateCustomer(Long id, CustomerDto updateCustomer, int currentYear, String schemaName);
 
     List<Customer> findByArchivedTrue();
 

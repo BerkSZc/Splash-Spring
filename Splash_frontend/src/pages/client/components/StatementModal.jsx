@@ -12,9 +12,13 @@ export default function StatementModal({
   if (!showPrintModal) return null;
 
   const handlePrint = () => {
-    const html = generateStatementHTML(selectedCustomer, statementData, year);
-    const printWindow = window.open("", "_blank", "width=1000, height=800");
+    const printWindow = window.open(
+      "about:blank?action=print",
+      "_blank",
+      "width=1000, height=800",
+    );
     if (printWindow) {
+      const html = generateStatementHTML(selectedCustomer, statementData, year);
       printWindow.document.open();
       printWindow.document.write(html);
       printWindow.document.close();

@@ -132,6 +132,7 @@ export default function InvoicePage() {
             printItem={state.printItem}
             onCancel={() => handlers.setPrintItem(null)}
             onExecutePrint={handlers.executePrint}
+            customers={state.customers}
           />
         )}
 

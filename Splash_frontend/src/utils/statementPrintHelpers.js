@@ -156,7 +156,7 @@ export const generateStatementHTML = (customer, statementData, year) => {
           window.onload = () => {
             setTimeout(() => {
               window.print();
-              window.onafterprint = () => window.close();
+             // window.onafterprint = () => window.close();
             }, 300);
           };
         </script>

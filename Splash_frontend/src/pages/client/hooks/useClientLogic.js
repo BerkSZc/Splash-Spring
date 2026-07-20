@@ -245,9 +245,6 @@ export const useClientLogic = () => {
       setSelectedCustomers([]);
       setSelectionMode(false);
 
-      const dateString = `${year}-01-01`;
-      await getAllOpeningVoucherByYear(dateString, tenant);
-
       setForm({
         name: "",
         yearlyDebit: 0,

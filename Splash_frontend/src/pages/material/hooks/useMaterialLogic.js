@@ -164,8 +164,6 @@ export const useMaterialLogic = () => {
         setIsOpen(false);
         setForm(initialForm);
       }
-
-      await getMaterials(page, PAGE_SIZE, search, showArchived, tenant);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
