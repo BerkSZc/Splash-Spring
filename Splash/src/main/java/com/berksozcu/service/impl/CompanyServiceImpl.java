@@ -55,10 +55,7 @@ public class CompanyServiceImpl implements ICompanyService {
     private PayrollRepository payrollRepository;
 
     @Autowired
-    private ReceivedCollectionRepository receivedCollectionRepository;
-
-    @Autowired
-    private PaymentCompanyRepository paymentCompanyRepository;
+    private CollectionRepository collectionRepository;
 
     @Autowired
     private PurchaseInvoiceItemRepository purchaseInvoiceItemRepository;
@@ -86,8 +83,7 @@ public class CompanyServiceImpl implements ICompanyService {
         //Kopyalanacak Tablolar
         String[] allTables = {"customer", "material",
                 "purchase_invoice", "purchase_invoice_item", "sales_invoice", "sales_invoice_item",
-                "material_price_history", "received_collection",
-                "payment_company", "payroll", "opening_voucher"};
+                "material_price_history", "collection", "payroll", "opening_voucher"};
 
         List<String> tablesWithData = List.of("");
         try (Connection connection = dataSource.getConnection()) {
@@ -200,8 +196,7 @@ public class CompanyServiceImpl implements ICompanyService {
         salesInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         salesInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         payrollRepository.deleteByCompanyIdAndTransactionDateBetween(companyId, start, end);
-        receivedCollectionRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
-        paymentCompanyRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        collectionRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         openingVoucherRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
 
         yearRepository.deleteYearValueByCompanyId(year, companyId);

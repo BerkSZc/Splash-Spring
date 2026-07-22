@@ -1,5 +1,6 @@
 package com.berksozcu.service.impl;
 
+import com.berksozcu.entites.collections.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.currency.CurrencyRate;
 import com.berksozcu.entites.payroll.PayrollModel;
@@ -37,9 +38,7 @@ public class CommonDataServiceImpl implements ICommonDataService {
     @Autowired
     private PayrollRepository payrollRepository;
     @Autowired
-    private ReceivedCollectionRepository receivedCollectionRepository;
-    @Autowired
-    private PaymentCompanyRepository paymentCompanyRepository;
+    private CollectionRepository collectionRepository;
     @Autowired
     private CompanyRepository companyRepository;
 
@@ -105,11 +104,11 @@ public class CommonDataServiceImpl implements ICommonDataService {
                 prefix = "SOZ";
             }
             case "COLLECTION" -> {
-                lastNo = receivedCollectionRepository.findMaxFileNoByYearAndCompany(start, end, company);
+                lastNo = collectionRepository.findMaxFileNoByYearAndCompanyAndType(start, end, company, CollectionType.RECEIVED);
                 prefix = "TAH";
             }
             case "PAYMENT" -> {
-                lastNo = paymentCompanyRepository.findMaxFileNoByYearAndCompany(start, end, company);
+                lastNo = collectionRepository.findMaxFileNoByYearAndCompanyAndType(start, end, company, CollectionType.PAYMENT);
                 prefix = "ODEME";
             }
             case "CHEQUE_IN" -> {

@@ -2,8 +2,7 @@ import { useEffect, useMemo } from "react";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { useClient } from "../../../../backend/store/useClient.js";
-import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
-import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
+import { useCollection } from "../../../../backend/store/useCollection.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import { useCompany } from "../../../../backend/store/useCompany.js";
@@ -27,10 +26,7 @@ export const useHomeLogic = () => {
     loading: salesLoading,
   } = useSalesInvoice();
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
-  const { getReceivedCollectionsByYear, loading: collectionsLoading } =
-    useReceivedCollection();
-  const { getPaymentCollectionsByYear, loading: paymentsLoading } =
-    usePaymentCompany();
+  const { getCollectionsByYear, loading: collectionsLoading } = useCollection();
 
   const {
     vouchers,
@@ -50,8 +46,7 @@ export const useHomeLogic = () => {
         await Promise.all([
           getAllCompanies(),
           getAllCustomers(0, 999, false, "", tenant, year),
-          getReceivedCollectionsByYear(0, 999, "", year, tenant),
-          getPaymentCollectionsByYear(0, 999, "", year, tenant),
+          getCollectionsByYear(0, 999, "", year, tenant),
           getPurchaseInvoiceByYear(0, 999, "", year, tenant),
           getSalesInvoicesByYear(0, 999, "", year, tenant),
           getAllOpeningVoucherByYear(dateString, tenant),
@@ -111,7 +106,6 @@ export const useHomeLogic = () => {
     salesLoading ||
     customersLoading ||
     collectionsLoading ||
-    paymentsLoading ||
     vouchersLoading;
 
   return {

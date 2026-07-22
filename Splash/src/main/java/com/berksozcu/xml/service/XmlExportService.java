@@ -1,7 +1,7 @@
 package com.berksozcu.xml.service;
 
-import com.berksozcu.entites.collections.PaymentCompany;
-import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.collections.Collection;
+import com.berksozcu.entites.collections.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -70,10 +70,7 @@ public class XmlExportService {
     private CustomerRepository customerRepository;
 
     @Autowired
-    private ReceivedCollectionRepository receivedCollectionRepository;
-
-    @Autowired
-    private PaymentCompanyRepository paymentCompanyRepository;
+    private CollectionRepository collectionRepository;
 
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
@@ -216,9 +213,9 @@ public class XmlExportService {
             mXml.setNAME(Objects.requireNonNullElse(m.getComment(), ""));
             MaterialUnit unitCode = m.getUnit();
 
-            if(unitCode != null) {
+            if (unitCode != null) {
                 try {
-            mXml.setUNITSET_CODE(String.valueOf(m.getUnit()));
+                    mXml.setUNITSET_CODE(String.valueOf(m.getUnit()));
                 } catch (IllegalArgumentException e) {
                     mXml.setUNITSET_CODE("ADET");
                 }
@@ -342,18 +339,18 @@ public class XmlExportService {
     public byte[] exportCollections(int year, String schemaName) throws Exception {
         Company company = companyRepository.findBySchemaName(schemaName);
 
-        LocalDate start =  LocalDate.of(year, 1, 1);
+        LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        List<PaymentCompany> paymentCompanyList = paymentCompanyRepository.findAllByCompanyAndDateBetween(
-                company, start, end);
-        List<ReceivedCollection> receivedCollectionList = receivedCollectionRepository.findAllByCompanyAndDateBetween(
-                company, start, end);
+        List<Collection> paymentCompanyList = collectionRepository.findAllByCompanyAndDateBetweenAndType(
+                company, start, end, CollectionType.PAYMENT);
+        List<Collection> receivedCollectionList = collectionRepository.findAllByCompanyAndDateBetweenAndType(
+                company, start, end,  CollectionType.RECEIVED);
 
         CollectionsXml rootXml = new CollectionsXml();
         List<CollectionXml> collectionXmlList = new ArrayList<>();
 
-        for(ReceivedCollection rc : receivedCollectionList) {
+        for (Collection rc : receivedCollectionList) {
             CollectionXml cXml = new CollectionXml();
             cXml.setTYPE(11);
             cXml.setCOMPANY_ID(rc.getCompany().getId());
@@ -372,7 +369,7 @@ public class XmlExportService {
             cXml.setAttachmentArp(attachmentArp);
             collectionXmlList.add(cXml);
         }
-        for(PaymentCompany py : paymentCompanyList) {
+        for (Collection py : paymentCompanyList) {
             CollectionXml cXml = new CollectionXml();
             cXml.setTYPE(12);
             cXml.setSD_CODE("2");
@@ -418,7 +415,7 @@ public class XmlExportService {
         Map<String, List<Payroll>> groupedByCustomer = payrollList.stream()
                 .collect(Collectors.groupingBy(p -> p.getCustomer().getCode() + "-" + p.getPayrollModel()));
 
-        for(List<Payroll> customerPayrolls : groupedByCustomer.values()) {
+        for (List<Payroll> customerPayrolls : groupedByCustomer.values()) {
             Payroll first = customerPayrolls.getFirst();
 
             PayrollRollXml rollXml = new PayrollRollXml();
@@ -430,7 +427,7 @@ public class XmlExportService {
 
             PayrollTransactionsXml transactionsXml = new PayrollTransactionsXml();
             List<PayrollTxXml> payrollTxXmls = new ArrayList<>();
-            for(Payroll payroll : customerPayrolls) {
+            for (Payroll payroll : customerPayrolls) {
                 PayrollTxXml ptxXml = new PayrollTxXml();
                 ptxXml.setNumber(Objects.requireNonNullElse(payroll.getFileNo(), ""));
                 ptxXml.setDueDate(Objects.requireNonNullElse(payroll.getExpiredDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
@@ -444,7 +441,7 @@ public class XmlExportService {
         }
         rootXml.setRolls(payrollsXmlList);
 
-        JAXBContext context =  JAXBContext.newInstance(PayrollsXml.class);
+        JAXBContext context = JAXBContext.newInstance(PayrollsXml.class);
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
@@ -465,14 +462,14 @@ public class XmlExportService {
         ArpVouchersXml rootXml = new ArpVouchersXml();
         List<ArpVoucherXml> voucherXmlList = new ArrayList<>();
 
-        if(!voucherList.isEmpty()) {
+        if (!voucherList.isEmpty()) {
             ArpVoucherXml vXml = new ArpVoucherXml();
             vXml.setNumber("DEVIR_" + year);
             vXml.setDate(start.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             ArpTransactionsXml txsWrapper = new ArpTransactionsXml();
             List<ArpTransactionXml> txList = new ArrayList<>();
 
-            for(OpeningVoucher op : voucherList) {
+            for (OpeningVoucher op : voucherList) {
                 ArpTransactionXml tx = new ArpTransactionXml();
                 tx.setARP_CODE(op.getCustomer().getCode().trim().toUpperCase());
                 tx.setCUSTOMER_NAME(Objects.requireNonNullElse(op.getCustomerName(), ""));
@@ -487,7 +484,7 @@ public class XmlExportService {
             vXml.setTransactions(txsWrapper);
             voucherXmlList.add(vXml);
         }
-            rootXml.setVouchers(voucherXmlList);
+        rootXml.setVouchers(voucherXmlList);
 
         JAXBContext context = JAXBContext.newInstance(ArpVouchersXml.class);
         Marshaller marshaller = context.createMarshaller();
@@ -500,6 +497,6 @@ public class XmlExportService {
     }
 
     private BigDecimal safeGet(BigDecimal value) {
-        return value != null ? value :  BigDecimal.ZERO;
+        return value != null ? value : BigDecimal.ZERO;
     }
 }
