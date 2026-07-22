@@ -4,7 +4,6 @@ export const accountStatementHelper = (
   selectedCustomer,
   sales,
   purchase,
-  payments,
   collections,
   payrolls,
   year,
@@ -74,11 +73,15 @@ export const accountStatementHelper = (
       (col) => Number(col.customerId) === targetId && isCorrectYear(col.date),
     )
     .forEach((col) => {
+      const isCollection = col.type === "RECEIVED";
+
       combined.push({
         date: col.date,
-        desc: `${col.type || "Nakit"} Tahsilat (Fiş: ${col.id || ""})`,
-        debit: 0,
-        credit: Number(col.price || 0),
+        desc: isCollection
+          ? `Tahsilat (Fiş: ${col.fileNo || col.id || ""})`
+          : `Ödeme (Fiş: ${col.fileNo || col.id || ""})`,
+        debit: isCollection ? 0 : Number(col.price || 0),
+        credit: isCollection ? Number(col.price || 0) : 0,
       });
     });
 
@@ -116,21 +119,7 @@ export const accountStatementHelper = (
       });
     });
 
-  // 6. Yapılan Ödemeler (BORÇ)
-  (payments || [])
-    .filter(
-      (pay) => Number(pay.customerId) === targetId && isCorrectYear(pay.date),
-    )
-    .forEach((pay) => {
-      combined.push({
-        date: pay.date,
-        desc: `${pay.type || "Banka"} Ödemesi`,
-        debit: Number(pay.price || 0),
-        credit: 0,
-      });
-    });
-
-  // 7. Tarihe göre sırala
+  // 6. Tarihe göre sırala
   combined.sort((a, b) => {
     const parseDate = (d) => {
       if (!d || typeof d !== "string") return new Date(0);
@@ -140,7 +129,7 @@ export const accountStatementHelper = (
     return parseDate(a.date) - parseDate(b.date);
   });
 
-  // 8. Yürüyen Bakiye Hesapla
+  // 7. Yürüyen Bakiye Hesapla
   let runningBalance = 0;
   return (Array.isArray(combined) ? combined : []).map((item) => {
     runningBalance += (item.debit || 0) - (item.credit || 0);

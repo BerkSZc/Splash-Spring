@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
-import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
-import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
+import { useCollection } from "../../../../backend/store/useCollection.js";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
@@ -16,22 +15,11 @@ export const useFinancialLogic = () => {
     collectionTotalPages,
     addCollection,
     editCollection,
-    deleteReceivedCollection,
-    getReceivedCollectionsByYear,
+    deleteCollection,
+    getCollectionsByYear,
     loading: collectionsLoading,
-  } = useReceivedCollection();
-  const {
-    payments,
-    paymentTotalPages,
-    addPayment,
-    editPayment,
-    deletePaymentCompany,
-    getPaymentCollectionsByYear,
-    loading: paymentsLoading,
-  } = usePaymentCompany();
-
+  } = useCollection();
   const { getFileNo, loading: commonDataLoading } = useCommonData();
-
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -47,8 +35,11 @@ export const useFinancialLogic = () => {
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
+  const backendType = type === "received" ? "RECEIVED" : "PAYMENT";
+
   useEffect(() => {
     localStorage.setItem("collection_type", type);
+    setPage(0);
   }, [type]);
 
   useEffect(() => {
@@ -87,6 +78,15 @@ export const useFinancialLogic = () => {
     fileNo: "",
   });
 
+  const [editForm, setEditForm] = useState({
+    date: "",
+    customerId: "",
+    price: "",
+    comment: "",
+    fileNo: "",
+    type: "PAYMENT",
+  });
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (event.button === 2) return;
@@ -114,21 +114,13 @@ export const useFinancialLogic = () => {
     setAddForm((prev) => ({ ...prev, date: getInitialDate(year) }));
   }, [year, tenant]);
 
-  const [editForm, setEditForm] = useState({
-    date: "",
-    customerId: "",
-    price: "",
-    comment: "",
-    fileNo: "",
-  });
-
   useEffect(() => {
     let ignore = false;
     const updateFileNo = async () => {
       const date = addForm.date;
       if (!date) return;
 
-      const mode = type === "received" ? "COLLECTION" : "PAYMENT";
+      const mode = type === "received" ? "RECEIVED" : "PAYMENT";
       try {
         const nextNo = await getFileNo(date, mode, tenant);
 
@@ -154,19 +146,13 @@ export const useFinancialLogic = () => {
       try {
         await Promise.all([
           getAllCustomers(0, 999, false, "", tenant, year),
-          getReceivedCollectionsByYear(
+          getCollectionsByYear(
             page,
             PAGE_SIZE,
             debouncedSearch,
             year,
             tenant,
-          ),
-          getPaymentCollectionsByYear(
-            page,
-            PAGE_SIZE,
-            debouncedSearch,
-            year,
-            tenant,
+            backendType,
           ),
         ]);
         if (ignore) return;
@@ -180,17 +166,16 @@ export const useFinancialLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant, page, debouncedSearch]);
+  }, [year, tenant, page, debouncedSearch, type]);
 
   const filteredList = useMemo(() => {
-    const shownList = type === "received" ? collections : payments;
-    return (Array.isArray(shownList) ? shownList : []).sort((a, b) => {
+    return (Array.isArray(collections) ? collections : []).sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
 
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [collections, payments, type, sortOrder]);
+  }, [collections, type, sortOrder]);
 
   const handleSelectRow = (id) => {
     setSelectedId((prev) => (prev === id ? null : id));
@@ -248,19 +233,17 @@ export const useFinancialLogic = () => {
       fileNo: addForm.fileNo || "",
       customer: { id: customerId },
       customerName: selectedCustomer?.name || "",
+      type: backendType,
     };
 
     try {
-      if (type === "received") {
-        await addCollection(customerId, payload, tenant);
-      } else {
-        await addPayment(customerId, payload, tenant);
-      }
+      await addCollection(customerId, payload, tenant);
+
       const resetDate = getInitialDate(year);
 
       const nextNo = await getFileNo(
         resetDate,
-        type === "received" ? "COLLECTION" : "PAYMENT",
+        type === "received" ? "RECEIVED" : "PAYMENT",
         tenant,
       );
 
@@ -312,6 +295,7 @@ export const useFinancialLogic = () => {
       price: formatNumber(item?.price) || "",
       comment: item.comment || "",
       fileNo: item.fileNo || "",
+      type: item.type || backendType,
     });
   };
 
@@ -331,6 +315,7 @@ export const useFinancialLogic = () => {
       fileNo: editForm.fileNo || "",
       customerId: customerId,
       customerName: selectedCustomer?.name || "",
+      type: editForm.type || backendType,
     };
 
     const selectedYear = new Date(editForm.date).getFullYear();
@@ -340,14 +325,20 @@ export const useFinancialLogic = () => {
       return;
     }
     try {
-      if (type === "received") {
-        await editCollection(payload.id, payload, tenant);
-      } else {
-        await editPayment(payload.id, payload, tenant);
-      }
+      await editCollection(payload.id, payload, tenant);
       setEditing(null);
       clearSelection();
-      await getAllCustomers(0, 999, false, "", tenant, year);
+      await Promise.all([
+        getAllCustomers(0, 999, false, "", tenant, year),
+        getCollectionsByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+          backendType,
+        ),
+      ]);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -363,11 +354,9 @@ export const useFinancialLogic = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      if (type === "received") {
-        await deleteReceivedCollection(deleteTarget.id, tenant);
-      } else {
-        await deletePaymentCompany(deleteTarget.id, tenant);
-      }
+      const targetType = deleteTarget.type || backendType;
+
+      await deleteCollection(deleteTarget.id, tenant, targetType);
       setDeleteTarget(null);
       clearSelection();
 
@@ -401,11 +390,7 @@ export const useFinancialLogic = () => {
     return val.toString().replace(/\./g, "").replace(",", ".");
   };
 
-  const isLoading =
-    customersLoading ||
-    collectionsLoading ||
-    paymentsLoading ||
-    commonDataLoading;
+  const isLoading = customersLoading || collectionsLoading || commonDataLoading;
 
   const clearSelection = () => {
     setContextMenu(null);
@@ -430,8 +415,7 @@ export const useFinancialLogic = () => {
       isOpen,
       selectedId,
       contextMenu,
-      totalPages:
-        type === "received" ? collectionTotalPages : paymentTotalPages,
+      collectionTotalPages,
       page,
       viewingItem,
     },

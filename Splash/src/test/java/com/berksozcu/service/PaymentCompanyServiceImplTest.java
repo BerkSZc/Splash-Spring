@@ -1,537 +1,537 @@
-package com.berksozcu.service;
-
-import com.berksozcu.dto.collection.CollectionDto;
-import com.berksozcu.entites.collections.PaymentCompany;
-import com.berksozcu.entites.company.Company;
-import com.berksozcu.entites.company.Year;
-import com.berksozcu.entites.customer.Customer;
-import com.berksozcu.entites.customer.OpeningVoucher;
-import com.berksozcu.exception.BaseException;
-import com.berksozcu.repository.*;
-import com.berksozcu.service.impl.PaymentCompanyServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-
-@ExtendWith(MockitoExtension.class)
-public class PaymentCompanyServiceImplTest {
-
-    @Mock
-    private CustomerRepository customerRepository;
-    @Mock
-    private PaymentCompanyRepository paymentCompanyRepository;
-    @Mock
-    private OpeningVoucherRepository openingVoucherRepository;
-    @Mock
-    private CompanyRepository companyRepository;
-
-    @InjectMocks
-    private PaymentCompanyServiceImpl paymentCompanyServiceImpl;
-
-    private Customer mockCustomer;
-    private PaymentCompany mockPayment;
-    private Company mockCompany;
-    private OpeningVoucher mockOpeningVoucher;
-
-    @BeforeEach
-    void setUp() {
-        mockCustomer = new Customer();
-        mockCustomer.setId(1L);
-        mockCustomer.setName("BERK");
-        mockCustomer.setArchived(false);
-        mockCustomer.setCode("1C");
-
-        mockCompany = new Company();
-        mockCompany.setId(10L);
-        mockCompany.setSchemaName("company");
-
-        Year mockYear = new Year();
-        mockYear.setCompany(mockCompany);
-        mockYear.setYearValue(2025);
-
-        mockCompany.setYears(List.of(mockYear));
-
-        mockPayment = new PaymentCompany();
-        mockPayment.setId(1L);
-        mockPayment.setFileNo("A1231");
-        mockPayment.setPrice(new BigDecimal("100.00"));
-        mockPayment.setCompany(mockCompany);
-        mockPayment.setCustomer(mockCustomer);
-        mockPayment.setDate(LocalDate.of(2026, 5, 10));
-
-        mockOpeningVoucher = new OpeningVoucher();
-        mockOpeningVoucher.setId(1L);
-        mockOpeningVoucher.setCustomer(mockCustomer);
-        mockOpeningVoucher.setDebit(new BigDecimal("100.00"));
-        mockOpeningVoucher.setFinalBalance(new BigDecimal("100.00"));
-    }
-
-    @Test
-    void addPaymentCompany_ShouldThrowException_WhenCustomerNotExists() {
-        Long nonExistentCustomerId = 99L;
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(customerRepository.findByIdAndCompany(nonExistentCustomerId, mockCompany))
-                .thenReturn(Optional.empty());
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.addPaymentCompany(nonExistentCustomerId, mockPaymentCompanyDto, "company"));
-
-        assertEquals("Hata Kodu: 1001 Müşteri mevcut değil", exception.getMessage());
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void addPaymentCompany_ShouldThrowException_WhenCustomerIsArchived() {
-        mockCustomer.setArchived(true);
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company"));
-
-        assertEquals("Hata Kodu: 1012 Arşivdeki müşteriye işlem yapılamaz", exception.getMessage());
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void addPaymentCompany_ShouldThrowException_WhenFileNoExists() {
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
-
-        when(paymentCompanyRepository.existsByFileNoAndCompany(mockPayment.getFileNo(), mockCompany))
-                .thenReturn(true);
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company"));
-
-        assertEquals("Hata Kodu: 1029 İşlem no mevcut", exception.getMessage());
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void addPaymentCompany_ShouldFillDefaultValues_WhenInputIsMissing() {
-        mockPayment.setPrice(null);
-        mockPayment.setFileNo(null);
-        mockCustomer.setName(null);
-        mockPayment.setDate(null);
-        mockPayment.setComment(null);
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
-
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(eq(1L),
-                eq(mockCompany), any(), any()))
-                .thenReturn(Optional.of(mockOpeningVoucher));
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company");
-
-        assertEquals(BigDecimal.ZERO, mockPayment.getPrice());
-        assertEquals("", mockPayment.getCustomerName());
-        assertEquals("", mockPayment.getFileNo());
-        assertEquals(LocalDate.now(), mockPayment.getDate());
-        assertEquals("", mockPayment.getComment());
-
-        verify(openingVoucherRepository, times(1)).save(mockOpeningVoucher);
-        verify(paymentCompanyRepository, times(1)).save(mockPayment);
-    }
-
-    @Test
-    void addPaymentCompany_ShouldUpdateVoucherBalancesAndSaveEverything() {
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any())).thenReturn(Optional.of(mockOpeningVoucher));
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company");
-
-        assertEquals(new BigDecimal("200.00"), mockOpeningVoucher.getFinalBalance());
-        assertEquals(new BigDecimal("200.00"), mockOpeningVoucher.getDebit());
-
-        verify(paymentCompanyRepository, times(1)).save(mockPayment);
-        verify(openingVoucherRepository, times(1)).save(mockOpeningVoucher);
-    }
-
-    @Test
-    void editPaymentCompany_ShouldThrowException_WhenPaymentNotFound() {
-        Long paymentId = 1L;
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
-                .thenReturn(Optional.empty());
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPaymentCompanyDto, "company"));
-
-        assertEquals("Hata Kodu: 1005 Ödeme bulunamadı", exception.getMessage());
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void editPaymentCompany_ShouldThrowException_WhenFileNoExistsAndNewFileNoNotExists() {
-
-        CollectionDto request = new CollectionDto();
-        request.setFileNo("ASSS1");
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockPayment));
-
-        when(paymentCompanyRepository.existsByFileNoAndCompany(request.getFileNo(), mockCompany))
-                .thenReturn(true);
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.editPaymentCompany(1L, request, "company")
-        );
-        assertEquals("Hata Kodu: 1029 İşlem no mevcut" ,exception.getMessage());
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void editPaymentCompany_ShouldThrowException_WhenCompanyIdIsInvalid() {
-
-        Company request = new Company();
-        request.setId(2L);
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(request);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, request)).thenReturn(Optional.of(mockPayment));
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company"));
-
-        assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void editPaymentCompany_ShouldTransferBalance_WhenCustomerChange() {
-        Customer newCustomer = new Customer();
-        newCustomer.setId(1L);
-
-        CollectionDto request = new CollectionDto();
-        request.setPrice(new BigDecimal("150.00"));
-        request.setFileNo("NEW-123");
-        request.setCustomerId(1L);
-
-        OpeningVoucher newOpeningVoucher = new OpeningVoucher();
-        newOpeningVoucher.setDebit(new BigDecimal("500.00"));
-        newOpeningVoucher.setFinalBalance(new BigDecimal("500.00"));
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
-                .thenReturn(Optional.of(mockPayment));
-
-        when(paymentCompanyRepository.existsByFileNoAndCompany(request.getFileNo(), mockCompany))
-                .thenReturn(false);
-
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any()))
-                .thenReturn(Optional.of(mockOpeningVoucher))
-                .thenReturn(Optional.of(newOpeningVoucher));
-
-        paymentCompanyServiceImpl.editPaymentCompany(1L, request, "company");
-
-        assertEquals(0, BigDecimal.ZERO.compareTo(mockOpeningVoucher.getFinalBalance()));
-        assertEquals(0 , BigDecimal.ZERO.compareTo(mockOpeningVoucher.getDebit()));
-
-        assertEquals(0, new BigDecimal("650.00").compareTo(newOpeningVoucher.getFinalBalance()));
-        assertEquals(0, new BigDecimal("650.00").compareTo(newOpeningVoucher.getDebit()));
-
-        verify(openingVoucherRepository, times(1)).save(mockOpeningVoucher);
-        verify(openingVoucherRepository, times(1)).save(newOpeningVoucher);
-        verify(paymentCompanyRepository, times(1)).save(mockPayment);
-    }
-
-    @Test
-    void editPaymentCompany_ShouldCreateDefaultVoucher_WithInitialValues() {
-
-        Long paymentId = 1L;
-
-        ArgumentCaptor<OpeningVoucher> voucherCaptor = ArgumentCaptor.forClass(OpeningVoucher.class);
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
-                .thenReturn(Optional.of(mockPayment));
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any()))
-                .thenReturn(Optional.empty());
-
-        when(openingVoucherRepository.save(any(OpeningVoucher.class))).thenAnswer(i -> {
-            OpeningVoucher input = i.getArgument(0);
-            if (BigDecimal.ZERO.equals(input.getFinalBalance())) {
-                throw new RuntimeException("HATA");
-            }
-            return input;
-        });
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        try {
-            paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPaymentCompanyDto, "company");
-        } catch (RuntimeException e) {
-            assertEquals("HATA", e.getMessage());
-        }
-
-        verify(openingVoucherRepository).save(voucherCaptor.capture());
-        OpeningVoucher captured = voucherCaptor.getValue();
-
-        assertEquals("Eklendi", captured.getDescription());
-        assertEquals("001", captured.getFileNo());
-        assertEquals(0, captured.getFinalBalance().compareTo(BigDecimal.ZERO));
-        assertEquals(0, captured.getDebit().compareTo(BigDecimal.ZERO));
-        assertEquals(0, captured.getCredit().compareTo(BigDecimal.ZERO));
-        assertEquals(0, captured.getYearlyCredit().compareTo(BigDecimal.ZERO));
-        assertEquals(0, captured.getYearlyDebit().compareTo(BigDecimal.ZERO));
-        assertEquals(mockCustomer, captured.getCustomer());
-        assertEquals(mockCompany, captured.getCompany());
-        assertEquals(mockCustomer.getName(), captured.getCustomerName());
-        assertEquals(LocalDate.of(captured.getDate().getYear(), 1, 1), captured.getDate());
-    }
-
-    @Test
-    void editPaymentCompany_ShouldUpdateFinalBalanceAndDebit_AfterExceptions() {
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
-                .thenReturn(Optional.of(mockPayment));
-
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any()))
-                .thenReturn(Optional.of(mockOpeningVoucher))
-                .thenThrow(new RuntimeException("Test Durduruldu"));
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-        try {
-            paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company");
-        } catch (RuntimeException e) {
-            //HATA
-        }
-
-        assertEquals(0, new BigDecimal("0.00").compareTo(mockOpeningVoucher.getFinalBalance()));
-        assertEquals(0, new BigDecimal("0.00").compareTo(mockOpeningVoucher.getDebit()));
-
-        verify(openingVoucherRepository, never()).save(any());
-    }
-
-    @Test
-    void editPaymentCompany_ShouldFillDefaultValues_WhenInputIsMissing() {
-
-        CollectionDto inputPayment = new CollectionDto();
-        inputPayment.setCustomerId(1L);;
-        inputPayment.setDate(null);
-        inputPayment.setPrice(null);
-        inputPayment.setComment(null);
-        inputPayment.setFileNo(null);
-        inputPayment.setCustomerName(null);
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
-                .thenReturn(Optional.of(mockPayment));
-
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any())).
-                thenReturn(Optional.of(mockOpeningVoucher))
-                .thenThrow(new RuntimeException("Test Durduruldu"));
-
-        try {
-            paymentCompanyServiceImpl.editPaymentCompany(1L, inputPayment, "company");
-        } catch (RuntimeException e) {
-            // HATA
-        }
-
-        assertEquals(LocalDate.now(), mockPayment.getDate());
-        assertEquals("", mockPayment.getComment());
-        assertEquals(BigDecimal.ZERO, mockPayment.getPrice());
-        assertEquals("", mockPayment.getFileNo());
-        assertEquals("", mockPayment.getCustomerName());
-
-        verify(paymentCompanyRepository, never()).save(any());
-    }
-
-    @Test
-    void editPaymentCompany_ShouldUpdateVoucherBalanceAndSaveEverything() {
-
-        OpeningVoucher newOpeningVoucher = new OpeningVoucher();
-        newOpeningVoucher.setId(1L);
-        newOpeningVoucher.setFinalBalance(new BigDecimal("100.00"));
-        newOpeningVoucher.setDebit(new BigDecimal("0.00"));
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
-                .thenReturn(Optional.of(mockPayment));
-
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any()))
-                .thenReturn(Optional.of(mockOpeningVoucher))
-                .thenReturn(Optional.of(newOpeningVoucher));
-
-        CollectionDto mockPaymentCompanyDto = new CollectionDto();
-        mockPaymentCompanyDto.setId(mockPayment.getId());
-        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
-        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
-        mockPaymentCompanyDto.setDate(mockPayment.getDate());
-        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
-        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
-        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
-        mockPaymentCompanyDto.setComment(mockPayment.getComment());
-
-
-        paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company");
-
-        assertEquals(new BigDecimal("200.00"), newOpeningVoucher.getFinalBalance());
-        assertEquals(new BigDecimal("100.00"), newOpeningVoucher.getDebit());
-
-        verify(openingVoucherRepository).save(mockOpeningVoucher);
-        verify(paymentCompanyRepository).save(mockPayment);
-    }
-
-    @Test
-    void deletePaymentCompany_ShouldThrowException_WhenPaymentNotFound() {
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
-                .thenReturn(Optional.empty());
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.deletePaymentCompany(1L, "company"));
-
-        assertEquals("Hata Kodu: 1005 Ödeme bulunamadı", exception.getMessage());
-
-        verify(paymentCompanyRepository, never()).delete(any());
-    }
-
-    @Test
-    void deletePaymentCompany_ShouldThrowException_WhenCompanyIdIsInvalid() {
-
-        Company request = new Company();
-        request.setId(1L);
-
-        when(companyRepository.findBySchemaName("company")).thenReturn(request);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, request))
-                .thenReturn(Optional.of(mockPayment));
-
-        BaseException exception = assertThrows(BaseException.class, () ->
-                paymentCompanyServiceImpl.deletePaymentCompany(1L, "company"));
-
-        assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
-        verify(paymentCompanyRepository, never()).delete(any());
-    }
-
-    @Test
-    void deletePaymentCompany_ShouldUpdateVoucherBalanceAndSaveEverything() {
-        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
-        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
-                .thenReturn(Optional.of(mockPayment));
-
-        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
-                any(), any()))
-                .thenReturn(Optional.of(mockOpeningVoucher));
-
-        paymentCompanyServiceImpl.deletePaymentCompany(1L, "company");
-
-        assertEquals(new BigDecimal("0.00"), mockOpeningVoucher.getFinalBalance());
-        assertEquals(new BigDecimal("0.00"), mockOpeningVoucher.getDebit());
-
-        verify(openingVoucherRepository).save(mockOpeningVoucher);
-        verify(paymentCompanyRepository).deleteById(1L);
-    }
-}
+//package com.berksozcu.service;
+//
+//import com.berksozcu.dto.collection.CollectionDto;
+//import com.berksozcu.entites.collections.PaymentCompany;
+//import com.berksozcu.entites.company.Company;
+//import com.berksozcu.entites.company.Year;
+//import com.berksozcu.entites.customer.Customer;
+//import com.berksozcu.entites.customer.OpeningVoucher;
+//import com.berksozcu.exception.BaseException;
+//import com.berksozcu.repository.*;
+//import com.berksozcu.service.impl.PaymentCompanyServiceImpl;
+//import org.junit.jupiter.api.BeforeEach;
+//import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.extension.ExtendWith;
+//import org.mockito.ArgumentCaptor;
+//import org.mockito.InjectMocks;
+//import org.mockito.Mock;
+//import org.mockito.junit.jupiter.MockitoExtension;
+//
+//import java.math.BigDecimal;
+//import java.time.LocalDate;
+//import java.util.List;
+//import java.util.Optional;
+//
+//import static org.junit.jupiter.api.Assertions.assertEquals;
+//import static org.junit.jupiter.api.Assertions.assertThrows;
+//import static org.mockito.ArgumentMatchers.any;
+//import static org.mockito.ArgumentMatchers.anyLong;
+//import static org.mockito.Mockito.*;
+//
+//@ExtendWith(MockitoExtension.class)
+//public class PaymentCompanyServiceImplTest {
+//
+//    @Mock
+//    private CustomerRepository customerRepository;
+//    @Mock
+//    private PaymentCompanyRepository paymentCompanyRepository;
+//    @Mock
+//    private OpeningVoucherRepository openingVoucherRepository;
+//    @Mock
+//    private CompanyRepository companyRepository;
+//
+//    @InjectMocks
+//    private PaymentCompanyServiceImpl paymentCompanyServiceImpl;
+//
+//    private Customer mockCustomer;
+//    private PaymentCompany mockPayment;
+//    private Company mockCompany;
+//    private OpeningVoucher mockOpeningVoucher;
+//
+//    @BeforeEach
+//    void setUp() {
+//        mockCustomer = new Customer();
+//        mockCustomer.setId(1L);
+//        mockCustomer.setName("BERK");
+//        mockCustomer.setArchived(false);
+//        mockCustomer.setCode("1C");
+//
+//        mockCompany = new Company();
+//        mockCompany.setId(10L);
+//        mockCompany.setSchemaName("company");
+//
+//        Year mockYear = new Year();
+//        mockYear.setCompany(mockCompany);
+//        mockYear.setYearValue(2025);
+//
+//        mockCompany.setYears(List.of(mockYear));
+//
+//        mockPayment = new PaymentCompany();
+//        mockPayment.setId(1L);
+//        mockPayment.setFileNo("A1231");
+//        mockPayment.setPrice(new BigDecimal("100.00"));
+//        mockPayment.setCompany(mockCompany);
+//        mockPayment.setCustomer(mockCustomer);
+//        mockPayment.setDate(LocalDate.of(2026, 5, 10));
+//
+//        mockOpeningVoucher = new OpeningVoucher();
+//        mockOpeningVoucher.setId(1L);
+//        mockOpeningVoucher.setCustomer(mockCustomer);
+//        mockOpeningVoucher.setDebit(new BigDecimal("100.00"));
+//        mockOpeningVoucher.setFinalBalance(new BigDecimal("100.00"));
+//    }
+//
+//    @Test
+//    void addPaymentCompany_ShouldThrowException_WhenCustomerNotExists() {
+//        Long nonExistentCustomerId = 99L;
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(customerRepository.findByIdAndCompany(nonExistentCustomerId, mockCompany))
+//                .thenReturn(Optional.empty());
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.addPaymentCompany(nonExistentCustomerId, mockPaymentCompanyDto, "company"));
+//
+//        assertEquals("Hata Kodu: 1001 Müşteri mevcut değil", exception.getMessage());
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void addPaymentCompany_ShouldThrowException_WhenCustomerIsArchived() {
+//        mockCustomer.setArchived(true);
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company"));
+//
+//        assertEquals("Hata Kodu: 1012 Arşivdeki müşteriye işlem yapılamaz", exception.getMessage());
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void addPaymentCompany_ShouldThrowException_WhenFileNoExists() {
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
+//
+//        when(paymentCompanyRepository.existsByFileNoAndCompany(mockPayment.getFileNo(), mockCompany))
+//                .thenReturn(true);
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company"));
+//
+//        assertEquals("Hata Kodu: 1029 İşlem no mevcut", exception.getMessage());
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void addPaymentCompany_ShouldFillDefaultValues_WhenInputIsMissing() {
+//        mockPayment.setPrice(null);
+//        mockPayment.setFileNo(null);
+//        mockCustomer.setName(null);
+//        mockPayment.setDate(null);
+//        mockPayment.setComment(null);
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
+//
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(eq(1L),
+//                eq(mockCompany), any(), any()))
+//                .thenReturn(Optional.of(mockOpeningVoucher));
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company");
+//
+//        assertEquals(BigDecimal.ZERO, mockPayment.getPrice());
+//        assertEquals("", mockPayment.getCustomerName());
+//        assertEquals("", mockPayment.getFileNo());
+//        assertEquals(LocalDate.now(), mockPayment.getDate());
+//        assertEquals("", mockPayment.getComment());
+//
+//        verify(openingVoucherRepository, times(1)).save(mockOpeningVoucher);
+//        verify(paymentCompanyRepository, times(1)).save(mockPayment);
+//    }
+//
+//    @Test
+//    void addPaymentCompany_ShouldUpdateVoucherBalancesAndSaveEverything() {
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(customerRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockCustomer));
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any())).thenReturn(Optional.of(mockOpeningVoucher));
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        paymentCompanyServiceImpl.addPaymentCompany(1L, mockPaymentCompanyDto, "company");
+//
+//        assertEquals(new BigDecimal("200.00"), mockOpeningVoucher.getFinalBalance());
+//        assertEquals(new BigDecimal("200.00"), mockOpeningVoucher.getDebit());
+//
+//        verify(paymentCompanyRepository, times(1)).save(mockPayment);
+//        verify(openingVoucherRepository, times(1)).save(mockOpeningVoucher);
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldThrowException_WhenPaymentNotFound() {
+//        Long paymentId = 1L;
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
+//                .thenReturn(Optional.empty());
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPaymentCompanyDto, "company"));
+//
+//        assertEquals("Hata Kodu: 1005 Ödeme bulunamadı", exception.getMessage());
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldThrowException_WhenFileNoExistsAndNewFileNoNotExists() {
+//
+//        CollectionDto request = new CollectionDto();
+//        request.setFileNo("ASSS1");
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany)).thenReturn(Optional.of(mockPayment));
+//
+//        when(paymentCompanyRepository.existsByFileNoAndCompany(request.getFileNo(), mockCompany))
+//                .thenReturn(true);
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.editPaymentCompany(1L, request, "company")
+//        );
+//        assertEquals("Hata Kodu: 1029 İşlem no mevcut" ,exception.getMessage());
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldThrowException_WhenCompanyIdIsInvalid() {
+//
+//        Company request = new Company();
+//        request.setId(2L);
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(request);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, request)).thenReturn(Optional.of(mockPayment));
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company"));
+//
+//        assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldTransferBalance_WhenCustomerChange() {
+//        Customer newCustomer = new Customer();
+//        newCustomer.setId(1L);
+//
+//        CollectionDto request = new CollectionDto();
+//        request.setPrice(new BigDecimal("150.00"));
+//        request.setFileNo("NEW-123");
+//        request.setCustomerId(1L);
+//
+//        OpeningVoucher newOpeningVoucher = new OpeningVoucher();
+//        newOpeningVoucher.setDebit(new BigDecimal("500.00"));
+//        newOpeningVoucher.setFinalBalance(new BigDecimal("500.00"));
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+//                .thenReturn(Optional.of(mockPayment));
+//
+//        when(paymentCompanyRepository.existsByFileNoAndCompany(request.getFileNo(), mockCompany))
+//                .thenReturn(false);
+//
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any()))
+//                .thenReturn(Optional.of(mockOpeningVoucher))
+//                .thenReturn(Optional.of(newOpeningVoucher));
+//
+//        paymentCompanyServiceImpl.editPaymentCompany(1L, request, "company");
+//
+//        assertEquals(0, BigDecimal.ZERO.compareTo(mockOpeningVoucher.getFinalBalance()));
+//        assertEquals(0 , BigDecimal.ZERO.compareTo(mockOpeningVoucher.getDebit()));
+//
+//        assertEquals(0, new BigDecimal("650.00").compareTo(newOpeningVoucher.getFinalBalance()));
+//        assertEquals(0, new BigDecimal("650.00").compareTo(newOpeningVoucher.getDebit()));
+//
+//        verify(openingVoucherRepository, times(1)).save(mockOpeningVoucher);
+//        verify(openingVoucherRepository, times(1)).save(newOpeningVoucher);
+//        verify(paymentCompanyRepository, times(1)).save(mockPayment);
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldCreateDefaultVoucher_WithInitialValues() {
+//
+//        Long paymentId = 1L;
+//
+//        ArgumentCaptor<OpeningVoucher> voucherCaptor = ArgumentCaptor.forClass(OpeningVoucher.class);
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(paymentId, mockCompany))
+//                .thenReturn(Optional.of(mockPayment));
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any()))
+//                .thenReturn(Optional.empty());
+//
+//        when(openingVoucherRepository.save(any(OpeningVoucher.class))).thenAnswer(i -> {
+//            OpeningVoucher input = i.getArgument(0);
+//            if (BigDecimal.ZERO.equals(input.getFinalBalance())) {
+//                throw new RuntimeException("HATA");
+//            }
+//            return input;
+//        });
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        try {
+//            paymentCompanyServiceImpl.editPaymentCompany(paymentId, mockPaymentCompanyDto, "company");
+//        } catch (RuntimeException e) {
+//            assertEquals("HATA", e.getMessage());
+//        }
+//
+//        verify(openingVoucherRepository).save(voucherCaptor.capture());
+//        OpeningVoucher captured = voucherCaptor.getValue();
+//
+//        assertEquals("Eklendi", captured.getDescription());
+//        assertEquals("001", captured.getFileNo());
+//        assertEquals(0, captured.getFinalBalance().compareTo(BigDecimal.ZERO));
+//        assertEquals(0, captured.getDebit().compareTo(BigDecimal.ZERO));
+//        assertEquals(0, captured.getCredit().compareTo(BigDecimal.ZERO));
+//        assertEquals(0, captured.getYearlyCredit().compareTo(BigDecimal.ZERO));
+//        assertEquals(0, captured.getYearlyDebit().compareTo(BigDecimal.ZERO));
+//        assertEquals(mockCustomer, captured.getCustomer());
+//        assertEquals(mockCompany, captured.getCompany());
+//        assertEquals(mockCustomer.getName(), captured.getCustomerName());
+//        assertEquals(LocalDate.of(captured.getDate().getYear(), 1, 1), captured.getDate());
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldUpdateFinalBalanceAndDebit_AfterExceptions() {
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+//                .thenReturn(Optional.of(mockPayment));
+//
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any()))
+//                .thenReturn(Optional.of(mockOpeningVoucher))
+//                .thenThrow(new RuntimeException("Test Durduruldu"));
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//        try {
+//            paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company");
+//        } catch (RuntimeException e) {
+//            //HATA
+//        }
+//
+//        assertEquals(0, new BigDecimal("0.00").compareTo(mockOpeningVoucher.getFinalBalance()));
+//        assertEquals(0, new BigDecimal("0.00").compareTo(mockOpeningVoucher.getDebit()));
+//
+//        verify(openingVoucherRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldFillDefaultValues_WhenInputIsMissing() {
+//
+//        CollectionDto inputPayment = new CollectionDto();
+//        inputPayment.setCustomerId(1L);;
+//        inputPayment.setDate(null);
+//        inputPayment.setPrice(null);
+//        inputPayment.setComment(null);
+//        inputPayment.setFileNo(null);
+//        inputPayment.setCustomerName(null);
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+//                .thenReturn(Optional.of(mockPayment));
+//
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any())).
+//                thenReturn(Optional.of(mockOpeningVoucher))
+//                .thenThrow(new RuntimeException("Test Durduruldu"));
+//
+//        try {
+//            paymentCompanyServiceImpl.editPaymentCompany(1L, inputPayment, "company");
+//        } catch (RuntimeException e) {
+//            // HATA
+//        }
+//
+//        assertEquals(LocalDate.now(), mockPayment.getDate());
+//        assertEquals("", mockPayment.getComment());
+//        assertEquals(BigDecimal.ZERO, mockPayment.getPrice());
+//        assertEquals("", mockPayment.getFileNo());
+//        assertEquals("", mockPayment.getCustomerName());
+//
+//        verify(paymentCompanyRepository, never()).save(any());
+//    }
+//
+//    @Test
+//    void editPaymentCompany_ShouldUpdateVoucherBalanceAndSaveEverything() {
+//
+//        OpeningVoucher newOpeningVoucher = new OpeningVoucher();
+//        newOpeningVoucher.setId(1L);
+//        newOpeningVoucher.setFinalBalance(new BigDecimal("100.00"));
+//        newOpeningVoucher.setDebit(new BigDecimal("0.00"));
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+//                .thenReturn(Optional.of(mockPayment));
+//
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any()))
+//                .thenReturn(Optional.of(mockOpeningVoucher))
+//                .thenReturn(Optional.of(newOpeningVoucher));
+//
+//        CollectionDto mockPaymentCompanyDto = new CollectionDto();
+//        mockPaymentCompanyDto.setId(mockPayment.getId());
+//        mockPaymentCompanyDto.setFileNo(mockPayment.getFileNo());
+//        mockPaymentCompanyDto.setCompanyId(mockPayment.getCompany().getId());
+//        mockPaymentCompanyDto.setDate(mockPayment.getDate());
+//        mockPaymentCompanyDto.setPrice(mockPayment.getPrice());
+//        mockPaymentCompanyDto.setCustomerId(mockPayment.getCustomer().getId());
+//        mockPaymentCompanyDto.setCustomerName(mockPayment.getCustomer().getName());
+//        mockPaymentCompanyDto.setComment(mockPayment.getComment());
+//
+//
+//        paymentCompanyServiceImpl.editPaymentCompany(1L, mockPaymentCompanyDto, "company");
+//
+//        assertEquals(new BigDecimal("200.00"), newOpeningVoucher.getFinalBalance());
+//        assertEquals(new BigDecimal("100.00"), newOpeningVoucher.getDebit());
+//
+//        verify(openingVoucherRepository).save(mockOpeningVoucher);
+//        verify(paymentCompanyRepository).save(mockPayment);
+//    }
+//
+//    @Test
+//    void deletePaymentCompany_ShouldThrowException_WhenPaymentNotFound() {
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+//                .thenReturn(Optional.empty());
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.deletePaymentCompany(1L, "company"));
+//
+//        assertEquals("Hata Kodu: 1005 Ödeme bulunamadı", exception.getMessage());
+//
+//        verify(paymentCompanyRepository, never()).delete(any());
+//    }
+//
+//    @Test
+//    void deletePaymentCompany_ShouldThrowException_WhenCompanyIdIsInvalid() {
+//
+//        Company request = new Company();
+//        request.setId(1L);
+//
+//        when(companyRepository.findBySchemaName("company")).thenReturn(request);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, request))
+//                .thenReturn(Optional.of(mockPayment));
+//
+//        BaseException exception = assertThrows(BaseException.class, () ->
+//                paymentCompanyServiceImpl.deletePaymentCompany(1L, "company"));
+//
+//        assertEquals("Hata Kodu: 1020 Bu faturayı düzenlemeye yetkiniz yok", exception.getMessage());
+//        verify(paymentCompanyRepository, never()).delete(any());
+//    }
+//
+//    @Test
+//    void deletePaymentCompany_ShouldUpdateVoucherBalanceAndSaveEverything() {
+//        when(companyRepository.findBySchemaName("company")).thenReturn(mockCompany);
+//        when(paymentCompanyRepository.findByIdAndCompany(1L, mockCompany))
+//                .thenReturn(Optional.of(mockPayment));
+//
+//        when(openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(anyLong(), eq(mockCompany),
+//                any(), any()))
+//                .thenReturn(Optional.of(mockOpeningVoucher));
+//
+//        paymentCompanyServiceImpl.deletePaymentCompany(1L, "company");
+//
+//        assertEquals(new BigDecimal("0.00"), mockOpeningVoucher.getFinalBalance());
+//        assertEquals(new BigDecimal("0.00"), mockOpeningVoucher.getDebit());
+//
+//        verify(openingVoucherRepository).save(mockOpeningVoucher);
+//        verify(paymentCompanyRepository).deleteById(1L);
+//    }
+//}

@@ -13,6 +13,9 @@ CREATE TYPE public.payroll_model_enum AS ENUM ('INPUT', 'OUTPUT', 'UNKNOWN');
 DROP TYPE IF EXISTS public.payroll_type_enum CASCADE;
 CREATE TYPE public.payroll_type_enum AS ENUM ('CHEQUE', 'BOND', 'UNKNOWN');
 
+DROP TYPE IF EXISTS public.collection_type_enum CASCADE;
+CREATE TYPE public.collection_type_enum AS ENUM ('RECEIVED', 'PAYMENT', 'UNKNOWN');
+
 CREATE COLLATION IF NOT EXISTS tr_tr_custom (
     provider = 'icu',
     locale = 'tr-TR'
@@ -23,6 +26,7 @@ CREATE CAST (varchar AS public.unit_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.invoice_status) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.payroll_model_enum) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS public.payroll_type_enum) WITH INOUT AS IMPLICIT;
+CREATE CAST (varchar AS public.collection_type_enum) WITH INOUT AS IMPLICIT;
 
 
 
@@ -184,7 +188,7 @@ CREATE TABLE material_price_history (
     customer_id BIGINT,
     company_id BIGINT,
 
-    CONSTRAINT cutomer_price
+    CONSTRAINT customer_price
         FOREIGN KEY (customer_id) REFERENCES customer(id),
     CONSTRAINT fk_material_price_history_material
         FOREIGN KEY (material_id) REFERENCES material(id),
@@ -198,25 +202,25 @@ CREATE TABLE material_price_history (
 -- 11. TAHSİLAT TABLOSU
 -- ---------------------------
 
-CREATE TABLE IF NOT EXISTS received_collection (
-    id BIGSERIAL PRIMARY KEY ,
-    date DATE NOT NULL,
-    comment VARCHAR(255),
-    price DECIMAL(18,2) NOT NULL,
-    customer_id BIGINT,
-    company_id BIGINT,
-    customer_name VARCHAR(255),
-    file_no VARCHAR(255),
-    CONSTRAINT fk_received_customer FOREIGN KEY (customer_id) REFERENCES customer(id),
-    CONSTRAINT fk_received_company FOREIGN KEY (company_id) REFERENCES company(id)
-);
+--CREATE TABLE IF NOT EXISTS received_collection (
+--    id BIGSERIAL PRIMARY KEY ,
+--    date DATE NOT NULL,
+--    comment VARCHAR(255),
+--    price DECIMAL(18,2) NOT NULL,
+--    customer_id BIGINT,
+--    company_id BIGINT,
+--    customer_name VARCHAR(255),
+--    file_no VARCHAR(255),
+--    CONSTRAINT fk_received_customer FOREIGN KEY (customer_id) REFERENCES customer(id),
+--    CONSTRAINT fk_received_company FOREIGN KEY (company_id) REFERENCES company(id)
+--);
 
 
 -- ---------------------------
 -- 12. FİRMAYA ÖDEME TABLOSU
 -- ---------------------------
 
-CREATE TABLE IF NOT EXISTS payment_company (
+CREATE TABLE IF NOT EXISTS collection (
     id BIGSERIAL PRIMARY KEY ,
     date DATE NOT NULL,
     comment VARCHAR(255),
@@ -225,6 +229,7 @@ CREATE TABLE IF NOT EXISTS payment_company (
     company_id BIGINT,
     customer_name VARCHAR(255),
     file_no VARCHAR(255),
+    type public.collection_type_enum NOT NULL,
     CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES customer(id),
     CONSTRAINT fk_payment_company FOREIGN KEY (company_id) REFERENCES company(id)
 );

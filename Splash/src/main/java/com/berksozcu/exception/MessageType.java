@@ -39,7 +39,8 @@ public enum MessageType {
     SIRKET_YIL_MEVCUT_DEGIL(1030, "Lütfen Şirket İçin Bir Mali Yılı Oluşturun"),
     MALZEME_KULLANIMDA(1031, "Faturalarda Kullanılan Malzemeler Silinemez!"),
     ISTEK_FAZLALALIGI(1032, "Sunucuya çok fazla istek gönderdiniz bir süre sonra tekrar deneyiniz!"),
-    OTURUM_SURE_DOLDU(1033, "Oturum süreniz doldu!");
+    OTURUM_SURE_DOLDU(1033, "Oturum süreniz doldu!"),
+    TIP_UYUSMUYOR(1034, "Kasa İşleminin Tipi Silmek İstediğinizle Uyuşmuyor!");
 
     private Integer code;
     private String message;

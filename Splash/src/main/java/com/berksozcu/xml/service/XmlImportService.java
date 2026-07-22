@@ -1,7 +1,7 @@
 package com.berksozcu.xml.service;
 
-import com.berksozcu.entites.collections.PaymentCompany;
-import com.berksozcu.entites.collections.ReceivedCollection;
+import com.berksozcu.entites.collections.Collection;
+import com.berksozcu.entites.collections.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -61,10 +61,7 @@ public class XmlImportService {
     private MaterialRepository materialRepository;
 
     @Autowired
-    private ReceivedCollectionRepository receivedCollectionRepository;
-
-    @Autowired
-    private PaymentCompanyRepository paymentCompanyRepository;
+    private CollectionRepository collectionRepository;
 
     @Autowired
     private SalesInvoiceRepository salesInvoiceRepository;
@@ -458,25 +455,31 @@ public class XmlImportService {
 
         Company company = getCompany(schemaName);
 
-        Set<String> existingCollections = receivedCollectionRepository.findAllByCompany(company)
+        Set<String> existingCollections = collectionRepository.findAllByCompanyAndType(company, CollectionType.RECEIVED)
                 .stream()
-                .map(ReceivedCollection::getFileNo)
+                .map(Collection::getFileNo)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        Set<String> existingPayments = paymentCompanyRepository.findAllByCompany(company)
-                .stream().map(PaymentCompany::getFileNo)
+        Set<String> existingPayments = collectionRepository.findAllByCompanyAndType(company, CollectionType.PAYMENT)
+                .stream().map(Collection::getFileNo)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+
+        List<Collection> collectionsToSave = new ArrayList<>();
+        Map<String, OpeningVoucher> voucherCache = new HashMap<>();
 
         for (CollectionXml c : collectionsXml.getCollections()) {
 
             String sdCode = c.getSD_CODE();
             Integer type = c.getTYPE();
+            String fileNo = c.getNUMBER() != null ? c.getNUMBER().trim().toUpperCase() : null;
 
-            if (type == 11 && existingCollections.contains(c.getNUMBER())) {
-                System.out.println("Tahsilar Fişi mevcut: " + c.getNUMBER());
+            if (type == 11 && existingCollections.contains(fileNo)) {
+                System.out.println("Tahsilar Fişi mevcut: " + fileNo);
                 continue;
-            } else if (type == 12 && "2".equals(sdCode) && existingPayments.contains(c.getNUMBER())) {
-                System.out.println("Ödeme Fişi mevcut: " + c.getNUMBER());
+            } else if (type == 12 && "2".equals(sdCode) && existingPayments.contains(fileNo)) {
+                System.out.println("Ödeme Fişi mevcut: " + fileNo);
                 continue;
             }
 
@@ -490,7 +493,7 @@ public class XmlImportService {
                 if (c.getTYPE() == 71 || c.getTYPE() == 72) {
                     arpCode = c.getSD_CODE();
                 } else {
-                    System.out.println("ARP_CODE eksik, kayıt atlandı: " + c.getNUMBER());
+                    System.out.println("ARP_CODE eksik, kayıt atlandı: " + fileNo);
                     continue;
                 }
             }
@@ -498,7 +501,7 @@ public class XmlImportService {
             Customer customer = customerRepository.findByCodeAndCompany(arpCode, company)
                     .orElse(null);
             if (customer == null) {
-                System.out.println("Müşteri bulunamadı: " + arpCode + " - kayıt: " + c.getNUMBER());
+                System.out.println("Müşteri bulunamadı: " + arpCode + " - kayıt: " + fileNo);
                 continue;
             }
 
@@ -507,7 +510,7 @@ public class XmlImportService {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
                 date = LocalDate.parse(c.getDATE(), formatter);
             } catch (Exception e) {
-                System.out.println("Hatalı tarih formatı: " + c.getDATE() + " - kayıt: " + c.getNUMBER());
+                System.out.println("Hatalı tarih formatı: " + c.getDATE() + " - kayıt: " + fileNo);
                 continue;
             }
             BigDecimal total = safeGet(parseBigDecimal(c.getAMOUNT()));
@@ -517,46 +520,46 @@ public class XmlImportService {
             LocalDate start = LocalDate.of(date.getYear(), 1, 1);
             LocalDate end = LocalDate.of(date.getYear(), 12, 31);
 
-            OpeningVoucher voucher = openingBalanceRepository
-                    .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
-                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
+            String voucherKey = customer.getId() + "_" + date.getYear();
+            OpeningVoucher voucher = voucherCache.computeIfAbsent(voucherKey, k ->
+                    openingBalanceRepository.findByCustomerIdAndCompanyAndDateBetween(customer.getId(),
+                            company, start, end).orElseGet(() -> getDefaultVoucher(company, customer, start)));
 
-            voucher.setCompany(company);
+            Collection newCollection = new Collection();
+            newCollection.setCustomer(customer);
+            newCollection.setDate(date);
+            newCollection.setPrice(total);
+            newCollection.setFileNo(fileNo);
+            newCollection.setCustomerName(Objects.requireNonNullElse(customer.getName(), "").toUpperCase());
+            newCollection.setComment(Objects.requireNonNullElse(c.getDESCRIPTION(), ""));
+            newCollection.setCompany(company);
+
             if (type == 11) {
                 // Tahsilat
-                ReceivedCollection rc = new ReceivedCollection();
-                rc.setCustomer(customer);
-                rc.setDate(date);
-                rc.setPrice(safeGet(total));
-                rc.setFileNo(Objects.requireNonNullElse(c.getNUMBER(), ""));
-                rc.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
-                rc.setComment(Objects.requireNonNullElse(c.getDESCRIPTION(), ""));
-                rc.setCompany(company);
+
+                newCollection.setType(CollectionType.RECEIVED);
 
                 voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(total).setScale(2, RoundingMode.HALF_UP));
                 voucher.setCredit(safeGet(voucher.getCredit()).add(total).setScale(2, RoundingMode.HALF_UP));
-                existingCollections.add(c.getNUMBER());
+                existingCollections.add(fileNo);
 
-                receivedCollectionRepository.save(rc);
-                openingBalanceRepository.save(voucher);
+                collectionsToSave.add(newCollection);
             } else if (type == 12 && "2".equals(sdCode)) {
                 // Firmaya ödeme
-                PaymentCompany py = new PaymentCompany();
-                py.setCustomer(customer);
-                py.setDate(date);
-                py.setComment(Objects.requireNonNullElse(c.getDESCRIPTION(), ""));
-                py.setFileNo(Objects.requireNonNullElse(c.getNUMBER(), ""));
-                py.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
-                py.setPrice(safeGet(total));
-                py.setCompany(company);
+
+                newCollection.setType(CollectionType.PAYMENT);
 
                 voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(total).setScale(2, RoundingMode.HALF_UP));
                 voucher.setDebit(safeGet(voucher.getDebit()).add(total).setScale(2, RoundingMode.HALF_UP));
-                existingPayments.add(c.getNUMBER());
+                existingPayments.add(fileNo);
 
-                paymentCompanyRepository.save(py);
-                openingBalanceRepository.save(voucher);
+                collectionsToSave.add(newCollection);
             }
+
+        }
+        if(!collectionsToSave.isEmpty()) {
+            collectionRepository.saveAll(collectionsToSave);
+            openingBalanceRepository.saveAll(voucherCache.values());
         }
     }
 

@@ -1,5 +1,6 @@
 package com.berksozcu.dto.collection;
 
+import com.berksozcu.entites.collections.CollectionType;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -25,4 +26,6 @@ public class CollectionDto {
     private BigDecimal finalBalance;
 
     private String fileNo;
+
+    private CollectionType type;
 }

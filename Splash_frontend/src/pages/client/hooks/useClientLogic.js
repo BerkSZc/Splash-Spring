@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
 import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
-import { usePaymentCompany } from "../../../../backend/store/usePaymentCompany.js";
-import { useReceivedCollection } from "../../../../backend/store/useReceivedCollection.js";
+import { useCollection } from "../../../../backend/store/useCollection.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import { accountStatementHelper } from "../utils/accountStatementHelper.js";
@@ -32,15 +31,10 @@ export const useClientLogic = () => {
     loading: purchaseLoading,
   } = usePurchaseInvoice();
   const {
-    payments,
-    getPaymentCollectionsByYear,
-    loading: paymentsLoading,
-  } = usePaymentCompany();
-  const {
     collections,
-    getReceivedCollectionsByYear,
-    loading: collectionLoading,
-  } = useReceivedCollection();
+    getCollectionsByYear,
+    loading: collectionsLoading,
+  } = useCollection();
   const { payrolls, getPayrollByYear, loading: payrollsLoading } = usePayroll();
   const {
     getAllOpeningVoucherByYear,
@@ -134,7 +128,6 @@ export const useClientLogic = () => {
         selectedCustomerForStatement,
         sales,
         purchase,
-        payments,
         collections,
         payrolls,
         year,
@@ -146,7 +139,6 @@ export const useClientLogic = () => {
     selectedCustomerForStatement,
     sales,
     purchase,
-    payments,
     collections,
     payrolls,
     year,
@@ -201,8 +193,7 @@ export const useClientLogic = () => {
       await Promise.allSettled([
         getSalesInvoicesByYear(0, 999, "", year, tenant),
         getPurchaseInvoiceByYear(0, 999, "", year, tenant),
-        getPaymentCollectionsByYear(0, 999, "", year, tenant),
-        getReceivedCollectionsByYear(0, 999, "", year, tenant),
+        getCollectionsByYear(0, 999, "", year, tenant),
         getPayrollByYear(0, 999, "", "", year, tenant),
       ]);
       setShowPrintModal(true);
@@ -404,8 +395,7 @@ export const useClientLogic = () => {
     customerLoading ||
     purchaseLoading ||
     salesLoading ||
-    collectionLoading ||
-    paymentsLoading ||
+    collectionsLoading ||
     payrollsLoading ||
     vouchersLoading;
 
