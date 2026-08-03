@@ -1,425 +1,425 @@
-package com.berksozcu.service.impl;
-
-import com.berksozcu.dto.invoice.InvoiceDto;
-import com.berksozcu.dto.invoice.InvoiceItemDto;
-import com.berksozcu.entites.company.Company;
-import com.berksozcu.entites.customer.Customer;
-import com.berksozcu.entites.customer.OpeningVoucher;
-import com.berksozcu.entites.material.Material;
-import com.berksozcu.entites.material_price_history.InvoiceType;
-import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
-import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
-import com.berksozcu.entites.sales.SalesInvoice;
-import com.berksozcu.entites.sales.SalesInvoiceItem;
-import com.berksozcu.exception.BaseException;
-import com.berksozcu.exception.ErrorMessage;
-import com.berksozcu.exception.MessageType;
-import com.berksozcu.repository.*;
-import com.berksozcu.service.ISalesInvoiceService;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-
-
-@Service
-public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
-
-    @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
-
-    @Autowired
-    private MaterialRepository materialRepository;
-
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private MaterialPriceHistoryRepository materialPriceHistoryRepository;
-
-    @Autowired
-    private OpeningVoucherRepository openingVoucherRepository;
-
-    @Autowired
-    private CompanyRepository companyRepository;
-
-    @Override
-    @Transactional
-    public InvoiceDto addSalesInvoice(Long id, InvoiceDto invoiceDto, String schemaName) {
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
-                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-
-        if (customer.isArchived()) {
-            throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
-        }
-
-        String fileNo = invoiceDto.getFileNo() != null ? invoiceDto.getFileNo().trim().toUpperCase() : "";
-
-        if (salesInvoiceRepository.existsByFileNoAndCompany(fileNo, company)) {
-            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
-        }
-
-        LocalDate start = LocalDate.of(invoiceDto.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(invoiceDto.getDate().getYear(), 12, 31);
-
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                        id, company, start, end)
-                .orElseGet(() -> getDefaultVoucher(customer, start, company));
-
-        SalesInvoice salesInvoice = new SalesInvoice();
-
-        salesInvoice.setCustomer(customer);
-        salesInvoice.setEurSellingRate(safeGet(invoiceDto.getEurSellingRate()));
-        salesInvoice.setUsdSellingRate(safeGet(invoiceDto.getUsdSellingRate()));
-        salesInvoice.setCompany(company);
-        salesInvoice.setFileNo(fileNo);
-        salesInvoice.setInvoiced(invoiceDto.isInvoiced());
-        salesInvoice.setDate(invoiceDto.getDate());
-
-        BigDecimal totalPrice = BigDecimal.ZERO;
-        BigDecimal kdvToplam = BigDecimal.ZERO;
-
-        List<SalesInvoiceItem> entityItems = new ArrayList<>();
-
-        for (InvoiceItemDto item : invoiceDto.getItems()) {
-            Material material = materialRepository.findByIdAndCompany(item.getMaterialId(), company).orElseThrow(
-                    () -> new BaseException(new ErrorMessage(MessageType.MALZEME_ALAN_BOS)));
-
-            SalesInvoiceItem salesInvoiceItem = new SalesInvoiceItem();
-
-            salesInvoiceItem.setMaterial(material);
-            salesInvoiceItem.setSalesInvoice(salesInvoice);
-
-            // Malzemenin bulunduğu satırın kdv siz fiyatı
-            BigDecimal lineTotal = safeGet(item.getUnitPrice())
-                    .multiply(safeGet(item.getQuantity()))
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            BigDecimal kdv = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-
-            BigDecimal kdvTutarHesaplama = kdv
-                    .multiply(safeGet(item.getUnitPrice())).multiply(safeGet(item.getQuantity()))
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            salesInvoiceItem.setKdvTutar(kdvTutarHesaplama);
-            salesInvoiceItem.setQuantity(safeGet(item.getQuantity()));
-            salesInvoiceItem.setCompany(company);
-            salesInvoiceItem.setUnitPrice(safeGet(item.getUnitPrice()));
-            salesInvoiceItem.setKdv(safeGet(item.getKdv()));
-            salesInvoiceItem.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));
-
-            kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
-
-            salesInvoiceItem.setLineTotal(lineTotal);
-            totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
-
-            entityItems.add(salesInvoiceItem);
-        }
-
-        salesInvoice.setItems(entityItems);
-        totalPrice = totalPrice.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
-
-        salesInvoice.setKdvToplam(kdvToplam);
-        salesInvoice.setTotalPrice(totalPrice);
-
-        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(totalPrice));
-        voucher.setDebit(safeGet(voucher.getDebit()).add(totalPrice));
-
-        openingVoucherRepository.save(voucher);
-        SalesInvoice savedInvoice = salesInvoiceRepository.save(salesInvoice);
-
-        for (SalesInvoiceItem item : savedInvoice.getItems()) {
-            savePriceHistory(item, savedInvoice, customer, company);
-
-        }
-        return convertToDto(savedInvoice);
-    }
-
-    @Override
-    @Transactional
-    public InvoiceDto editSalesInvoice(Long id, InvoiceDto invoiceDto, String schemaName) {
-
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        SalesInvoice oldInvoice = salesInvoiceRepository.findByIdAndCompany(id, company)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
-
-        String fileNo = invoiceDto.getFileNo() != null ? invoiceDto.getFileNo().trim().toUpperCase() : "";
-
-        if (salesInvoiceRepository.existsByFileNoAndCompany(fileNo, company)
-                && !oldInvoice.getFileNo().equals(fileNo)) {
-            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
-        }
-
-        if (!oldInvoice.getCompany().getId().equals(company.getId())) {
-            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
-        }
-
-        Customer oldCustomer = oldInvoice.getCustomer();
-        Customer newCustomer = customerRepository
-                .findByIdAndCompany(invoiceDto.getCustomerId(), company)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
-
-        LocalDate oldStart = LocalDate.of(oldInvoice.getDate().getYear(), 1, 1);
-        LocalDate oldEnd = LocalDate.of(oldInvoice.getDate().getYear(), 12, 31);
-
-        OpeningVoucher oldVoucher =
-                openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                                oldCustomer.getId(), company, oldStart, oldEnd)
-                        .orElseGet(() -> getDefaultVoucher(oldCustomer, oldStart, company));
-
-        oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(safeGet(oldInvoice.getTotalPrice())));
-        oldVoucher.setDebit(safeGet(oldVoucher.getDebit()).subtract(safeGet(oldInvoice.getTotalPrice())));
-
-        LocalDate start = LocalDate.of(invoiceDto.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(invoiceDto.getDate().getYear(), 12, 31);
-
-        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                        newCustomer.getId(), company, start, end)
-                .orElseGet(() -> getDefaultVoucher(newCustomer, start, company));
-
-        for (SalesInvoiceItem oldItem : oldInvoice.getItems()) {
-            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
-                    oldItem.getMaterial().getId(), oldInvoice.getId(), company);
-        }
-
-        oldInvoice.setDate(Objects.requireNonNullElse(invoiceDto.getDate(), LocalDate.now()));
-        oldInvoice.setFileNo(fileNo);
-        oldInvoice.setEurSellingRate(safeGet(invoiceDto.getEurSellingRate()));
-        oldInvoice.setUsdSellingRate(safeGet(invoiceDto.getUsdSellingRate()));
-        oldInvoice.setCustomer(newCustomer);
-        oldInvoice.setInvoiced(invoiceDto.isInvoiced());
-
-        List<SalesInvoiceItem> oldItems = oldInvoice.getItems();
-        List<InvoiceItemDto> newItems = invoiceDto.getItems() != null ? invoiceDto.getItems() : new ArrayList<>();
-
-        oldItems.removeIf(old ->
-                newItems.stream().noneMatch(n -> n.getId() != null
-                        && n.getId().equals(old.getId())));
-
-        for (InvoiceItemDto newItem : newItems) {
-            Material material = materialRepository.findByIdAndCompany(newItem.getMaterialId(), company)
-                    .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
-
-            if (newItem.getId() == null) {
-                SalesInvoiceItem invoiceItem = new SalesInvoiceItem();
-
-                invoiceItem.setCompany(company);
-                invoiceItem.setMaterial(material);
-                invoiceItem.setSalesInvoice(oldInvoice);
-                invoiceItem.setMaterial(material);
-                invoiceItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
-                invoiceItem.setKdv(safeGet(newItem.getKdv()));
-                invoiceItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
-                invoiceItem.setQuantity(safeGet(newItem.getQuantity()));
-
-                oldItems.add(invoiceItem);
-            } else {
-                SalesInvoiceItem oldItem = oldItems.stream()
-                        .filter(i -> i.getId().equals(newItem.getId()))
-                        .findFirst()
-                        .orElseThrow();
-
-                oldItem.setMaterial(material);
-                oldItem.setQuantity(safeGet(newItem.getQuantity()));
-                oldItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
-                oldItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
-                oldItem.setKdv(safeGet(newItem.getKdv()));
-            }
-        }
-
-        BigDecimal total = BigDecimal.ZERO;
-        BigDecimal kdvToplam = BigDecimal.ZERO;
-
-        for (SalesInvoiceItem item : oldItems) {
-            //KDV HESAPLAMA
-            BigDecimal kdvOran = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-            //Malzemenin bulunduğu satırın kdv tutarı
-            BigDecimal kdvTutar = safeGet(item.getUnitPrice())
-                    .multiply(safeGet(item.getQuantity()))
-                    .multiply(kdvOran)
-                    .setScale(2, RoundingMode.HALF_UP);
-            //Malzemenin bulunduğu satırın Kdv siz fiyatı
-            BigDecimal lineTotal = safeGet(item.getUnitPrice())
-                    .multiply(safeGet(item.getQuantity()))
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            item.setKdvTutar(kdvTutar);
-            item.setLineTotal(lineTotal);
-
-            kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
-            total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
-
-        }
-        total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
-
-        oldInvoice.setKdvToplam(kdvToplam);
-        oldInvoice.setTotalPrice(total);
-
-        // 5- Yeni toplamı müşterinin bakiyesine ekle
-        newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).add(total));
-        newVoucher.setDebit(safeGet(newVoucher.getDebit()).add(total));
-
-        openingVoucherRepository.save(oldVoucher);
-
-        openingVoucherRepository.save(newVoucher);
-        SalesInvoice savedInvoice = salesInvoiceRepository.save(oldInvoice);
-
-        return convertToDto(savedInvoice);
-    }
-
-    @Override
-    @Transactional
-    public void deleteSalesInvoice(Long id, String schemaName) {
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        SalesInvoice salesInvoice = salesInvoiceRepository.findByIdAndCompany(id, company)
-                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
-
-
-        if (!salesInvoice.getCompany().getId().equals(company.getId())) {
-            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
-        }
-        Customer customer = salesInvoice.getCustomer();
-
-        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
-
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                        customer.getId(), company, start, end)
-                .orElseGet(() -> getDefaultVoucher(customer, start, company));
-
-        for (SalesInvoiceItem salesInvoiceItem : salesInvoice.getItems()) {
-            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
-                    salesInvoiceItem.getMaterial().getId(), id, company);
-        }
-
-        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(salesInvoice.getTotalPrice())));
-        voucher.setDebit(safeGet(voucher.getDebit()).subtract(safeGet(salesInvoice.getTotalPrice())));
-
-        openingVoucherRepository.save(voucher);
-        salesInvoiceRepository.deleteById(id);
-    }
-
-    @Override
-    public Page<InvoiceDto> getSalesInvoicesByYear(int page, int size, String search, int year, String schemaName) {
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        LocalDate start = LocalDate.of(year, 1, 1);
-        LocalDate end = LocalDate.of(year, 12, 31);
-
-        String searchParam;
-        if (search == null || search.trim().isEmpty()) {
-            searchParam = "";
-        } else {
-            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
-        }
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
-
-        Page<SalesInvoice> pagedInvoice = salesInvoiceRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
-
-        return pagedInvoice.map(this::convertToDto);
-    }
-
-    private InvoiceDto convertToDto(SalesInvoice salesInvoice) {
-        InvoiceDto dto = new InvoiceDto();
-        dto.setId(salesInvoice.getId());
-        dto.setCustomerId(salesInvoice.getCustomer().getId());
-        dto.setCompanyId(salesInvoice.getCompany().getId());
-        dto.setDate(salesInvoice.getDate());
-        dto.setTotalPrice(salesInvoice.getTotalPrice());
-        dto.setInvoiced(salesInvoice.isInvoiced());
-        dto.setCustomerName(salesInvoice.getCustomer().getName());
-        dto.setEurSellingRate(salesInvoice.getEurSellingRate());
-        dto.setUsdSellingRate(salesInvoice.getUsdSellingRate());
-        dto.setKdvToplam(salesInvoice.getKdvToplam());
-        dto.setFileNo(salesInvoice.getFileNo());
-        dto.setCustomerCode(salesInvoice.getCustomer().getCode());
-
-        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
-        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
-
-        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
-                salesInvoice.getCustomer().getId(),
-                salesInvoice.getCompany(),
-                start,
-                end
-        ).orElseGet(() -> getDefaultVoucher(salesInvoice.getCustomer(), start, salesInvoice.getCompany()));
-
-        dto.setFinalBalance(voucher.getFinalBalance());
-
-        List<InvoiceItemDto> invoiceItemDtos = new ArrayList<>();
-
-        for (SalesInvoiceItem item : salesInvoice.getItems()) {
-            InvoiceItemDto itemDto = new InvoiceItemDto();
-            itemDto.setId(item.getId());
-            itemDto.setCompanyId(item.getCompany().getId());
-            itemDto.setMaterialId(item.getMaterial().getId());
-            itemDto.setKdvTutar(item.getKdvTutar());
-            itemDto.setMaterialName(item.getMaterial().getComment());
-            itemDto.setLineTotal(item.getLineTotal());
-            itemDto.setKdv(item.getKdv());
-            itemDto.setUnitPrice(item.getUnitPrice());
-            itemDto.setQuantity(item.getQuantity());
-            itemDto.setUnit(item.getUnit());
-            itemDto.setInvoiceId(salesInvoice.getId());
-            itemDto.setMaterialCode(item.getMaterial().getCode());
-
-            invoiceItemDtos.add(itemDto);
-        }
-        dto.setItems(invoiceItemDtos);
-        return dto;
-    }
-
-    private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer, Company company) {
-        MaterialPriceHistory saveHistory = new MaterialPriceHistory();
-        saveHistory.setMaterial(item.getMaterial());
-        saveHistory.setInvoiceId(Objects.requireNonNullElse(invoice.getId(), 999L));
-        saveHistory.setInvoiceType(InvoiceType.SALES);
-        saveHistory.setPrice(safeGet(item.getUnitPrice()));
-        saveHistory.setQuantity(safeGet(item.getQuantity()));
-        saveHistory.setDate(Objects.requireNonNullElse(invoice.getDate(), LocalDate.now()));
-        saveHistory.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
-        saveHistory.setCustomer(customer);
-        saveHistory.setCompany(company);
-        materialPriceHistoryRepository.save(saveHistory);
-    }
-
-    private OpeningVoucher getDefaultVoucher(Customer customer, LocalDate start, Company company) {
-        OpeningVoucher newVoucher = new OpeningVoucher();
-        newVoucher.setCustomer(customer);
-        newVoucher.setDate(Objects.requireNonNullElse(start, LocalDate.now()));
-        newVoucher.setDebit(BigDecimal.ZERO);
-        newVoucher.setCredit(BigDecimal.ZERO);
-        newVoucher.setYearlyCredit(BigDecimal.ZERO);
-        newVoucher.setYearlyDebit(BigDecimal.ZERO);
-        newVoucher.setFinalBalance(BigDecimal.ZERO);
-        newVoucher.setFileNo("001");
-        newVoucher.setDescription("Eklendi");
-        newVoucher.setCompany(company);
-        newVoucher.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
-        return newVoucher;
-    }
-
-    private BigDecimal safeGet(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
-    }
-}
-
-
-
+//package com.berksozcu.service.impl;
+//
+//import com.berksozcu.dto.invoice.InvoiceDto;
+//import com.berksozcu.dto.invoice.InvoiceItemDto;
+//import com.berksozcu.entites.company.Company;
+//import com.berksozcu.entites.customer.Customer;
+//import com.berksozcu.entites.customer.OpeningVoucher;
+//import com.berksozcu.entites.material.Material;
+//import com.berksozcu.entites.material_price_history.InvoiceType;
+//import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
+//import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
+//import com.berksozcu.entites.sales.SalesInvoice;
+//import com.berksozcu.entites.sales.SalesInvoiceItem;
+//import com.berksozcu.exception.BaseException;
+//import com.berksozcu.exception.ErrorMessage;
+//import com.berksozcu.exception.MessageType;
+//import com.berksozcu.repository.*;
+//import com.berksozcu.service.ISalesInvoiceService;
+//import jakarta.transaction.Transactional;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.cglib.core.Local;
+//import org.springframework.data.domain.Page;
+//import org.springframework.data.domain.PageRequest;
+//import org.springframework.data.domain.Pageable;
+//import org.springframework.data.domain.Sort;
+//import org.springframework.stereotype.Service;
+//
+//import java.math.BigDecimal;
+//import java.math.RoundingMode;
+//import java.time.LocalDate;
+//import java.util.ArrayList;
+//import java.util.List;
+//import java.util.Locale;
+//import java.util.Objects;
+//
+//
+//@Service
+//public class SalesInvoiceServiceImpl implements ISalesInvoiceService {
+//
+//    @Autowired
+//    private SalesInvoiceRepository salesInvoiceRepository;
+//
+//    @Autowired
+//    private MaterialRepository materialRepository;
+//
+//    @Autowired
+//    private CustomerRepository customerRepository;
+//
+//    @Autowired
+//    private MaterialPriceHistoryRepository materialPriceHistoryRepository;
+//
+//    @Autowired
+//    private OpeningVoucherRepository openingVoucherRepository;
+//
+//    @Autowired
+//    private CompanyRepository companyRepository;
+//
+//    @Override
+//    @Transactional
+//    public InvoiceDto addSalesInvoice(Long id, InvoiceDto invoiceDto, String schemaName) {
+//        Company company = companyRepository.findBySchemaName(schemaName);
+//
+//        Customer customer = customerRepository.findByIdAndCompany(id, company).orElseThrow(
+//                () -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+//
+//        if (customer.isArchived()) {
+//            throw new BaseException(new ErrorMessage(MessageType.ARSIV_MUSTERI));
+//        }
+//
+//        String fileNo = invoiceDto.getFileNo() != null ? invoiceDto.getFileNo().trim().toUpperCase() : "";
+//
+//        if (salesInvoiceRepository.existsByFileNoAndCompany(fileNo, company)) {
+//            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+//        }
+//
+//        LocalDate start = LocalDate.of(invoiceDto.getDate().getYear(), 1, 1);
+//        LocalDate end = LocalDate.of(invoiceDto.getDate().getYear(), 12, 31);
+//
+//        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+//                        id, company, start, end)
+//                .orElseGet(() -> getDefaultVoucher(customer, start, company));
+//
+//        SalesInvoice salesInvoice = new SalesInvoice();
+//
+//        salesInvoice.setCustomer(customer);
+//        salesInvoice.setEurSellingRate(safeGet(invoiceDto.getEurSellingRate()));
+//        salesInvoice.setUsdSellingRate(safeGet(invoiceDto.getUsdSellingRate()));
+//        salesInvoice.setCompany(company);
+//        salesInvoice.setFileNo(fileNo);
+//        salesInvoice.setInvoiced(invoiceDto.isInvoiced());
+//        salesInvoice.setDate(invoiceDto.getDate());
+//
+//        BigDecimal totalPrice = BigDecimal.ZERO;
+//        BigDecimal kdvToplam = BigDecimal.ZERO;
+//
+//        List<SalesInvoiceItem> entityItems = new ArrayList<>();
+//
+//        for (InvoiceItemDto item : invoiceDto.getItems()) {
+//            Material material = materialRepository.findByIdAndCompany(item.getMaterialId(), company).orElseThrow(
+//                    () -> new BaseException(new ErrorMessage(MessageType.MALZEME_ALAN_BOS)));
+//
+//            SalesInvoiceItem salesInvoiceItem = new SalesInvoiceItem();
+//
+//            salesInvoiceItem.setMaterial(material);
+//            salesInvoiceItem.setSalesInvoice(salesInvoice);
+//
+//            // Malzemenin bulunduğu satırın kdv siz fiyatı
+//            BigDecimal lineTotal = safeGet(item.getUnitPrice())
+//                    .multiply(safeGet(item.getQuantity()))
+//                    .setScale(2, RoundingMode.HALF_UP);
+//
+//            BigDecimal kdv = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+//
+//            BigDecimal kdvTutarHesaplama = kdv
+//                    .multiply(safeGet(item.getUnitPrice())).multiply(safeGet(item.getQuantity()))
+//                    .setScale(2, RoundingMode.HALF_UP);
+//
+//            salesInvoiceItem.setKdvTutar(kdvTutarHesaplama);
+//            salesInvoiceItem.setQuantity(safeGet(item.getQuantity()));
+//            salesInvoiceItem.setCompany(company);
+//            salesInvoiceItem.setUnitPrice(safeGet(item.getUnitPrice()));
+//            salesInvoiceItem.setKdv(safeGet(item.getKdv()));
+//            salesInvoiceItem.setUnit(Objects.requireNonNullElse(item.getUnit(), material.getUnit()));
+//
+//            kdvToplam = kdvToplam.add(kdvTutarHesaplama).setScale(2, RoundingMode.HALF_UP);
+//
+//            salesInvoiceItem.setLineTotal(lineTotal);
+//            totalPrice = totalPrice.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
+//
+//            entityItems.add(salesInvoiceItem);
+//        }
+//
+//        salesInvoice.setItems(entityItems);
+//        totalPrice = totalPrice.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
+//
+//        salesInvoice.setKdvToplam(kdvToplam);
+//        salesInvoice.setTotalPrice(totalPrice);
+//
+//        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(totalPrice));
+//        voucher.setDebit(safeGet(voucher.getDebit()).add(totalPrice));
+//
+//        openingVoucherRepository.save(voucher);
+//        SalesInvoice savedInvoice = salesInvoiceRepository.save(salesInvoice);
+//
+//        for (SalesInvoiceItem item : savedInvoice.getItems()) {
+//            savePriceHistory(item, savedInvoice, customer, company);
+//
+//        }
+//        return convertToDto(savedInvoice);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public InvoiceDto editSalesInvoice(Long id, InvoiceDto invoiceDto, String schemaName) {
+//
+//        Company company = companyRepository.findBySchemaName(schemaName);
+//
+//        SalesInvoice oldInvoice = salesInvoiceRepository.findByIdAndCompany(id, company)
+//                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+//
+//        String fileNo = invoiceDto.getFileNo() != null ? invoiceDto.getFileNo().trim().toUpperCase() : "";
+//
+//        if (salesInvoiceRepository.existsByFileNoAndCompany(fileNo, company)
+//                && !oldInvoice.getFileNo().equals(fileNo)) {
+//            throw new BaseException(new ErrorMessage(MessageType.FATURA_NO_MEVCUT));
+//        }
+//
+//        if (!oldInvoice.getCompany().getId().equals(company.getId())) {
+//            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+//        }
+//
+//        Customer oldCustomer = oldInvoice.getCustomer();
+//        Customer newCustomer = customerRepository
+//                .findByIdAndCompany(invoiceDto.getCustomerId(), company)
+//                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
+//
+//        LocalDate oldStart = LocalDate.of(oldInvoice.getDate().getYear(), 1, 1);
+//        LocalDate oldEnd = LocalDate.of(oldInvoice.getDate().getYear(), 12, 31);
+//
+//        OpeningVoucher oldVoucher =
+//                openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+//                                oldCustomer.getId(), company, oldStart, oldEnd)
+//                        .orElseGet(() -> getDefaultVoucher(oldCustomer, oldStart, company));
+//
+//        oldVoucher.setFinalBalance(safeGet(oldVoucher.getFinalBalance()).subtract(safeGet(oldInvoice.getTotalPrice())));
+//        oldVoucher.setDebit(safeGet(oldVoucher.getDebit()).subtract(safeGet(oldInvoice.getTotalPrice())));
+//
+//        LocalDate start = LocalDate.of(invoiceDto.getDate().getYear(), 1, 1);
+//        LocalDate end = LocalDate.of(invoiceDto.getDate().getYear(), 12, 31);
+//
+//        OpeningVoucher newVoucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+//                        newCustomer.getId(), company, start, end)
+//                .orElseGet(() -> getDefaultVoucher(newCustomer, start, company));
+//
+//        for (SalesInvoiceItem oldItem : oldInvoice.getItems()) {
+//            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
+//                    oldItem.getMaterial().getId(), oldInvoice.getId(), company);
+//        }
+//
+//        oldInvoice.setDate(Objects.requireNonNullElse(invoiceDto.getDate(), LocalDate.now()));
+//        oldInvoice.setFileNo(fileNo);
+//        oldInvoice.setEurSellingRate(safeGet(invoiceDto.getEurSellingRate()));
+//        oldInvoice.setUsdSellingRate(safeGet(invoiceDto.getUsdSellingRate()));
+//        oldInvoice.setCustomer(newCustomer);
+//        oldInvoice.setInvoiced(invoiceDto.isInvoiced());
+//
+//        List<SalesInvoiceItem> oldItems = oldInvoice.getItems();
+//        List<InvoiceItemDto> newItems = invoiceDto.getItems() != null ? invoiceDto.getItems() : new ArrayList<>();
+//
+//        oldItems.removeIf(old ->
+//                newItems.stream().noneMatch(n -> n.getId() != null
+//                        && n.getId().equals(old.getId())));
+//
+//        for (InvoiceItemDto newItem : newItems) {
+//            Material material = materialRepository.findByIdAndCompany(newItem.getMaterialId(), company)
+//                    .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
+//
+//            if (newItem.getId() == null) {
+//                SalesInvoiceItem invoiceItem = new SalesInvoiceItem();
+//
+//                invoiceItem.setCompany(company);
+//                invoiceItem.setMaterial(material);
+//                invoiceItem.setSalesInvoice(oldInvoice);
+//                invoiceItem.setMaterial(material);
+//                invoiceItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
+//                invoiceItem.setKdv(safeGet(newItem.getKdv()));
+//                invoiceItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
+//                invoiceItem.setQuantity(safeGet(newItem.getQuantity()));
+//
+//                oldItems.add(invoiceItem);
+//            } else {
+//                SalesInvoiceItem oldItem = oldItems.stream()
+//                        .filter(i -> i.getId().equals(newItem.getId()))
+//                        .findFirst()
+//                        .orElseThrow();
+//
+//                oldItem.setMaterial(material);
+//                oldItem.setQuantity(safeGet(newItem.getQuantity()));
+//                oldItem.setUnitPrice(safeGet(newItem.getUnitPrice()));
+//                oldItem.setUnit(Objects.requireNonNullElse(newItem.getUnit(), material.getUnit()));
+//                oldItem.setKdv(safeGet(newItem.getKdv()));
+//            }
+//        }
+//
+//        BigDecimal total = BigDecimal.ZERO;
+//        BigDecimal kdvToplam = BigDecimal.ZERO;
+//
+//        for (SalesInvoiceItem item : oldItems) {
+//            //KDV HESAPLAMA
+//            BigDecimal kdvOran = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+//            //Malzemenin bulunduğu satırın kdv tutarı
+//            BigDecimal kdvTutar = safeGet(item.getUnitPrice())
+//                    .multiply(safeGet(item.getQuantity()))
+//                    .multiply(kdvOran)
+//                    .setScale(2, RoundingMode.HALF_UP);
+//            //Malzemenin bulunduğu satırın Kdv siz fiyatı
+//            BigDecimal lineTotal = safeGet(item.getUnitPrice())
+//                    .multiply(safeGet(item.getQuantity()))
+//                    .setScale(2, RoundingMode.HALF_UP);
+//
+//            item.setKdvTutar(kdvTutar);
+//            item.setLineTotal(lineTotal);
+//
+//            kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
+//            total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
+//
+//        }
+//        total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
+//
+//        oldInvoice.setKdvToplam(kdvToplam);
+//        oldInvoice.setTotalPrice(total);
+//
+//        // 5- Yeni toplamı müşterinin bakiyesine ekle
+//        newVoucher.setFinalBalance(safeGet(newVoucher.getFinalBalance()).add(total));
+//        newVoucher.setDebit(safeGet(newVoucher.getDebit()).add(total));
+//
+//        openingVoucherRepository.save(oldVoucher);
+//
+//        openingVoucherRepository.save(newVoucher);
+//        SalesInvoice savedInvoice = salesInvoiceRepository.save(oldInvoice);
+//
+//        return convertToDto(savedInvoice);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public void deleteSalesInvoice(Long id, String schemaName) {
+//        Company company = companyRepository.findBySchemaName(schemaName);
+//
+//        SalesInvoice salesInvoice = salesInvoiceRepository.findByIdAndCompany(id, company)
+//                .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.FATURA_BULUNAMADI)));
+//
+//
+//        if (!salesInvoice.getCompany().getId().equals(company.getId())) {
+//            throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
+//        }
+//        Customer customer = salesInvoice.getCustomer();
+//
+//        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
+//        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
+//
+//        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+//                        customer.getId(), company, start, end)
+//                .orElseGet(() -> getDefaultVoucher(customer, start, company));
+//
+//        for (SalesInvoiceItem salesInvoiceItem : salesInvoice.getItems()) {
+//            materialPriceHistoryRepository.deleteByMaterialIdAndInvoiceIdAndCompany(
+//                    salesInvoiceItem.getMaterial().getId(), id, company);
+//        }
+//
+//        voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(salesInvoice.getTotalPrice())));
+//        voucher.setDebit(safeGet(voucher.getDebit()).subtract(safeGet(salesInvoice.getTotalPrice())));
+//
+//        openingVoucherRepository.save(voucher);
+//        salesInvoiceRepository.deleteById(id);
+//    }
+//
+//    @Override
+//    public Page<InvoiceDto> getSalesInvoicesByYear(int page, int size, String search, int year, String schemaName) {
+//        Company company = companyRepository.findBySchemaName(schemaName);
+//
+//        LocalDate start = LocalDate.of(year, 1, 1);
+//        LocalDate end = LocalDate.of(year, 12, 31);
+//
+//        String searchParam;
+//        if (search == null || search.trim().isEmpty()) {
+//            searchParam = "";
+//        } else {
+//            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+//        }
+//
+//        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+//
+//        Page<SalesInvoice> pagedInvoice = salesInvoiceRepository.findByCompanyAndSearchAndDateBetween(company, searchParam, start, end, pageable);
+//
+//        return pagedInvoice.map(this::convertToDto);
+//    }
+//
+//    private InvoiceDto convertToDto(SalesInvoice salesInvoice) {
+//        InvoiceDto dto = new InvoiceDto();
+//        dto.setId(salesInvoice.getId());
+//        dto.setCustomerId(salesInvoice.getCustomer().getId());
+//        dto.setCompanyId(salesInvoice.getCompany().getId());
+//        dto.setDate(salesInvoice.getDate());
+//        dto.setTotalPrice(salesInvoice.getTotalPrice());
+//        dto.setInvoiced(salesInvoice.isInvoiced());
+//        dto.setCustomerName(salesInvoice.getCustomer().getName());
+//        dto.setEurSellingRate(salesInvoice.getEurSellingRate());
+//        dto.setUsdSellingRate(salesInvoice.getUsdSellingRate());
+//        dto.setKdvToplam(salesInvoice.getKdvToplam());
+//        dto.setFileNo(salesInvoice.getFileNo());
+//        dto.setCustomerCode(salesInvoice.getCustomer().getCode());
+//
+//        LocalDate start = LocalDate.of(salesInvoice.getDate().getYear(), 1, 1);
+//        LocalDate end = LocalDate.of(salesInvoice.getDate().getYear(), 12, 31);
+//
+//        OpeningVoucher voucher = openingVoucherRepository.findByCustomerIdAndCompanyAndDateBetween(
+//                salesInvoice.getCustomer().getId(),
+//                salesInvoice.getCompany(),
+//                start,
+//                end
+//        ).orElseGet(() -> getDefaultVoucher(salesInvoice.getCustomer(), start, salesInvoice.getCompany()));
+//
+//        dto.setFinalBalance(voucher.getFinalBalance());
+//
+//        List<InvoiceItemDto> invoiceItemDtos = new ArrayList<>();
+//
+//        for (SalesInvoiceItem item : salesInvoice.getItems()) {
+//            InvoiceItemDto itemDto = new InvoiceItemDto();
+//            itemDto.setId(item.getId());
+//            itemDto.setCompanyId(item.getCompany().getId());
+//            itemDto.setMaterialId(item.getMaterial().getId());
+//            itemDto.setKdvTutar(item.getKdvTutar());
+//            itemDto.setMaterialName(item.getMaterial().getComment());
+//            itemDto.setLineTotal(item.getLineTotal());
+//            itemDto.setKdv(item.getKdv());
+//            itemDto.setUnitPrice(item.getUnitPrice());
+//            itemDto.setQuantity(item.getQuantity());
+//            itemDto.setUnit(item.getUnit());
+//            itemDto.setInvoiceId(salesInvoice.getId());
+//            itemDto.setMaterialCode(item.getMaterial().getCode());
+//
+//            invoiceItemDtos.add(itemDto);
+//        }
+//        dto.setItems(invoiceItemDtos);
+//        return dto;
+//    }
+//
+//    private void savePriceHistory(SalesInvoiceItem item, SalesInvoice invoice, Customer customer, Company company) {
+//        MaterialPriceHistory saveHistory = new MaterialPriceHistory();
+//        saveHistory.setMaterial(item.getMaterial());
+//        saveHistory.setInvoiceId(Objects.requireNonNullElse(invoice.getId(), 999L));
+//        saveHistory.setInvoiceType(InvoiceType.SALES);
+//        saveHistory.setPrice(safeGet(item.getUnitPrice()));
+//        saveHistory.setQuantity(safeGet(item.getQuantity()));
+//        saveHistory.setDate(Objects.requireNonNullElse(invoice.getDate(), LocalDate.now()));
+//        saveHistory.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
+//        saveHistory.setCustomer(customer);
+//        saveHistory.setCompany(company);
+//        materialPriceHistoryRepository.save(saveHistory);
+//    }
+//
+//    private OpeningVoucher getDefaultVoucher(Customer customer, LocalDate start, Company company) {
+//        OpeningVoucher newVoucher = new OpeningVoucher();
+//        newVoucher.setCustomer(customer);
+//        newVoucher.setDate(Objects.requireNonNullElse(start, LocalDate.now()));
+//        newVoucher.setDebit(BigDecimal.ZERO);
+//        newVoucher.setCredit(BigDecimal.ZERO);
+//        newVoucher.setYearlyCredit(BigDecimal.ZERO);
+//        newVoucher.setYearlyDebit(BigDecimal.ZERO);
+//        newVoucher.setFinalBalance(BigDecimal.ZERO);
+//        newVoucher.setFileNo("001");
+//        newVoucher.setDescription("Eklendi");
+//        newVoucher.setCompany(company);
+//        newVoucher.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
+//        return newVoucher;
+//    }
+//
+//    private BigDecimal safeGet(BigDecimal value) {
+//        return value != null ? value : BigDecimal.ZERO;
+//    }
+//}
+//
+//
+//

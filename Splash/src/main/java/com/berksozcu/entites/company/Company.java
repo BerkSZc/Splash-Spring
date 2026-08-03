@@ -17,14 +17,21 @@ public class Company {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //Şirket Kodu
+    @Column(name = "schema_name")
+    private String schemaName;
+
     //Şirket İsmi
     private String name;
 
-    @Column(name = "schema_name")
-    //Şirket Kodu
-    private String schemaName;
+    @Column(name = "company_address")
+    private String companyAddress;
 
-    private String description;
+    @Column(name = "vd_no")
+    private String vdNo;
+
+    @Column(name = "invoice_description")
+    private String invoiceDescription;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

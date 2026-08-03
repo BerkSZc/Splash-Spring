@@ -7,5 +7,8 @@ public class AuthDto {
     private String username;
     private String password;
     private String companyName;
-    private String description;
+
+    private String companyAddress;
+    private String vdNo;
+    private String invoiceDescription;
 }

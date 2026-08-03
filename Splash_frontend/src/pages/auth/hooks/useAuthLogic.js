@@ -12,7 +12,9 @@ export const useAuthLogic = () => {
   const [password, setPassword] = useState("");
 
   const [companyName, setCompanyName] = useState("");
-  const [description, setDescription] = useState("");
+  const [invoiceDescription, setInvoiceDescription] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [vdNo, setVdNo] = useState("");
 
   const { changeTenant } = useTenant();
   const { changeYear } = useYear();
@@ -33,7 +35,9 @@ export const useAuthLogic = () => {
           username,
           password,
           companyName,
-          description,
+          invoiceDescription,
+          companyAddress,
+          vdNo,
         });
       }
 
@@ -50,13 +54,24 @@ export const useAuthLogic = () => {
   };
 
   return {
-    state: { mode, username, password, companyName, description, loading },
+    state: {
+      mode,
+      username,
+      password,
+      companyName,
+      invoiceDescription,
+      companyAddress,
+      vdNo,
+      loading,
+    },
     handlers: {
       setMode,
       setUsername,
       setPassword,
       setCompanyName,
-      setDescription,
+      setInvoiceDescription,
+      setCompanyAddress,
+      setVdNo,
       handleSubmit,
     },
   };

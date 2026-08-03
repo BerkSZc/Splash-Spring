@@ -44,8 +44,10 @@ last_logged_company_id BIGINT
 CREATE TABLE IF NOT EXISTS company (
 id BIGSERIAL PRIMARY KEY,
 name VARCHAR(255) COLLATE tr_tr_custom,
+vd_no VARCHAR(50),
+company_address VARCHAR(255),
 schema_name VARCHAR(255),
-description VARCHAR(255),
+invoice_description VARCHAR(255),
 user_id BIGINT NOT NULL,
 FOREIGN KEY (user_id) REFERENCES app_user(id)
 );
@@ -98,13 +100,12 @@ CREATE TABLE IF NOT EXISTS currency_rate (
     last_updated DATE
 );
 
--- ---------------------------
--- 6. SATIN ALMA FATURASI TABLOSU
--- ---------------------------
-CREATE TABLE IF NOT EXISTS purchase_invoice (
+--FATURA TABLOSU
+CREATE TABLE IF NOT EXISTS invoice (
     id BIGSERIAL PRIMARY KEY ,
     file_no VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
+    invoice_type public.invoice_status NOT NULL,
     customer_id BIGINT NOT NULL,
     company_id BIGINT,
     total_price DECIMAL(18,2) DEFAULT 0,
@@ -116,12 +117,11 @@ CREATE TABLE IF NOT EXISTS purchase_invoice (
     FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
--- ---------------------------
--- 7. SATIN ALMA FATURA KALEMLERİ
--- ---------------------------
-CREATE TABLE IF NOT EXISTS purchase_invoice_item (
+--FATURA KALEMLERİ
+
+CREATE TABLE IF NOT EXISTS invoice_item (
     id BIGSERIAL PRIMARY KEY ,
-    purchase_invoice_id BIGINT NOT NULL,
+    invoice_id BIGINT NOT NULL,
     material_id BIGINT NOT NULL,
     company_id BIGINT NOT NULL,
     unit_price DECIMAL(18,4) NOT NULL,
@@ -130,47 +130,84 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_item (
     line_total DECIMAL(18,2) NOT NULL,
     kdv DECIMAL(18,2) DEFAULT 20,
     kdv_tutar DECIMAL(18,2) DEFAULT 0,
-    FOREIGN KEY (purchase_invoice_id) REFERENCES purchase_invoice(id) ON DELETE CASCADE,
     FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (company_id) REFERENCES company(id)
+    FOREIGN KEY (company_id) REFERENCES company(id),
+    FOREIGN KEY (invoice_id) REFERENCES invoice(id)
 );
+
+-- ---------------------------
+-- 6. SATIN ALMA FATURASI TABLOSU
+-- ---------------------------
+--CREATE TABLE IF NOT EXISTS purchase_invoice (
+--    id BIGSERIAL PRIMARY KEY ,
+--    file_no VARCHAR(50) NOT NULL,
+--    date DATE NOT NULL,
+--    customer_id BIGINT NOT NULL,
+--    company_id BIGINT,
+--    total_price DECIMAL(18,2) DEFAULT 0,
+--    kdv_toplam DECIMAL(18,2) DEFAULT 0,
+--    eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
+--    usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
+--    invoiced BOOLEAN NOT NULL DEFAULT TRUE,
+--    FOREIGN KEY (customer_id) REFERENCES customer(id),
+--    FOREIGN KEY (company_id) REFERENCES company(id)
+--);
+
+-- ---------------------------
+-- 7. SATIN ALMA FATURA KALEMLERİ
+-- ---------------------------
+--CREATE TABLE IF NOT EXISTS purchase_invoice_item (
+--    id BIGSERIAL PRIMARY KEY ,
+--    purchase_invoice_id BIGINT NOT NULL,
+--    material_id BIGINT NOT NULL,
+--    company_id BIGINT NOT NULL,
+--    unit_price DECIMAL(18,4) NOT NULL,
+--    quantity DECIMAL(18,2) NOT NULL,
+--    unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
+--    line_total DECIMAL(18,2) NOT NULL,
+--    kdv DECIMAL(18,2) DEFAULT 20,
+--    kdv_tutar DECIMAL(18,2) DEFAULT 0,
+--    FOREIGN KEY (purchase_invoice_id) REFERENCES purchase_invoice(id) ON DELETE CASCADE,
+--    FOREIGN KEY (material_id) REFERENCES material(id),
+--    FOREIGN KEY (company_id) REFERENCES company(id)
+--);
 
 -- ---------------------------
 -- 8. SATIŞ FATURASI TABLOSU
 -- ---------------------------
-CREATE TABLE IF NOT EXISTS sales_invoice (
-    id BIGSERIAL PRIMARY KEY ,
-    file_no VARCHAR(50) NOT NULL,
-    date DATE NOT NULL,
-    customer_id BIGINT NOT NULL,
-    company_id BIGINT,
-    total_price DECIMAL(18,2) DEFAULT 0,
-    kdv_toplam DECIMAL(18,2) DEFAULT 0,
-    eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
-    usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
-    invoiced BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (customer_id) REFERENCES customer(id),
-    FOREIGN KEY (company_id) REFERENCES company(id)
-);
+--CREATE TABLE IF NOT EXISTS sales_invoice (
+--    id BIGSERIAL PRIMARY KEY ,
+--    file_no VARCHAR(50) NOT NULL,
+--    date DATE NOT NULL,
+--    customer_id BIGINT NOT NULL,
+--    company_id BIGINT,
+--    total_price DECIMAL(18,2) DEFAULT 0,
+--    kdv_toplam DECIMAL(18,2) DEFAULT 0,
+--    eur_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
+--    usd_selling_rate DECIMAL(18, 4) DEFAULT 0.0000,
+--    invoiced BOOLEAN NOT NULL DEFAULT TRUE,
+--    FOREIGN KEY (customer_id) REFERENCES customer(id),
+--    FOREIGN KEY (company_id) REFERENCES company(id)
+--);
 
 -- ---------------------------
 -- 9. SATIŞ FATURA KALEMLERİ
 -- ---------------------------
-CREATE TABLE IF NOT EXISTS sales_invoice_item (
-    id BIGSERIAL PRIMARY KEY ,
-    sales_invoice_id BIGINT NOT NULL,
-    material_id BIGINT NOT NULL,
-    company_id BIGINT NOT NULL,
-    unit_price DECIMAL(18,4) NOT NULL,
-    quantity DECIMAL(18,2) NOT NULL,
-    unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
-    line_total DECIMAL(18,2) NOT NULL,
-    kdv DECIMAL(18,2) DEFAULT 18,
-    kdv_tutar DECIMAL(18,2) DEFAULT 20,
-    FOREIGN KEY (sales_invoice_id) REFERENCES sales_invoice(id) ON DELETE CASCADE,
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (company_id) REFERENCES company(id)
-);
+--CREATE TABLE IF NOT EXISTS sales_invoice_item (
+--    id BIGSERIAL PRIMARY KEY ,
+--    sales_invoice_id BIGINT NOT NULL,
+--    material_id BIGINT NOT NULL,
+--    company_id BIGINT NOT NULL,
+--    unit_price DECIMAL(18,4) NOT NULL,
+--    quantity DECIMAL(18,2) NOT NULL,
+--    unit varchar(20) NOT NULL, -- Material daki MaterailUnit değerleri alıyor sadece!
+--    line_total DECIMAL(18,2) NOT NULL,
+--    kdv DECIMAL(18,2) DEFAULT 18,
+--    kdv_tutar DECIMAL(18,2) DEFAULT 20,
+--    FOREIGN KEY (sales_invoice_id) REFERENCES sales_invoice(id) ON DELETE CASCADE,
+--    FOREIGN KEY (material_id) REFERENCES material(id),
+--    FOREIGN KEY (company_id) REFERENCES company(id)
+--);
 
 -- ---------------------------
 -- 10. MALZEME FİYAT GEÇMİŞİ
@@ -300,11 +337,11 @@ CREATE TABLE IF NOT EXISTS fiscal_year(
 );
 
 -- INDEXES
-CREATE INDEX IF NOT EXISTS idx_pur_inv_company_date
-ON purchase_invoice (company_id, date);
+CREATE INDEX IF NOT EXISTS idx_inv_company_date
+ON invoice (company_id, date);
 
-CREATE INDEX IF NOT EXISTS idx_sales_inv_company_date
-ON sales_invoice (company_id, date);
+--CREATE INDEX IF NOT EXISTS idx_sales_inv_company_date
+--ON sales_invoice (company_id, date);
 
 CREATE INDEX IF NOT EXISTS idx_payroll_date_file_no
 ON payroll (transaction_date, file_no);

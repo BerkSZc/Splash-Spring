@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
-import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
+import { useInvoice } from "../../../../backend/store/useInvoice.js";
 import { useClient } from "../../../../backend/store/useClient.js";
 import { useCollection } from "../../../../backend/store/useCollection.js";
 import { useYear } from "../../../context/YearContext.jsx";
@@ -15,16 +14,7 @@ export const useHomeLogic = () => {
     getAllCompanies,
     loading: companiesLoading,
   } = useCompany();
-  const {
-    purchase,
-    getPurchaseInvoiceByYear,
-    loading: purchaseLoading,
-  } = usePurchaseInvoice();
-  const {
-    sales,
-    getSalesInvoicesByYear,
-    loading: salesLoading,
-  } = useSalesInvoice();
+  const { invoice, getInvoicesByYear, loading: invoiceLoading } = useInvoice();
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const { getCollectionsByYear, loading: collectionsLoading } = useCollection();
 
@@ -47,8 +37,7 @@ export const useHomeLogic = () => {
           getAllCompanies(),
           getAllCustomers(0, 999, false, "", tenant, year),
           getCollectionsByYear(0, 999, "", year, tenant),
-          getPurchaseInvoiceByYear(0, 999, "", year, tenant),
-          getSalesInvoicesByYear(0, 999, "", year, tenant),
+          getInvoicesByYear(0, 999, "", year, tenant),
           getAllOpeningVoucherByYear(dateString, tenant),
         ]);
         if (ignore) return;
@@ -102,17 +91,24 @@ export const useHomeLogic = () => {
 
   const isLoading =
     companiesLoading ||
-    purchaseLoading ||
-    salesLoading ||
+    invoiceLoading ||
     customersLoading ||
     collectionsLoading ||
     vouchersLoading;
 
+  const purchaseInvoices = Array.isArray(invoice)
+    ? invoice.filter((inv) => inv.invoiceType === "PURCHASE")
+    : [];
+
+  const salesInvoices = Array.isArray(invoice)
+    ? invoice.filter((inv) => inv.invoiceType === "SALES")
+    : [];
+
   return {
     state: {
       isLoading,
-      purchase: Array.isArray(purchase) ? purchase : [],
-      sales: Array.isArray(sales) ? sales : [],
+      purchase: purchaseInvoices,
+      sales: salesInvoices,
       customers: Array.isArray(customers) ? customers : [],
       totalCredits: financialSummary.totalCredits,
       totalDebts: financialSummary.totalDebts,

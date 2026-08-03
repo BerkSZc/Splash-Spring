@@ -1,4 +1,4 @@
-package com.berksozcu.xml.entites.purchase;
+package com.berksozcu.xml.entites.invoice;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;

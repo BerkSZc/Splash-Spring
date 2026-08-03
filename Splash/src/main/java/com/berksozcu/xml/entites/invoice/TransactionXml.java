@@ -1,4 +1,4 @@
-package com.berksozcu.xml.entites.purchase;
+package com.berksozcu.xml.entites.invoice;
 
 import com.berksozcu.entites.material.MaterialUnit;
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -27,6 +27,7 @@ public class TransactionXml {
     @XmlElement(name = "PRICE")
     private BigDecimal PRICE;
 
+    //KDV DAHİL FİYAT
     @XmlElement(name = "TOTAL")
     private BigDecimal TOTAL;
 
@@ -36,8 +37,6 @@ public class TransactionXml {
     @XmlElement(name = "COMPANY_ID")
     private Long COMPANY_ID;
 
-    @XmlElement(name = "TOTAL_NET")
-    private BigDecimal TOTAL_NET;
 
     @XmlElement(name = "VAT_RATE")
     private BigDecimal VAT_RATE;

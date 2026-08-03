@@ -22,7 +22,7 @@ export const useCompany = create((set, get) => ({
   addCompany: async (companyData) => {
     set({ loading: true });
     try {
-      await axiosInstance.post("/company/create", companyData, {
+      const res = await axiosInstance.post("/company/create", companyData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -124,7 +124,6 @@ export const useCompany = create((set, get) => ({
             : c,
         ),
       }));
-      toast.success("Şirket bilgileri başarıyla değiştirildi.");
     } catch (error) {
       throw error;
     } finally {

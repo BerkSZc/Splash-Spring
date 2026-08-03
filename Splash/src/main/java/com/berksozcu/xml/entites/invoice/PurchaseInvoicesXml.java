@@ -1,4 +1,4 @@
-package com.berksozcu.xml.entites.purchase;
+package com.berksozcu.xml.entites.invoice;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -16,8 +16,6 @@ import java.util.List;
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)
 public class PurchaseInvoicesXml {
-
-        @XmlElement(name = "INVOICE")
-        private List<InvoiceXml> invoices;
- }
-
+    @XmlElement(name = "INVOICE")
+    private List<InvoiceXml> invoices;
+}

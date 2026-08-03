@@ -3,6 +3,7 @@ export default function InvoicePrintPreview({
   onCancel,
   onExecutePrint,
   customers,
+  company,
 }) {
   if (!printItem) return null;
 
@@ -21,10 +22,12 @@ export default function InvoicePrintPreview({
 
   const isPurchase = printItem?.invoiceType === "purchase";
   const typeTitle = isPurchase ? "Satın Alma Faturası" : "Satış Faturası";
+  const primaryColor = isPurchase ? "#111827" : "#1e3a8a";
 
   const formattedDate = printItem?.date?.includes("-")
     ? printItem.date.split("-").reverse().join(".")
     : printItem?.date;
+
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black/90 flex justify-center items-center z-[9999] backdrop-blur-sm md:p-10 text-left">
       <div className="bg-[#1a1f2e] border border-gray-800 w-full max-w-5xl max-h-[95vh] rounded-[2rem] flex flex-col overflow-hidden shadow-2xl">
@@ -60,19 +63,16 @@ export default function InvoicePrintPreview({
         {/* Önizleme Alanı */}
         <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gray-800/30 flex justify-center items-start">
           <div className="bg-white w-[210mm] min-h-[297mm] p-[12mm] shadow-2xl text-black font-sans origin-top transform scale-[0.65] md:scale-95 lg:scale-100 rounded-lg">
-            {/* Üst Logo ve Başlık Bilgisi */}
             <div className="pb-6 mb-8 flex justify-between items-start border-b border-gray-200">
               <div className="flex flex-col gap-1 text-left">
                 <h2 className="text-lg font-extrabold text-blue-900 leading-tight">
-                  SÖZCÜ MATBAA <br /> MALZEMELERİ LTD. ŞTİ.
+                  {company?.name || "ŞİRKET ADI"}
                 </h2>
                 <p className="text-[10px] text-gray-500 mt-1 leading-relaxed uppercase">
-                  Himaye-i Etfal Sok. Aydoğmuş İş Hanı 7/1
-                  <br />
-                  Cağaloğlu / İSTANBUL
+                  {company?.companyAddress || "—"}
                   <br />
                   <span className="font-semibold text-gray-900">
-                    VERGİ NO: 7800063113
+                    VERGİ NO: {company?.vdNo || "—"}
                   </span>
                 </p>
               </div>
@@ -80,7 +80,7 @@ export default function InvoicePrintPreview({
               <div className="text-right flex flex-col items-end pt-1">
                 <h1
                   className="text-base font-bold tracking-tight"
-                  style={{ color: "#000000" }}
+                  style={{ color: primaryColor }}
                 >
                   {typeTitle.toUpperCase()}
                 </h1>
@@ -97,7 +97,7 @@ export default function InvoicePrintPreview({
             <div className="flex justify-end mb-10">
               <div
                 className="p-4 bg-[#f9fafb] rounded-l-xl border border-gray-200 border-r-4 w-full max-w-[380px] text-right"
-                style={{ borderRightColor: "#000000" }}
+                style={{ borderRightColor: primaryColor }}
               >
                 <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                   FATURA EDİLEN MÜŞTERİ
@@ -197,7 +197,7 @@ export default function InvoicePrintPreview({
                   </span>
                   <span
                     className="text-xl font-extrabold tracking-tight"
-                    style={{ color: "#000000" }}
+                    style={{ color: primaryColor }}
                   >
                     {totalPrice.toLocaleString("tr-TR", {
                       minimumFractionDigits: 2,
@@ -226,34 +226,13 @@ export default function InvoicePrintPreview({
                 </p>
               </div>
 
-              {/* Banka Bilgileri */}
-              <div>
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="text-[9px] font-bold uppercase text-gray-400 border-b border-gray-100">
-                      <th className="pb-2 w-1/3">BANKA ADI</th>
-                      <th className="pb-2 font-mono">İBAN NO</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-800 divide-y divide-gray-50 font-medium">
-                    <tr>
-                      <td className="py-2 text-gray-900 font-semibold">
-                        Enpara Bank
-                      </td>
-                      <td className="py-2 font-mono tracking-wide text-gray-700">
-                        TR10 0015 7000 0000 0098 6528 18
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-gray-900 font-semibold">
-                        Denizbank Cağaloğlu Şb.
-                      </td>
-                      <td className="py-2 font-mono tracking-wide text-gray-700">
-                        TR88 0013 4000 0018 5773 3000 10
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Fatura Açıklaması / Notu
+                </h4>
+                <p className="text-xs font-semibold text-gray-800 uppercase m-0">
+                  {company?.invoiceDescription || "—"}
+                </p>
               </div>
 
               {/* Ödeme Notu */}

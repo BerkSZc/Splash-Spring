@@ -18,22 +18,37 @@ const CompanyPage = () => {
       )}
       <div className="max-w-6xl mx-auto space-y-12">
         {/* BAŞLIK */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-extrabold text-white">
-            Çalışma Alanı Yönetimi
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Şirket seçimi yapın ve mali dönemleri yönetin.
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-center md:text-left space-y-2">
+            <h1 className="text-4xl font-extrabold text-white">
+              Çalışma Alanı Yönetimi
+            </h1>
+            <p className="text-gray-400 text-lg">
+              Şirket seçimi yapın ve mali dönemleri yönetin.
+            </p>
+          </div>
+
+          {!state.showCompanyForm && (
+            <button
+              onClick={() => handlers.setShowCompanyForm(true)}
+              className="flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs transition-all duration-300 active:scale-95 shadow-2xl bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-500 animate-in fade-in zoom-in duration-300 whitespace-nowrap"
+            >
+              <span className="text-base">+</span> YENİ ŞİRKET
+            </button>
+          )}
         </div>
 
         {/* 1. BÖLÜM: ŞİRKET EKLEME FORMU */}
-        <CompanyForm
-          newCompData={state.newCompData}
-          setNewCompData={handlers.setNewCompData}
-          onCreate={handlers.handleCreateCompany}
-        />
-
+        {state.showCompanyForm && (
+          <div className="relative animate-in fade-in zoom-in-95 duration-300">
+            <CompanyForm
+              newCompData={state.newCompData}
+              setNewCompData={handlers.setNewCompData}
+              onCreate={handlers.handleCreateCompany}
+              onCancel={() => handlers.setShowCompanyForm(false)}
+            />
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* 2. BÖLÜM: ŞİRKET LİSTESİ */}
           <div className="lg:col-span-2 space-y-6">

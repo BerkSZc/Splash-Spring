@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class AuthenticationService {
@@ -50,11 +51,11 @@ public class AuthenticationService {
     @Transactional(rollbackFor = Exception.class)
     public UserResponse signUp(AuthDto request) throws SQLException {
 
-        if(userRepository.findByUsername(request.getUsername()).isPresent()){
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new BaseException(new ErrorMessage(MessageType.KULLANICI_MEVCUT));
         }
 
-        if(request.getPassword().length() < 8){
+        if (request.getPassword().length() < 8) {
             throw new BaseException(new ErrorMessage(MessageType.SIFRE_HATA));
         }
 
@@ -67,10 +68,15 @@ public class AuthenticationService {
 
         String schemaName = companyService.createDefaultSchemaName();
 
+        CompanyDto companyDto = new CompanyDto();
+        companyDto.setSchemaName(schemaName);
+        companyDto.setName(Objects.requireNonNullElse(request.getCompanyName(), "").toUpperCase());
+        companyDto.setCompanyAddress(Objects.requireNonNullElse(request.getCompanyAddress(), "").toUpperCase());
+        companyDto.setVdNo(request.getVdNo());
+        companyDto.setInvoiceDescription(Objects.requireNonNullElse(request.getInvoiceDescription(), "").toUpperCase());
+
         CompanyDto newCompany = companyService.createNewTenantSchema(
-                schemaName,
-                request.getCompanyName(),
-                request.getDescription(),
+                companyDto,
                 "splash",
                 newUser
         );
@@ -100,7 +106,7 @@ public class AuthenticationService {
 
         Company company;
 
-        if(newUser.getLastLoggedCompanyId() != null) {
+        if (newUser.getLastLoggedCompanyId() != null) {
             company = companyRepository.findById(newUser.getLastLoggedCompanyId())
                     .orElseGet(() -> companyRepository.findFirstByUserIdOrderByIdDesc(newUser.getId())
                             .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.SIRKET_BULUNAMADI))));
@@ -119,8 +125,8 @@ public class AuthenticationService {
 
         String token = jwtService.generateToken(newUser, Map.of("schemaName", company.getSchemaName()));
         return UserResponse.builder().token(token).
-        schemaName(company.getSchemaName()).
-        build();
+                schemaName(company.getSchemaName()).
+                build();
     }
 
     public UserResponse switchCompany(Long companyId) {

@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
-  { label: "Şirket Seçim", to: "/devir", icon: "🏢" },
+  { label: "Şirket Verileri", to: "/devir", icon: "🏢" },
   { label: "Veri İşlemleri", to: "/ekleme", icon: "⚙️" },
 ];
 

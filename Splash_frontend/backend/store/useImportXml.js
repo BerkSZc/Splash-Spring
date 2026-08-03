@@ -5,17 +5,17 @@ import toast from "react-hot-toast";
 export const useImportXml = create((set) => ({
   loading: false,
 
-  importPurchaseInvoice: async (file, schemaName) => {
+  importInvoices: async (file, schemaName, type) => {
     set({ loading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      await axiosInstance.post("/import/purchase-invoice", formData, {
+      await axiosInstance.post("/import/invoice", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        params: { schemaName },
+        params: { schemaName, type },
       });
       toast.success("Aktarma başarıyla tamamlandı");
     } catch (error) {
@@ -24,26 +24,45 @@ export const useImportXml = create((set) => ({
       set({ loading: false });
     }
   },
+  // importPurchaseInvoice: async (file, schemaName) => {
+  //   set({ loading: true });
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("file", file);
 
-  importSalesInvoice: async (file, schemaName) => {
-    set({ loading: true });
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+  //     await axiosInstance.post("/import/purchase-invoice", formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //       params: { schemaName },
+  //     });
+  //     toast.success("Aktarma başarıyla tamamlandı");
+  //   } catch (error) {
+  //     throw error;
+  //   } finally {
+  //     set({ loading: false });
+  //   }
+  // },
 
-      await axiosInstance.post("/import/sales-invoice", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        params: { schemaName },
-      });
-      toast.success("Aktarma başarıyla tamamlandı");
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
-  },
+  // importSalesInvoice: async (file, schemaName) => {
+  //   set({ loading: true });
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("file", file);
+
+  //     await axiosInstance.post("/import/sales-invoice", formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //       params: { schemaName },
+  //     });
+  //     toast.success("Aktarma başarıyla tamamlandı");
+  //   } catch (error) {
+  //     throw error;
+  //   } finally {
+  //     set({ loading: false });
+  //   }
+  // },
 
   importMaterials: async (file, schemaName) => {
     set({ loading: true });

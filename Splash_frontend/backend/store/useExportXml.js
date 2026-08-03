@@ -5,52 +5,57 @@ import { axiosInstance } from "../lib/axios";
 export const useExportXml = create((set) => ({
   loading: false,
 
-  exportPurchaseInvoice: async (year, schemaName) => {
+  exportInvoices: async (year, schemaName, type) => {
     set({ loading: true });
     try {
-      const response = await axiosInstance.get("/export/purchase-invoices", {
-        params: { year, schemaName },
+      const response = await axiosInstance.get("/export/invoices", {
+        params: { year, schemaName, type },
         responseType: "blob",
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Satin_Alma_Faturalari_${year}.xml`);
+      link.setAttribute(
+        "download",
+        `${type === "SALES" ? "satış" : "satın alma"}_Faturalari_${year}.xml`,
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
 
-      toast.success(`${year} yılı satın alma faturaları dışarı aktarıldı`);
+      toast.success(
+        `${year} yılı ${type === "SALES" ? "satış" : "satın alma"} faturaları dışarı aktarıldı`,
+      );
     } catch (error) {
       throw error;
     } finally {
       set({ loading: false });
     }
   },
-  exportSalesInvoice: async (year, schemaName) => {
-    set({ loading: true });
-    try {
-      const response = await axiosInstance.get("/export/sales-invoices", {
-        params: { year, schemaName },
-        responseType: "blob",
-      });
+  // exportSalesInvoice: async (year, schemaName) => {
+  //   set({ loading: true });
+  //   try {
+  //     const response = await axiosInstance.get("/export/sales-invoices", {
+  //       params: { year, schemaName },
+  //       responseType: "blob",
+  //     });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `Satis_Faturalari_${year}.xml`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+  //     const url = window.URL.createObjectURL(new Blob([response.data]));
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.setAttribute("download", `Satis_Faturalari_${year}.xml`);
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     link.remove();
 
-      toast.success(`${year} yılı satış faturaları dışarı aktarıldı`);
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
-  },
+  //     toast.success(`${year} yılı satış faturaları dışarı aktarıldı`);
+  //   } catch (error) {
+  //     throw error;
+  //   } finally {
+  //     set({ loading: false });
+  //   }
+  // },
   exportMaterials: async (schemaName) => {
     set({ loading: true });
     try {

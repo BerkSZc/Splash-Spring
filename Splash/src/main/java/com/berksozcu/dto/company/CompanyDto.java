@@ -1,7 +1,5 @@
 package com.berksozcu.dto.company;
 
-import com.berksozcu.entites.company.Year;
-import com.berksozcu.entites.user.User;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -16,7 +14,11 @@ public class CompanyDto {
 
     private String schemaName;
 
-    private String description;
+    private String companyAddress;
+
+    private String invoiceDescription;
+
+    private String vdNo;
 
     private Long userId;
 
