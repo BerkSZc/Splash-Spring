@@ -69,7 +69,7 @@ export const useClient = create((set, get) => ({
   updateCustomer: async (id, updateCustomer, currentYear, schemaName) => {
     set({ loading: true });
     try {
-      await axiosInstance.put(
+      const res = await axiosInstance.put(
         `/customer/update-customer/${id}`,
         updateCustomer,
         {

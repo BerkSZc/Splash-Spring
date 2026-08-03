@@ -1,4 +1,4 @@
-package com.berksozcu.entites.collections;
+package com.berksozcu.entites.collection;
 
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;

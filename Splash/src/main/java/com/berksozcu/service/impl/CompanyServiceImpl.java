@@ -17,8 +17,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +44,7 @@ public class CompanyServiceImpl implements ICompanyService {
     private YearRepository yearRepository;
 
     @Autowired
-    private PurchaseInvoiceRepository purchaseInvoiceRepository;
-
-    @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
+    private InvoiceRepository invoiceRepository;
 
     @Autowired
     private PayrollRepository payrollRepository;
@@ -58,10 +53,7 @@ public class CompanyServiceImpl implements ICompanyService {
     private CollectionRepository collectionRepository;
 
     @Autowired
-    private PurchaseInvoiceItemRepository purchaseInvoiceItemRepository;
-
-    @Autowired
-    private SalesInvoiceItemRepository salesInvoiceItemRepository;
+    private InvoiceItemRepository invoiceItemRepository;
 
     @Autowired
     private OpeningVoucherRepository openingVoucherRepository;
@@ -71,7 +63,9 @@ public class CompanyServiceImpl implements ICompanyService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CompanyDto createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException {
+    public CompanyDto createNewTenantSchema(CompanyDto companyDto, String sourceSchema, User user) throws SQLException {
+        String schemaName = companyDto.getSchemaName();
+
         if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_ISIM_HATA));
         }
@@ -82,7 +76,7 @@ public class CompanyServiceImpl implements ICompanyService {
 
         //Kopyalanacak Tablolar
         String[] allTables = {"customer", "material",
-                "purchase_invoice", "purchase_invoice_item", "sales_invoice", "sales_invoice_item",
+                "invoice", "invoice_item",
                 "material_price_history", "collection", "payroll", "opening_voucher"};
 
         List<String> tablesWithData = List.of("");
@@ -110,9 +104,11 @@ public class CompanyServiceImpl implements ICompanyService {
                 connection.commit();
 
                 Company company = new Company();
-                company.setName(companyName);
+                company.setName(Objects.requireNonNullElse(companyDto.getName(), "").toUpperCase());
                 company.setSchemaName(schemaName);
-                company.setDescription(description);
+                company.setInvoiceDescription(Objects.requireNonNullElse(companyDto.getInvoiceDescription(), "").toUpperCase());
+                company.setVdNo(Objects.requireNonNullElse(companyDto.getVdNo(), ""));
+                company.setCompanyAddress(Objects.requireNonNullElse(companyDto.getCompanyAddress(), "").toUpperCase());
                 company.setUser(user);
                 Company savedCompany = companyRepository.save(company);
 
@@ -134,11 +130,13 @@ public class CompanyServiceImpl implements ICompanyService {
 
     @Transactional
     @Override
-    public CompanyDto editCompany(String schemaName, String companyName, String description) {
-        Company company = companyRepository.findBySchemaName(schemaName);
+    public CompanyDto editCompany(CompanyDto companyDto) {
+        Company company = companyRepository.findBySchemaName(companyDto.getSchemaName());
 
-        company.setName(Objects.requireNonNullElse(companyName, ""));
-        company.setDescription(Objects.requireNonNullElse(description, ""));
+        company.setName(Objects.requireNonNullElse(companyDto.getName(), "").toUpperCase());
+        company.setInvoiceDescription(Objects.requireNonNullElse(companyDto.getInvoiceDescription(), "").toUpperCase());
+        company.setCompanyAddress(Objects.requireNonNullElse(companyDto.getCompanyAddress(), "").toUpperCase());
+        company.setVdNo(Objects.requireNonNullElse(companyDto.getVdNo(), ""));
         Company savedCompany = companyRepository.save(company);
         return convertToDto(savedCompany);
     }
@@ -190,11 +188,8 @@ public class CompanyServiceImpl implements ICompanyService {
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        purchaseInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
-        purchaseInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
-
-        salesInvoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
-        salesInvoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        invoiceItemRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
+        invoiceRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         payrollRepository.deleteByCompanyIdAndTransactionDateBetween(companyId, start, end);
         collectionRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
         openingVoucherRepository.deleteByCompanyIdAndDateBetween(companyId, start, end);
@@ -281,17 +276,19 @@ public class CompanyServiceImpl implements ICompanyService {
         CompanyDto companyDto = new CompanyDto();
         companyDto.setId(company.getId());
         companyDto.setName(company.getName());
-        companyDto.setDescription(company.getDescription());
+        companyDto.setInvoiceDescription(company.getInvoiceDescription());
         companyDto.setSchemaName(company.getSchemaName());
+        companyDto.setCompanyAddress(company.getCompanyAddress());
+        companyDto.setVdNo(company.getVdNo());
         companyDto.setUserId(company.getUser().getId());
         List<YearDto> yearDtoList = company.getYears().stream()
-                        .map(year -> {
-                            YearDto yearDto = new YearDto();
-                            yearDto.setId(year.getId());
-                            yearDto.setYearValue(year.getYearValue());
-                            yearDto.setCompanyId(year.getCompany().getId());
-                            return yearDto;
-                        }).collect(Collectors.toList());
+                .map(year -> {
+                    YearDto yearDto = new YearDto();
+                    yearDto.setId(year.getId());
+                    yearDto.setYearValue(year.getYearValue());
+                    yearDto.setCompanyId(year.getCompany().getId());
+                    return yearDto;
+                }).collect(Collectors.toList());
 
         companyDto.setYears(yearDtoList);
         return companyDto;

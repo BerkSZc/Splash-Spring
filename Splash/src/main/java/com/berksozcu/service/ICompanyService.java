@@ -10,11 +10,11 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface ICompanyService {
-     CompanyDto createNewTenantSchema(String schemaName, String companyName, String description, String sourceSchema, User user) throws SQLException;
+     CompanyDto createNewTenantSchema(CompanyDto companyDto, String sourceSchema, User user) throws SQLException;
      List<YearDto> getYearsByCompany(Long companyId);
      YearDto addYearToCompany(Long companyId, Integer year);
      void deleteCompanyAndYear(Long companyId, Integer year);
      String createDefaultSchemaName();
-     CompanyDto editCompany(String schemaName, String companyName, String description);
+     CompanyDto editCompany(CompanyDto companyDto);
      List<CompanyDto> getAllCompanies(User user);
 }

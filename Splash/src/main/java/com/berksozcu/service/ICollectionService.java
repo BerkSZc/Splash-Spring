@@ -1,7 +1,7 @@
 package com.berksozcu.service;
 
 import com.berksozcu.dto.collection.CollectionDto;
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.CollectionType;
 import org.springframework.data.domain.Page;
 
 public interface ICollectionService {

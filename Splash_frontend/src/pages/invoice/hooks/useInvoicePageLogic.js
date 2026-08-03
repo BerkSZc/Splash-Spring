@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice";
-import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice";
 import { useMaterial } from "../../../../backend/store/useMaterial";
 import { useClient } from "../../../../backend/store/useClient";
 import { useCommonData } from "../../../../backend/store/useCommonData.js";
@@ -9,29 +7,23 @@ import { useTenant } from "../../../context/TenantContext";
 import { generateInvoiceHTML } from "../../../utils/printHelpers.js";
 import toast from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
+import { useInvoice } from "../../../../backend/store/useInvoice.js";
 
 export const useInvoicePageLogic = () => {
   const {
-    purchase,
-    purchaseTotalPages,
-    editPurchaseInvoice,
-    deletePurchaseInvoice,
-    getPurchaseInvoiceByYear,
-    loading: purchaseLoading,
-  } = usePurchaseInvoice();
-  const {
-    sales,
-    salesTotalPages,
-    editSalesInvoice,
-    deleteSalesInvoice,
-    getSalesInvoicesByYear,
-    loading: salesLoading,
-  } = useSalesInvoice();
+    invoice,
+    invoiceTotalPages,
+    editInvoice,
+    deleteInvoice,
+    getInvoicesByYear,
+    loading: invoiceLoading,
+  } = useInvoice();
+
   const { materials, getMaterials, loading: materialLoading } = useMaterial();
   const { customers, getAllCustomers, loading: customerLoading } = useClient();
   const { convertCurrency, loading: commonDataLoading } = useCommonData();
   const { year } = useYear();
-  const { tenant } = useTenant();
+  const { tenant, currentCompany } = useTenant();
 
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -114,21 +106,15 @@ export const useInvoicePageLogic = () => {
         ]);
         if (ignore) return;
 
-        invoiceType === "purchase"
-          ? await getPurchaseInvoiceByYear(
-              page,
-              PAGE_SIZE,
-              debouncedSearch,
-              year,
-              tenant,
-            )
-          : await getSalesInvoicesByYear(
-              page,
-              PAGE_SIZE,
-              debouncedSearch,
-              year,
-              tenant,
-            );
+        const backendType = invoiceType === "purchase" ? "PURCHASE" : "SALES";
+        await getInvoicesByYear(
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          year,
+          tenant,
+          backendType,
+        );
       } catch (error) {
         const backendErr =
           error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -175,7 +161,12 @@ export const useInvoicePageLogic = () => {
       "width=1000, height=800",
     );
     if (printWindow) {
-      const html = generateInvoiceHTML(inv, invoiceType, customers);
+      const html = generateInvoiceHTML(
+        inv,
+        invoiceType,
+        customers,
+        currentCompany,
+      );
       printWindow.document.open();
       printWindow.document.write(html);
       printWindow.document.close();
@@ -394,6 +385,9 @@ export const useInvoicePageLogic = () => {
       usdSellingRate: invoice.usdSellingRate || "",
       eurSellingRate: invoice.eurSellingRate || "",
       invoiced: Boolean(invoice.invoiced),
+      invoiceType:
+        invoice.invoiceType ||
+        (invoiceType === "purchase" ? "PURCHASE" : "SALES"),
       items: (Array.isArray(invoice?.items) ? invoice.items : [])
         .sort((a, b) => a.id - b.id)
         .map((i) => ({
@@ -423,6 +417,8 @@ export const useInvoicePageLogic = () => {
       usdSellingRate: Number(form.usdSellingRate) || 0,
       eurSellingRate: Number(form.eurSellingRate) || 0,
       invoiced: Boolean(form.invoiced),
+      invoiceType:
+        form.invoiceType || (invoiceType === "purchase" ? "PURCHASE" : "SALES"),
       items: (Array.isArray(form.items) ? form.items : []).map((i) => {
         const netTutar = Number(i.unitPrice) * Number(i.quantity);
         const satirKdv = (netTutar * Number(i.kdv)) / 100;
@@ -461,11 +457,7 @@ export const useInvoicePageLogic = () => {
     }
 
     try {
-      if (invoiceType === "purchase") {
-        await editPurchaseInvoice(editingInvoice.id, payload, tenant);
-      } else {
-        await editSalesInvoice(editingInvoice.id, payload, tenant);
-      }
+      await editInvoice(editingInvoice.id, payload, tenant);
       await getAllCustomers(0, 999, false, "", tenant, year);
       setEditingInvoice(null);
       setForm(null);
@@ -486,11 +478,8 @@ export const useInvoicePageLogic = () => {
   const confirmDelete = async () => {
     setDeleteTarget(null);
     try {
-      if (invoiceType === "purchase") {
-        await deletePurchaseInvoice(deleteTarget.id, tenant);
-      } else {
-        await deleteSalesInvoice(deleteTarget.id, tenant);
-      }
+      const backendType = invoiceType === "purchase" ? "PURCHASE" : "SALES";
+      await deleteInvoice(deleteTarget.id, tenant, backendType);
       await getAllCustomers(0, 999, false, "", tenant, year);
       setSelectedInvoiceId(null);
     } catch (error) {
@@ -591,16 +580,20 @@ export const useInvoicePageLogic = () => {
   };
 
   const sortedAndFilteredInvoices = useMemo(() => {
-    const baseData = invoiceType === "purchase" ? purchase : sales;
-    const dataArray = Array.isArray(baseData) ? baseData : [];
+    const dataArray = Array.isArray(invoice) ? invoice : [];
+    const expectedType = invoiceType === "purchase" ? "PURCHASE" : "SALES";
 
-    return [...dataArray].sort((a, b) => {
+    const filteredByType = dataArray.filter(
+      (inv) => inv.invoiceType === expectedType,
+    );
+
+    return filteredByType.sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
 
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [purchase, sales, invoiceType, sortOrder]);
+  }, [invoice, invoiceType, sortOrder]);
 
   const formatDateToTR = (dateString) => {
     if (
@@ -673,10 +666,7 @@ export const useInvoicePageLogic = () => {
   };
 
   const isLoading =
-    (invoiceType === "purchase" ? purchaseLoading : salesLoading) ||
-    materialLoading ||
-    customerLoading ||
-    commonDataLoading;
+    invoiceLoading || materialLoading || customerLoading || commonDataLoading;
 
   const clearSelection = () => {
     setContextMenu(null);
@@ -706,10 +696,10 @@ export const useInvoicePageLogic = () => {
       selectedInvoiceId,
       contextMenu,
       page,
-      totalPages:
-        invoiceType === "purchase" ? purchaseTotalPages : salesTotalPages,
+      totalPages: invoiceTotalPages,
       viewingInvoice,
       showAddForm,
+      currentCompany,
     },
     handlers: {
       toggleMenu,

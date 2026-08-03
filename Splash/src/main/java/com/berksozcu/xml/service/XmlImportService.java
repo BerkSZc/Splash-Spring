@@ -1,10 +1,12 @@
 package com.berksozcu.xml.service;
 
-import com.berksozcu.entites.collections.Collection;
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.Collection;
+import com.berksozcu.entites.collection.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
+import com.berksozcu.entites.invoice.Invoice;
+import com.berksozcu.entites.invoice.InvoiceItem;
 import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
@@ -13,15 +15,12 @@ import com.berksozcu.entites.material_price_history.MaterialPriceHistory;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.entites.payroll.PayrollType;
-import com.berksozcu.entites.purchase.PurchaseInvoice;
-import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
-import com.berksozcu.entites.sales.SalesInvoice;
-import com.berksozcu.entites.sales.SalesInvoiceItem;
 import com.berksozcu.repository.*;
 import com.berksozcu.xml.entites.collections.CollectionXml;
 import com.berksozcu.xml.entites.collections.CollectionsXml;
 import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
+import com.berksozcu.xml.entites.invoice.SalesInvoicesXml;
 import com.berksozcu.xml.entites.materials.*;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
 import com.berksozcu.xml.entites.opening_balances.ArpVoucherXml;
@@ -29,11 +28,9 @@ import com.berksozcu.xml.entites.opening_balances.ArpVouchersXml;
 import com.berksozcu.xml.entites.payrolls.PayrollRollXml;
 import com.berksozcu.xml.entites.payrolls.PayrollTxXml;
 import com.berksozcu.xml.entites.payrolls.PayrollsXml;
-import com.berksozcu.xml.entites.purchase.InvoiceXml;
-import com.berksozcu.xml.entites.purchase.PurchaseInvoicesXml;
-import com.berksozcu.xml.entites.purchase.TransactionXml;
-import com.berksozcu.xml.entites.sales.SalesInvoiceXml;
-import com.berksozcu.xml.entites.sales.SalesInvoicesXml;
+import com.berksozcu.xml.entites.invoice.InvoiceXml;
+import com.berksozcu.xml.entites.invoice.PurchaseInvoicesXml;
+import com.berksozcu.xml.entites.invoice.TransactionXml;
 import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
@@ -55,16 +52,13 @@ public class XmlImportService {
     private CustomerRepository customerRepository;
 
     @Autowired
-    private PurchaseInvoiceRepository invoiceRepository;
-
-    @Autowired
     private MaterialRepository materialRepository;
 
     @Autowired
     private CollectionRepository collectionRepository;
 
     @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
+    private InvoiceRepository invoiceRepository;
 
     @Autowired
     private MaterialPriceHistoryRepository materialPriceHistoryRepository;
@@ -79,12 +73,12 @@ public class XmlImportService {
     private CompanyRepository companyRepository;
 
     @Transactional
-    public void importPurchaseInvoices(MultipartFile file, String schemaName) throws Exception {
+    public void importInvoices(MultipartFile file, String schemaName, InvoiceType type) throws Exception {
+        boolean isSales = type == InvoiceType.SALES;
+        Class<?> jaxbClass = isSales ? SalesInvoicesXml.class : PurchaseInvoicesXml.class;
 
-        JAXBContext context = JAXBContext.newInstance(PurchaseInvoicesXml.class);
+        JAXBContext context = JAXBContext.newInstance(jaxbClass);
         Unmarshaller unmarshaller = context.createUnmarshaller();
-
-        PurchaseInvoicesXml invoicesXml = (PurchaseInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
 
         Company company = getCompany(schemaName);
 
@@ -96,91 +90,101 @@ public class XmlImportService {
                                 m -> m
                         ));
 
+        List<InvoiceXml> invoiceXmlList;
+
+        if(isSales) {
+            SalesInvoicesXml xmlRoot = (SalesInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
+            invoiceXmlList = xmlRoot.getInvoices();
+        } else {
+            PurchaseInvoicesXml xmlRoot = (PurchaseInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
+            invoiceXmlList = xmlRoot.getInvoices();
+        }
+
         Long invoiceCounter = 1L;
 
-        for (InvoiceXml xmlInv : invoicesXml.getInvoices()) {
+        for(InvoiceXml xmlInv : invoiceXmlList) {
 
-            if (invoiceRepository.existsByFileNoAndCompany(xmlInv.getDOC_NUMBER(), company)) {
-                System.out.println("Fatura NO mevcut: " + xmlInv.getDOC_NUMBER());
-                continue;
-            }
+            String fileNo = isSales
+                    ? Objects.requireNonNullElse(xmlInv.getNUMBER(), "")
+                    : Objects.requireNonNullElse(xmlInv.getDOC_NUMBER(), "");
 
-            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
-                System.out.println("İptal olmuş fatura atlandı: " + xmlInv.getDOC_NUMBER());
-                continue;
-            }
-
-            if (xmlInv.getDOC_NUMBER() == null || xmlInv.getDOC_NUMBER().isBlank()) {
+            if (fileNo.isBlank()) {
                 System.out.println("Fatura No'su boş veya mevcut değil");
                 continue;
             }
 
-            PurchaseInvoice invoice = new PurchaseInvoice();
+            if (invoiceRepository.existsByFileNoAndCompany(fileNo, company)) {
+                System.out.println("Fatura NO mevcut: " + xmlInv.getNUMBER());
+                continue;
+            }
+
+            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
+                System.out.println("İptal olmuş fatura atlandı: " + xmlInv.getNUMBER());
+                continue;
+            }
+
+            Invoice invoice = new Invoice();
             LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
             invoice.setDate(date);
-
-
-            invoice.setFileNo(Objects.requireNonNullElse(xmlInv.getDOC_NUMBER(), ""));
+            invoice.setFileNo(fileNo);
             invoice.setCompany(company);
-            invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
-            invoice.setEurSellingRate(BigDecimal.ONE);
-            invoice.setUsdSellingRate(BigDecimal.ONE);
+            invoice.setInvoiceType(type);
+            invoice.setEurSellingRate(Objects.requireNonNullElse(xmlInv.getEUR_SELLING_RATE(), BigDecimal.ONE));
+            invoice.setUsdSellingRate(Objects.requireNonNullElse(xmlInv.getUSD_SELLING_RATE(), BigDecimal.ONE));
             invoice.setInvoiced(Objects.requireNonNullElse(xmlInv.getINVOICED(), true));
-
+            invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
             invoice.setTotalPrice(safeGet(xmlInv.getTOTAL_NET()).setScale(2, RoundingMode.HALF_UP));
-            // Customer eşleştirme
+
             Customer customer = customerRepository.findByCodeAndCompany(xmlInv.getARP_CODE(), company)
                     .orElse(null);
 
             if (customer == null) {
                 System.err.println("Müşteri bulunamadı: " + xmlInv.getARP_CODE() + " → Fatura atlandı");
-                continue; // müşteri yoksa faturayı atla
+                continue;
             }
 
             invoice.setCustomer(customer);
 
-            List<PurchaseInvoiceItem> itemList = new ArrayList<>();
+            List<InvoiceItem> itemList = new ArrayList<>();
 
             LocalDate start = LocalDate.of(date.getYear(), 1, 1);
             LocalDate end = LocalDate.of(date.getYear(), 12, 31);
 
             OpeningVoucher voucher = openingBalanceRepository
                     .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
-                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
+                            .orElseGet(() -> getDefaultVoucher(company, customer, start));
 
             voucher.setCompany(company);
-            // Fatura satırları
+
             if (xmlInv.getTRANSACTIONS() != null && xmlInv.getTRANSACTIONS().getList() != null) {
                 for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
-
                     if (tx.getMASTER_CODE() == null || tx.getMASTER_CODE().isBlank()) {
-                        System.err.println("HATA: MASTER_CODE boş! Satır numarası: " + tx);
+                        System.err.println("HATA: MASTER_CODE boş!");
                         continue;
                     }
-                    // Malzeme eşleştirme
+
                     String masterCode = tx.getMASTER_CODE().trim().toUpperCase();
                     Material material = materialMap.get(masterCode);
 
                     if (material == null) {
                         System.err.println("HATA: Malzeme bulunamadı, satır atlandı → " + tx.getMASTER_CODE());
-                        continue; // veya throw new BaseException(...) ile işlemi durdur
+                        continue;
                     }
 
-                    //Malzeme Fiyat Geçmişi Kayıt İşlemi
+                    // Malzeme Fiyat Geçmişi Kaydı
                     saveMaterialPrice(material,
-                            LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                            date,
                             customer.getName(),
                             tx.getPRICE(),
                             tx.getQUANTITY(),
-                            InvoiceType.PURCHASE,
+                            type,
                             customer,
                             invoiceCounter,
                             company);
 
-                    //Fatura Kalemleri
-                    PurchaseInvoiceItem item = new PurchaseInvoiceItem();
-                    item.setPurchaseInvoice(invoice);
+                    InvoiceItem item = new InvoiceItem();
+                    item.setInvoice(invoice);
                     item.setMaterial(material);
                     item.setUnit(Objects.requireNonNullElse(tx.getUNIT_CODE(), MaterialUnit.ADET));
                     item.setCompany(company);
@@ -188,132 +192,266 @@ public class XmlImportService {
                     item.setUnitPrice(safeGet(tx.getPRICE()).setScale(2, RoundingMode.HALF_UP));
                     item.setKdv(safeGet(tx.getVAT_RATE()).setScale(2, RoundingMode.HALF_UP));
                     item.setKdvTutar(safeGet(tx.getVAT_AMOUNT()).setScale(2, RoundingMode.HALF_UP));
-                    item.setLineTotal(safeGet(tx.getTOTAL()).setScale(2, RoundingMode.HALF_UP));
 
-                    System.out.println(
-                            "ITEM → " + material.getCode() + " | ID=" + material.getId()
-                    );
+                    BigDecimal lineTotal = tx.getTOTAL() != null ? tx.getTOTAL() : BigDecimal.ZERO;
+                    item.setLineTotal(safeGet(lineTotal).setScale(2, RoundingMode.HALF_UP));
+
                     itemList.add(item);
                 }
                 invoiceCounter++;
-
                 invoice.setItems(itemList);
 
-                voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
-                voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+                if (isSales) {
+                    voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+                    voucher.setDebit(safeGet(voucher.getDebit()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+                } else {
+                    voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+                    voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+                }
+
                 openingBalanceRepository.save(voucher);
-                // Cascade ALL sayesinde item'lar otomatik kaydedilir
+
                 invoiceRepository.save(invoice);
             }
         }
     }
 
-    @Transactional
-    public void importSalesInvoices(MultipartFile file, String schemaName) throws Exception {
-        JAXBContext context = JAXBContext.newInstance(SalesInvoicesXml.class);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-
-        SalesInvoicesXml invoicesXml = (SalesInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
-
-        Company company = getCompany(schemaName);
-
-        Map<String, Material> materialMap = materialRepository.findAllByCompany(company)
-                .stream().collect(Collectors.toMap(m -> m.getCode().trim().toUpperCase(),
-                        m -> m));
-
-        Long invoiceCounter = 1L;
-        for (SalesInvoiceXml xmlInv : invoicesXml.getSalesInvoices()) {
-
-            if (salesInvoiceRepository.existsByFileNoAndCompany(xmlInv.getNUMBER(), company)) {
-                System.out.println("Fatura no mevcut: " + xmlInv.getNUMBER());
-                continue;
-            }
-
-            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
-                System.out.println("İptal edilmiş Fatura atlandı: " + xmlInv.getNUMBER());
-                continue;
-            }
-
-            SalesInvoice invoice = new SalesInvoice();
-            LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-
-            invoice.setFileNo(Objects.requireNonNullElse(xmlInv.getNUMBER(), ""));
-            invoice.setDate(date);
-            invoice.setCompany(company);
-            BigDecimal totalPrice = safeGet(xmlInv.getTOTAL_NET()).setScale(2, RoundingMode.HALF_UP);
-            invoice.setTotalPrice(totalPrice);
-            invoice.setEurSellingRate(BigDecimal.ONE);
-            invoice.setUsdSellingRate(BigDecimal.ONE);
-            invoice.setInvoiced(Objects.requireNonNullElse(xmlInv.getINVOICED(), true));
-
-            invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
-
-            Customer customer = customerRepository.findByCodeAndCompany(xmlInv.getARP_CODE(), company)
-                    .orElse(null);
-            invoice.setCustomer(customer);
-
-            if (customer == null) {
-                System.err.println("Müşteri bulunamadı: " + xmlInv.getARP_CODE() + " → Fatura atlandı");
-                continue; // müşteri yoksa faturayı atla
-            }
-
-            List<SalesInvoiceItem> itemList = new ArrayList<>();
-
-            LocalDate start = LocalDate.of(date.getYear(), 1, 1);
-            LocalDate end = LocalDate.of(date.getYear(), 12, 31);
-
-            OpeningVoucher voucher = openingBalanceRepository
-                    .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
-                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
-
-            for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
-                if (tx.getMASTER_CODE() == null || tx.getMASTER_CODE().isBlank()) {
-                    System.out.println("Atlanan satır (MASTER_CODE boş)");
-                    continue;
-                }
-
-                Material material = materialMap.get(tx.getMASTER_CODE().trim().toUpperCase());
-
-                if (material == null) {
-                    System.err.println("HATA: Malzeme bulunamadı, satır atlandı → " + tx.getMASTER_CODE());
-                    continue;
-                }
-
-                saveMaterialPrice(material,
-                        LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                        customer.getName(),
-                        tx.getPRICE(),
-                        tx.getQUANTITY(),
-                        InvoiceType.SALES,
-                        customer,
-                        invoiceCounter,
-                        company);
-
-                // Fatura Kalemleri
-                SalesInvoiceItem item = new SalesInvoiceItem();
-
-                item.setMaterial(material);
-                item.setQuantity(safeGet(tx.getQUANTITY()));
-                item.setUnitPrice(safeGet(tx.getPRICE()));
-                item.setKdv(safeGet(tx.getVAT_RATE()));
-                item.setUnit(Objects.requireNonNullElse(tx.getUNIT_CODE(), MaterialUnit.ADET));
-                item.setCompany(company);
-                item.setKdvTutar(safeGet(tx.getVAT_AMOUNT()));
-                item.setLineTotal(safeGet(tx.getTOTAL_NET()));
-
-                itemList.add(item);
-                item.setSalesInvoice(invoice);
-            }
-            invoiceCounter++;
-            // Satış faturası tutarını bakiyeye ekliyoruz
-            voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
-            voucher.setDebit(safeGet(voucher.getDebit()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
-
-            invoice.setItems(itemList);
-            openingBalanceRepository.save(voucher);
-            salesInvoiceRepository.save(invoice);
-        }
-    }
+//    @Transactional
+//    public void importPurchaseInvoices(MultipartFile file, String schemaName) throws Exception {
+//
+//        JAXBContext context = JAXBContext.newInstance(PurchaseInvoicesXml.class);
+//        Unmarshaller unmarshaller = context.createUnmarshaller();
+//
+//        PurchaseInvoicesXml invoicesXml = (PurchaseInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
+//
+//        Company company = getCompany(schemaName);
+//
+//        Map<String, Material> materialMap =
+//                materialRepository.findAllByCompany(company)
+//                        .stream()
+//                        .collect(Collectors.toMap(
+//                                m -> m.getCode().trim().toUpperCase(),
+//                                m -> m
+//                        ));
+//
+//        Long invoiceCounter = 1L;
+//
+//        for (InvoiceXml xmlInv : invoicesXml.getInvoices()) {
+//
+//            if (invoiceRepository.existsByFileNoAndCompany(xmlInv.getDOC_NUMBER(), company)) {
+//                System.out.println("Fatura NO mevcut: " + xmlInv.getDOC_NUMBER());
+//                continue;
+//            }
+//
+//            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
+//                System.out.println("İptal olmuş fatura atlandı: " + xmlInv.getDOC_NUMBER());
+//                continue;
+//            }
+//
+//            if (xmlInv.getDOC_NUMBER() == null || xmlInv.getDOC_NUMBER().isBlank()) {
+//                System.out.println("Fatura No'su boş veya mevcut değil");
+//                continue;
+//            }
+//
+//            PurchaseInvoice invoice = new PurchaseInvoice();
+//            LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+//
+//            invoice.setDate(date);
+//
+//
+//            invoice.setFileNo(Objects.requireNonNullElse(xmlInv.getDOC_NUMBER(), ""));
+//            invoice.setCompany(company);
+//            invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
+//            invoice.setEurSellingRate(BigDecimal.ONE);
+//            invoice.setUsdSellingRate(BigDecimal.ONE);
+//            invoice.setInvoiced(Objects.requireNonNullElse(xmlInv.getINVOICED(), true));
+//
+//            invoice.setTotalPrice(safeGet(xmlInv.getTOTAL_NET()).setScale(2, RoundingMode.HALF_UP));
+//            // Customer eşleştirme
+//            Customer customer = customerRepository.findByCodeAndCompany(xmlInv.getARP_CODE(), company)
+//                    .orElse(null);
+//
+//            if (customer == null) {
+//                System.err.println("Müşteri bulunamadı: " + xmlInv.getARP_CODE() + " → Fatura atlandı");
+//                continue; // müşteri yoksa faturayı atla
+//            }
+//
+//            invoice.setCustomer(customer);
+//
+//            List<PurchaseInvoiceItem> itemList = new ArrayList<>();
+//
+//            LocalDate start = LocalDate.of(date.getYear(), 1, 1);
+//            LocalDate end = LocalDate.of(date.getYear(), 12, 31);
+//
+//            OpeningVoucher voucher = openingBalanceRepository
+//                    .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
+//                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
+//
+//            voucher.setCompany(company);
+//            // Fatura satırları
+//            if (xmlInv.getTRANSACTIONS() != null && xmlInv.getTRANSACTIONS().getList() != null) {
+//                for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
+//
+//                    if (tx.getMASTER_CODE() == null || tx.getMASTER_CODE().isBlank()) {
+//                        System.err.println("HATA: MASTER_CODE boş! Satır numarası: " + tx);
+//                        continue;
+//                    }
+//                    // Malzeme eşleştirme
+//                    String masterCode = tx.getMASTER_CODE().trim().toUpperCase();
+//                    Material material = materialMap.get(masterCode);
+//
+//                    if (material == null) {
+//                        System.err.println("HATA: Malzeme bulunamadı, satır atlandı → " + tx.getMASTER_CODE());
+//                        continue; // veya throw new BaseException(...) ile işlemi durdur
+//                    }
+//
+//                    //Malzeme Fiyat Geçmişi Kayıt İşlemi
+//                    saveMaterialPrice(material,
+//                            LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+//                            customer.getName(),
+//                            tx.getPRICE(),
+//                            tx.getQUANTITY(),
+//                            InvoiceType.PURCHASE,
+//                            customer,
+//                            invoiceCounter,
+//                            company);
+//
+//                    //Fatura Kalemleri
+//                    PurchaseInvoiceItem item = new PurchaseInvoiceItem();
+//                    item.setPurchaseInvoice(invoice);
+//                    item.setMaterial(material);
+//                    item.setUnit(Objects.requireNonNullElse(tx.getUNIT_CODE(), MaterialUnit.ADET));
+//                    item.setCompany(company);
+//                    item.setQuantity(safeGet(tx.getQUANTITY()).setScale(2, RoundingMode.HALF_UP));
+//                    item.setUnitPrice(safeGet(tx.getPRICE()).setScale(2, RoundingMode.HALF_UP));
+//                    item.setKdv(safeGet(tx.getVAT_RATE()).setScale(2, RoundingMode.HALF_UP));
+//                    item.setKdvTutar(safeGet(tx.getVAT_AMOUNT()).setScale(2, RoundingMode.HALF_UP));
+//                    item.setLineTotal(safeGet(tx.getTOTAL()).setScale(2, RoundingMode.HALF_UP));
+//
+//                    System.out.println(
+//                            "ITEM → " + material.getCode() + " | ID=" + material.getId()
+//                    );
+//                    itemList.add(item);
+//                }
+//                invoiceCounter++;
+//
+//                invoice.setItems(itemList);
+//
+//                voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).subtract(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+//                voucher.setCredit(safeGet(voucher.getCredit()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+//                openingBalanceRepository.save(voucher);
+//                // Cascade ALL sayesinde item'lar otomatik kaydedilir
+//                invoiceRepository.save(invoice);
+//            }
+//        }
+//    }
+//
+//    @Transactional
+//    public void importSalesInvoices(MultipartFile file, String schemaName) throws Exception {
+//        JAXBContext context = JAXBContext.newInstance(SalesInvoicesXml.class);
+//        Unmarshaller unmarshaller = context.createUnmarshaller();
+//
+//        SalesInvoicesXml invoicesXml = (SalesInvoicesXml) unmarshaller.unmarshal(file.getInputStream());
+//
+//        Company company = getCompany(schemaName);
+//
+//        Map<String, Material> materialMap = materialRepository.findAllByCompany(company)
+//                .stream().collect(Collectors.toMap(m -> m.getCode().trim().toUpperCase(),
+//                        m -> m));
+//
+//        Long invoiceCounter = 1L;
+//        for (SalesInvoiceXml xmlInv : invoicesXml.getSalesInvoices()) {
+//
+//            if (salesInvoiceRepository.existsByFileNoAndCompany(xmlInv.getNUMBER(), company)) {
+//                System.out.println("Fatura no mevcut: " + xmlInv.getNUMBER());
+//                continue;
+//            }
+//
+//            if (xmlInv.getCANCELLED() != null && xmlInv.getCANCELLED().equals(1)) {
+//                System.out.println("İptal edilmiş Fatura atlandı: " + xmlInv.getNUMBER());
+//                continue;
+//            }
+//
+//            SalesInvoice invoice = new SalesInvoice();
+//            LocalDate date = LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+//
+//            invoice.setFileNo(Objects.requireNonNullElse(xmlInv.getNUMBER(), ""));
+//            invoice.setDate(date);
+//            invoice.setCompany(company);
+//            BigDecimal totalPrice = safeGet(xmlInv.getTOTAL_NET()).setScale(2, RoundingMode.HALF_UP);
+//            invoice.setTotalPrice(totalPrice);
+//            invoice.setEurSellingRate(BigDecimal.ONE);
+//            invoice.setUsdSellingRate(BigDecimal.ONE);
+//            invoice.setInvoiced(Objects.requireNonNullElse(xmlInv.getINVOICED(), true));
+//
+//            invoice.setKdvToplam(safeGet(xmlInv.getTOTAL_VAT()).setScale(2, RoundingMode.HALF_UP));
+//
+//            Customer customer = customerRepository.findByCodeAndCompany(xmlInv.getARP_CODE(), company)
+//                    .orElse(null);
+//            invoice.setCustomer(customer);
+//
+//            if (customer == null) {
+//                System.err.println("Müşteri bulunamadı: " + xmlInv.getARP_CODE() + " → Fatura atlandı");
+//                continue; // müşteri yoksa faturayı atla
+//            }
+//
+//            List<SalesInvoiceItem> itemList = new ArrayList<>();
+//
+//            LocalDate start = LocalDate.of(date.getYear(), 1, 1);
+//            LocalDate end = LocalDate.of(date.getYear(), 12, 31);
+//
+//            OpeningVoucher voucher = openingBalanceRepository
+//                    .findByCustomerIdAndCompanyAndDateBetween(customer.getId(), company, start, end)
+//                    .orElseGet(() -> getDefaultVoucher(company, customer, start));
+//
+//            for (TransactionXml tx : xmlInv.getTRANSACTIONS().getList()) {
+//                if (tx.getMASTER_CODE() == null || tx.getMASTER_CODE().isBlank()) {
+//                    System.out.println("Atlanan satır (MASTER_CODE boş)");
+//                    continue;
+//                }
+//
+//                Material material = materialMap.get(tx.getMASTER_CODE().trim().toUpperCase());
+//
+//                if (material == null) {
+//                    System.err.println("HATA: Malzeme bulunamadı, satır atlandı → " + tx.getMASTER_CODE());
+//                    continue;
+//                }
+//
+//                saveMaterialPrice(material,
+//                        LocalDate.parse(xmlInv.getDATE(), DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+//                        customer.getName(),
+//                        tx.getPRICE(),
+//                        tx.getQUANTITY(),
+//                        InvoiceType.SALES,
+//                        customer,
+//                        invoiceCounter,
+//                        company);
+//
+//                // Fatura Kalemleri
+//                SalesInvoiceItem item = new SalesInvoiceItem();
+//
+//                item.setMaterial(material);
+//                item.setQuantity(safeGet(tx.getQUANTITY()));
+//                item.setUnitPrice(safeGet(tx.getPRICE()));
+//                item.setKdv(safeGet(tx.getVAT_RATE()));
+//                item.setUnit(Objects.requireNonNullElse(tx.getUNIT_CODE(), MaterialUnit.ADET));
+//                item.setCompany(company);
+//                item.setKdvTutar(safeGet(tx.getVAT_AMOUNT()));
+//                item.setLineTotal(safeGet(tx.getTOTAL_NET()));
+//
+//                itemList.add(item);
+//                item.setSalesInvoice(invoice);
+//            }
+//            invoiceCounter++;
+//            // Satış faturası tutarını bakiyeye ekliyoruz
+//            voucher.setFinalBalance(safeGet(voucher.getFinalBalance()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+//            voucher.setDebit(safeGet(voucher.getDebit()).add(safeGet(invoice.getTotalPrice())).setScale(2, RoundingMode.HALF_UP));
+//
+//            invoice.setItems(itemList);
+//            openingBalanceRepository.save(voucher);
+//            salesInvoiceRepository.save(invoice);
+//        }
+//    }
 
     @Transactional
     public void importMaterials(MultipartFile file, String schemaName) throws Exception {
@@ -557,7 +695,7 @@ public class XmlImportService {
             }
 
         }
-        if(!collectionsToSave.isEmpty()) {
+        if (!collectionsToSave.isEmpty()) {
             collectionRepository.saveAll(collectionsToSave);
             openingBalanceRepository.saveAll(voucherCache.values());
         }

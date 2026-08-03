@@ -1,52 +1,48 @@
-package com.berksozcu.controller.impl;
-
-import com.berksozcu.annotation.RateLimit;
-import com.berksozcu.controller.ISalesInvoiceController;
-import com.berksozcu.dto.invoice.InvoiceDto;
-import com.berksozcu.entites.sales.SalesInvoice;
-import com.berksozcu.service.ISalesInvoiceService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/rest/api/sales")
-@RateLimit(capacity = 5000)
-public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
-
-    @Autowired
-    private ISalesInvoiceService salesInvoiceService;
-
-    @Override
-    @PostMapping("/add/{id}")
-    public InvoiceDto addSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody InvoiceDto salesInvoice,
-                                        @RequestParam String schemaName) {
-        return salesInvoiceService.addSalesInvoice(id, salesInvoice, schemaName);
-    }
-
-    @Override
-    @PutMapping("/update/{id}")
-    public InvoiceDto editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody InvoiceDto salesInvoice,
-                                         @RequestParam String schemaName) {
-           return   salesInvoiceService.editSalesInvoice(id, salesInvoice, schemaName);
-    }
-
-    @Override
-    @DeleteMapping("/delete/{id}")
-    public void deleteSalesInvoice(@PathVariable(name = "id") Long id,
-                                   @RequestParam String schemaName) {
-        salesInvoiceService.deleteSalesInvoice(id, schemaName);
-    }
-
-    @Override
-    @GetMapping("/find-by-year")
-    public Page<InvoiceDto> getSalesInvoiceByYear(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "20") int size,
-                                                  @RequestParam(required = false) String search,
-                                                  @RequestParam int year,
-                                                  @RequestParam String schemaName) {
-        return salesInvoiceService.getSalesInvoicesByYear(page, size, search, year, schemaName);
-    }
-}
+//package com.berksozcu.controller.impl;
+//
+//import com.berksozcu.annotation.RateLimit;
+//import com.berksozcu.dto.invoice.InvoiceDto;
+//import com.berksozcu.service.ISalesInvoiceService;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.data.domain.Page;
+//import org.springframework.web.bind.annotation.*;
+//
+//@RestController
+//@RequestMapping("/rest/api/sales")
+//@RateLimit(capacity = 5000)
+//public class SalesInvoiceControllerImpl implements ISalesInvoiceController {
+//
+//    @Autowired
+//    private ISalesInvoiceService salesInvoiceService;
+//
+//    @Override
+//    @PostMapping("/add/{id}")
+//    public InvoiceDto addSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody InvoiceDto salesInvoice,
+//                                        @RequestParam String schemaName) {
+//        return salesInvoiceService.addSalesInvoice(id, salesInvoice, schemaName);
+//    }
+//
+//    @Override
+//    @PutMapping("/update/{id}")
+//    public InvoiceDto editSalesInvoice(@PathVariable(name = "id") Long id, @RequestBody InvoiceDto salesInvoice,
+//                                         @RequestParam String schemaName) {
+//           return   salesInvoiceService.editSalesInvoice(id, salesInvoice, schemaName);
+//    }
+//
+//    @Override
+//    @DeleteMapping("/delete/{id}")
+//    public void deleteSalesInvoice(@PathVariable(name = "id") Long id,
+//                                   @RequestParam String schemaName) {
+//        salesInvoiceService.deleteSalesInvoice(id, schemaName);
+//    }
+//
+//    @Override
+//    @GetMapping("/find-by-year")
+//    public Page<InvoiceDto> getSalesInvoiceByYear(@RequestParam(defaultValue = "0") int page,
+//                                                  @RequestParam(defaultValue = "20") int size,
+//                                                  @RequestParam(required = false) String search,
+//                                                  @RequestParam int year,
+//                                                  @RequestParam String schemaName) {
+//        return salesInvoiceService.getSalesInvoicesByYear(page, size, search, year, schemaName);
+//    }
+//}

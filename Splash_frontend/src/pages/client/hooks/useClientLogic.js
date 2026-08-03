@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useClient } from "../../../../backend/store/useClient.js";
-import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
-import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
+import { useInvoice } from "../../../../backend/store/useInvoice.js";
 import { useCollection } from "../../../../backend/store/useCollection.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
@@ -20,16 +19,7 @@ export const useClientLogic = () => {
     customerTotalPages,
     loading: customerLoading,
   } = useClient();
-  const {
-    sales,
-    getSalesInvoicesByYear,
-    loading: salesLoading,
-  } = useSalesInvoice();
-  const {
-    purchase,
-    getPurchaseInvoiceByYear,
-    loading: purchaseLoading,
-  } = usePurchaseInvoice();
+  const { invoice, getInvoicesByYear, loading: invoiceLoading } = useInvoice();
   const {
     collections,
     getCollectionsByYear,
@@ -101,6 +91,7 @@ export const useClientLogic = () => {
           year,
         ),
         getAllOpeningVoucherByYear(dateString, tenant),
+        getInvoicesByYear(0, 999, "", year, tenant),
       ]);
 
       if (ignore) return;
@@ -126,8 +117,7 @@ export const useClientLogic = () => {
       );
       const data = accountStatementHelper(
         selectedCustomerForStatement,
-        sales,
-        purchase,
+        invoice,
         collections,
         payrolls,
         year,
@@ -137,8 +127,7 @@ export const useClientLogic = () => {
     }
   }, [
     selectedCustomerForStatement,
-    sales,
-    purchase,
+    invoice,
     collections,
     payrolls,
     year,
@@ -191,8 +180,7 @@ export const useClientLogic = () => {
     try {
       setSelectedCustomerForStatement(updatedCustomer);
       await Promise.allSettled([
-        getSalesInvoicesByYear(0, 999, "", year, tenant),
-        getPurchaseInvoiceByYear(0, 999, "", year, tenant),
+        getInvoicesByYear(0, 999, "", year, tenant),
         getCollectionsByYear(0, 999, "", year, tenant),
         getPayrollByYear(0, 999, "", "", year, tenant),
       ]);
@@ -393,8 +381,7 @@ export const useClientLogic = () => {
 
   const isLoading =
     customerLoading ||
-    purchaseLoading ||
-    salesLoading ||
+    invoiceLoading ||
     collectionsLoading ||
     payrollsLoading ||
     vouchersLoading;

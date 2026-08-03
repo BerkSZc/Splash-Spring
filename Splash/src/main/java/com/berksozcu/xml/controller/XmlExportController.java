@@ -2,6 +2,7 @@ package com.berksozcu.xml.controller;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.controller.base.RestBaseController;
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.xml.service.XmlExportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -20,13 +21,15 @@ public class XmlExportController extends RestBaseController {
     @Autowired
     private XmlExportService xmlExportService;
 
-    @GetMapping("/purchase-invoices")
-    public ResponseEntity<byte[]> exportPurchaseInvoices(@RequestParam int year, @RequestParam String schemaName) {
+    @GetMapping("/invoices")
+    public ResponseEntity<byte[]> exportInvoices(@RequestParam int year, @RequestParam String schemaName, @RequestParam InvoiceType type) {
         try {
-            byte[] xmlContent = xmlExportService.exportPurchaseInvoices(year, schemaName);
+            byte[] xmlContent = xmlExportService.exportInvoices(year, schemaName, type);
+
+            String filename = (type == InvoiceType.SALES) ? "sales_invoices.xml" : "purchase_invoices.xml";
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                     .contentType(MediaType.APPLICATION_XML)
                     .body(xmlContent);
         } catch (Exception e) {
@@ -34,19 +37,34 @@ public class XmlExportController extends RestBaseController {
         }
     }
 
-    @GetMapping("/sales-invoices")
-    public ResponseEntity<byte[]> exportSalesInvoices(@RequestParam int year, @RequestParam String schemaName) {
-        try {
-            byte[] xmlContent = xmlExportService.exportSalesInvoices(year, schemaName);
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
-                    .contentType(MediaType.APPLICATION_XML)
-                    .body(xmlContent);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
+//    @GetMapping("/purchase-invoices")
+//    public ResponseEntity<byte[]> exportPurchaseInvoices(@RequestParam int year, @RequestParam String schemaName) {
+//        try {
+//            byte[] xmlContent = xmlExportService.exportPurchaseInvoices(year, schemaName);
+//
+//            return ResponseEntity.ok()
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+//                    .contentType(MediaType.APPLICATION_XML)
+//                    .body(xmlContent);
+//        } catch (Exception e) {
+//            return ResponseEntity.internalServerError().build();
+//        }
+//    }
+//
+//    @GetMapping("/sales-invoices")
+//    public ResponseEntity<byte[]> exportSalesInvoices(@RequestParam int year, @RequestParam String schemaName) {
+//        try {
+//            byte[] xmlContent = xmlExportService.exportSalesInvoices(year, schemaName);
+//
+//            return ResponseEntity.ok()
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xml")
+//                    .contentType(MediaType.APPLICATION_XML)
+//                    .body(xmlContent);
+//        } catch (Exception e) {
+//            return ResponseEntity.internalServerError().build();
+//        }
+//    }
+//
     @GetMapping("/materials")
     public ResponseEntity<byte[]> exportMaterials(@RequestParam String schemaName) {
         try {

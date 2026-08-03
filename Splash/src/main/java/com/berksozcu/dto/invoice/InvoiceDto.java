@@ -1,5 +1,6 @@
 package com.berksozcu.dto.invoice;
 
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -30,6 +31,8 @@ public class InvoiceDto {
         private BigDecimal eurSellingRate;
 
         private BigDecimal usdSellingRate;
+
+        private InvoiceType invoiceType;
 
         private boolean invoiced = false;
 

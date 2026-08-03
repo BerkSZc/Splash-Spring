@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useCompany } from "../../backend/store/useCompany.js";
 import toast from "react-hot-toast";
 import { useAuthentication } from "../../backend/store/useAuthentication.js";
@@ -6,7 +6,7 @@ import { useAuthentication } from "../../backend/store/useAuthentication.js";
 const TenantContext = createContext();
 
 export const TenantProvider = ({ children }) => {
-  const { getAllCompanies } = useCompany();
+  const { companies, getAllCompanies } = useCompany();
   const { isAuthenticated } = useAuthentication();
 
   const [tenant, setTenantState] = useState(
@@ -34,6 +34,11 @@ export const TenantProvider = ({ children }) => {
     };
   }, []);
 
+  const currentCompany = useMemo(() => {
+    const dataArray = Array.isArray(companies) ? companies : [];
+    return dataArray.find((c) => c.schemaName === tenant) || null;
+  }, [companies, tenant]);
+
   const changeTenant = (newTenant) => {
     const val = String(newTenant);
     setTenantState(val);
@@ -42,7 +47,7 @@ export const TenantProvider = ({ children }) => {
   };
 
   return (
-    <TenantContext.Provider value={{ tenant, changeTenant }}>
+    <TenantContext.Provider value={{ tenant, changeTenant, currentCompany }}>
       {children}
     </TenantContext.Provider>
   );

@@ -140,6 +140,25 @@ export default function InvoiceEditModal({
               </option>
             </select>
           </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-blue-400 uppercase ml-1 tracking-widest">
+              Fatura Türü
+            </label>
+            <select
+              value={form?.invoiceType || "SALES"}
+              onChange={(e) =>
+                setForm({ ...form, invoiceType: e.target.value })
+              }
+              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-3 text-white outline-none focus:border-black-500 font-bold cursor-pointer"
+            >
+              <option value="SALES" className="bg-[#0f172a] text-white-400">
+                Satış Faturası
+              </option>
+              <option value="PURCHASE" className="bg-[#0f172a] text-white-400">
+                Satın Alma Faturası
+              </option>
+            </select>
+          </div>
         </div>
         <div className="bg-gray-900/60 border border-gray-800 rounded-3xl p-6 overflow-hidden mb-8">
           <table className="w-full text-left border-separate border-spacing-y-2">

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMaterial } from "../../../../backend/store/useMaterial.js";
 import { useClient } from "../../../../backend/store/useClient.js";
-import { useSalesInvoice } from "../../../../backend/store/useSalesInvoice.js";
-import { usePurchaseInvoice } from "../../../../backend/store/usePurchaseInvoice.js";
+import { useInvoice } from "../../../../backend/store/useInvoice.js";
 import { useYear } from "../../../context/YearContext.jsx";
 import { useTenant } from "../../../context/TenantContext.jsx";
 import toast from "react-hot-toast";
@@ -13,15 +12,10 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   const { materials, getMaterials, loading: materialLoading } = useMaterial();
   const { customers, getAllCustomers, loading: customersLoading } = useClient();
   const {
-    addSalesInvoice,
-    getSalesInvoicesByYear,
-    loading: salesLoading,
-  } = useSalesInvoice();
-  const {
-    addPurchaseInvoice,
-    getPurchaseInvoiceByYear,
-    loading: purchaseLoading,
-  } = usePurchaseInvoice();
+    addInvoice,
+    getInvoicesByYear,
+    loading: invoiceLoading,
+  } = useInvoice();
   const {
     convertCurrency,
     getDailyRates,
@@ -463,6 +457,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       usdSellingRate: Number(currentForm.usdSellingRate) || 0,
       currencyDate: currentForm.date || "",
       invoiced: Boolean(currentForm.invoiced),
+      invoiceType: isSales ? "SALES" : "PURCHASE",
 
       items: (Array.isArray(currentForm.items) ? currentForm.items : []).map(
         (i) => {
@@ -483,17 +478,16 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
     };
 
     try {
-      if (isSales) {
-        await addSalesInvoice(Number(currentForm.customerId), payload, tenant);
-        await getSalesInvoicesByYear(0, 999, "", year, tenant);
-      } else {
-        await addPurchaseInvoice(
-          Number(currentForm.customerId),
-          payload,
-          tenant,
-        );
-        await getPurchaseInvoiceByYear(0, 999, "", year, tenant);
-      }
+      await addInvoice(Number(currentForm.customerId), payload, tenant);
+      await getInvoicesByYear(
+        0,
+        999,
+        "",
+        year,
+        tenant,
+        isSales ? "SALES" : "PURCHASE",
+      );
+
       onSuccess?.();
 
       setTimeout(() => {
@@ -542,11 +536,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
   };
 
   const isLoading =
-    materialLoading ||
-    customersLoading ||
-    purchaseLoading ||
-    salesLoading ||
-    commonDataLoading;
+    materialLoading || customersLoading || invoiceLoading || commonDataLoading;
 
   return {
     state: {

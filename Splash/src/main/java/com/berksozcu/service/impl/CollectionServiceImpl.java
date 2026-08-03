@@ -1,8 +1,8 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.dto.collection.CollectionDto;
-import com.berksozcu.entites.collections.Collection;
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.Collection;
+import com.berksozcu.entites.collection.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
@@ -59,7 +59,7 @@ public class CollectionServiceImpl implements ICollectionService {
 
         CollectionType type = collectionDto.getType();
 
-        if (collectionRepository.existsByFileNoAndCompanyAndType(fileNo, company, type)) {
+        if (collectionRepository.existsByFileNoAndCompany(fileNo, company)) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }
 
@@ -106,11 +106,11 @@ public class CollectionServiceImpl implements ICollectionService {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
-        Customer newCustomer = customerRepository.findById(collectionDto.getCustomerId())
+        Customer newCustomer = customerRepository.findByIdAndCompany(collectionDto.getCustomerId(), company)
                 .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MUSTERI_BULUNAMADI)));
         Customer oldCustomer = oldCollection.getCustomer();
 
-        if (collectionRepository.existsByFileNoAndCompanyAndType(collectionDto.getFileNo(), company, type)
+        if (collectionRepository.existsByFileNoAndCompany(collectionDto.getFileNo(), company)
                 && !oldCollection.getFileNo().equals(collectionDto.getFileNo())) {
             throw new BaseException(new ErrorMessage(MessageType.ISLEM_MEVCUT));
         }

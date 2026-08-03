@@ -30,11 +30,14 @@ export const useTransferLogic = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [confirmDeleteCheck, setConfirmDeleteCheck] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
+  const [showCompanyForm, setShowCompanyForm] = useState(false);
 
   const [newCompData, setNewCompData] = useState({
     id: "",
     name: "",
-    desc: "",
+    companyAddress: "",
+    vdNo: "",
+    invoiceDescription: "",
   });
 
   useEffect(() => {
@@ -131,7 +134,9 @@ export const useTransferLogic = () => {
     setEditingCompany({
       schemaName: company.schemaName,
       name: company.name || "",
-      description: company.description || company.desc || "",
+      companyAddress: company.companyAddress || "",
+      vdNo: company.vdNo || "",
+      invoiceDescription: company.invoiceDescription || "",
     });
   };
 
@@ -140,14 +145,17 @@ export const useTransferLogic = () => {
 
     const payload = {
       schemaName: editingCompany.schemaName,
-      companyName: editingCompany.name,
-      description: editingCompany.description,
+      name: editingCompany.name,
+      companyAddress: editingCompany.companyAddress,
+      vdNo: editingCompany.vdNo,
+      invoiceDescription: editingCompany.invoiceDescription,
     };
 
     try {
       await editCompany(payload);
       toast.success("Şirket bilgileri güncellendi");
       setEditingCompany(null);
+      await getAllCompanies();
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Güncelleme başarısız";
@@ -181,7 +189,15 @@ export const useTransferLogic = () => {
 
     try {
       await addCompany({ ...newCompData, sourceSchema: source });
-      setNewCompData({ id: "", name: "", desc: "" });
+      setNewCompData({
+        id: "",
+        name: "",
+        companyAddress: "",
+        vdNo: "",
+        invoiceDescription: "",
+      });
+      setShowCompanyForm(false);
+      toast.success("Şirket başarıyla oluşturuldu");
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -225,6 +241,7 @@ export const useTransferLogic = () => {
       isLoading,
       isAuthenticated,
       editingCompany,
+      showCompanyForm,
     },
     handlers: {
       changeYear,
@@ -244,6 +261,7 @@ export const useTransferLogic = () => {
       handleStartEdit,
       setEditingCompany,
       handleGoToCompany,
+      setShowCompanyForm,
     },
   };
 };

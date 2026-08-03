@@ -21,21 +21,19 @@ export const useXmlImportLogic = () => {
   const { tenant } = useTenant();
 
   const {
-    importPurchaseInvoice,
+    importInvoices,
     importMaterials,
     importMaterialsPurchasePrice,
     importMaterialsSalesPrice,
     importCustomers,
     importCollections,
-    importSalesInvoice,
     importPayrolls,
     importVouchers,
     loading: importLoading,
   } = useImportXml();
 
   const {
-    exportPurchaseInvoice,
-    exportSalesInvoice,
+    exportInvoices,
     exportMaterials,
     exportMaterialsPurchasePrice,
     exportMaterialsSalesPrice,
@@ -79,8 +77,8 @@ export const useXmlImportLogic = () => {
       refMap[type]?.current?.click();
     } else {
       try {
-        if (type === "invoice") await exportPurchaseInvoice(year, tenant);
-        else if (type === "sales") await exportSalesInvoice(year, tenant);
+        if (type === "invoice") await exportInvoices(year, tenant, "PURCHASE");
+        else if (type === "sales") await exportInvoices(year, tenant, "SALES");
         else if (type === "materials") await exportMaterials(tenant);
         else if (type === "materialsPurchasePrice")
           await exportMaterialsPurchasePrice(tenant);
@@ -109,7 +107,7 @@ export const useXmlImportLogic = () => {
     if (!file) return;
 
     try {
-      if (type === "invoice") await importPurchaseInvoice(file, tenant);
+      if (type === "invoice") await importInvoices(file, tenant, "PURCHASE");
       else if (type === "materials") await importMaterials(file, tenant);
       else if (type === "materialsPurchasePrice")
         await importMaterialsPurchasePrice(file, tenant);
@@ -117,7 +115,7 @@ export const useXmlImportLogic = () => {
         await importMaterialsSalesPrice(file, tenant);
       else if (type === "customers") await importCustomers(file, tenant);
       else if (type === "collections") await importCollections(file, tenant);
-      else if (type === "sales") await importSalesInvoice(file, tenant);
+      else if (type === "sales") await importInvoices(file, tenant, "SALES");
       else if (type === "payrolls") await importPayrolls(file, tenant);
       else if (type === "vouchers") await importVouchers(file, tenant);
     } catch (error) {

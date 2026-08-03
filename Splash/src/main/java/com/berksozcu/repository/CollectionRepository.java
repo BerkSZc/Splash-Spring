@@ -1,7 +1,7 @@
 package com.berksozcu.repository;
 
-import com.berksozcu.entites.collections.Collection;
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.Collection;
+import com.berksozcu.entites.collection.CollectionType;
 import com.berksozcu.entites.company.Company;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +21,7 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     List<Collection> findAllByCompanyAndDateBetweenAndType(Company company, LocalDate start, LocalDate end, CollectionType type);
 
-    boolean existsByFileNoAndCompanyAndType(String fileNo, Company company, CollectionType type);
+    boolean existsByFileNoAndCompany(String fileNo, Company company);
 
     @Query("SELECT MAX(c.fileNo) FROM Collection c " +
             "WHERE c.date BETWEEN :start AND " +

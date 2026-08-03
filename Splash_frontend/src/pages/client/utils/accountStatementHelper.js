@@ -2,8 +2,7 @@
 
 export const accountStatementHelper = (
   selectedCustomer,
-  sales,
-  purchase,
+  invoices,
   collections,
   payrolls,
   year,
@@ -53,17 +52,19 @@ export const accountStatementHelper = (
     });
   }
 
-  // 2. Satış Faturaları (BORÇ)
-  (sales || [])
+  // 2.  Faturalar
+  (invoices || [])
     .filter(
       (inv) => Number(inv.customerId) === targetId && isCorrectYear(inv.date),
     )
     .forEach((inv) => {
+      const isSales = inv.invoiceType === "SALES";
+
       combined.push({
         date: inv.date,
-        desc: `Satış Faturası (No: ${inv.fileNo})`,
-        debit: Number(inv.totalPrice || 0),
-        credit: 0,
+        desc: `${isSales ? "Satış" : "Alış"} Faturası (No: ${inv.fileNo})`,
+        debit: isSales ? Number(inv.totalPrice || 0) : 0,
+        credit: isSales ? 0 : Number(inv.totalPrice || 0),
       });
     });
 
@@ -105,21 +106,7 @@ export const accountStatementHelper = (
       });
     });
 
-  // 5. Satın Alma Faturaları (ALACAK)
-  (purchase || [])
-    .filter(
-      (inv) => Number(inv.customerId) === targetId && isCorrectYear(inv.date),
-    )
-    .forEach((inv) => {
-      combined.push({
-        date: inv.date,
-        desc: `Alış Faturası (No: ${inv.fileNo})`,
-        debit: 0,
-        credit: Number(inv.totalPrice || 0),
-      });
-    });
-
-  // 6. Tarihe göre sırala
+  // 5. Tarihe göre sırala
   combined.sort((a, b) => {
     const parseDate = (d) => {
       if (!d || typeof d !== "string") return new Date(0);
@@ -129,7 +116,7 @@ export const accountStatementHelper = (
     return parseDate(a.date) - parseDate(b.date);
   });
 
-  // 7. Yürüyen Bakiye Hesapla
+  // 6. Yürüyen Bakiye Hesapla
   let runningBalance = 0;
   return (Array.isArray(combined) ? combined : []).map((item) => {
     runningBalance += (item.debit || 0) - (item.credit || 0);

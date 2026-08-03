@@ -1,5 +1,5 @@
 // Fatura yazdırma templatei
-export const generateInvoiceHTML = (inv, invoiceType, customers) => {
+export const generateInvoiceHTML = (inv, invoiceType, customers, company) => {
   const currentCustomer = (Array.isArray(customers) ? customers : []).find(
     (c) => Number(c.id) === Number(inv?.customerId),
   );
@@ -84,12 +84,11 @@ export const generateInvoiceHTML = (inv, invoiceType, customers) => {
             <div style="flex: 1;">
                <div>
                   <h2 style="font-size: 18px; font-weight: 800; color: #1e3a8a; margin: 0; line-height: 1.2;">
-                    SÖZCÜ MATBAA <br> MALZEMELERİ LTD. ŞTİ.
+                    ${company?.name || "ŞİRKET ADI"}
                   </h2>
                   <p style="font-size: 10px; color: #6b7280; margin-top: 6px; line-height: 1.5; text-transform: uppercase;">
-                    Himaye-i Etfal Sok. Aydoğmuş İş Hanı 7/1<br>
-                    Cağaloğlu / İSTANBUL<br>
-                    <span style="font-weight: 600; color: #111827;">VERGİ NO: 7800063113</span>
+                    ${company?.companyAddress || "-"}<br>
+                    <span style="font-weight: 600; color: #111827;">VERGİ NO: ${company?.vdNo || "-"}</span>
                   </p>
                </div>
                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
@@ -192,26 +191,12 @@ export const generateInvoiceHTML = (inv, invoiceType, customers) => {
             </p>
           </div>
 
-          <!-- Banka Bilgileri -->
-          <div style="margin-top: 24px;">
-            <table style="width: 100%; text-align: left; font-size: 12px; border-collapse: collapse;">
-              <thead>
-                <tr style="border-bottom: 1px solid #e5e7eb;">
-                  <th style="padding-bottom: 6px; width: 33%; font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase;">BANKA ADI</th>
-                  <th style="padding-bottom: 6px; font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; font-family: monospace;">İBAN NO</th>
-                </tr>
-              </thead>
-              <tbody style="color: #1f2937; font-weight: 500;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: 600; color: #111827;">Enpara Bank</td>
-                  <td style="padding: 8px 0; font-family: monospace; letter-spacing: 0.02em; color: #374151;">TR10 0015 7000 0000 0098 6528 18</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: 600; color: #111827;">Denizbank Cağaloğlu Şb.</td>
-                  <td style="padding: 8px 0; font-family: monospace; letter-spacing: 0.02em; color: #374151;">TR88 0013 4000 0018 5773 3000 10</td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Banka Bilgileri Yerine invoiceDescription Alanı -->
+          <div style="margin-top: 24px; padding: 14px 16px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;">
+            <h4 style="font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Fatura Açıklaması / Notu</h4>
+            <p style="font-size: 12px; font-weight: 600; color: #1f2937; margin: 0; text-transform: uppercase;">
+              ${company?.invoiceDescription || "—"}
+            </p>
           </div>
 
           <!-- Döviz Kurları Notu -->

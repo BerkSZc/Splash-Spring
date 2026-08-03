@@ -1,19 +1,18 @@
 package com.berksozcu.xml.service;
 
-import com.berksozcu.entites.collections.Collection;
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.Collection;
+import com.berksozcu.entites.collection.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
+import com.berksozcu.entites.invoice.Invoice;
+import com.berksozcu.entites.invoice.InvoiceItem;
 import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.payroll.Payroll;
 import com.berksozcu.entites.payroll.PayrollModel;
-import com.berksozcu.entites.purchase.PurchaseInvoice;
-import com.berksozcu.entites.purchase.PurchaseInvoiceItem;
-import com.berksozcu.entites.sales.SalesInvoice;
-import com.berksozcu.entites.sales.SalesInvoiceItem;
 import com.berksozcu.repository.*;
 import com.berksozcu.xml.entites.collections.AttachmentArp;
 import com.berksozcu.xml.entites.collections.CollectionXml;
@@ -21,6 +20,8 @@ import com.berksozcu.xml.entites.collections.CollectionsXml;
 import com.berksozcu.xml.entites.collections.TransactionField;
 import com.berksozcu.xml.entites.customer.CustomerXml;
 import com.berksozcu.xml.entites.customer.CustomersXml;
+import com.berksozcu.xml.entites.invoice.*;
+import com.berksozcu.xml.entites.invoice.SalesInvoicesXml;
 import com.berksozcu.xml.entites.materials.*;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionXml;
 import com.berksozcu.xml.entites.opening_balances.ArpTransactionsXml;
@@ -30,17 +31,10 @@ import com.berksozcu.xml.entites.payrolls.PayrollRollXml;
 import com.berksozcu.xml.entites.payrolls.PayrollTransactionsXml;
 import com.berksozcu.xml.entites.payrolls.PayrollTxXml;
 import com.berksozcu.xml.entites.payrolls.PayrollsXml;
-import com.berksozcu.xml.entites.purchase.InvoiceXml;
-import com.berksozcu.xml.entites.purchase.PurchaseInvoicesXml;
-import com.berksozcu.xml.entites.purchase.TransactionXml;
-import com.berksozcu.xml.entites.purchase.TransactionsXml;
-import com.berksozcu.xml.entites.sales.SalesInvoiceXml;
-import com.berksozcu.xml.entites.sales.SalesInvoicesXml;
 import jakarta.transaction.Transactional;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -58,10 +52,7 @@ import java.util.stream.Collectors;
 public class XmlExportService {
 
     @Autowired
-    private PurchaseInvoiceRepository purchaseInvoiceRepository;
-
-    @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
+    private InvoiceRepository invoiceRepository;
 
     @Autowired
     private MaterialRepository materialRepository;
@@ -82,30 +73,43 @@ public class XmlExportService {
     private CompanyRepository companyRepository;
 
     @Transactional
-    public byte[] exportPurchaseInvoices(int year, String schemaName) throws Exception {
+    public byte[] exportInvoices(int year, String schemaName, InvoiceType invoiceType) throws Exception {
         Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        List<PurchaseInvoice> purchaseInvoices = purchaseInvoiceRepository.findAllByCompanyAndDateBetween(
-                company, start, end);
+        List<Invoice> invoices = invoiceRepository.findAllByCompanyAndDateBetweenAndInvoiceType(
+                company, start, end, invoiceType);
 
-        PurchaseInvoicesXml rootXml = new PurchaseInvoicesXml();
+        boolean isSales = invoiceType == InvoiceType.SALES;
+
         List<InvoiceXml> invoiceXmlList = new ArrayList<>();
 
-        for (PurchaseInvoice inv : purchaseInvoices) {
+        for (Invoice inv : invoices) {
             InvoiceXml invXml = new InvoiceXml();
+
+            if (isSales) {
+                invXml.setTYPE(8);
+                invXml.setNUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
+            } else {
+                invXml.setTYPE(1);
+                invXml.setDOC_NUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
+            }
+
             invXml.setCOMPANY_ID(inv.getCompany().getId());
             invXml.setDATE(Objects.requireNonNullElse(inv.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-            invXml.setDOC_NUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
             invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
+
             invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()));
             invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()));
             invXml.setINVOICED(inv.isInvoiced());
+            invXml.setEUR_SELLING_RATE(safeGet(inv.getEurSellingRate()));
+            invXml.setUSD_SELLING_RATE(safeGet(inv.getUsdSellingRate()));
+
             TransactionsXml txsXml = new TransactionsXml();
             List<TransactionXml> txList = new ArrayList<>();
 
-            for (PurchaseInvoiceItem item : inv.getItems()) {
+            for (InvoiceItem item : inv.getItems()) {
                 TransactionXml tx = new TransactionXml();
                 tx.setTYPE(0);
                 tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
@@ -117,8 +121,7 @@ public class XmlExportService {
                 tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
 
                 BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
-                tx.setTOTAL_NET(lineTotal.setScale(2, RoundingMode.HALF_UP));
-                tx.setTOTAL(lineTotal.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP));
+                tx.setTOTAL(lineTotal.setScale(2, RoundingMode.HALF_UP));
 
                 txList.add(tx);
             }
@@ -126,69 +129,22 @@ public class XmlExportService {
             invXml.setTRANSACTIONS(txsXml);
             invoiceXmlList.add(invXml);
         }
-        rootXml.setInvoices(invoiceXmlList);
+        Object rootXml;
+        Class<?> jaxbContextClass;
 
-        JAXBContext context = JAXBContext.newInstance(PurchaseInvoicesXml.class);
-        Marshaller marshaller = context.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        marshaller.marshal(rootXml, baos);
-        return baos.toByteArray();
-    }
-
-    @Transactional
-    public byte[] exportSalesInvoices(int year, String schemaName) throws Exception {
-        Company company = companyRepository.findBySchemaName(schemaName);
-
-        LocalDate start = LocalDate.of(year, 1, 1);
-        LocalDate end = LocalDate.of(year, 12, 31);
-        List<SalesInvoice> salesInvoiceList = salesInvoiceRepository.findAllByCompanyAndDateBetween(
-                company, start, end);
-
-        SalesInvoicesXml rootXml = new SalesInvoicesXml();
-        List<SalesInvoiceXml> salesInvoiceXmls = new ArrayList<>();
-
-        for (SalesInvoice inv : salesInvoiceList) {
-            SalesInvoiceXml invXml = new SalesInvoiceXml();
-
-            invXml.setTYPE(8);
-            invXml.setCOMPANY_ID(inv.getCompany().getId());
-            invXml.setDATE(Objects.requireNonNullElse(inv.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-            invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
-            invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()).setScale(2, RoundingMode.HALF_UP));
-            invXml.setNUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
-            invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
-            invXml.setINVOICED(inv.isInvoiced());
-
-            TransactionsXml txsXml = new TransactionsXml();
-            List<TransactionXml> txList = new ArrayList<>();
-
-            for (SalesInvoiceItem item : inv.getItems()) {
-                TransactionXml tx = new TransactionXml();
-                tx.setTYPE(0);
-                tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
-                tx.setQUANTITY(safeGet(item.getQuantity()));
-                tx.setPRICE(safeGet(item.getUnitPrice()));
-                tx.setUNIT_CODE(Objects.requireNonNullElse(item.getUnit(), MaterialUnit.ADET));
-                tx.setCOMPANY_ID(item.getCompany().getId());
-                tx.setVAT_RATE(safeGet(item.getKdv()));
-                tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
-
-                BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
-                tx.setTOTAL_NET(lineTotal.setScale(2, RoundingMode.HALF_UP));
-                tx.setTOTAL(lineTotal.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP));
-
-                txList.add(tx);
-            }
-            txsXml.setList(txList);
-            invXml.setTRANSACTIONS(txsXml);
-            salesInvoiceXmls.add(invXml);
+        if(isSales) {
+           SalesInvoicesXml salesRoot = new SalesInvoicesXml();
+            salesRoot.setInvoices(invoiceXmlList);
+            rootXml = salesRoot;
+            jaxbContextClass = SalesInvoicesXml.class;
+        } else {
+            PurchaseInvoicesXml purchaseRoot = new PurchaseInvoicesXml();
+            purchaseRoot.setInvoices(invoiceXmlList);
+            rootXml = purchaseRoot;
+            jaxbContextClass = PurchaseInvoicesXml.class;
         }
-        rootXml.setSalesInvoices(salesInvoiceXmls);
 
-        JAXBContext context = JAXBContext.newInstance(SalesInvoicesXml.class);
+        JAXBContext context = JAXBContext.newInstance(jaxbContextClass);
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
@@ -197,6 +153,123 @@ public class XmlExportService {
         marshaller.marshal(rootXml, baos);
         return baos.toByteArray();
     }
+
+//    @Transactional
+//    public byte[] exportPurchaseInvoices(int year, String schemaName) throws Exception {
+//        Company company = companyRepository.findBySchemaName(schemaName);
+//        LocalDate start = LocalDate.of(year, 1, 1);
+//        LocalDate end = LocalDate.of(year, 12, 31);
+//
+//        List<PurchaseInvoice> purchaseInvoices = purchaseInvoiceRepository.findAllByCompanyAndDateBetween(
+//                company, start, end);
+//
+//        PurchaseInvoicesXml rootXml = new PurchaseInvoicesXml();
+//        List<InvoiceXml> invoiceXmlList = new ArrayList<>();
+//
+//        for (PurchaseInvoice inv : purchaseInvoices) {
+//            InvoiceXml invXml = new InvoiceXml();
+//            invXml.setCOMPANY_ID(inv.getCompany().getId());
+//            invXml.setDATE(Objects.requireNonNullElse(inv.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+//            invXml.setDOC_NUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
+//            invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
+//            invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()));
+//            invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()));
+//            invXml.setINVOICED(inv.isInvoiced());
+//            TransactionsXml txsXml = new TransactionsXml();
+//            List<TransactionXml> txList = new ArrayList<>();
+//
+//            for (PurchaseInvoiceItem item : inv.getItems()) {
+//                TransactionXml tx = new TransactionXml();
+//                tx.setTYPE(0);
+//                tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
+//                tx.setQUANTITY(safeGet(item.getQuantity()));
+//                tx.setPRICE(safeGet(item.getUnitPrice()));
+//                tx.setUNIT_CODE(Objects.requireNonNullElse(item.getUnit(), MaterialUnit.ADET));
+//                tx.setCOMPANY_ID(item.getCompany().getId());
+//                tx.setVAT_RATE(safeGet(item.getKdv()));
+//                tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
+//
+//                BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
+//                tx.setTOTAL_NET(lineTotal.setScale(2, RoundingMode.HALF_UP));
+//                tx.setTOTAL(lineTotal.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP));
+//
+//                txList.add(tx);
+//            }
+//            txsXml.setList(txList);
+//            invXml.setTRANSACTIONS(txsXml);
+//            invoiceXmlList.add(invXml);
+//        }
+//        rootXml.setInvoices(invoiceXmlList);
+//
+//        JAXBContext context = JAXBContext.newInstance(PurchaseInvoicesXml.class);
+//        Marshaller marshaller = context.createMarshaller();
+//        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+//        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+//
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        marshaller.marshal(rootXml, baos);
+//        return baos.toByteArray();
+//    }
+//
+//    @Transactional
+//    public byte[] exportSalesInvoices(int year, String schemaName) throws Exception {
+//        Company company = companyRepository.findBySchemaName(schemaName);
+//
+//        LocalDate start = LocalDate.of(year, 1, 1);
+//        LocalDate end = LocalDate.of(year, 12, 31);
+//        List<SalesInvoice> salesInvoiceList = salesInvoiceRepository.findAllByCompanyAndDateBetween(
+//                company, start, end);
+//
+//        SalesInvoicesXml rootXml = new SalesInvoicesXml();
+//        List<SalesInvoiceXml> salesInvoiceXmls = new ArrayList<>();
+//
+//        for (SalesInvoice inv : salesInvoiceList) {
+//            SalesInvoiceXml invXml = new SalesInvoiceXml();
+//
+//            invXml.setTYPE(8);
+//            invXml.setCOMPANY_ID(inv.getCompany().getId());
+//            invXml.setDATE(Objects.requireNonNullElse(inv.getDate(), LocalDate.now()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+//            invXml.setTOTAL_NET(safeGet(inv.getTotalPrice()).setScale(2, RoundingMode.HALF_UP));
+//            invXml.setTOTAL_VAT(safeGet(inv.getKdvToplam()).setScale(2, RoundingMode.HALF_UP));
+//            invXml.setNUMBER(Objects.requireNonNullElse(inv.getFileNo(), ""));
+//            invXml.setARP_CODE(inv.getCustomer().getCode().trim().toUpperCase());
+//            invXml.setINVOICED(inv.isInvoiced());
+//
+//            TransactionsXml txsXml = new TransactionsXml();
+//            List<TransactionXml> txList = new ArrayList<>();
+//
+//            for (SalesInvoiceItem item : inv.getItems()) {
+//                TransactionXml tx = new TransactionXml();
+//                tx.setTYPE(0);
+//                tx.setMASTER_CODE(item.getMaterial().getCode().trim().toUpperCase());
+//                tx.setQUANTITY(safeGet(item.getQuantity()));
+//                tx.setPRICE(safeGet(item.getUnitPrice()));
+//                tx.setUNIT_CODE(Objects.requireNonNullElse(item.getUnit(), MaterialUnit.ADET));
+//                tx.setCOMPANY_ID(item.getCompany().getId());
+//                tx.setVAT_RATE(safeGet(item.getKdv()));
+//                tx.setVAT_AMOUNT(safeGet(item.getKdvTutar()));
+//
+//                BigDecimal lineTotal = safeGet(item.getUnitPrice()).multiply(safeGet(item.getQuantity()));
+//                tx.setTOTAL_NET(lineTotal.setScale(2, RoundingMode.HALF_UP));
+//                tx.setTOTAL(lineTotal.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP));
+//
+//                txList.add(tx);
+//            }
+//            txsXml.setList(txList);
+//            invXml.setTRANSACTIONS(txsXml);
+//            salesInvoiceXmls.add(invXml);
+//        }
+//        rootXml.setSalesInvoices(salesInvoiceXmls);
+//
+//        JAXBContext context = JAXBContext.newInstance(SalesInvoicesXml.class);
+//        Marshaller marshaller = context.createMarshaller();
+//        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+//        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+//
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        marshaller.marshal(rootXml, baos);
+//        return baos.toByteArray();
+//    }
 
     @Transactional
     public byte[] exportMaterials(String schemaName) throws Exception {

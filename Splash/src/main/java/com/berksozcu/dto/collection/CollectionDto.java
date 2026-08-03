@@ -1,6 +1,6 @@
 package com.berksozcu.dto.collection;
 
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.CollectionType;
 import lombok.Data;
 
 import java.math.BigDecimal;

@@ -5,9 +5,8 @@ import com.berksozcu.controller.ICustomerController;
 import com.berksozcu.controller.base.RestBaseController;
 import com.berksozcu.controller.base.RootEntity;
 import com.berksozcu.dto.customer.CustomerDto;
-import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.service.ICustomerService;
-import com.berksozcu.service.IPurchaseInvoiceService;
+import com.berksozcu.service.IInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +22,7 @@ public class CustomerControllerImpl extends RestBaseController implements ICusto
     private ICustomerService customerService;
 
     @Autowired
-    private IPurchaseInvoiceService purchaseInvoice;
+    private IInvoiceService purchaseInvoice;
 
     @Override
     @PostMapping("/add-customer")

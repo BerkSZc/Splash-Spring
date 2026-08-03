@@ -16,27 +16,67 @@ export const CompanyEditModal = ({
         </p>
 
         <div className="space-y-6">
+          {/* 1. Şirket Adı */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-blue-500 uppercase ml-1">
-              Şirket Adı
+              Şirket Adı / Unvanı
             </label>
             <input
               value={data.name || ""}
               onChange={(e) => onChange({ ...data, name: e.target.value })}
+              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all uppercase"
+            />
+          </div>
+
+          {/* 2. Vergi Numarası */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-blue-500 uppercase ml-1">
+              Vergi Numarası
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={data.vdNo || ""}
+              onChange={(e) => {
+                const numericValue = e.target.value.replace(/\D/g, "");
+                onChange({ ...data, vdNo: numericValue });
+              }}
+              placeholder="Sadece rakam giriniz"
               className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all"
             />
           </div>
 
+          {/* 3. Şirket Adresi */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-blue-500 uppercase ml-1">
-              Açıklama
+              Şirket Adresi
+            </label>
+            <input
+              value={data.companyAddress || ""}
+              onChange={(e) =>
+                onChange({
+                  ...data,
+                  companyAddress: e.target.value,
+                })
+              }
+              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all uppercase"
+            />
+          </div>
+
+          {/* 4. Fatura Açıklaması / Notu */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-blue-500 uppercase ml-1">
+              Fatura Açıklaması / Notu
             </label>
             <textarea
-              value={data.description || ""}
+              value={data.invoiceDescription || ""}
               onChange={(e) =>
-                onChange({ ...data, description: e.target.value })
+                onChange({
+                  ...data,
+                  invoiceDescription: e.target.value,
+                })
               }
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all h-32 resize-none"
+              className="w-full bg-gray-800 border-2 border-gray-700 rounded-2xl px-5 py-4 text-white focus:border-blue-500 outline-none transition-all h-28 resize-none uppercase"
             />
           </div>
         </div>

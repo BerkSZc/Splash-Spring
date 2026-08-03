@@ -1,11 +1,8 @@
 package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
-import com.berksozcu.controller.ICompanyController;
 import com.berksozcu.dto.company.CompanyDto;
 import com.berksozcu.dto.company.YearDto;
-import com.berksozcu.entites.company.Company;
-import com.berksozcu.entites.company.Year;
 import com.berksozcu.entites.user.User;
 import com.berksozcu.entites.user.UserResponse;
 import com.berksozcu.exception.BaseException;
@@ -13,12 +10,10 @@ import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
 import com.berksozcu.security.AuthenticationService;
 import com.berksozcu.service.ICompanyService;
-import com.berksozcu.service.impl.CompanyServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/rest/api/company")
 @RateLimit(capacity = 100)
-public class CompanyControllerImpl implements ICompanyController {
+public class CompanyControllerImpl {
     @Autowired
     private ICompanyService companyService;
 
@@ -35,12 +30,9 @@ public class CompanyControllerImpl implements ICompanyController {
     private AuthenticationService authenticationService;
 
     @PostMapping("/create")
-    @Override
-    public ResponseEntity<CompanyDto> createCompany(@RequestBody Map<String, String> request, @AuthenticationPrincipal User user) {
-        String companyName = request.get("name");
-        String description = request.get("desc");
+    public ResponseEntity<CompanyDto> createCompany(@RequestBody CompanyDto companyDto, @RequestBody Map<String, String> request, @AuthenticationPrincipal User user) {
         String sourceSchema = request.get("sourceSchema");
-        if(companyName == null || companyName.isEmpty()) {
+        if(companyDto.getName() == null || companyDto.getName().isEmpty()) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_HATA));
         }
 
@@ -51,7 +43,7 @@ public class CompanyControllerImpl implements ICompanyController {
         String schemaName = companyService.createDefaultSchemaName();
 
         try {
-            CompanyDto createdCompanyDto = companyService.createNewTenantSchema(schemaName, companyName, description, sourceSchema, user);
+            CompanyDto createdCompanyDto = companyService.createNewTenantSchema(companyDto, sourceSchema, user);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdCompanyDto);
         } catch (Exception e) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_HATA));
@@ -59,36 +51,29 @@ public class CompanyControllerImpl implements ICompanyController {
     }
 
     @PutMapping("/edit-company")
-    @Override
-    public CompanyDto editCompany(@RequestBody Map<String, String> request) {
-        String schemaName = request.get("schemaName");
-        String companyName = request.get("companyName");
-        String description = request.get("description");
+    public CompanyDto editCompany(@RequestBody CompanyDto companyDto) {
 
-        return companyService.editCompany(schemaName, companyName, description);
+
+        return companyService.editCompany(companyDto);
     }
 
     @GetMapping("/find-all")
-    @Override
     public List<CompanyDto> findAllCompany(@AuthenticationPrincipal User user) {
         if (user == null) return List.of();
         return companyService.getAllCompanies(user);
     }
 
     @PostMapping("/create-year")
-    @Override
     public ResponseEntity<YearDto> createYear(@RequestParam Long companyId, @RequestParam Integer year) {
         return ResponseEntity.ok(companyService.addYearToCompany(companyId, year));
     }
 
     @GetMapping("/get-all-year")
-    @Override
     public ResponseEntity<List<YearDto>> getAllYear(@RequestParam Long companyId) {
         return ResponseEntity.ok(companyService.getYearsByCompany(companyId));
     }
 
     @DeleteMapping("/delete-year")
-    @Override
     public void deleteYear(@RequestParam Long companyId, @RequestParam Integer year) {
          companyService.deleteCompanyAndYear(companyId, year);
     }

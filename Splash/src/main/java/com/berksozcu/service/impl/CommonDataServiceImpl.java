@@ -1,8 +1,9 @@
 package com.berksozcu.service.impl;
 
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.CollectionType;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.currency.CurrencyRate;
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.entites.payroll.PayrollModel;
 import com.berksozcu.entites.payroll.PayrollType;
 import com.berksozcu.repository.*;
@@ -12,7 +13,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -32,9 +32,7 @@ public class CommonDataServiceImpl implements ICommonDataService {
     @Autowired
     private CurrencyRateRepository currencyRateRepository;
     @Autowired
-    private PurchaseInvoiceRepository purchaseInvoiceRepository;
-    @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
+    private InvoiceRepository invoiceRepository;
     @Autowired
     private PayrollRepository payrollRepository;
     @Autowired
@@ -96,11 +94,11 @@ public class CommonDataServiceImpl implements ICommonDataService {
 
         switch (type.toUpperCase()) {
             case "PURCHASE" -> {
-                lastNo = purchaseInvoiceRepository.findMaxFileNoByYearAndCompany(start, end, company);
+                lastNo = invoiceRepository.findMaxFileNoByYearAndCompanyAndType(start, end, company, InvoiceType.PURCHASE, "%ALIS%");
                 prefix = "ALIS";
             }
             case "SALES" -> {
-                lastNo = salesInvoiceRepository.findMaxFileNoByYearAndCompany(start, end, company);
+                lastNo = invoiceRepository.findMaxFileNoByYearAndCompanyAndType(start, end, company, InvoiceType.SALES, "%SOZ%");
                 prefix = "SOZ";
             }
             case "COLLECTION" -> {
@@ -136,7 +134,6 @@ public class CommonDataServiceImpl implements ICommonDataService {
                 prefix = "SOZ";
             }
         }
-        ;
 
         if (lastNo == null || lastNo.isBlank() || !lastNo.startsWith(prefix)) {
             return String.format("%s%d001", prefix, date.getYear());

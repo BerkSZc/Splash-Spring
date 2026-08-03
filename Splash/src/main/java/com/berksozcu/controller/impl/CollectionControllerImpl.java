@@ -2,7 +2,7 @@ package com.berksozcu.controller.impl;
 
 import com.berksozcu.annotation.RateLimit;
 import com.berksozcu.dto.collection.CollectionDto;
-import com.berksozcu.entites.collections.CollectionType;
+import com.berksozcu.entites.collection.CollectionType;
 import com.berksozcu.service.ICollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

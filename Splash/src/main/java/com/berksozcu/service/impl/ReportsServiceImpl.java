@@ -1,20 +1,19 @@
 package com.berksozcu.service.impl;
 
 import com.berksozcu.dto.customer.CustomerDto;
-import com.berksozcu.dto.customer.OpeningVoucherDto;
 import com.berksozcu.dto.report.FullReportDto;
 import com.berksozcu.dto.report.MonthlyKdvDto;
 import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.customer.Customer;
 import com.berksozcu.entites.customer.OpeningVoucher;
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.repository.CompanyRepository;
+import com.berksozcu.repository.InvoiceRepository;
 import com.berksozcu.repository.OpeningVoucherRepository;
-import com.berksozcu.repository.SalesInvoiceRepository;
 import com.berksozcu.service.IReportsService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.berksozcu.repository.PurchaseInvoiceRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,10 +27,7 @@ import java.util.stream.Collectors;
 public class ReportsServiceImpl implements IReportsService {
 
     @Autowired
-    private PurchaseInvoiceRepository purchaseInvoiceRepository;
-
-    @Autowired
-    private SalesInvoiceRepository salesInvoiceRepository;
+    private InvoiceRepository invoiceRepository;
 
     @Autowired
     private CompanyRepository companyRepository;
@@ -45,9 +41,9 @@ public class ReportsServiceImpl implements IReportsService {
 
         Company company =  companyRepository.findBySchemaName(schemaName);
 
-        List<MonthlyKdvDto> purchases = purchaseInvoiceRepository.getMonthlyPurchases(year, company.getId());
+        List<MonthlyKdvDto> purchases = invoiceRepository.getMonthlyChangeByType(year, company.getId(), InvoiceType.PURCHASE);
 
-        List<MonthlyKdvDto> sales = salesInvoiceRepository.getMonthlySales(year, company.getId());
+        List<MonthlyKdvDto> sales = invoiceRepository.getMonthlyChangeByType(year, company.getId(), InvoiceType.SALES);
 
         List<Map<String, Object>> analysis = calculateKdvAnalysis(purchases, sales, year);
 

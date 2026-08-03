@@ -110,7 +110,6 @@ export default function InvoicePage() {
             formatNumber={state.formatNumber}
             onItemChange={handlers.handleItemChange}
             setForm={handlers.setForm}
-            invoiceType={state.invoiceType}
             materials={state.materials}
             customers={state.customers}
             onRateChange={handlers.handleRateChange}
@@ -133,6 +132,7 @@ export default function InvoicePage() {
             onCancel={() => handlers.setPrintItem(null)}
             onExecutePrint={handlers.executePrint}
             customers={state.customers}
+            company={state.currentCompany}
           />
         )}
 

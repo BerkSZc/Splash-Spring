@@ -5,6 +5,7 @@ import com.berksozcu.entites.company.Company;
 import com.berksozcu.entites.material.Currency;
 import com.berksozcu.entites.material.Material;
 import com.berksozcu.entites.material.MaterialUnit;
+import com.berksozcu.entites.material_price_history.InvoiceType;
 import com.berksozcu.exception.BaseException;
 import com.berksozcu.exception.ErrorMessage;
 import com.berksozcu.exception.MessageType;
@@ -30,10 +31,7 @@ public class MaterialServiceImpl implements IMaterialService {
     private MaterialRepository materialRepository;
 
     @Autowired
-    private PurchaseInvoiceItemRepository purchaseInvoiceItemRepository;
-
-    @Autowired
-    private SalesInvoiceItemRepository salesInvoiceItemRepository;
+    private InvoiceItemRepository invoiceItemRepository;
 
     @Autowired
     private CompanyRepository companyRepository;
@@ -131,8 +129,8 @@ public class MaterialServiceImpl implements IMaterialService {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_YETKISIZ));
         }
 
-        if (salesInvoiceItemRepository.existsByMaterialIdAndCompany(id, company) ||
-                purchaseInvoiceItemRepository.existsByMaterialIdAndCompany(id, company)) {
+        if (invoiceItemRepository.existsByMaterialIdAndInvoice_CompanyAndInvoice_InvoiceType(id, company, InvoiceType.PURCHASE) ||
+                invoiceItemRepository.existsByMaterialIdAndInvoice_CompanyAndInvoice_InvoiceType(id, company, InvoiceType.SALES)) {
             throw new BaseException(new ErrorMessage(MessageType.MALZEME_KULLANIMDA));
         }
 
