@@ -100,4 +100,32 @@ export const useInvoice = create((set) => ({
       set({ loading: false });
     }
   },
+  getAllInvoicesByCustomerId: async (
+    customerId,
+    page = 0,
+    size = 20,
+    search,
+    invoiceType,
+    schemaName,
+  ) => {
+    set({ loading: true });
+    try {
+      const res = await axiosInstance.get(
+        `/invoice/find-all-invoices/${customerId}`,
+        {
+          params: { page, size, search, invoiceType, schemaName },
+        },
+      );
+      set({
+        invoice: res.data.content,
+        invoiceTotalPages: res.data.totalPages,
+        currentPage: res.data.number,
+      });
+    } catch (error) {
+      set({ invoice: [] });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
 }));

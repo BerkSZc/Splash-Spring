@@ -15,4 +15,7 @@ public interface IInvoiceService {
                                                           String search,
                                                           int year, String schemaName,
                                               InvoiceType invoiceType);
+
+    public Page<InvoiceDto> getAllInvoicesByCustomerId(int page, int size, String search, Long customerId,
+                                                             String schemaName, InvoiceType invoiceType);
 }

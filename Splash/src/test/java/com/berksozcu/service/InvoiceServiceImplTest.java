@@ -31,7 +31,7 @@
 //import static org.mockito.Mockito.*;
 //
 //@ExtendWith(MockitoExtension.class)
-//public class PurchaseInvoiceServiceImplTest {
+//public class InvoiceServiceImplTest {
 //
 //    @Mock
 //    private CustomerRepository customerRepository;

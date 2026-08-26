@@ -48,4 +48,23 @@ public class InvoiceControllerImpl {
     ) {
         return invoiceService.getInvoicesByDateBetween(page, size, search, year, schemaName, type);
     }
+
+    @GetMapping("/find-all-invoices/{customerId}")
+    public Page<InvoiceDto> getAllInvoicesByCustomerId(
+            @PathVariable Long customerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) InvoiceType invoiceType,
+            @RequestParam String schemaName) {
+
+        return invoiceService.getAllInvoicesByCustomerId(
+                page,
+                size,
+                search,
+                customerId,
+                schemaName,
+                invoiceType
+        );
+    }
 }

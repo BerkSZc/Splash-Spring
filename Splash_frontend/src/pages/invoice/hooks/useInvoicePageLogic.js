@@ -22,7 +22,7 @@ export const useInvoicePageLogic = () => {
   const { materials, getMaterials, loading: materialLoading } = useMaterial();
   const { customers, getAllCustomers, loading: customerLoading } = useClient();
   const { convertCurrency, loading: commonDataLoading } = useCommonData();
-  const { year } = useYear();
+  const { year, changeYear } = useYear();
   const { tenant, currentCompany } = useTenant();
 
   const [editingInvoice, setEditingInvoice] = useState(null);
@@ -46,11 +46,27 @@ export const useInvoicePageLogic = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  useEffect(() => {
-    const tab = searchParams.get("tab");
+  const urlTab = searchParams.get("tab");
+  const urlSearch = searchParams.get("search");
+  const urlSelectedId = searchParams.get("selectedId");
+  const urlYear = searchParams.get("year");
 
-    if (tab === "sales" || tab === "purchase") {
-      setInvoiceType(tab);
+  useEffect(() => {
+    if (urlYear && changeYear && Number(urlYear) !== Number(year)) {
+      changeYear(Number(urlYear));
+    }
+
+    if (urlTab === "sales" || urlTab === "purchase") {
+      setInvoiceType(urlTab);
+    }
+
+    if (urlSearch !== null) {
+      setSearchTerm(urlSearch);
+    }
+
+    if (urlSelectedId) {
+      const parsedId = Number(urlSelectedId);
+      setSelectedInvoiceId(parsedId);
     }
   }, [searchParams]);
 
@@ -95,18 +111,32 @@ export const useInvoicePageLogic = () => {
   }, [printItem, deleteTarget, editingInvoice, viewingInvoice, showAddForm]);
 
   useEffect(() => {
-    let ignore = false;
+    if (!year || !tenant) return;
 
-    const fetchData = async () => {
-      if (!year) return;
+    const fetchCommonData = async () => {
       try {
         await Promise.all([
           getMaterials(0, 999, "", false, tenant),
           getAllCustomers(0, 999, false, "", tenant, year),
         ]);
-        if (ignore) return;
+      } catch (error) {
+        const backendErr =
+          error?.response?.data?.exception?.message || "Bilinmeyen Hata";
 
+        toast.error(backendErr);
+      }
+    };
+
+    fetchCommonData();
+  }, [year, tenant]);
+
+  useEffect(() => {
+    if (!year || !tenant) return;
+
+    const fetchInvoices = async () => {
+      try {
         const backendType = invoiceType === "purchase" ? "PURCHASE" : "SALES";
+
         await getInvoicesByYear(
           page,
           PAGE_SIZE,
@@ -118,13 +148,12 @@ export const useInvoicePageLogic = () => {
       } catch (error) {
         const backendErr =
           error?.response?.data?.exception?.message || "Bilinmeyen Hata";
+
         toast.error(backendErr);
       }
     };
-    fetchData();
-    return () => {
-      ignore = true;
-    };
+
+    fetchInvoices();
   }, [year, invoiceType, tenant, page, debouncedSearch]);
 
   useEffect(() => {
@@ -678,9 +707,10 @@ export const useInvoicePageLogic = () => {
     state: {
       formatNumber,
       invoiceType,
+      searchTerm,
+      selectedInvoiceId,
       editingInvoice,
       deleteTarget,
-      searchTerm,
       openMenuId,
       menuRef,
       printItem,
@@ -693,7 +723,6 @@ export const useInvoicePageLogic = () => {
       formatDateToTR,
       isLoading,
       sortOrder,
-      selectedInvoiceId,
       contextMenu,
       page,
       totalPages: invoiceTotalPages,
@@ -703,10 +732,11 @@ export const useInvoicePageLogic = () => {
     },
     handlers: {
       toggleMenu,
+      setSearchTerm,
+      setInvoiceType,
+      handleTypeChange,
       setSortOrder,
       setEditingInvoice,
-      setInvoiceType,
-      setSearchTerm,
       setPrintItem: (item) =>
         setPrintItem(item ? { ...item, invoiceType } : null),
       setForm,
@@ -728,7 +758,6 @@ export const useInvoicePageLogic = () => {
       handleView,
       setShowAddForm,
       clearSelection,
-      handleTypeChange,
       handleInvoiceStatusChange,
     },
   };

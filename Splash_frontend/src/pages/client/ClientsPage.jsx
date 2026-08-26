@@ -7,6 +7,7 @@ import ContextMenu from "./components/ContextMenu";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import ClientEditModal from "./components/ClientEditModal.jsx";
 import ClientViewModal from "./components/ClientViewModal.jsx";
+import ClientInvoiceMovementsModal from "./components/ClientInvoiceMovementsModal.jsx";
 
 export default function ClientsPage() {
   const { state, handlers } = useClientLogic();
@@ -219,6 +220,7 @@ export default function ClientsPage() {
           }}
           onSelectedCustomer={handlers.setSelectedCustomers}
           onView={handlers.handleView}
+          onOpenInvoices={(c) => handlers.setViewingInvoicesClient(c)}
         />
       )}
 
@@ -240,6 +242,14 @@ export default function ClientsPage() {
             handlers.setViewingClient(null);
             handlers.clearSelection();
           }}
+        />
+      )}
+
+      {state.viewingInvoicesClient && (
+        <ClientInvoiceMovementsModal
+          customer={state.viewingInvoicesClient}
+          formatNumber={state.formatNumber}
+          onClose={() => handlers.setViewingInvoicesClient(null)}
         />
       )}
 
