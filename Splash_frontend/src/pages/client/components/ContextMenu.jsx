@@ -11,6 +11,7 @@ export default function ContextMenu({
   onOpenStatement,
   onSelectedCustomer,
   onView,
+  onOpenInvoices,
 }) {
   useEffect(() => {
     const handleAction = () => {
@@ -80,9 +81,18 @@ export default function ContextMenu({
                 onView(contextMenu.customer);
                 onClose();
               }}
-              className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-blue-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
+              className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-black-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
             >
               <span>👁️</span> İncele
+            </button>
+            <button
+              onClick={() => {
+                onOpenInvoices(contextMenu.customer);
+                onClose();
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-blue-600/20 text-green-400 flex items-center gap-3 rounded-xl transition-colors text-sm font-bold border-t border-gray-800/50 mt-1"
+            >
+              <span>🧾</span> Fatura Hareketleri
             </button>
           </>
         )}

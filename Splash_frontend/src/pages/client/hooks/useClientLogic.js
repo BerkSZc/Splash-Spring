@@ -50,6 +50,7 @@ export const useClientLogic = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [pendingArchiveIds, setPendingArchiveIds] = useState([]);
   const [viewingClient, setViewingClient] = useState(null);
+  const [viewingInvoicesClient, setViewingInvoicesClient] = useState(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -136,7 +137,13 @@ export const useClientLogic = () => {
   ]);
 
   useEffect(() => {
-    if (editClient || showPrintModal || showArchiveModal || viewingClient) {
+    if (
+      editClient ||
+      showPrintModal ||
+      showArchiveModal ||
+      viewingClient ||
+      viewingInvoicesClient
+    ) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -145,7 +152,13 @@ export const useClientLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [editClient, showPrintModal, showArchiveModal, viewingClient]);
+  }, [
+    editClient,
+    showPrintModal,
+    showArchiveModal,
+    viewingClient,
+    viewingInvoicesClient,
+  ]);
 
   useEffect(() => {
     const handleCloseModal = (event) => {
@@ -418,6 +431,7 @@ export const useClientLogic = () => {
       viewingClient,
       customerTotalPages,
       page,
+      viewingInvoicesClient,
     },
     handlers: {
       handleChange,
@@ -444,6 +458,7 @@ export const useClientLogic = () => {
       handleView,
       setPage,
       clearSelection,
+      setViewingInvoicesClient,
     },
   };
 };

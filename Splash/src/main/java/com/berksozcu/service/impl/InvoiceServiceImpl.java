@@ -18,19 +18,15 @@ import com.berksozcu.repository.*;
 import com.berksozcu.service.IInvoiceService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class InvoiceServiceImpl implements IInvoiceService {
@@ -329,7 +325,7 @@ public class InvoiceServiceImpl implements IInvoiceService {
         if (search == null || search.trim().isEmpty()) {
             searchParam = "";
         } else {
-            searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+            searchParam = "%" + normalizeSearch(search.trim()) + "%";
         }
 
         Page<Invoice> pagedInvoice;
@@ -346,6 +342,42 @@ public class InvoiceServiceImpl implements IInvoiceService {
         return pagedInvoice.map(this::convertToDto);
     }
 
+    @Override
+    public Page<InvoiceDto> getAllInvoicesByCustomerId(int page, int size, String search, Long customerId,
+                                                       String schemaName, InvoiceType invoiceType) {
+        Company company = companyRepository.findBySchemaName(schemaName);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        String searchParam = (search == null || search.trim().isEmpty())
+                ? null
+                : "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
+
+        String invoiceTypeParam = (invoiceType == null) ? null : invoiceType.name();
+
+        Page<Long> idPage = invoiceRepository.findInvoiceIdsByCustomerId(
+                company, customerId, searchParam, invoiceTypeParam, pageable);
+
+        List<Long> ids = idPage.getContent();
+
+        if (ids.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<Invoice> invoices = invoiceRepository.findAllByIdInWithItems(ids);
+
+        Map<Long, Invoice> invoiceMap = invoices.stream()
+                .collect(Collectors.toMap(Invoice::getId, Function.identity()));
+
+        List<InvoiceDto> orderedDtos = ids.stream()
+                .map(invoiceMap::get)
+                .filter(Objects::nonNull)
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(orderedDtos, pageable, idPage.getTotalElements());
+    }
+
     private void saveHistoryPrice(InvoiceItem item, Invoice invoice, Customer customer,
                                   Company company, InvoiceType invoiceType) {
         MaterialPriceHistory materialPriceHistory = new MaterialPriceHistory();
@@ -359,6 +391,18 @@ public class InvoiceServiceImpl implements IInvoiceService {
         materialPriceHistory.setCustomerName(Objects.requireNonNullElse(customer.getName(), ""));
         materialPriceHistory.setCompany(company);
         materialPriceHistoryRepository.save(materialPriceHistory);
+    }
+
+    private String normalizeSearch(String value) {
+        return value
+                .toLowerCase(new Locale("tr", "TR"))
+                .replace("ı", "i")
+                .replace("ğ", "g")
+                .replace("ü", "u")
+                .replace("ş", "s")
+                .replace("ö", "o")
+                .replace("ç", "c")
+                .replace("İ", "i");
     }
 
     private void updateVoucherBalance(OpeningVoucher voucher, InvoiceType invoiceType, BigDecimal price, boolean isAdding) {

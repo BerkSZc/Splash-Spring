@@ -6,6 +6,7 @@ import com.berksozcu.entites.invoice.Invoice;
 import com.berksozcu.entites.material_price_history.InvoiceType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -52,20 +53,54 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<MonthlyKdvDto> getMonthlyChangeByType(@Param("year") int year, @Param("companyId") Long companyId, InvoiceType type);
 
 
-    @Query("SELECT p FROM Invoice p WHERE p.company = :company " +
-            "AND p.date BETWEEN :start AND :end " +
-            "AND p.invoiceType = :type " +
-            "AND (:search IS NULL OR :search = '' " +
-            "OR LOWER(p.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query("""
+    SELECT p FROM Invoice p
+    WHERE p.company = :company
+      AND p.date BETWEEN :start AND :end
+      AND p.invoiceType = :type
+      AND (
+          :search IS NULL OR :search = ''
+          OR LOWER(
+              TRANSLATE(
+                  p.fileNo,
+                  'İIıĞğÜüŞşÖöÇç',
+                  'IIiGgUuSsOoCc'
+              )
+          ) LIKE :search
+          OR LOWER(
+              TRANSLATE(
+                  p.customer.name,
+                  'İIıĞğÜüŞşÖöÇç',
+                  'IIiGgUuSsOoCc'
+              )
+          ) LIKE :search
+      )
+    """)
     Page<Invoice> findByCompanyAndSearchAndDateBetweenAndType(Company company, String search, LocalDate start, LocalDate end,
                                                                Pageable pageable, InvoiceType type);
 
-    @Query("SELECT p FROM Invoice p WHERE p.company = :company " +
-            "AND p.date BETWEEN :start AND :end " +
-            "AND (:search IS NULL OR :search = '' " +
-            "OR LOWER(p.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query("""
+    SELECT p FROM Invoice p
+    WHERE p.company = :company
+      AND p.date BETWEEN :start AND :end
+      AND (
+          :search IS NULL OR :search = ''
+          OR LOWER(
+              TRANSLATE(
+                  p.fileNo,
+                  'İIıĞğÜüŞşÖöÇç',
+                  'IIiGgUuSsOoCc'
+              )
+          ) LIKE :search
+          OR LOWER(
+              TRANSLATE(
+                  p.customer.name,
+                  'İIıĞğÜüŞşÖöÇç',
+                  'IIiGgUuSsOoCc'
+              )
+          ) LIKE :search
+      )
+    """)
     Page<Invoice> findByCompanyAndSearchAndDateBetween(Company company, String search, LocalDate start, LocalDate end,
                                                                Pageable pageable);
 
@@ -73,5 +108,33 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     Optional<Invoice> findByIdAndCompany(Long id, Company company);
 
+    @Query(
+            value = "SELECT i.id FROM Invoice i " +
+                    "WHERE i.company = :company " +
+                    "AND i.customer.id = :customerId " +
+                    "AND (:invoiceType IS NULL OR CAST(i.invoiceType AS string) = :invoiceType) " +
+                    "AND (:search IS NULL OR LOWER(i.fileNo) LIKE :search OR LOWER(i.customer.name) LIKE :search)",
 
+            countQuery = "SELECT COUNT(i) FROM Invoice i " +
+                    "WHERE i.company = :company " +
+                    "AND i.customer.id = :customerId " +
+                    "AND (:invoiceType IS NULL OR CAST(i.invoiceType AS string) = :invoiceType) " +
+                    "AND (:search IS NULL OR LOWER(i.fileNo) LIKE :search OR LOWER(i.customer.name) LIKE :search)"
+    )
+    Page<Long> findInvoiceIdsByCustomerId(
+            @Param("company") Company company,
+            @Param("customerId") Long customerId,
+            @Param("search") String search,
+            @Param("invoiceType") String invoiceType,
+            Pageable pageable
+    );
+
+    @Query(
+            "SELECT DISTINCT i FROM Invoice i " +
+                    "LEFT JOIN FETCH i.items " +
+                    "LEFT JOIN FETCH i.customer " +
+                    "WHERE i.id IN :ids " +
+                    "ORDER BY i.date DESC"
+    )
+    List<Invoice> findAllByIdInWithItems(@Param("ids") List<Long> ids);
 }
