@@ -44,7 +44,12 @@ export const useAuthLogic = () => {
       const newSchema = response?.schemaName;
       if (newSchema) {
         changeTenant(newSchema);
-        changeYear(new Date().getFullYear());
+
+        if (response?.yearValue) {
+          changeYear(response.yearValue);
+        } else {
+          changeYear(new Date().getFullYear());
+        }
       }
     } catch (error) {
       const backendErr =

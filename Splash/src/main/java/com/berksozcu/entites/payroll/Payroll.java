@@ -64,4 +64,8 @@ public class Payroll {
 
     @Column(precision = 18, scale = 2)
     private BigDecimal amount;
+
+    //Çek ve Veya Senet Cari Edilen Müşteri Bilgisi
+    @Column(name = "endorsed_customer")
+    private String endorsedCustomer;
 }

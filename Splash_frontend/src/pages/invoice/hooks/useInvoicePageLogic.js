@@ -31,11 +31,13 @@ export const useInvoicePageLogic = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [viewingInvoice, setViewingInvoice] = useState(null);
   const menuRef = useRef(null);
+  const [bulkMailModalOpen, setBulkMailModalOpen] = useState(false);
   const [printItem, setPrintItem] = useState(null);
   const [form, setForm] = useState(null);
   const [sortOrder, setSortOrder] = useState("desc");
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [mailTargetInvoice, setMailTargetInvoice] = useState(null);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState([]);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
   const [invoiceType, setInvoiceType] = useState(() => {
@@ -66,7 +68,7 @@ export const useInvoicePageLogic = () => {
 
     if (urlSelectedId) {
       const parsedId = Number(urlSelectedId);
-      setSelectedInvoiceId(parsedId);
+      setSelectedInvoiceIds([parsedId]);
     }
   }, [searchParams]);
 
@@ -98,7 +100,9 @@ export const useInvoicePageLogic = () => {
       deleteTarget ||
       editingInvoice ||
       viewingInvoice ||
-      showAddForm
+      showAddForm ||
+      mailTargetInvoice ||
+      bulkMailModalOpen
     ) {
       document.body.style.overflow = "hidden";
     } else {
@@ -108,7 +112,15 @@ export const useInvoicePageLogic = () => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [printItem, deleteTarget, editingInvoice, viewingInvoice, showAddForm]);
+  }, [
+    printItem,
+    deleteTarget,
+    editingInvoice,
+    viewingInvoice,
+    showAddForm,
+    mailTargetInvoice,
+    bulkMailModalOpen,
+  ]);
 
   useEffect(() => {
     if (!year || !tenant) return;
@@ -136,10 +148,12 @@ export const useInvoicePageLogic = () => {
     const fetchInvoices = async () => {
       try {
         const backendType = invoiceType === "purchase" ? "PURCHASE" : "SALES";
+        const backendSort = sortOrder.toUpperCase();
 
         await getInvoicesByYear(
           page,
           PAGE_SIZE,
+          backendSort,
           debouncedSearch,
           year,
           tenant,
@@ -154,7 +168,7 @@ export const useInvoicePageLogic = () => {
     };
 
     fetchInvoices();
-  }, [year, invoiceType, tenant, page, debouncedSearch]);
+  }, [year, invoiceType, tenant, page, debouncedSearch, sortOrder]);
 
   useEffect(() => {
     const handleGlobalClick = (event) => {
@@ -167,11 +181,20 @@ export const useInvoicePageLogic = () => {
       }
 
       if (
+        bulkMailModalOpen ||
+        mailTargetInvoice ||
+        editingInvoice ||
+        viewingInvoice
+      ) {
+        return;
+      }
+
+      if (
         !event.target.closest(".invoice-row") &&
         !event.target.closest(".context-menu-container") &&
         !event.target.closest(".modal-container")
       ) {
-        setSelectedInvoiceId(null);
+        setSelectedInvoiceIds([]);
       }
     };
 
@@ -180,7 +203,13 @@ export const useInvoicePageLogic = () => {
     return () => {
       document.removeEventListener("mousedown", handleGlobalClick);
     };
-  }, [contextMenu]);
+  }, [
+    contextMenu,
+    bulkMailModalOpen,
+    mailTargetInvoice,
+    editingInvoice,
+    viewingInvoice,
+  ]);
 
   const executePrint = async (inv) => {
     if (!inv) return;
@@ -200,6 +229,21 @@ export const useInvoicePageLogic = () => {
       printWindow.document.write(html);
       printWindow.document.close();
       setPrintItem(null);
+    }
+  };
+
+  const handleToggleSelectInvoice = (id) => {
+    setSelectedInvoiceIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = (invoices) => {
+    const allIds = (Array.isArray(invoices) ? invoices : []).map((i) => i.id);
+    if (selectedInvoiceIds.length === allIds.length && allIds.length > 0) {
+      setSelectedInvoiceIds([]);
+    } else {
+      setSelectedInvoiceIds(allIds);
     }
   };
 
@@ -372,6 +416,11 @@ export const useInvoicePageLogic = () => {
     });
   };
 
+  const selectedInvoicesData = useMemo(() => {
+    const list = Array.isArray(invoice) ? invoice : [];
+    return list.filter((inv) => selectedInvoiceIds.includes(inv.id));
+  }, [invoice, selectedInvoiceIds]);
+
   const handleEdit = (invoice) => {
     // MÜŞTERİ KONTROLÜ: Faturadaki müşteriler arşivli ise ismini ekle
     if (invoice.customerId) {
@@ -510,7 +559,7 @@ export const useInvoicePageLogic = () => {
       const backendType = invoiceType === "purchase" ? "PURCHASE" : "SALES";
       await deleteInvoice(deleteTarget.id, tenant, backendType);
       await getAllCustomers(0, 999, false, "", tenant, year);
-      setSelectedInvoiceId(null);
+      setSelectedInvoiceIds([]);
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -665,17 +714,24 @@ export const useInvoicePageLogic = () => {
     return decPart !== undefined ? `${formattedInt},${decPart}` : formattedInt;
   };
 
-  const handleSelectInvoice = (id) => {
-    setSelectedInvoiceId((prev) => (prev === id ? null : id));
-  };
-
   const handleContextMenu = (e, inv) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelectedInvoiceId(inv?.id);
 
-    const menuWidth = 190;
-    const menuHeight = 180;
+    if (!inv?.id) return;
+
+    // Fatura seçilmediyse listeye ekleme/koruma kuralı:
+    const willBeSelected = selectedInvoiceIds.includes(inv.id)
+      ? selectedInvoiceIds
+      : [...selectedInvoiceIds, inv.id];
+
+    setSelectedInvoiceIds(willBeSelected);
+
+    const isMultiple = willBeSelected.length > 1;
+
+    const menuWidth = 224;
+
+    const menuHeight = isMultiple ? 60 : 240;
 
     const x =
       e.clientX + menuWidth > window.innerWidth
@@ -699,7 +755,7 @@ export const useInvoicePageLogic = () => {
 
   const clearSelection = () => {
     setContextMenu(null);
-    setSelectedInvoiceId(null);
+    setSelectedInvoiceIds([]);
     setOpenMenuId(null);
   };
 
@@ -708,7 +764,6 @@ export const useInvoicePageLogic = () => {
       formatNumber,
       invoiceType,
       searchTerm,
-      selectedInvoiceId,
       editingInvoice,
       deleteTarget,
       openMenuId,
@@ -719,7 +774,11 @@ export const useInvoicePageLogic = () => {
       filteredInvoices: sortedAndFilteredInvoices,
       year,
       materials,
+      mailTargetInvoice,
+      selectedInvoiceIds,
       customers,
+      bulkMailModalOpen,
+      selectedInvoicesData,
       formatDateToTR,
       isLoading,
       sortOrder,
@@ -735,7 +794,10 @@ export const useInvoicePageLogic = () => {
       setSearchTerm,
       setInvoiceType,
       handleTypeChange,
-      setSortOrder,
+      setSortOrder: (newOrder) => {
+        setSortOrder(newOrder);
+        setPage(0);
+      },
       setEditingInvoice,
       setPrintItem: (item) =>
         setPrintItem(item ? { ...item, invoiceType } : null),
@@ -749,14 +811,18 @@ export const useInvoicePageLogic = () => {
       handleSave,
       handleRateChange,
       handleContextMenu,
-      handleSelectInvoice,
       confirmDelete,
       setDeleteTarget,
       setContextMenu,
       setPage,
       setViewingInvoice,
+      setBulkMailModalOpen,
+      setMailTargetInvoice,
       handleView,
       setShowAddForm,
+      handleToggleSelectInvoice,
+      handleSelectAll,
+      setSelectedInvoiceIds,
       clearSelection,
       handleInvoiceStatusChange,
     },

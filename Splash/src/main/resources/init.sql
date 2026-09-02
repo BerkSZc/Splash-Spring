@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS app_user(
 id BIGSERIAL PRIMARY KEY,
 username VARCHAR(255) NOT NULL,
 password VARCHAR(255) NOT NULL,
-last_logged_company_id BIGINT
+last_logged_company_id BIGINT,
+last_logged_year_id BIGINT
 );
 
 -- ---------------------------
@@ -50,6 +51,31 @@ schema_name VARCHAR(255),
 invoice_description VARCHAR(255),
 user_id BIGINT NOT NULL,
 FOREIGN KEY (user_id) REFERENCES app_user(id)
+);
+
+-- ---------------------------
+--  MAİL LOG TABLOSU
+-- --------------------------
+
+CREATE TABLE IF NOT EXISTS splash.mail_log (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    company_id BIGINT NOT NULL,
+    recipient_to VARCHAR(500) NOT NULL,
+    subject VARCHAR(500),
+    body TEXT,
+    file_name VARCHAR(255),
+    sent_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_mail_log_user
+        FOREIGN KEY (user_id)
+        REFERENCES splash.app_user(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_mail_log_company
+        FOREIGN KEY (company_id)
+        REFERENCES splash.company(id)
+        ON DELETE CASCADE
 );
 
 -- ---------------------------
@@ -287,6 +313,7 @@ CREATE TABLE IF NOT EXISTS payroll (
     file_no VARCHAR(100),
     bank_name VARCHAR(255),
     bank_branch VARCHAR(255),
+    endorsed_customer VARCHAR(255),
     amount DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
 
     CONSTRAINT fk_payroll_customer

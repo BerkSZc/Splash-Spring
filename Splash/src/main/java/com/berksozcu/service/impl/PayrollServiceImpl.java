@@ -76,6 +76,7 @@ public class PayrollServiceImpl implements IPayrollService {
         payroll.setBankName(Objects.requireNonNullElse(payrollDto.getBankName(), "").toUpperCase());
         payroll.setBankBranch(Objects.requireNonNullElse(payrollDto.getBankBranch(), "").toUpperCase());
         payroll.setCompany(company);
+        payroll.setEndorsedCustomer(Objects.requireNonNullElse(payrollDto.getEndorsedCustomer(), "").toUpperCase());
 
         updateBalance(payrollDto, voucher);
         openingVoucherRepository.save(voucher);
@@ -141,6 +142,7 @@ public class PayrollServiceImpl implements IPayrollService {
         oldPayroll.setTransactionDate(Objects.requireNonNullElse(payrollDto.getTransactionDate(), LocalDate.now()));
         oldPayroll.setExpiredDate(Objects.requireNonNullElse(payrollDto.getExpiredDate(), LocalDate.now()));
         oldPayroll.setBankBranch(Objects.requireNonNullElse(payrollDto.getBankBranch(), "").toUpperCase());
+        oldPayroll.setEndorsedCustomer(Objects.requireNonNullElse(payrollDto.getEndorsedCustomer(), "").toUpperCase());
 
         updateBalance(payrollDto, newVoucher);
 
@@ -185,12 +187,15 @@ public class PayrollServiceImpl implements IPayrollService {
     }
 
     @Override
-    public Page<PayrollDto> getPayrollsByYear(int page, int size, String search, String type, int year, String schemaName) {
+    public Page<PayrollDto> getPayrollsByYear(int page, int size, String sortDirection, String search, String type, int year, String schemaName) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
+        Sort sort = "ASC".equalsIgnoreCase(sortDirection)
+                ? Sort.by("transactionDate").ascending().and(Sort.by("id").ascending())
+                : Sort.by("transactionDate").descending().and(Sort.by("id").descending());
 
         String searchParam;
         if (search == null || search.trim().isEmpty()) {
@@ -199,7 +204,7 @@ public class PayrollServiceImpl implements IPayrollService {
             searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         if (type == null || type.isEmpty()) {
             Page<Payroll> payrollPage = payrollRepository.findAllByStatement(company, searchParam, start, end, pageable);
@@ -232,6 +237,7 @@ public class PayrollServiceImpl implements IPayrollService {
         payrollDto.setExpiredDate(payroll.getExpiredDate());
         payrollDto.setBankName(payroll.getBankName());
         payrollDto.setCustomerName(payroll.getCustomer().getName());
+        payrollDto.setEndorsedCustomer(payroll.getEndorsedCustomer());
 
         OpeningVoucher openingVoucher = openingVoucherRepository
                 .findByCustomerIdAndCompanyAndDateBetween(payroll.getCustomer().getId(), payroll.getCompany(), start, end)

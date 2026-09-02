@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTenant } from "../context/TenantContext";
 import { useCompany } from "../../backend/store/useCompany";
 import toast from "react-hot-toast";
+import { useYear } from "../context/YearContext";
 
 const CompanyDropDown = () => {
   const { tenant, changeTenant } = useTenant();
@@ -11,6 +12,8 @@ const CompanyDropDown = () => {
     switchCompany,
     loading: companiesLoading,
   } = useCompany();
+
+  const { changeYear } = useYear();
 
   const [open, setOpen] = useState(false);
 
@@ -66,7 +69,9 @@ const CompanyDropDown = () => {
       const data = await switchCompany(c.id);
 
       changeTenant(data.schemaName);
-
+      if (data.yearValue) {
+        changeYear(data.yearValue);
+      }
       setOpen(false);
     } catch (error) {
       const backendErr =

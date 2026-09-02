@@ -41,12 +41,13 @@ public class InvoiceControllerImpl {
     @GetMapping("/find-by-year")
     public Page<InvoiceDto> getPurchaseInvoiceByYear(@RequestParam(defaultValue = "0") int page,
                                                      @RequestParam(defaultValue = "20") int size,
+                                                     @RequestParam(defaultValue = "DESC") String sortDirection,
                                                      @RequestParam(required = false) String search,
                                                      @RequestParam int year,
                                                      @RequestParam String schemaName,
                                                      @RequestParam(required = false) InvoiceType type
     ) {
-        return invoiceService.getInvoicesByDateBetween(page, size, search, year, schemaName, type);
+        return invoiceService.getInvoicesByDateBetween(page, size, sortDirection, search, year, schemaName, type);
     }
 
     @GetMapping("/find-all-invoices/{customerId}")

@@ -19,14 +19,21 @@ export default function MaterialPriceTooltip({
 
   const {
     history,
+    totalPages,
+    totalElements,
     getHistoryByAllYear,
     getHistoryByYear,
     getHistoryByCustomerAndYear,
     getHistoryByCustomerAndAllYear,
     loading: materialPriceLoading,
   } = useMaterialPriceHistory();
+
   const [selectedType, setSelectedType] = useState("PURCHASE");
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
+
   const { year } = useYear();
   const { tenant } = useTenant();
   const menuRef = useRef(null);
@@ -49,16 +56,43 @@ export default function MaterialPriceTooltip({
     };
   }, []);
 
-  const performSearch = async (type, mode) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(0);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const performSearch = async (type, mode, currentPage, currentSearch) => {
     if (!materialId || !mode) return;
 
     try {
       if (mode === "YEARLY") {
-        await getHistoryByYear(materialId, type, tenant, year);
+        await getHistoryByYear(
+          currentPage,
+          PAGE_SIZE,
+          currentSearch,
+          materialId,
+          type,
+          tenant,
+          year,
+        );
       } else if (mode === "ALL") {
-        await getHistoryByAllYear(materialId, tenant, type);
+        await getHistoryByAllYear(
+          currentPage,
+          PAGE_SIZE,
+          currentSearch,
+          materialId,
+          tenant,
+          type,
+        );
       } else if (mode === "CUSTOMER-YEARLY") {
         await getHistoryByCustomerAndYear(
+          currentPage,
+          PAGE_SIZE,
+          currentSearch,
           customerId,
           materialId,
           type,
@@ -67,6 +101,9 @@ export default function MaterialPriceTooltip({
         );
       } else if (mode === "CUSTOMER-ALL") {
         await getHistoryByCustomerAndAllYear(
+          currentPage,
+          PAGE_SIZE,
+          currentSearch,
           customerId,
           materialId,
           tenant,
@@ -93,51 +130,21 @@ export default function MaterialPriceTooltip({
     }
     setSearchMode(mode);
     setShowMenu(false);
+    setSearchTerm("");
     setOpen(true);
-    setCurrentIndex(0);
-    performSearch(selectedType, mode);
+    setDebouncedSearch("");
+    setPage(0);
   };
 
   useEffect(() => {
     if (open && searchMode) {
-      performSearch(selectedType, searchMode);
-      setCurrentIndex(0);
+      performSearch(selectedType, searchMode, page, debouncedSearch);
     }
-  }, [selectedType, materialId, open]);
+  }, [selectedType, materialId, open, searchMode, page, debouncedSearch]);
 
-  useEffect(() => {
-    const handleAction = () => {
-      if (open || showMenu) {
-        setOpen(false);
-        setShowMenu(false);
-      }
-    };
-    window.addEventListener("wheel", handleAction, { passive: true });
-    window.addEventListener("scroll", handleAction, {
-      passive: true,
-      capture: true,
-    });
-
-    return () => {
-      window.removeEventListener("wheel", handleAction);
-      window.removeEventListener("scroll", handleAction, { capture: true });
-    };
-  }, [open, showMenu]);
-
-  const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  const handleNext = () => {
-    const list = Array.isArray(history) ? history : [];
-    setCurrentIndex((prev) => Math.min(prev + 1, list.length - 1));
-  };
-  const currentItem = Array.isArray(history) ? history[currentIndex] : null;
-
-  const handleSelect = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (currentItem && onSelect) {
-      onSelect(Number(currentItem.price) || 0);
+  const handleSelectPrice = (price) => {
+    if (onSelect) {
+      onSelect(Number(price) || 0);
       setOpen(false);
     }
   };
@@ -146,8 +153,23 @@ export default function MaterialPriceTooltip({
     if (!dateString || typeof dateString !== "string") return dateString;
     if (dateString.includes(".")) return dateString;
 
-    const [year, month, day] = dateString.split("-");
-    return `${day}.${month}.${year}`;
+    const [y, m, d] = dateString.split("-");
+    return `${d}.${m}.${y}`;
+  };
+
+  const getModalTitle = () => {
+    switch (searchMode) {
+      case "YEARLY":
+        return `${year} Yılı Fiyat Analizi`;
+      case "ALL":
+        return "Tüm Yıllar Fiyat Analizi";
+      case "CUSTOMER-YEARLY":
+        return `Müşteriye Göre ${year} Yılı Fiyat Analizi`;
+      case "CUSTOMER-ALL":
+        return "Müşteriye Göre Tüm Yıllar Fiyat Analizi";
+      default:
+        return "Fiyat Analizi";
+    }
   };
 
   const isLoading = materialPriceLoading;
@@ -181,10 +203,10 @@ export default function MaterialPriceTooltip({
         createPortal(
           <div
             ref={menuPopupRef}
-            className="fixed left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[10001] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed left-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[10001] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
             style={{
               top: menuRef.current?.getBoundingClientRect().bottom + 8,
-              left: menuRef.current?.getBoundingClientRect().left - 150,
+              left: menuRef.current?.getBoundingClientRect().left - 180,
             }}
           >
             <button
@@ -197,39 +219,97 @@ export default function MaterialPriceTooltip({
             <button
               type="button"
               onClick={(e) => handleMenuClick(e, "ALL")}
-              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-blue-600 hover:text-white transition-colors border-b border-gray-800"
             >
               🌍 Tüm Yıllarda Ara
             </button>
             <button
               type="button"
               onClick={(e) => handleMenuClick(e, "CUSTOMER-YEARLY")}
-              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
+              className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors border-b border-gray-800"
             >
-              Müşteriye göre {year} Yılı için Ara
+              👤 Müşteriye Göre {year} Yılında Ara
             </button>
             <button
               type="button"
               onClick={(e) => handleMenuClick(e, "CUSTOMER-ALL")}
               className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-emerald-600 hover:text-white transition-colors"
             >
-              Müşteriye göre Tüm Yıllarda Ara
+              👥 Müşteriye Göre Tüm Yıllarda Ara
             </button>
           </div>,
           document.body,
         )}
 
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-[#0f172a] border border-gray-800 rounded-[2rem] shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in duration-300">
-            {/* Kapatma butonu */}
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-red-400 p-2 transition-colors"
-            >
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black/80 flex justify-center items-center z-[9999] backdrop-blur-md p-4">
+          <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+              <div>
+                <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                  <span className="p-2 bg-blue-600/20 text-blue-400 rounded-xl text-lg">
+                    📊
+                  </span>
+                  {getModalTitle()}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="p-2 text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-800 rounded-xl transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tab Seçimi */}
+            <div className="flex gap-2 p-1.5 bg-gray-900/80 rounded-2xl border border-gray-800 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedType("PURCHASE");
+                  setSearchTerm("");
+                  setDebouncedSearch("");
+                  setPage(0);
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                  selectedType === "PURCHASE"
+                    ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                }`}
+              >
+                🛒 Alış Hareketleri
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedType("SALES");
+                  setSearchTerm("");
+                  setDebouncedSearch("");
+                  setPage(0);
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                  selectedType === "SALES"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                }`}
+              >
+                💼 Satış Hareketleri
+              </button>
+            </div>
+
+            {/* Arama Alanı */}
+            <div className="relative mb-6">
+              <input
+                type="text"
+                placeholder="Müşteri adı veya tarihe göre ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-gray-900/60 border-2 border-gray-800 rounded-2xl text-white outline-none backdrop-blur-sm focus:border-blue-500 transition-all text-sm"
+              />
               <svg
-                className="w-6 h-6"
+                className="w-6 h-6 text-gray-500 absolute left-4 top-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -238,189 +318,131 @@ export default function MaterialPriceTooltip({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-            </button>
-
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <span className="p-2 bg-blue-600/20 text-blue-500 rounded-lg text-sm">
-                ₺
-              </span>
-              Fiyat Analizi
-            </h3>
-
-            {/* Fatura tipi seçimi */}
-            <div className="mb-8">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2 block ml-1">
-                İşlem Türü
-              </label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-gray-900 rounded-xl border border-gray-800">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedType("PURCHASE");
-                  }}
-                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                    selectedType === "PURCHASE"
-                      ? "bg-blue-600 text-white shadow-lg"
-                      : "text-gray-500 hover:text-gray-300"
-                  }`}
-                >
-                  Alış
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedType("SALES")}
-                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                    selectedType === "SALES"
-                      ? "bg-emerald-600 text-white shadow-lg"
-                      : "text-gray-500 hover:text-gray-300"
-                  }`}
-                >
-                  Satış
-                </button>
-              </div>
             </div>
 
-            {/* Fiyat geçmişi kartı */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 mb-8 min-h-[160px] flex flex-col justify-center relative overflow-hidden group">
+            {/* Tablo Alanı */}
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {isLoading ? (
-                // ZIRH: Veri çekilirken kartın içinde dönen bir loader ve bilgi mesajı
-                <div className="text-center space-y-3 animate-pulse">
-                  <div className="flex justify-center">
-                    <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                  </div>
-                  <p className="text-gray-500 text-[10px] uppercase tracking-widest font-bold">
-                    Geçmiş Veriler Sorgulanıyor...
-                  </p>
+                <div className="text-center py-16 text-gray-400 animate-pulse font-semibold">
+                  Fiyat hareketleri sorgulanıyor...
                 </div>
-              ) : currentItem ? (
-                <>
-                  <div className="space-y-4 relative z-10">
-                    <div className="flex justify-between items-end">
-                      <span className="text-gray-500 text-xs">Birim Fiyat</span>
-                      <span
-                        className={`text-2xl font-black font-mono ${
-                          selectedType === "PURCHASE"
-                            ? "text-blue-400"
-                            : "text-emerald-400"
-                        }`}
-                      >
-                        {(currentItem.price ?? 0)?.toLocaleString("tr-TR", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        ₺
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-800">
-                      <div>
-                        <span className="text-gray-500 text-[10px] uppercase block">
-                          Miktar
-                        </span>
-                        <span className="text-gray-200 font-bold text-sm">
-                          {currentItem.quantity ?? 0}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-gray-500 text-[10px] uppercase block">
-                          Tarih
-                        </span>
-                        <span className="text-gray-200 font-bold text-sm">
-                          {formatDateToTR(currentItem?.date || "")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {currentItem?.customerName && (
-                      <div className="pt-2">
-                        <span className="text-gray-500 text-[10px] uppercase block">
-                          İlgili Cari
-                        </span>
-                        <span className="text-gray-300 text-xs font-medium truncate block italic">
-                          "{currentItem.customerName || ""}"
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="absolute bottom-2 right-4 text-[10px] font-mono text-gray-700">
-                    {currentIndex + 1} / {history?.length}
-                  </div>
-                </>
+              ) : !history || history.length === 0 ? (
+                <div className="text-center py-16 text-gray-500 font-semibold border border-dashed border-gray-800 rounded-2xl">
+                  Bu kritere uygun{" "}
+                  {selectedType === "PURCHASE" ? "Alış" : "Satış"} kaydı
+                  bulunamadı.
+                </div>
               ) : (
-                <div className="text-center py-10">
-                  <div className="text-3xl mb-2">🔍</div>
-                  <p className="text-gray-500 text-sm italic font-medium">
-                    Bu işlem türünde kayıt bulunamadı
-                  </p>
-                </div>
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-800 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                      <th className="py-3 px-4">MÜŞTERİ / CARİ</th>
+                      <th className="py-3 px-4 text-center">İŞLEM TARİHİ</th>
+                      <th className="py-3 px-4 text-center">MİKTAR</th>
+                      <th className="py-3 px-4 text-right">BİRİM FİYAT</th>
+                      <th className="py-3 px-4 text-center">İŞLEM</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/60 text-xs font-semibold">
+                    {history.map((item, idx) => {
+                      const customerTitle =
+                        item.customerName ||
+                        item.customer?.name ||
+                        "Bilinmeyen Müşteri";
+
+                      return (
+                        <tr
+                          key={item.id || idx}
+                          className="hover:bg-gray-800/30 transition-colors"
+                        >
+                          <td
+                            className="py-4 px-4 font-bold text-white max-w-[240px] truncate"
+                            title={customerTitle}
+                          >
+                            {customerTitle}
+                          </td>
+                          <td className="py-4 px-4 text-center text-gray-300 font-mono">
+                            {formatDateToTR(item.date)}
+                          </td>
+                          <td className="py-4 px-4 text-center text-gray-300 font-mono">
+                            {item.quantity || "0"}
+                          </td>
+                          <td
+                            className={`py-4 px-4 text-right font-black font-mono text-sm ${
+                              selectedType === "PURCHASE"
+                                ? "text-purple-400"
+                                : "text-emerald-400"
+                            }`}
+                          >
+                            {(item.price ?? 0)?.toLocaleString("tr-TR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{" "}
+                            ₺
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleSelectPrice(item.price)}
+                              className="px-3 py-1.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center gap-1 mx-auto active:scale-95"
+                              title="Bu fiyatı faturaya aktar"
+                            >
+                              <span>Seç</span>
+                              <span>✓</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
             </div>
 
-            {/* Navigasyon ve Seçim */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handlePrev}
-                disabled={currentIndex === 0}
-                className="p-4 bg-gray-800 text-gray-300 rounded-2xl hover:bg-gray-700 disabled:opacity-20 disabled:grayscale transition-all active:scale-90"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
+            {/* Sayfalama ve Alt Kısım */}
+            <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-800">
+              <div className="text-xs font-semibold text-gray-400">
+                Toplam Kayıt:{" "}
+                <strong className="text-white">
+                  {totalElements || history?.length || 0}
+                </strong>
+              </div>
 
-              {currentItem ? (
-                <button
-                  type="button"
-                  onClick={handleSelect}
-                  className={`flex-1 py-4 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95 ${
-                    selectedType === "PURCHASE"
-                      ? "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
-                      : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20"
-                  }`}
-                >
-                  Bu Fiyatı Kullan
-                </button>
-              ) : (
-                <div className="flex-1"></div>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs font-bold disabled:opacity-30 hover:bg-gray-700 transition"
+                  >
+                    ← Önceki
+                  </button>
+                  <span className="text-gray-400 text-xs font-semibold">
+                    Sayfa {page + 1} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPage((p) => Math.min(totalPages - 1, p + 1))
+                    }
+                    disabled={page >= totalPages - 1}
+                    className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs font-bold disabled:opacity-30 hover:bg-gray-700 transition"
+                  >
+                    Sonraki →
+                  </button>
+                </div>
               )}
 
               <button
                 type="button"
-                onClick={handleNext}
-                disabled={
-                  currentIndex === (history?.length || 1) - 1 ||
-                  !history?.length
-                }
-                className="p-4 bg-gray-800 text-gray-300 rounded-2xl hover:bg-gray-700 disabled:opacity-20 disabled:grayscale transition-all active:scale-90"
+                onClick={() => setOpen(false)}
+                className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition-all"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                Kapat
               </button>
             </div>
           </div>

@@ -12,4 +12,8 @@ import lombok.NoArgsConstructor;
 public class UserResponse {
     private String token;
     private String schemaName;
+
+    private Long companyId;
+    private Long yearId;
+    private Integer yearValue;
 }

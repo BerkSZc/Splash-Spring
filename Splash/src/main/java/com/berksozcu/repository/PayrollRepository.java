@@ -40,15 +40,21 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     @Query(value = "DELETE FROM Payroll pyr WHERE pyr.company.id = :companyId AND pyr.transactionDate BETWEEN :start AND :end")
     void deleteByCompanyIdAndTransactionDateBetween(Long companyId, LocalDate start, LocalDate end);
 
-    @Query("SELECT p FROM Payroll p WHERE p.company = :company " +
-            "AND p.transactionDate BETWEEN :start AND :end " +
-            "AND p.payrollType = :pType  " +
-            "AND p.payrollModel = :pModel  " +
-            "AND (:search IS NULL OR :search = '' " +
-            "OR LOWER(p.fileNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.bankName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.bankBranch) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.customer.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query("""
+    SELECT p FROM Payroll p
+    WHERE p.company = :company
+      AND p.transactionDate BETWEEN :start AND :end
+      AND p.payrollType = :pType
+      AND p.payrollModel = :pModel
+      AND (
+          :search IS NULL OR :search = ''
+          OR LOWER(TRANSLATE(p.fileNo, 'İIıĞğÜüŞşÖöÇç', 'iiigguussoocc')) LIKE :search
+          OR LOWER(TRANSLATE(p.bankName, 'İIıĞğÜüŞşÖöÇç', 'iiigguussoocc')) LIKE :search
+          OR LOWER(TRANSLATE(p.bankBranch, 'İIıĞğÜüŞşÖöÇç', 'iiigguussoocc')) LIKE :search
+          OR LOWER(TRANSLATE(p.customer.name, 'İIıĞğÜüŞşÖöÇç', 'iiigguussoocc')) LIKE :search
+          OR LOWER(TRANSLATE(COALESCE(p.endorsedCustomer, ''), 'İIıĞğÜüŞşÖöÇç', 'iiigguussoocc')) LIKE :search
+      )
+""")
     Page<Payroll> findByCompanyAndSearchAndTransactionDateBetween(Company company, String search, LocalDate start, LocalDate end,
                                                                   PayrollType pType,
                                                                   PayrollModel pModel,

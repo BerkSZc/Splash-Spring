@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface YearRepository extends JpaRepository<Year, Long> {
@@ -23,4 +24,8 @@ public interface YearRepository extends JpaRepository<Year, Long> {
     @Transactional
     @Query("DELETE FROM Year y WHERE y.yearValue = :yearValue AND y.company.id = :companyId")
     void deleteYearValueByCompanyId(@Param("yearValue") Integer yearValue, @Param("companyId") Long companyId);
+
+    Optional<Year> findFirstByCompanyIdOrderByYearValueDesc(Long companyId);
+
+    Optional<Year> findByIdAndCompanyId(Long id, Long companyId);
 }

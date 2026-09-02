@@ -264,9 +264,12 @@ export const useMaterialLogic = () => {
   };
 
   const handleShowHistory = (item, type = "year") => {
-    setHistoryMaterialId({ id: item.id, type });
+    setHistoryMaterialId({
+      id: item.id,
+      type,
+      name: item.comment || item.code,
+    });
     setContextMenu(null);
-    setShowHistorySubMenu(null);
     setShowHistorySubMenu(false);
   };
 

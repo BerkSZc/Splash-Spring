@@ -60,6 +60,16 @@ export default function PayrollViewModal({
                 {item.customer?.name || ""}
               </p>
             </div>
+            {item.endorsedCustomer && (
+              <div className="pt-4 border-t border-gray-800/50">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">
+                  Cari Edilen Müşteri
+                </label>
+                <p className="text-lg font-semibold text-blue-400">
+                  {item.endorsedCustomer}
+                </p>
+              </div>
+            )}
             <div className="pt-4 border-t border-gray-800/50 flex justify-between items-center">
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">

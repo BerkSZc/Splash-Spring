@@ -40,7 +40,8 @@ public enum MessageType {
     MALZEME_KULLANIMDA(1031, "Faturalarda Kullanılan Malzemeler Silinemez!"),
     ISTEK_FAZLALALIGI(1032, "Sunucuya çok fazla istek gönderdiniz bir süre sonra tekrar deneyiniz!"),
     OTURUM_SURE_DOLDU(1033, "Oturum süreniz doldu!"),
-    TIP_UYUSMUYOR(1034, "Kasa İşleminin Tipi Silmek İstediğinizle Uyuşmuyor!");
+    TIP_UYUSMUYOR(1034, "Kasa İşleminin Tipi Silmek İstediğinizle Uyuşmuyor!"),
+    GECERSIZ_MAIL(1035, "Lütfen geçerli bir mail adresi giriniz!");
 
     private Integer code;
     private String message;

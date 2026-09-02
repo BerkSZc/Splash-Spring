@@ -13,10 +13,16 @@ export const useAuthentication = create((set) => ({
     try {
       set({ loading: true });
       const response = await axiosInstance.post("/auth/login", credentials);
-      const { token, schemaName } = response.data.data;
+
+      const data = response.data.data || response.data;
+      const { token, schemaName, yearValue } = data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("tenant", schemaName);
+
+      if (yearValue) {
+        localStorage.setItem("year", yearValue);
+      }
 
       set({
         token: token,
@@ -38,10 +44,15 @@ export const useAuthentication = create((set) => ({
     try {
       set({ loading: true });
       const response = await axiosInstance.post("/auth/save", signUpData);
-      const { token, schemaName } = response.data.data;
+      const data = response.data.data || response.data;
+      const { token, schemaName, yearValue } = data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("tenant", schemaName);
+
+      if (yearValue) {
+        localStorage.setItem("year", yearValue);
+      }
 
       set({
         token: token,
@@ -81,7 +92,16 @@ export const useAuthentication = create((set) => ({
   authControl: async () => {
     try {
       set({ loading: true });
-      await axiosInstance.get("/auth/me");
+      const res = await axiosInstance.get("/auth/me");
+      const data = res?.data?.data || res?.data;
+
+      if (data?.schemaName) {
+        localStorage.setItem("tenant", data.schemaName);
+        set({ tenant: data.schemaName });
+      }
+      if (data?.yearValue) {
+        localStorage.setItem("year", data.yearValue);
+      }
 
       set({
         isAuthenticated: true,

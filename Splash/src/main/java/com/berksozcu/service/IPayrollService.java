@@ -12,5 +12,5 @@ public interface IPayrollService {
 
     void deletePayroll(Long id, String schemaName);
 
-     Page<PayrollDto> getPayrollsByYear(int page, int size, String search, String type, int year, String schemaName);
+     Page<PayrollDto> getPayrollsByYear(int page, int size, String sortDirection, String search, String type, int year, String schemaName);
 }

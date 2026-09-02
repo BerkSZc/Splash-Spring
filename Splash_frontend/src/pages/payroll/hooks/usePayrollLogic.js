@@ -80,6 +80,7 @@ export const usePayrollLogic = () => {
     transactionDate: getInitialDate(year),
     expiredDate: new Date().toISOString().slice(0, 10),
     customerId: "",
+    endorsedCustomer: "",
     amount: "",
     fileNo: "",
     bankName: "",
@@ -192,6 +193,7 @@ export const usePayrollLogic = () => {
             getPayrollByYear(
               page,
               PAGE_SIZE,
+              sortOrder.toUpperCase(),
               debouncedSearch,
               type,
               year,
@@ -215,13 +217,14 @@ export const usePayrollLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant, page, debouncedSearch, type]);
+  }, [year, tenant, page, debouncedSearch, type, sortOrder]);
 
   const resetForm = async () => {
     setForm({
       transactionDate: getInitialDate(year),
       expiredDate: new Date().toISOString().slice(0, 10),
       customerId: "",
+      endorsedCustomer: "",
       amount: "",
       fileNo: "",
       bankName: "",
@@ -276,6 +279,7 @@ export const usePayrollLogic = () => {
       customer: {
         id: Number(form.customerId),
       },
+      endorsedCustomer: form.endorsedCustomer || "",
       company: form.company,
       payrollType: type.includes("cheque") ? "CHEQUE" : "BOND",
       payrollModel: type.includes("_in") ? "INPUT" : "OUTPUT",
@@ -321,6 +325,7 @@ export const usePayrollLogic = () => {
       transactionDate: item.transactionDate,
       expiredDate: item.expiredDate,
       customerId: item.customerId || "",
+      endorsedCustomer: item.endorsedCustomer || "",
       amount: item.amount ? formatNumber(item.amount) : "",
       fileNo: item.fileNo || "",
       bankName: item.bankName || "",
@@ -365,6 +370,7 @@ export const usePayrollLogic = () => {
       transactionDate: getInitialDate(year),
       expiredDate: new Date().toISOString().slice(0, 10),
       customerId: "",
+      endorsedCustomer: "",
       amount: "",
       fileNo: "",
       bankName: "",
@@ -452,7 +458,10 @@ export const usePayrollLogic = () => {
     },
     handlers: {
       setType,
-      setSortOrder,
+      setSortOrder: (newOrder) => {
+        setSortOrder(newOrder);
+        setPage(0);
+      },
       setSearch,
       setForm,
       handleSubmit,

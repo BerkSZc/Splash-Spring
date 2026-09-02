@@ -78,6 +78,7 @@ export const useInvoice = create((set) => ({
   getInvoicesByYear: async (
     page = 0,
     size = 20,
+    sortDirection = "DESC",
     search,
     year,
     schemaName,
@@ -86,7 +87,7 @@ export const useInvoice = create((set) => ({
     set({ loading: true, invoice: [] });
     try {
       const res = await axiosInstance.get(`/invoice/find-by-year`, {
-        params: { page, size, search, year, schemaName, type },
+        params: { page, size, sortDirection, search, year, schemaName, type },
       });
       set({
         invoice: res.data.content,

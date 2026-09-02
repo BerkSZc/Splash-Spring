@@ -12,6 +12,7 @@ public interface IInvoiceService {
     void deleteInvoice(Long id, String schemaName, InvoiceType invoiceType);
 
     Page<InvoiceDto> getInvoicesByDateBetween(int page, int size,
+                                              String sortDirection,
                                                           String search,
                                                           int year, String schemaName,
                                               InvoiceType invoiceType);
