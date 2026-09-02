@@ -482,6 +482,7 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
       await getInvoicesByYear(
         0,
         999,
+        "DESC",
         "",
         year,
         tenant,

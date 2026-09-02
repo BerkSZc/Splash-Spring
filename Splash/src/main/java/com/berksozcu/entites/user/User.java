@@ -29,6 +29,9 @@ public class User implements UserDetails {
     @Column(name = "last_logged_company_id")
     private Long lastLoggedCompanyId;
 
+    @Column(name = "last_logged_year_id")
+    private Long lastLoggedYearId;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

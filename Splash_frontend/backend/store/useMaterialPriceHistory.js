@@ -3,38 +3,63 @@ import { axiosInstance } from "../lib/axios";
 
 export const useMaterialPriceHistory = create((set) => ({
   history: [],
+  totalPages: 0,
+  totalElements: 0,
   loading: false,
 
-  getHistoryByAllYear: async (materialId, schemaName, invoiceType) => {
+  getHistoryByAllYear: async (
+    page = 0,
+    size = 20,
+    search = "",
+    materialId,
+    schemaName,
+    invoiceType,
+  ) => {
     set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-all-year/${materialId}`,
         {
-          params: { schemaName, invoiceType },
+          params: { page, size, search, schemaName, invoiceType },
         },
       );
-      set({ history: res.data });
+      set({
+        history: res.data.content || [],
+        totalPages: res.data.totalPages || 0,
+        totalElements: res.data.totalElements || 0,
+      });
     } catch (error) {
-      set({ history: [] });
+      set({ history: [], totalPages: 0, totalElements: 0 });
       throw error;
     } finally {
       set({ loading: false });
     }
   },
 
-  getHistoryByYear: async (materialId, invoiceType, schemaName, year) => {
+  getHistoryByYear: async (
+    page = 0,
+    size = 20,
+    search = "",
+    materialId,
+    invoiceType,
+    schemaName,
+    year,
+  ) => {
     set({ loading: true, history: [] });
     try {
       const res = await axiosInstance.get(
         `/history/find-by-year/${materialId}`,
         {
-          params: { invoiceType, schemaName, year },
+          params: { page, size, search, invoiceType, schemaName, year },
         },
       );
-      set({ history: res.data });
+      set({
+        history: res.data.content || [],
+        totalPages: res.data.totalPages || 0,
+        totalElements: res.data.totalElements || 0,
+      });
     } catch (error) {
-      set({ history: [] });
+      set({ history: [], totalPages: 0, totalElements: 0 });
       throw error;
     } finally {
       set({ loading: false });
@@ -42,6 +67,9 @@ export const useMaterialPriceHistory = create((set) => ({
   },
 
   getHistoryByCustomerAndYear: async (
+    page = 0,
+    size = 20,
+    search = "",
     customerId,
     materialId,
     invoiceType,
@@ -53,12 +81,16 @@ export const useMaterialPriceHistory = create((set) => ({
       const res = await axiosInstance.get(
         `/history/find-by-customer-year/${customerId}/${materialId}`,
         {
-          params: { invoiceType, schemaName, year },
+          params: { page, size, search, invoiceType, schemaName, year },
         },
       );
-      set({ history: res.data });
+      set({
+        history: res.data.content || [],
+        totalPages: res.data.totalPages || 0,
+        totalElements: res.data.totalElements || 0,
+      });
     } catch (error) {
-      set({ history: [] });
+      set({ history: [], totalPages: 0, totalElements: 0 });
       throw error;
     } finally {
       set({ loading: false });
@@ -66,6 +98,9 @@ export const useMaterialPriceHistory = create((set) => ({
   },
 
   getHistoryByCustomerAndAllYear: async (
+    page = 0,
+    size = 20,
+    search = "",
     customerId,
     materialId,
     schemaName,
@@ -76,12 +111,16 @@ export const useMaterialPriceHistory = create((set) => ({
       const res = await axiosInstance.get(
         `/history/find-by-customer-all-year/${customerId}/${materialId}`,
         {
-          params: { schemaName, invoiceType },
+          params: { page, size, search, schemaName, invoiceType },
         },
       );
-      set({ history: res.data });
+      set({
+        history: res.data.content || [],
+        totalPages: res.data.totalPages || 0,
+        totalElements: res.data.totalElements || 0,
+      });
     } catch (error) {
-      set({ history: [] });
+      set({ history: [], totalPages: 0, totalElements: 0 });
       throw error;
     } finally {
       set({ loading: false });

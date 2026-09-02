@@ -144,11 +144,13 @@ export const useFinancialLogic = () => {
     const fetchData = async () => {
       if (!year || !tenant) return;
       try {
+        const backendSort = sortOrder.toUpperCase();
         await Promise.all([
           getAllCustomers(0, 999, false, "", tenant, year),
           getCollectionsByYear(
             page,
             PAGE_SIZE,
+            backendSort,
             debouncedSearch,
             year,
             tenant,
@@ -166,16 +168,11 @@ export const useFinancialLogic = () => {
     return () => {
       ignore = true;
     };
-  }, [year, tenant, page, debouncedSearch, type]);
+  }, [year, tenant, page, debouncedSearch, type, sortOrder]);
 
   const filteredList = useMemo(() => {
-    return (Array.isArray(collections) ? collections : []).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-
-      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    });
-  }, [collections, type, sortOrder]);
+    return Array.isArray(collections) ? collections : [];
+  }, [collections]);
 
   const handleSelectRow = (id) => {
     setSelectedId((prev) => (prev === id ? null : id));
@@ -333,6 +330,7 @@ export const useFinancialLogic = () => {
         getCollectionsByYear(
           page,
           PAGE_SIZE,
+          sortOrder.toUpperCase(),
           debouncedSearch,
           year,
           tenant,
@@ -422,7 +420,10 @@ export const useFinancialLogic = () => {
     handlers: {
       setType,
       setSearch,
-      setSortOrder,
+      setSortOrder: (newOrder) => {
+        setSortOrder(newOrder);
+        setPage(0);
+      },
       setDeleteTarget,
       setAddForm,
       setEditForm,

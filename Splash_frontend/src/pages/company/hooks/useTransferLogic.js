@@ -197,7 +197,6 @@ export const useTransferLogic = () => {
         invoiceDescription: "",
       });
       setShowCompanyForm(false);
-      toast.success("Şirket başarıyla oluşturuldu");
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";
@@ -215,6 +214,9 @@ export const useTransferLogic = () => {
       const data = await switchCompany(companyId);
 
       changeTenant(data.schemaName);
+      if (data.yearValue) {
+        changeYear(data.yearValue);
+      }
     } catch (error) {
       const backendErr =
         error?.response?.data?.exception?.message || "Bilinmeyen Hata";

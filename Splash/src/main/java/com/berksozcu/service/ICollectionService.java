@@ -10,6 +10,7 @@ public interface ICollectionService {
      void deleteCollection(Long id, String schemaName, CollectionType type);
      Page<CollectionDto> getCollectionsByYear(int page,
                                                      int size,
+                                                     String sortDirection,
                                                      String search,
                                                      int year,
                                                      String schemaName,

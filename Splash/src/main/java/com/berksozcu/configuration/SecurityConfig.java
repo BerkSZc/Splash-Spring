@@ -38,7 +38,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/rest/api/auth/login", "/rest/api/auth/save", "/rest/api/auth/me")
+                        .requestMatchers("/rest/api/auth/*")
                         .permitAll().requestMatchers("/", "/index.html", "/static/**", "/*.js", "/*.json", "/*.css", "/assets/**")
                         .permitAll()
                         .anyRequest().authenticated())

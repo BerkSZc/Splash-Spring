@@ -74,6 +74,7 @@ export default function PayrollTable({
               <th className="p-6 text-center w-16">Seç</th>
               <th className="p-6">Vade Tarihi</th>
               <th className="p-6">Müşteri / Cari</th>
+              <th className="p-6">Cari Edilen Müşteri</th>
               <th className="p-6">Evrak Detayı</th>
               <th className="p-6 text-right">Tutar</th>
             </tr>
@@ -137,6 +138,16 @@ export default function PayrollTable({
                   </div>
                   <div className="text-[10px] text-gray-500 uppercase font-bold mt-1">
                     Cari ID: #{item.customerId || ""}
+                  </div>
+                </td>
+                <td className="p-6">
+                  <div className="text-white text-sm font-semibold">
+                    {item.endorsedCustomer || "—"}
+                  </div>
+                  <div className="text-[10px] text-gray-500 uppercase font-bold mt-0.5">
+                    {item.endorsedCustomer
+                      ? "Ciro / Cari Edilen"
+                      : "Belirtilmedi"}
                   </div>
                 </td>
                 <td className="p-6">

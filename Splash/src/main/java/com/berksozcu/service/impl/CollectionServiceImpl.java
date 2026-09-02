@@ -192,11 +192,15 @@ public class CollectionServiceImpl implements ICollectionService {
     }
 
     @Override
-    public Page<CollectionDto> getCollectionsByYear(int page, int size, String search, int year, String schemaName, CollectionType type) {
+    public Page<CollectionDto> getCollectionsByYear(int page, int size, String sortDirection, String search, int year, String schemaName, CollectionType type) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
+
+        Sort sort = "ASC".equalsIgnoreCase(sortDirection)
+                ? Sort.by("date").ascending().and(Sort.by("id").ascending())
+                : Sort.by("date").descending().and(Sort.by("id").descending());
 
         String searchParam;
         if (search == null || search.trim().isEmpty()) {
@@ -205,7 +209,7 @@ public class CollectionServiceImpl implements ICollectionService {
             searchParam = "%" + search.toLowerCase(Locale.forLanguageTag("tr-TR")).trim() + "%";
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<Collection> pageablePayment;
         if (type == null) {

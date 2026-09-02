@@ -215,6 +215,8 @@ export default function MaterialPage() {
       {state.historyMaterialId && (
         <MaterialHistoryModal
           materialId={state.historyMaterialId.id}
+          materialName={state.historyMaterialId.name}
+          formatNumber={state.formatNumber}
           historyType={state.historyMaterialId.type}
           onClose={() => {
             handlers.setHistoryMaterialId(null);

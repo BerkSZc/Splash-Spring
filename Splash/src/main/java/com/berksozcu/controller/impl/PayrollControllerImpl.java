@@ -23,11 +23,12 @@ public class PayrollControllerImpl implements IPayrollController {
     @GetMapping("/find-by-year")
     public Page<PayrollDto> getPayrollsByYear(@RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "20") int size,
+                                              @RequestParam(defaultValue = "DESC") String sortDirection,
                                               @RequestParam(required = false) String search,
                                               @RequestParam(required = false) String type,
                                               @RequestParam int year,
                                               @RequestParam String schemaName) {
-        return payrollService.getPayrollsByYear(page, size, search, type, year, schemaName);
+        return payrollService.getPayrollsByYear(page, size, sortDirection, search, type, year, schemaName);
     }
 
     @Override

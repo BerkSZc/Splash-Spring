@@ -313,13 +313,18 @@ public class InvoiceServiceImpl implements IInvoiceService {
     }
 
     @Override
-    public Page<InvoiceDto> getInvoicesByDateBetween(int page, int size, String search, int year,
+    public Page<InvoiceDto> getInvoicesByDateBetween(int page, int size, String sortDirection, String search, int year,
                                                      String schemaName, InvoiceType invoiceType) {
         Company company = companyRepository.findBySchemaName(schemaName);
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        Sort sort = "ASC".equalsIgnoreCase(sortDirection)
+                ? Sort.by("date").ascending().and(Sort.by("id").ascending())
+                : Sort.by("date").descending().and(Sort.by("id").descending());
+
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         String searchParam;
         if (search == null || search.trim().isEmpty()) {

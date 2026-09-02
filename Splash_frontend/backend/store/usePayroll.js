@@ -11,6 +11,7 @@ export const usePayroll = create((set) => ({
   getPayrollByYear: async (
     page = 0,
     size = 20,
+    sortDirection = "DESC",
     search = "",
     type,
     year,
@@ -19,7 +20,7 @@ export const usePayroll = create((set) => ({
     set({ loading: true, payrolls: [] });
     try {
       const res = await axiosInstance.get(`/payroll/find-by-year`, {
-        params: { page, size, search, type, year, schemaName },
+        params: { page, size, sortDirection, search, type, year, schemaName },
       });
       set({
         payrolls: res.data.content,

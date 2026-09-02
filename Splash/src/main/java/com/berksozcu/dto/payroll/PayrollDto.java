@@ -10,33 +10,35 @@ import java.time.LocalDate;
 @Data
 public class PayrollDto {
 
-        private Long id;
+    private Long id;
 
-        //Çekin alındığı tarih
-        private LocalDate transactionDate;
+    //Çekin alındığı tarih
+    private LocalDate transactionDate;
 
-        //Çekin Vadesi
-        private LocalDate expiredDate;
+    //Çekin Vadesi
+    private LocalDate expiredDate;
 
-        //Çek veya senetin giriş mi çıkış mı olduğunun göstergesi
-        private PayrollModel payrollModel;
+    //Çek veya senetin giriş mi çıkış mı olduğunun göstergesi
+    private PayrollModel payrollModel;
 
-        //Çek mi Senet mi olduğunun göstergesi
-        private PayrollType payrollType;
+    //Çek mi Senet mi olduğunun göstergesi
+    private PayrollType payrollType;
 
-        private Long customerId;
+    private Long customerId;
 
-        private String customerName;
+    private String customerName;
 
-        private BigDecimal finalBalance;
+    private BigDecimal finalBalance;
 
-        private Long companyId;
+    private Long companyId;
 
-        private String fileNo;
+    private String fileNo;
 
-        private String bankName;
+    private String bankName;
 
-        private String bankBranch;
+    private String bankBranch;
 
-        private BigDecimal amount;
+    private BigDecimal amount;
+
+    private String endorsedCustomer;
 }

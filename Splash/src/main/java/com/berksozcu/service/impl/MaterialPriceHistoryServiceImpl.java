@@ -9,10 +9,14 @@ import com.berksozcu.repository.CompanyRepository;
 import com.berksozcu.repository.MaterialPriceHistoryRepository;
 import com.berksozcu.service.IMaterialPriceHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,69 +29,94 @@ public class MaterialPriceHistoryServiceImpl implements IMaterialPriceHistorySer
     private CompanyRepository companyRepository;
 
     @Override
-    public List<MaterialPriceHistoryDto> getHistoryAllYear(Long materialId,
-                                                           String schemaName
-            , InvoiceType invoiceType) {
+    public Page<MaterialPriceHistoryDto> getHistoryAllYear(int page, int size, String search, Long materialId, String schemaName, InvoiceType invoiceType) {
         Company company = companyRepository.findBySchemaName(schemaName);
-        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.
-                findByMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(materialId, company, invoiceType);
+        Pageable pageable = PageRequest.of(page, size);
+        String searchParam = prepareSearchParam(search);
 
-      return convertToDto(materialPriceHistories);
+        Page<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.
+                findByMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(materialId, company, invoiceType, searchParam, pageable);
+
+        return materialPriceHistories.map(this::convertToDto);
     }
 
     @Override
-    public List<MaterialPriceHistoryDto> getHistoryByYear(Long materialId, InvoiceType invoiceType,
+    public Page<MaterialPriceHistoryDto> getHistoryByYear(int page, int size, String search, Long materialId, InvoiceType invoiceType,
            String schemaName,
            int year) {
         Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
-                materialId, invoiceType, company,
-                start, end);
+        Pageable pageable = PageRequest.of(page, size);
+        String searchParam = prepareSearchParam(search);
 
-        return convertToDto(materialPriceHistories);
+        Page<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository.findByMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(
+                materialId, invoiceType, company,
+                start, end, searchParam, pageable);
+
+        return materialPriceHistories.map(this::convertToDto);
     }
 
     @Override
-    public List<MaterialPriceHistoryDto> getHistoryByCustomerAndYear(Long customerId, Long materialId,
+    public Page<MaterialPriceHistoryDto> getHistoryByCustomerAndYear(int page, int size, String search, Long customerId, Long materialId,
                   InvoiceType invoiceType, String schemaName, int year) {
         Company company = companyRepository.findBySchemaName(schemaName);
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
-        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
-                .findByCustomerIdAndMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(customerId,
-                        materialId, invoiceType, company, start, end);
+        Pageable pageable = PageRequest.of(page, size);
+        String searchParam = prepareSearchParam(search);
 
-      return convertToDto(materialPriceHistories);
+        Page<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
+                .findByCustomerIdAndMaterialIdAndInvoiceTypeAndCompanyAndDateBetweenOrderByDateDesc(customerId,
+                        materialId, invoiceType, company, start, end, searchParam, pageable);
+
+        return materialPriceHistories.map(this::convertToDto);
     }
 
     @Override
-    public List<MaterialPriceHistoryDto> getHistoryByCustomerAndAllYear(Long customerId, Long materialId,
+    public Page<MaterialPriceHistoryDto> getHistoryByCustomerAndAllYear(int page, int size, String search, Long customerId, Long materialId,
                   String schemaName, InvoiceType invoiceType) {
         Company company = companyRepository.findBySchemaName(schemaName);
-        List<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
+        Pageable pageable = PageRequest.of(page, size);
+        String searchParam = prepareSearchParam(search);
+
+        Page<MaterialPriceHistory> materialPriceHistories = materialPriceHistoryRepository
                 .findByCustomerIdAndMaterialIdAndCompanyAndInvoiceTypeOrderByDateDesc(customerId,
-                        materialId, company, invoiceType);
-        return convertToDto(materialPriceHistories);
+                        materialId, company, invoiceType, searchParam, pageable);
+
+        return materialPriceHistories.map(this::convertToDto);
     }
 
-    private List<MaterialPriceHistoryDto> convertToDto(List<MaterialPriceHistory> materialPriceHistories) {
+    private MaterialPriceHistoryDto convertToDto(MaterialPriceHistory entity) {
+        MaterialPriceHistoryDto dto = new MaterialPriceHistoryDto();
+        dto.setId(entity.getId());
+        dto.setCompanyId(entity.getCompany() != null ? entity.getCompany().getId() : null);
+        dto.setMaterialId(entity.getMaterial() != null ? entity.getMaterial().getId() : null);
+        dto.setCustomerId(entity.getCustomer() != null ? entity.getCustomer().getId() : null);
+        dto.setPrice(entity.getPrice());
+        dto.setDate(entity.getDate());
+        dto.setInvoiceType(entity.getInvoiceType());
+        dto.setQuantity(entity.getQuantity());
+        dto.setCustomerName(entity.getCustomer() != null ? entity.getCustomer().getName() : null);
+        return dto;
+    }
 
-        return materialPriceHistories.stream().map(materialPriceHistory -> {
-            MaterialPriceHistoryDto materialPriceHistoryDto = new MaterialPriceHistoryDto();
-            materialPriceHistoryDto.setId(materialPriceHistory.getId());
-            materialPriceHistoryDto.setCompanyId(materialPriceHistory.getCompany().getId());
-            materialPriceHistoryDto.setMaterialId(materialPriceHistory.getMaterial().getId());
-            materialPriceHistoryDto.setCustomerId(materialPriceHistory.getCustomer().getId());
-            materialPriceHistoryDto.setPrice(materialPriceHistory.getPrice());
-            materialPriceHistoryDto.setDate(materialPriceHistory.getDate());
-            materialPriceHistoryDto.setInvoiceType(materialPriceHistory.getInvoiceType());
-            materialPriceHistoryDto.setQuantity(materialPriceHistory.getQuantity());
-            materialPriceHistoryDto.setDate(materialPriceHistory.getDate());
-            materialPriceHistoryDto.setCustomerName(materialPriceHistory.getCustomer().getName());
+    private String prepareSearchParam(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return null;
+        }
+        String normalized = search
+                .replace("İ", "i")
+                .replace("I", "ı")
+                .toLowerCase(Locale.forLanguageTag("tr-TR"))
+                .replace("ı", "i")
+                .replace("ğ", "g")
+                .replace("ü", "u")
+                .replace("ş", "s")
+                .replace("ö", "o")
+                .replace("ç", "c")
+                .trim();
 
-            return materialPriceHistoryDto;
-        }).collect(Collectors.toList());
+        return "%" + normalized + "%";
     }
 }

@@ -92,7 +92,7 @@ export const useClientLogic = () => {
           year,
         ),
         getAllOpeningVoucherByYear(dateString, tenant),
-        getInvoicesByYear(0, 999, "", year, tenant),
+        getInvoicesByYear(0, 999, "DESC", "", year, tenant),
       ]);
 
       if (ignore) return;
@@ -193,9 +193,9 @@ export const useClientLogic = () => {
     try {
       setSelectedCustomerForStatement(updatedCustomer);
       await Promise.allSettled([
-        getInvoicesByYear(0, 999, "", year, tenant),
-        getCollectionsByYear(0, 999, "", year, tenant),
-        getPayrollByYear(0, 999, "", "", year, tenant),
+        getInvoicesByYear(0, 999, "DESC", "", year, tenant),
+        getCollectionsByYear(0, 999, "DESC", "", year, tenant),
+        getPayrollByYear(0, 999, "DESC", "", "", year, tenant),
       ]);
       setShowPrintModal(true);
     } catch (error) {

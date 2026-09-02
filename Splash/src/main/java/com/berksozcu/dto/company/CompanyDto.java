@@ -18,6 +18,8 @@ public class CompanyDto {
 
     private String invoiceDescription;
 
+    private String sourceSchema;
+
     private String vdNo;
 
     private Long userId;

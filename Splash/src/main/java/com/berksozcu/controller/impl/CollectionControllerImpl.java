@@ -39,11 +39,12 @@ public class CollectionControllerImpl {
     @GetMapping("/find-by-year")
     public Page<CollectionDto> getCollectionsByYear(@RequestParam(defaultValue = "0") int page,
                                                            @RequestParam(defaultValue = "20") int size,
+                                                    @RequestParam(defaultValue = "DESC") String sortDirection,
                                                            @RequestParam(required = false) String search,
                                                            @RequestParam int year,
                                                            @RequestParam String schemaName,
                                                            @RequestParam(required = false) CollectionType type) {
-        return collectionService.getCollectionsByYear(page, size, search, year, schemaName, type);
+        return collectionService.getCollectionsByYear(page, size, sortDirection, search, year, schemaName, type);
     }
 
 }

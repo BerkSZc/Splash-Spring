@@ -147,4 +147,19 @@ export const useCompany = create((set, get) => ({
       set({ loading: false });
     }
   },
+  switchYear: async (yearId) => {
+    set({ loading: true });
+    try {
+      const res = await axiosInstance.post(`/company/switch-year/${yearId}`);
+
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("tenant", res.data.schemaName);
+
+      return res.data;
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
 }));

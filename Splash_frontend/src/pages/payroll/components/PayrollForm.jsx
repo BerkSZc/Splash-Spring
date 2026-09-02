@@ -1,4 +1,5 @@
 import CustomerSearchSelect from "../../../components/CustomerSearchSelect.jsx";
+import EndorsedCustomerSelect from "./EndorsedCustomerSelect.jsx";
 
 export default function PayrollForm({
   form,
@@ -26,7 +27,7 @@ export default function PayrollForm({
           }
         }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">
               İşlem Tarihi
@@ -63,6 +64,14 @@ export default function PayrollForm({
               customers={customers}
               value={form.customerId}
               onChange={(id) => setForm({ ...form, customerId: id })}
+            />
+          </div>
+          <div className="space-y-2 lg:col-span-1">
+            <EndorsedCustomerSelect
+              customers={customers}
+              value={form?.endorsedCustomer || ""}
+              onChange={(val) => setForm({ ...form, endorsedCustomer: val })}
+              label={`${currentTheme.label.includes("Çek") ? "Çek" : "Senet"} Cari Edilen Müşteri`}
             />
           </div>
           <div className="space-y-2">

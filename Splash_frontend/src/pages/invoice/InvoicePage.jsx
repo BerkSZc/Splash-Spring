@@ -5,6 +5,9 @@ import InvoicePrintPreview from "./components/InvoicePrintPreview";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import InvoiceViewModal from "./components/InvoiceViewModal.jsx";
 import InvoiceAddModal from "./components/InvoiceAddModal.jsx";
+import SendMailModal from "../../components/SendMailModal.jsx";
+import { generateInvoiceHTML } from "../../utils/printHelpers.js";
+import SendBulkMailModal from "./components/SendBulkMailModal.jsx";
 
 export default function InvoicePage() {
   const { state, handlers } = useInvoicePageLogic();
@@ -92,16 +95,30 @@ export default function InvoicePage() {
           onEdit={handlers.handleEdit}
           onDelete={handlers.setDeleteTarget}
           onPrint={handlers.setPrintItem}
-          year={state.year}
           formatDateToTR={state.formatDateToTR}
           isLoading={state.isLoading}
-          selectedInvoiceId={state.selectedInvoiceId}
+          selectedInvoiceIds={state.selectedInvoiceIds}
+          onToggleSelect={handlers.handleToggleSelectInvoice}
+          onSelectAll={handlers.handleSelectAll}
           contextMenu={state.contextMenu}
           setContextMenu={handlers.setContextMenu}
           onContextMenu={handlers.handleContextMenu}
-          onSelectInvoice={handlers.handleSelectInvoice}
           onView={handlers.setViewingInvoice}
+          onSendMail={(inv) => handlers.setMailTargetInvoice(inv)}
+          onSendBulkMail={() => handlers.setBulkMailModalOpen(true)}
         />
+
+        {state.bulkMailModalOpen && (
+          <SendBulkMailModal
+            isOpen={state.bulkMailModalOpen}
+            onClose={() => handlers.setBulkMailModalOpen(false)}
+            invoices={state.selectedInvoicesData}
+            invoiceType={state.invoiceType}
+            customers={state.customers}
+            company={state.currentCompany}
+            onSuccess={() => handlers.setSelectedInvoiceIds([])}
+          />
+        )}
 
         {/* MODALLAR */}
         {state?.editingInvoice && (
@@ -133,6 +150,26 @@ export default function InvoicePage() {
             onExecutePrint={handlers.executePrint}
             customers={state.customers}
             company={state.currentCompany}
+          />
+        )}
+
+        {state.mailTargetInvoice && (
+          <SendMailModal
+            isOpen={Boolean(state.mailTargetInvoice)}
+            onClose={() => {
+              handlers.setMailTargetInvoice(null);
+              handlers.clearSelection();
+            }}
+            defaultSubject={`${state.mailTargetInvoice.fileNo || "Fatura"} Numaralı Faturanız`}
+            getHtmlBody={() =>
+              generateInvoiceHTML(
+                state.mailTargetInvoice,
+                state.invoiceType,
+                state.customers,
+                state.currentCompany,
+                true,
+              )
+            }
           />
         )}
 

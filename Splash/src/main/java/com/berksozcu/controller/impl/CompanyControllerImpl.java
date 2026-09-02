@@ -30,17 +30,20 @@ public class CompanyControllerImpl {
     private AuthenticationService authenticationService;
 
     @PostMapping("/create")
-    public ResponseEntity<CompanyDto> createCompany(@RequestBody CompanyDto companyDto, @RequestBody Map<String, String> request, @AuthenticationPrincipal User user) {
-        String sourceSchema = request.get("sourceSchema");
+    public ResponseEntity<CompanyDto> createCompany(@RequestBody CompanyDto companyDto, @AuthenticationPrincipal User user) {
         if(companyDto.getName() == null || companyDto.getName().isEmpty()) {
             throw new BaseException(new ErrorMessage(MessageType.SIRKET_HATA));
         }
 
+        String sourceSchema = companyDto.getSourceSchema();
         if(sourceSchema == null || sourceSchema.isEmpty()) {
             sourceSchema = "splash";
         }
 
-        String schemaName = companyService.createDefaultSchemaName();
+        if (companyDto.getSchemaName() == null || companyDto.getSchemaName().trim().isEmpty()) {
+            String generatedSchema = companyService.createDefaultSchemaName();
+            companyDto.setSchemaName(generatedSchema);
+        }
 
         try {
             CompanyDto createdCompanyDto = companyService.createNewTenantSchema(companyDto, sourceSchema, user);
@@ -81,6 +84,12 @@ public class CompanyControllerImpl {
     @PostMapping("/switch-company/{companyId}")
     public ResponseEntity<UserResponse> switchCompany(@PathVariable Long companyId) {
        UserResponse response = authenticationService.switchCompany(companyId);
+       return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/switch-year/{yearId}")
+    public ResponseEntity<UserResponse> switchYear(@PathVariable Long yearId) {
+       UserResponse response = authenticationService.switchYear(yearId);
        return ResponseEntity.ok(response);
     }
 }

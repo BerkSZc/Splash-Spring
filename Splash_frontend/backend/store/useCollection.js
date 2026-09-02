@@ -89,6 +89,7 @@ export const useCollection = create((set) => ({
   getCollectionsByYear: async (
     page = 0,
     size = 20,
+    sortDirection = "DESC",
     search = "",
     year,
     schemaName,
@@ -97,7 +98,7 @@ export const useCollection = create((set) => ({
     set({ loading: true, collections: [] });
     try {
       const res = await axiosInstance.get(`/collection/find-by-year`, {
-        params: { page, size, search, year, schemaName, type },
+        params: { page, size, sortDirection, search, year, schemaName, type },
       });
       set({
         collections: res.data.content,
