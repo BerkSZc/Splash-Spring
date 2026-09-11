@@ -70,7 +70,6 @@ export default function MaterialSearchSelect({
 
   return (
     <div className="relative w-full">
-      {/* 🎯 Tıpkı müşteri seçicindeki gibi butona/input alanına tıklama alanı yapıyoruz */}
       <div
         ref={inputRef}
         onClick={() => {
@@ -86,7 +85,6 @@ export default function MaterialSearchSelect({
         }`}
       >
         {open ? (
-          // Arama açıkken kullanıcı buraya yazı yazabilsin diye input'u gösteriyoruz
           <input
             type="text"
             autoComplete="off"
@@ -131,7 +129,6 @@ export default function MaterialSearchSelect({
               width: pos.width,
               zIndex: 9999,
             }}
-            // Dropdown Koyu Tema Sınıfları
             className="max-h-60 overflow-y-auto rounded-xl border border-gray-800 bg-[#0f172a] shadow-2xl animate-in fade-in zoom-in duration-200 custom-scrollbar"
           >
             {materials.length === 0 ? (

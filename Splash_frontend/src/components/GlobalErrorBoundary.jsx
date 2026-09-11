@@ -3,31 +3,87 @@ import React from "react";
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uygulama Hatası:", error, errorInfo);
+    console.error("Kritik Sistem Hatası Yakalandı:", error, errorInfo);
   }
+
+  componentDidMount() {
+    // Asenkron ve event handler çökmelerini yakalama
+    window.addEventListener("error", this.handleGlobalError);
+    window.addEventListener(
+      "unhandledrejection",
+      this.handleUnhandledRejection,
+    );
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("error", this.handleGlobalError);
+    window.removeEventListener(
+      "unhandledrejection",
+      this.handleUnhandledRejection,
+    );
+  }
+
+  handleGlobalError = (event) => {
+    console.error("Window Error:", event.error);
+    this.setState({
+      hasError: true,
+      error: event.error || new Error(event.message),
+    });
+  };
+
+  handleUnhandledRejection = (event) => {
+    console.error("Unhandled Rejection:", event.reason);
+    this.setState({ hasError: true, error: event.reason });
+  };
+
+  handleGoHome = () => {
+    if (window.location.hash) {
+      window.location.hash = "#/";
+    } else {
+      window.location.pathname = "/";
+    }
+    window.location.reload();
+  };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-6">
-          <h1 className="text-2xl font-bold mb-4">Bir şeyler ters gitti </h1>
-          <p className="mb-6 opacity-80 text-center text-sm">
-            Beklenmedik bir hata oluştu. Lütfen ana sayfaya dönmeyi deneyin.
-          </p>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors"
-          >
-            Ana Sayfaya Dön
-          </button>
+        <div className="fixed inset-0 w-screen h-screen bg-[#030712] text-white flex flex-col items-center justify-center p-6 z-[999999] select-none">
+          <div className="bg-[#0f172a] border border-gray-800 p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl space-y-5">
+            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto text-3xl">
+              ⚠️
+            </div>
+            <h2 className="text-xl font-bold">Bir Aksaklık Oluştu</h2>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              İşlem sırasında beklenmedik bir arayüz hatası meydana geldi. Siyah
+              ekranda kalmamak için doğrudan ana sayfaya dönebilirsiniz.
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={this.handleGoHome}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-blue-600/30"
+              >
+                Ana Sayfaya Dön
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold text-sm transition border border-gray-700"
+              >
+                Sayfayı Yenile
+              </button>
+            </div>
+          </div>
         </div>
       );
     }

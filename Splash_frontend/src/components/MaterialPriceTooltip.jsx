@@ -16,6 +16,7 @@ export default function MaterialPriceTooltip({
   const [open, setOpen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [searchMode, setSearchMode] = useState(null);
+  const [pos, setPos] = useState(null);
 
   const {
     history,
@@ -38,6 +39,43 @@ export default function MaterialPriceTooltip({
   const { tenant } = useTenant();
   const menuRef = useRef(null);
   const menuPopupRef = useRef(null);
+
+  useEffect(() => {
+    if (showMenu && menuRef.current) {
+      const updatePos = () => {
+        if (!menuRef.current) return;
+        const rect = menuRef.current.getBoundingClientRect();
+        const MENU_HEIGHT = 185;
+        const MENU_WIDTH = 256;
+
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        const openUpward = spaceBelow < MENU_HEIGHT && spaceAbove > spaceBelow;
+
+        const top = openUpward
+          ? rect.top + window.pageYOffset - MENU_HEIGHT - 6
+          : rect.bottom + window.pageYOffset + 6;
+
+        let left = rect.right + window.pageXOffset - MENU_WIDTH;
+        if (left < 10) left = 10;
+
+        setPos({
+          top,
+          left,
+          openUpward,
+        });
+      };
+
+      updatePos();
+      window.addEventListener("scroll", updatePos, true);
+      window.addEventListener("resize", updatePos);
+
+      return () => {
+        window.removeEventListener("scroll", updatePos, true);
+        window.removeEventListener("resize", updatePos);
+      };
+    }
+  }, [showMenu]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -199,6 +237,7 @@ export default function MaterialPriceTooltip({
       </button>
 
       {showMenu &&
+        pos &&
         document.body &&
         createPortal(
           <div

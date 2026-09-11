@@ -308,6 +308,31 @@ export const useInvoicePageLogic = () => {
     });
   };
 
+  const parseNumber = (val) => {
+    if (val === undefined || val === null || val === "") return 0;
+    if (typeof val === "number") return val;
+
+    let str = val.toString().trim();
+
+    if (str.includes(".") && str.includes(",")) {
+      return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
+    if (str.includes(",")) {
+      return parseFloat(str.replace(",", ".")) || 0;
+    }
+
+    if (str.includes(".")) {
+      const parts = str.split(".");
+      if (parts.length === 2 && parts[1].length <= 2) {
+        return parseFloat(str) || 0;
+      }
+      return parseFloat(str.replace(/\./g, "")) || 0;
+    }
+
+    return parseFloat(str) || 0;
+  };
+
   const handleMaterialSelect = async (index, materialId) => {
     const selectedMaterial = materials.find((m) => m.id === Number(materialId));
     if (!selectedMaterial) return;
@@ -367,47 +392,49 @@ export const useInvoicePageLogic = () => {
     const name = isManual ? e : e.target ? e.target.name : "";
     let rawValue = isManual ? manualValue : e.target ? e.target.value : e;
 
-    const parsedValue = parseNumber(rawValue);
-
     if (name === "materialId") {
-      handleMaterialSelect(index, parsedValue);
+      handleMaterialSelect(index, rawValue);
       return;
     }
 
     setForm((prev) => {
       const newItems = [...prev.items];
-      const item = { ...newItems[index], [name]: parsedValue };
+      const item = { ...newItems[index] };
 
-      const qty = Number(item.quantity) || 0;
+      item[name] = rawValue;
+
+      const qty = parseNumber(name === "quantity" ? rawValue : item.quantity);
       const kdvRate = Number(item.kdv) || 0;
 
       if (name === "lineTotal") {
-        const divisor = qty === 0 ? 1 : qty;
-
-        const calculatedUP =
-          parsedValue === "" ? "" : Number(parsedValue) / divisor;
-        item.unitPrice = calculatedUP !== "" ? calculatedUP.toString() : "";
-
-        item.lineTotal = parsedValue;
-
-        item.kdvTutar =
-          parsedValue === ""
-            ? ""
-            : ((Number(parsedValue) * kdvRate) / 100).toFixed(2);
+        const total = parseNumber(rawValue);
+        if (total === 0 || qty === 0) {
+          item.unitPrice = "";
+          item.kdvTutar = "";
+        } else {
+          const up = Math.round((total / qty + Number.EPSILON) * 10000) / 10000;
+          item.unitPrice = up.toString().replace(".", ",");
+          item.kdvTutar = (
+            Math.round(((total * kdvRate) / 100 + Number.EPSILON) * 100) / 100
+          ).toFixed(2);
+        }
       } else {
-        item[name] = parsedValue;
+        const up = parseNumber(
+          name === "unitPrice" ? rawValue : item.unitPrice,
+        );
+        const curQty = parseNumber(
+          name === "quantity" ? rawValue : item.quantity,
+        );
 
-        if (item.quantity === "" || item.unitPrice === "") {
+        if (up === 0 || curQty === 0) {
           item.lineTotal = "";
           item.kdvTutar = "";
         } else {
-          const currentUP = Number(item.unitPrice) || 0;
-          const currentQTY = Number(item.quantity) || 0;
-
-          item.lineTotal = (currentQTY * currentUP).toFixed(2);
-
-          const { kdvTutar } = calculateRow(currentUP, currentQTY, kdvRate);
-          item.kdvTutar = kdvTutar;
+          const net = Math.round((up * curQty + Number.EPSILON) * 100) / 100;
+          const kdvTut =
+            Math.round(((net * kdvRate) / 100 + Number.EPSILON) * 100) / 100;
+          item.lineTotal = net.toFixed(2);
+          item.kdvTutar = kdvTut.toFixed(2);
         }
       }
 
@@ -468,16 +495,31 @@ export const useInvoicePageLogic = () => {
         (invoiceType === "purchase" ? "PURCHASE" : "SALES"),
       items: (Array.isArray(invoice?.items) ? invoice.items : [])
         .sort((a, b) => a.id - b.id)
-        .map((i) => ({
-          id: i.id,
-          materialId: String(i.materialId),
-          unit: i.unit || i.material.unit || "ADET",
-          unitPrice: i.unitPrice || 0,
-          quantity: i.quantity || 0,
-          kdv: i.kdv || 0,
-          lineTotal: i.lineTotal || i.unitPrice * i.quantity || 0,
-          kdvTutar: i.kdvTutar || 0,
-        })),
+        .map((i) => {
+          const up = Number(i.unitPrice) || 0;
+          const qty = Number(i.quantity) || 0;
+          const kdv = Number(i.kdv) || 0;
+          const net = Math.round((up * qty + Number.EPSILON) * 100) / 100;
+          const kdvTut =
+            Math.round(((net * kdv) / 100 + Number.EPSILON) * 100) / 100;
+
+          const formattedUp = (
+            Math.round((up + Number.EPSILON) * 10000) / 10000
+          )
+            .toString()
+            .replace(".", ",");
+
+          return {
+            id: i.id,
+            materialId: String(i.materialId),
+            unit: i.unit || i.material?.unit || "ADET",
+            unitPrice: formattedUp,
+            quantity: qty.toString().replace(".", ","),
+            kdv: kdv,
+            lineTotal: net.toFixed(2),
+            kdvTutar: kdvTut.toFixed(2),
+          };
+        }),
     });
   };
 
@@ -498,18 +540,30 @@ export const useInvoicePageLogic = () => {
       invoiceType:
         form.invoiceType || (invoiceType === "purchase" ? "PURCHASE" : "SALES"),
       items: (Array.isArray(form.items) ? form.items : []).map((i) => {
-        const netTutar = Number(i.unitPrice) * Number(i.quantity);
-        const satirKdv = (netTutar * Number(i.kdv)) / 100;
+        const rawPrice = parseNumber(i.unitPrice);
+        const rawQty = parseNumber(i.quantity);
+        const cleanKdv = parseNumber(i.kdv);
+
+        // 🎯 Birim fiyat 4 basamağa kadar hassas (10000):
+        const cleanPrice =
+          Math.round((rawPrice + Number.EPSILON) * 10000) / 10000;
+        const cleanQty = Math.round((rawQty + Number.EPSILON) * 100) / 100;
+
+        const netTutar =
+          Math.round((cleanPrice * cleanQty + Number.EPSILON) * 100) / 100;
+        const satirKdv =
+          Math.round(((netTutar * cleanKdv) / 100 + Number.EPSILON) * 100) /
+          100;
 
         return {
           id: i.id || null,
           materialId: Number(i.materialId),
-          unit: i.unit,
-          unitPrice: Number(i.unitPrice),
-          quantity: Number(i.quantity),
-          kdv: Number(i.kdv),
-          lineTotal: netTutar + satirKdv,
-          kdvTutar: satirKdv,
+          unit: i.unit || "ADET",
+          unitPrice: cleanPrice,
+          quantity: cleanQty,
+          kdv: cleanKdv,
+          lineTotal: isNaN(netTutar) ? 0 : netTutar,
+          kdvTutar: isNaN(satirKdv) ? 0 : satirKdv,
         };
       }),
     };
@@ -538,6 +592,7 @@ export const useInvoicePageLogic = () => {
       await editInvoice(editingInvoice.id, payload, tenant);
       await getAllCustomers(0, 999, false, "", tenant, year);
       setEditingInvoice(null);
+      setSelectedInvoiceIds([]);
       setForm(null);
     } catch (error) {
       const backendErr =
@@ -589,21 +644,28 @@ export const useInvoicePageLogic = () => {
   };
 
   const modalTotals = useMemo(() => {
-    if (!form?.items) return { subTotal: 0, kdvTotal: 0, generalTotal: 0 };
+    if (!form?.items || !Array.isArray(form.items)) {
+      return { subTotal: 0, kdvTotal: 0, generalTotal: 0 };
+    }
 
-    const subTotal = form.items.reduce(
-      (sum, i) => sum + (Number(i.lineTotal) || 0),
-      0,
-    );
-    const kdvTotal = form.items.reduce(
-      (sum, i) => sum + (Number(i.kdvTutar) || 0),
-      0,
-    );
+    const subTotal = form.items.reduce((sum, i) => {
+      const val = parseNumber(i.lineTotal);
+      return sum + (isNaN(val) ? 0 : val);
+    }, 0);
+
+    const kdvTotal = form.items.reduce((sum, i) => {
+      const val = parseNumber(i.kdvTutar);
+      return sum + (isNaN(val) ? 0 : val);
+    }, 0);
+
+    const roundedSub = roundHalfUp(subTotal);
+    const roundedKdv = roundHalfUp(kdvTotal);
+    const roundedGeneral = roundHalfUp(roundedSub + roundedKdv);
 
     return {
-      subTotal: roundHalfUp(subTotal),
-      kdvTotal: roundHalfUp(kdvTotal),
-      generalTotal: roundHalfUp(subTotal + kdvTotal),
+      subTotal: roundedSub,
+      kdvTotal: roundedKdv,
+      generalTotal: roundedGeneral,
     };
   }, [form?.items]);
 
@@ -682,12 +744,6 @@ export const useInvoicePageLogic = () => {
       return dateString;
     const [y, m, d] = dateString.split("-");
     return `${d}.${m}.${y}`;
-  };
-
-  const parseNumber = (val) => {
-    if (val === undefined || val === null || val === "") return "";
-    if (typeof val !== "string") return val.toString();
-    return val.replace(/\./g, "").replace(",", ".");
   };
 
   const formatNumber = (val) => {

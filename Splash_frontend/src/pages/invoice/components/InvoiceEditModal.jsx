@@ -196,7 +196,7 @@ export default function InvoiceEditModal({
                     <input
                       type="text"
                       name="quantity"
-                      value={formatNumber(item?.quantity) || ""}
+                      value={item?.quantity || ""}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
@@ -207,7 +207,7 @@ export default function InvoiceEditModal({
                         }
                       }}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.,]/g, "");
+                        let val = e.target.value.replace(/[^0-9.,]/g, "");
                         onItemChange(i, "quantity", val);
                       }}
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2"
@@ -232,7 +232,7 @@ export default function InvoiceEditModal({
                       <input
                         type="text"
                         name="unitPrice"
-                        value={formatNumber(item?.unitPrice) || ""}
+                        value={item?.unitPrice || ""}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -243,10 +243,10 @@ export default function InvoiceEditModal({
                           }
                         }}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.,]/g, "");
+                          let val = e.target.value.replace(/[^0-9.,]/g, "");
                           onItemChange(i, "unitPrice", val);
                         }}
-                        className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none"
+                        className="w-28 bg-gray-900 border border-gray-700 rounded-lg px-1 py-2 text-white focus:border-blue-500 outline-none"
                       />
                       <MaterialPriceTooltip
                         materialId={item.materialId}

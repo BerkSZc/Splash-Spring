@@ -214,15 +214,26 @@ public class InvoiceServiceImpl implements IInvoiceService {
             Material material = materialRepository.findByIdAndCompany(newItemDto.getMaterialId(), company)
                     .orElseThrow(() -> new BaseException(new ErrorMessage(MessageType.MALZEME_BULUNAMADI)));
 
+            BigDecimal qty = safeGet(newItemDto.getQuantity()).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal unitPrice = safeGet(newItemDto.getUnitPrice()).setScale(4, RoundingMode.HALF_UP);
+            BigDecimal kdv = safeGet(newItemDto.getKdv());
+
+            BigDecimal kdvOran = kdv.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+            BigDecimal lineTotal = unitPrice.multiply(qty).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal kdvTutar = lineTotal.multiply(kdvOran).setScale(2, RoundingMode.HALF_UP);
+
             if (newItemDto.getId() == null) {
                 InvoiceItem newItem = new InvoiceItem();
                 newItem.setCompany(company);
                 newItem.setInvoice(oldInvoice);
                 newItem.setMaterial(material);
-                newItem.setQuantity(safeGet(newItemDto.getQuantity()));
-                newItem.setUnitPrice(safeGet(newItemDto.getUnitPrice()));
-                newItem.setKdv(safeGet(newItemDto.getKdv()));
+                newItem.setQuantity(qty);
+                newItem.setUnitPrice(unitPrice);
+                newItem.setKdv(kdv);
                 newItem.setUnit(Objects.requireNonNullElse(newItemDto.getUnit(), material.getUnit()));
+
+                newItem.setLineTotal(lineTotal);
+                newItem.setKdvTutar(kdvTutar);
 
                 oldItems.add(newItem);
             } else {
@@ -232,10 +243,12 @@ public class InvoiceServiceImpl implements IInvoiceService {
                         .orElseThrow();
 
                 oldItem.setMaterial(material);
-                oldItem.setQuantity(safeGet(newItemDto.getQuantity()));
-                oldItem.setUnitPrice(safeGet(newItemDto.getUnitPrice()));
+                oldItem.setQuantity(qty);
+                oldItem.setUnitPrice(unitPrice);
                 oldItem.setUnit(Objects.requireNonNullElse(newItemDto.getUnit(), material.getUnit()));
                 oldItem.setKdv(safeGet(newItemDto.getKdv()));
+                oldItem.setLineTotal(lineTotal);
+                oldItem.setKdvTutar(kdvTutar);
             }
         }
 
@@ -243,19 +256,8 @@ public class InvoiceServiceImpl implements IInvoiceService {
         BigDecimal kdvToplam = BigDecimal.ZERO;
 
         for (InvoiceItem item : oldItems) {
-            BigDecimal qty = safeGet(item.getQuantity());
-            BigDecimal unitPrice = safeGet(item.getUnitPrice());
-            BigDecimal kdvOran = safeGet(item.getKdv()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-
-            BigDecimal kdvTutar = unitPrice.multiply(qty).multiply(kdvOran).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal lineTotal = unitPrice.multiply(qty).setScale(2, RoundingMode.HALF_UP);
-
-            item.setKdvTutar(kdvTutar);
-            item.setLineTotal(lineTotal);
-
-            kdvToplam = kdvToplam.add(kdvTutar).setScale(2, RoundingMode.HALF_UP);
-            total = total.add(lineTotal).setScale(2, RoundingMode.HALF_UP);
-
+            kdvToplam = kdvToplam.add(safeGet(item.getKdvTutar())).setScale(2, RoundingMode.HALF_UP);
+            total = total.add(safeGet(item.getLineTotal())).setScale(2, RoundingMode.HALF_UP);
         }
         total = total.add(kdvToplam).setScale(2, RoundingMode.HALF_UP);
 

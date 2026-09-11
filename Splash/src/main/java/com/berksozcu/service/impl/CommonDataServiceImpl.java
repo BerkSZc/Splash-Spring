@@ -101,7 +101,7 @@ public class CommonDataServiceImpl implements ICommonDataService {
                 lastNo = invoiceRepository.findMaxFileNoByYearAndCompanyAndType(start, end, company, InvoiceType.SALES, "%SOZ%");
                 prefix = "SOZ";
             }
-            case "COLLECTION" -> {
+            case "RECEIVED" -> {
                 lastNo = collectionRepository.findMaxFileNoByYearAndCompanyAndType(start, end, company, CollectionType.RECEIVED);
                 prefix = "TAH";
             }

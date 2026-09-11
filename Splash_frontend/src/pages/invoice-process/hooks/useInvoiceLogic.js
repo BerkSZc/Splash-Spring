@@ -461,17 +461,25 @@ export const useInvoiceLogic = ({ onSuccess, type } = {}) => {
 
       items: (Array.isArray(currentForm.items) ? currentForm.items : []).map(
         (i) => {
-          const netTutar =
-            Number(parseNumber(i.unitPrice)) * Number(parseNumber(i.quantity));
-          const satirKdv = (netTutar * Number(i.kdv)) / 100;
+          const up = Number(parseNumber(i.unitPrice)) || 0;
+          const qty = Number(parseNumber(i.quantity)) || 0;
+          const kdvRate = Number(i.kdv) || 0;
+
+          const netTutar = Math.round((up * qty + Number.EPSILON) * 100) / 100;
+          const satirKdv =
+            Math.round(((netTutar * kdvRate) / 100 + Number.EPSILON) * 100) /
+            100;
+          const satirToplam =
+            Math.round((netTutar + satirKdv + Number.EPSILON) * 100) / 100;
+
           return {
             materialId: Number(i.materialId),
-            unit: i.unit,
-            unitPrice: Number(parseNumber(i.unitPrice)),
-            quantity: Number(parseNumber(i.quantity)),
-            kdv: Number(i.kdv),
-            kdvTutar: satirKdv,
-            lineTotal: netTutar + satirKdv,
+            unit: i.unit || "ADET",
+            unitPrice: up,
+            quantity: qty,
+            kdv: kdvRate,
+            kdvTutar: isNaN(satirKdv) ? 0 : satirKdv,
+            lineTotal: isNaN(satirToplam) ? 0 : satirToplam,
           };
         },
       ),
