@@ -47,11 +47,12 @@ function createWindow() {
   });
 
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (!url.startsWith(START_URL)) {
+    if (START_URL && !url.startsWith(START_URL) && url.startsWith("http")) {
       event.preventDefault();
-      console.warn(`Güvensiz Yönlendirme Engellendi: ${url}`);
+      shell.openExternal(url);
     }
   });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.includes("action=print") || url === "about:blank") {
       return {

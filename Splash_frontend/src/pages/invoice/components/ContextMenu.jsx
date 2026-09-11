@@ -76,17 +76,6 @@ export default function ContextMenu({
 
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onView(invoice);
-              onClose();
-            }}
-            className="w-full text-left px-4 py-2.5 hover:bg-yellow-500/20 text-yellow-400 rounded-xl flex items-center gap-2.5 transition text-sm border-t border-gray-800/50"
-          >
-            <span>👁️</span> İncele
-          </button>
-
-          <button
-            onClick={(e) => {
               console.log(
                 "👉 [1. CONTEXT MENU]: Mail Gönder tıklandı. Giden fatura:",
                 invoice,
@@ -110,6 +99,17 @@ export default function ContextMenu({
             className="w-full text-left px-4 py-2.5 hover:bg-red-500/20 text-red-400 rounded-xl flex items-center gap-2.5 transition text-sm border-t border-gray-800/50"
           >
             <span>🗑️</span> Sil
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onView(invoice);
+              onClose();
+            }}
+            className="w-full text-left px-4 py-2.5 hover:bg-yellow-500/20 text-yellow-400 rounded-xl flex items-center gap-2.5 transition text-sm border-t border-gray-800/50"
+          >
+            <span>👁️</span> İncele
           </button>
         </>
       )}

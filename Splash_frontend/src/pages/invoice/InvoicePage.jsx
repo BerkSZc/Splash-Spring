@@ -99,7 +99,6 @@ export default function InvoicePage() {
           isLoading={state.isLoading}
           selectedInvoiceIds={state.selectedInvoiceIds}
           onToggleSelect={handlers.handleToggleSelectInvoice}
-          onSelectAll={handlers.handleSelectAll}
           contextMenu={state.contextMenu}
           setContextMenu={handlers.setContextMenu}
           onContextMenu={handlers.handleContextMenu}
@@ -133,6 +132,7 @@ export default function InvoicePage() {
             onCancel={() => {
               handlers.setEditingInvoice(null);
               handlers.setForm(null);
+              handlers.clearSelection();
             }}
             onStatusChange={handlers.handleInvoiceStatusChange}
             onSave={handlers.handleSave}

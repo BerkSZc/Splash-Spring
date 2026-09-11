@@ -12,14 +12,10 @@ export default function InvoiceTable({
   isLoading,
   selectedInvoiceIds = [],
   onToggleSelect,
-  onSelectAll,
   onContextMenu,
   contextMenu,
   setContextMenu,
 }) {
-  const isAllSelected =
-    invoices.length > 0 && selectedInvoiceIds.length === invoices.length;
-
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-[2.5rem] overflow-visible backdrop-blur-sm shadow-2xl">
       <div className="overflow-x-auto">
@@ -121,12 +117,12 @@ export default function InvoiceTable({
                       )}
                     </td>
 
-                    <td className="p-5 text-right font-mono text-lg font-bold text-emerald-400">
-                      {(Number(inv.totalPrice) || 0)?.toLocaleString("tr-TR", {
+                    <td className="p-5 text-right font-mono text-lg font-bold text-emerald-400 whitespace-nowrap">
+                      {(Number(inv.totalPrice) || 0).toLocaleString("tr-TR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
-                      })}{" "}
-                      ₺
+                      })}
+                      &nbsp;₺
                     </td>
                   </tr>
                 );
